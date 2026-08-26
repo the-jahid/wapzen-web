@@ -24,7 +24,6 @@ export type ApiPromptSection = {
   begin_message?: string;
   begin_message_delay_ms?: number;
   system_prompt?: string;
-  dynamic_variables?: Record<string, string> | null;
 };
 
 export type ApiVoiceSection = {
@@ -51,22 +50,6 @@ export type ApiTranscriberSection = {
   language?: string;
   openai?: { model?: string } | null;
   elevenlabs?: { model?: string } | null;
-};
-
-export type ApiPostCallField = {
-  type: string;
-  name: string;
-  description?: string;
-  examples?: string[] | null;
-  required?: boolean;
-  enum_values?: string[] | null;
-  conditional_prompt?: string | null;
-};
-
-export type ApiPostCallSection = {
-  analysis_provider?: string;
-  analysis_model?: string | null;
-  post_call_analysis_data?: ApiPostCallField[] | null;
 };
 
 // ApiKnowledgeBaseSection lists the knowledge bases the agent answers from. The
@@ -96,7 +79,6 @@ export type AgentPayload = {
   prompt?: ApiPromptSection;
   voice?: ApiVoiceSection;
   transcriber?: ApiTranscriberSection;
-  post_call?: ApiPostCallSection;
   knowledge_base?: ApiKnowledgeBaseSection;
   tools?: ApiToolsSection;
 };
@@ -110,7 +92,6 @@ export type ApiAgentResource = {
   prompt?: ApiPromptSection | null;
   voice?: ApiVoiceSection | null;
   transcriber?: ApiTranscriberSection | null;
-  post_call?: ApiPostCallSection | null;
   knowledge_base?: ApiKnowledgeBaseSection | null;
   tools?: ApiToolsSection | null;
 };
@@ -187,9 +168,8 @@ export function getAgent(agentId: string, apiKey: string): Promise<ApiAgentResou
 }
 
 // updateAgent applies a partial update; only the fields present in payload
-// change, and the child collections (dynamic_variables,
-// post_call_analysis_data, knowledge_base_ids, tool_ids) are replaced wholesale
-// when present.
+// change, and the attachment sets (knowledge_base_ids, tool_ids) are replaced
+// wholesale when present.
 export function updateAgent(
   agentId: string,
   payload: AgentPayload,

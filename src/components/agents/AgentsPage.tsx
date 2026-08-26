@@ -166,15 +166,12 @@ type BeginMessageMode =
   | "agent_speaks_first"
   | "agent_waits_for_user"
   | "agent_speaks_first_with_model_generated_message";
-type FieldType = "string" | "number" | "boolean" | "enum";
 type ConfigSectionId =
   | "model"
   | "transcriber"
   | "voice"
   | "knowledge-base"
-  | "tools"
-  | "post-call"
-  | "dynamic-vars";
+  | "tools";
 
 type LlmConfig = {
   provider: LlmProvider;
@@ -209,28 +206,6 @@ type TranscriberConfig = {
   model: TranscriberModel;
 };
 
-type AnalysisField = {
-  id: string;
-  name: string;
-  type: FieldType;
-  description: string;
-  examples: string;
-  enum_values: string;
-  conditional_prompt: string;
-  required: boolean;
-};
-
-type AnalysisConfig = {
-  provider: LlmProvider;
-  model: LlmModel;
-  fields: AnalysisField[];
-};
-
-type DynamicVariable = {
-  key: string;
-  value: string;
-};
-
 type Agent = {
   id: string;
   name: string;
@@ -247,8 +222,6 @@ type Agent = {
   llm: LlmConfig;
   voice: VoiceConfig;
   transcriber: TranscriberConfig;
-  analysis: AnalysisConfig;
-  dynamic_variables: DynamicVariable[];
   // Ids of the knowledge bases this agent may quote from. The catalogue itself
   // lives in the Knowledge Base workspace; the agent only holds the attachments.
   knowledge_base_ids: string[];
@@ -710,21 +683,12 @@ const beginModeOptions: Option<BeginMessageMode>[] = [
   },
 ];
 
-const fieldTypeOptions: Option<FieldType>[] = [
-  { id: "string", label: "String" },
-  { id: "number", label: "Number" },
-  { id: "boolean", label: "Boolean" },
-  { id: "enum", label: "Enum" },
-];
-
 const configSections: { id: ConfigSectionId; label: string; icon: IconName }[] = [
   { id: "model", label: "Model", icon: "cube" },
   { id: "transcriber", label: "Transcriber", icon: "mic" },
   { id: "voice", label: "Voice & Live Audio", icon: "speaker" },
   { id: "knowledge-base", label: "Knowledge Base", icon: "book" },
   { id: "tools", label: "Tools", icon: "wrench" },
-  { id: "post-call", label: "Post-Call Analysis", icon: "chart" },
-  { id: "dynamic-vars", label: "Dynamic Variables", icon: "hash" },
 ];
 
 const navItems: { label: string; badge?: string; icon: IconName; href?: string }[] = [
@@ -765,7 +729,7 @@ const defaultVoice: VoiceConfig = {
 
 // ── API ⇄ UI mapping ──
 // The server groups agent config into sections (agent/model/prompt/voice/
-// transcriber/post_call); the editor state is the flatter Agent shape above.
+// transcriber); the editor state is the flatter Agent shape above.
 
 function pickOption<T extends string>(
   options: Option<T>[],
@@ -793,13 +757,6 @@ function roleLabel(direction: CallDirection): string {
   if (direction === "inbound") return "Inbound Calls";
   if (direction === "outbound") return "Outbound Calls";
   return "Inbound & Outbound";
-}
-
-function splitList(value: string): string[] {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
 }
 
 function voiceConfigFromApi(voice: ApiVoiceSection | null | undefined): VoiceConfig {
@@ -890,11 +847,9 @@ function agentFromApi(res: ApiAgentResource): Agent {
   const model = res.model;
   const prompt = res.prompt;
   const transcriber = res.transcriber;
-  const postCall = res.post_call;
 
   const callDirection = pickOption(callDirectionOptions, agent?.call_direction, "both");
   const llmProvider = pickOption(llmProviders, model?.provider, "openai");
-  const analysisProvider = pickOption(llmProviders, postCall?.analysis_provider, "openai");
   let voiceConfig = voiceConfigFromApi(res.voice);
   if (voiceConfig.provider === "openai_realtime") {
     voiceConfig = { ...voiceConfig, voice: normalizeOpenAIRealtimeVoice(voiceConfig.voice) };
@@ -938,60 +893,14 @@ function agentFromApi(res: ApiAgentResource): Agent {
         transcriberModels[transcriberProvider][0].id
       ),
     },
-    analysis: {
-      provider: analysisProvider,
-      model: pickOption(
-        llmModels[analysisProvider],
-        postCall?.analysis_model,
-        firstEnabledOption(llmModels[analysisProvider])
-      ),
-      fields: (postCall?.post_call_analysis_data ?? []).map((field) => ({
-        id: makeId("analysis"),
-        name: field.name,
-        type: pickOption(fieldTypeOptions, field.type, "string"),
-        description: field.description ?? "",
-        examples: (field.examples ?? []).join(", "),
-        enum_values: (field.enum_values ?? []).join(", "),
-        conditional_prompt: field.conditional_prompt ?? "",
-        required: !!field.required,
-      })),
-    },
-    dynamic_variables: Object.entries(prompt?.dynamic_variables ?? {}).map(([key, value]) => ({
-      key,
-      value,
-    })),
     knowledge_base_ids: res.knowledge_base?.knowledge_base_ids ?? [],
     tool_ids: res.tools?.tool_ids ?? [],
   };
 }
 
-function dynamicVariablesPayload(variables: DynamicVariable[]): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const variable of variables) {
-    const key = variable.key.trim();
-    if (key) map[key] = variable.value;
-  }
-  return map;
-}
-
-function analysisFieldsPayload(fields: AnalysisField[]) {
-  return fields
-    .filter((field) => field.name.trim())
-    .map((field) => ({
-      type: field.type,
-      name: field.name.trim(),
-      description: field.description,
-      examples: splitList(field.examples),
-      required: field.required,
-      enum_values: field.type === "enum" ? splitList(field.enum_values) : [],
-      conditional_prompt: field.conditional_prompt.trim() ? field.conditional_prompt : null,
-    }));
-}
-
 // agentToPayload serializes the full editor state for PATCH. The backend
-// replaces dynamic_variables, post_call_analysis_data and knowledge_base_ids
-// wholesale when the keys are present, so publishing always syncs the complete
-// configuration.
+// replaces knowledge_base_ids and tool_ids wholesale when the keys are present,
+// so publishing always syncs the complete configuration.
 function agentToPayload(agent: Agent): AgentPayload {
   return {
     agent: {
@@ -1012,7 +921,6 @@ function agentToPayload(agent: Agent): AgentPayload {
       begin_message: agent.welcome_message,
       begin_message_delay_ms: agent.welcome_delay_ms,
       system_prompt: agent.system_prompt,
-      dynamic_variables: dynamicVariablesPayload(agent.dynamic_variables),
     },
     voice: voicePayload(agent.voice),
     transcriber: {
@@ -1021,11 +929,6 @@ function agentToPayload(agent: Agent): AgentPayload {
       ...(agent.transcriber.provider === "openai"
         ? { openai: { model: agent.transcriber.model } }
         : { elevenlabs: { model: agent.transcriber.model } }),
-    },
-    post_call: {
-      analysis_provider: agent.analysis.provider,
-      analysis_model: agent.analysis.model,
-      post_call_analysis_data: analysisFieldsPayload(agent.analysis.fields),
     },
     tools: {
       tool_ids: agent.tool_ids,
@@ -1838,7 +1741,6 @@ const css = `
 .number-pick-hint.is-blocked { color: var(--faint); }
 .number-pick-empty { color: var(--subtle); font-size: 12px; line-height: 1.55; }
 .number-pick-empty a { color: var(--primary-light); font-weight: 700; }
-.editable-row { align-items: center; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr) 36px; }
 .icon-button {
   align-items: center;
   background: var(--panel);
@@ -1853,7 +1755,6 @@ const css = `
   width: 36px;
 }
 .icon-button:hover { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--rose); }
-.list-footer-btn { margin-top: 10px; width: 100%; }
 .config-panel { min-height: 0; }
 .config-fields {
   border-bottom: 1px solid var(--border);
@@ -1886,32 +1787,6 @@ const css = `
 .range-head { align-items: center; display: flex; justify-content: space-between; }
 .range-value { color: var(--primary-light); font-size: 12px; font-weight: 800; }
 .agents-range { accent-color: var(--primary-2); width: 100%; }
-.toggle-row { align-items: center; display: flex; justify-content: space-between; gap: 12px; }
-.toggle {
-  align-items: center;
-  background: var(--app-line);
-  border: 1px solid var(--app-border-strong);
-  border-radius: 999px;
-  cursor: pointer;
-  display: inline-flex;
-  height: 24px;
-  padding: 2px;
-  transition: background .18s ease;
-  width: 44px;
-}
-.toggle.is-on { background: var(--primary); }
-.toggle-thumb { background: #fff; border-radius: 50%; height: 18px; transform: translateX(0); transition: transform .18s ease; width: 18px; }
-.toggle.is-on .toggle-thumb { transform: translateX(20px); }
-.nested-list { display: grid; gap: 10px; }
-.nested-item {
-  background: var(--app-border-soft);
-  border: 1px solid var(--app-border);
-  border-radius: 12px;
-  display: grid;
-  gap: 10px;
-  padding: 10px;
-}
-.two-col { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .read-only-row {
   align-items: center;
   background: var(--app-hover);
@@ -2820,10 +2695,6 @@ function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function makeId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 function avatarColor(id: string) {
   const total = id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return avatarColors[total % avatarColors.length];
@@ -3107,31 +2978,6 @@ function RangeField({
         value={value}
       />
     </label>
-  );
-}
-
-function Toggle({
-  checked,
-  label,
-  onChange,
-}: {
-  checked: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="toggle-row">
-      <span className="field-label">{label}</span>
-      <button
-        aria-checked={checked}
-        className={`toggle${checked ? " is-on" : ""}`}
-        onClick={() => onChange(!checked)}
-        role="switch"
-        type="button"
-      >
-        <span className="toggle-thumb" />
-      </button>
-    </div>
   );
 }
 
@@ -4938,8 +4784,6 @@ const configSectionCopy: Record<ConfigSectionId, string> = {
   voice: "Configure the voice provider and delivery settings used during live calls.",
   "knowledge-base": "Attach knowledge bases the agent can quote from during calls.",
   tools: "Create the actions this agent can take during a call, and attach them.",
-  "post-call": "Define the structured data captured after each call.",
-  "dynamic-vars": "Manage variables you can reference inside prompts.",
 };
 
 function ConfigSectionModal({
@@ -4974,13 +4818,6 @@ function ConfigSectionModal({
 
   function updateVoice(patch: Partial<VoiceConfig>) {
     updateDraft((current) => ({ ...current, voice: { ...current.voice, ...patch } }));
-  }
-
-  function updateAnalysis(patch: Partial<AnalysisConfig>) {
-    updateDraft((current) => ({
-      ...current,
-      analysis: { ...current.analysis, ...patch },
-    }));
   }
 
   useEffect(() => {
@@ -5050,7 +4887,6 @@ function ConfigSectionModal({
           >
             <ConfigBody
               agent={draftAgent}
-              onAnalysisChange={updateAnalysis}
               onSelectedChange={updateDraft}
               onVoiceChange={updateVoice}
               sectionId={sectionId}
@@ -5104,8 +4940,6 @@ function ConfigMeta({
   }
   if (sectionId === "knowledge-base") value = agent.knowledge_base_ids.length;
   if (sectionId === "tools") value = agent.tool_ids.length;
-  if (sectionId === "post-call") value = agent.analysis.fields.length;
-  if (sectionId === "dynamic-vars") value = agent.dynamic_variables.length;
   return value === null ? <span /> : <span className="config-badge">{value}</span>;
 }
 
@@ -6597,13 +6431,11 @@ function createCallProviderPatch(form: CreateForm, provider: CallProvider): Part
 
 function ConfigBody({
   agent,
-  onAnalysisChange,
   onSelectedChange,
   onVoiceChange,
   sectionId,
 }: {
   agent: Agent;
-  onAnalysisChange: (patch: Partial<AnalysisConfig>) => void;
   onSelectedChange: (updater: (agent: Agent) => Agent) => void;
   onVoiceChange: (patch: Partial<VoiceConfig>) => void;
   sectionId: ConfigSectionId;
@@ -6852,212 +6684,7 @@ function ConfigBody({
     );
   }
 
-  if (sectionId === "post-call") {
-    return (
-      <AnalysisEditor
-        analysis={agent.analysis}
-        onChange={onAnalysisChange}
-      />
-    );
-  }
-
-  function updateVariable(index: number, patch: Partial<DynamicVariable>) {
-    onSelectedChange((current) => ({
-      ...current,
-      dynamic_variables: current.dynamic_variables.map((variable, variableIndex) =>
-        variableIndex === index ? { ...variable, ...patch } : variable
-      ),
-    }));
-  }
-
-  return (
-    <>
-      <div className="nested-list">
-        {agent.dynamic_variables.length ? (
-          agent.dynamic_variables.map((variable, index) => (
-            <div className="editable-row" key={index}>
-              <div className="two-col">
-                <input
-                  className="agents-input"
-                  onChange={(event) => updateVariable(index, { key: event.target.value })}
-                  placeholder="variable_name"
-                  value={variable.key}
-                />
-                <input
-                  className="agents-input"
-                  onChange={(event) => updateVariable(index, { value: event.target.value })}
-                  placeholder="Value"
-                  value={variable.value}
-                />
-              </div>
-              <button
-                aria-label="Delete dynamic variable"
-                className="icon-button"
-                onClick={() =>
-                  onSelectedChange((current) => ({
-                    ...current,
-                    dynamic_variables: current.dynamic_variables.filter(
-                      (_, variableIndex) => variableIndex !== index
-                    ),
-                  }))
-                }
-                type="button"
-              >
-                <Icon name="trash" size={16} />
-              </button>
-            </div>
-          ))
-        ) : (
-          <div className="empty-list">No dynamic variables yet.</div>
-        )}
-      </div>
-      <div className="helper-line">
-        Reference variables in prompts as {"{{variable_name}}"}.
-      </div>
-      <button
-        className="agents-btn agents-btn-secondary list-footer-btn"
-        onClick={() =>
-          onSelectedChange((current) => ({
-            ...current,
-            dynamic_variables: [...current.dynamic_variables, { key: "", value: "" }],
-          }))
-        }
-        type="button"
-      >
-        + Add variable
-      </button>
-    </>
-  );
-}
-
-function AnalysisEditor({
-  analysis,
-  onChange,
-}: {
-  analysis: AnalysisConfig;
-  onChange: (patch: Partial<AnalysisConfig>) => void;
-}) {
-  function updateField(id: string, patch: Partial<AnalysisField>) {
-    onChange({
-      fields: analysis.fields.map((field) => (field.id === id ? { ...field, ...patch } : field)),
-    });
-  }
-
-  return (
-    <>
-      <SelectField
-        label="Provider"
-        onChange={(provider: LlmProvider) =>
-          onChange({ provider, model: firstEnabledOption(llmModels[provider]) })
-        }
-        options={llmProviders}
-        value={analysis.provider}
-      />
-      <SelectField
-        label="Analysis model"
-        onChange={(model: LlmModel) => onChange({ model })}
-        options={llmModels[analysis.provider]}
-        value={analysis.model}
-      />
-      <div className="nested-list">
-        {analysis.fields.map((field) => (
-          <div className="nested-item" key={field.id}>
-            <div className="two-col">
-              <label className="field-row">
-                <span className="field-label">Field name</span>
-                <input
-                  className="agents-input"
-                  onChange={(event) => updateField(field.id, { name: event.target.value })}
-                  value={field.name}
-                />
-              </label>
-              <SelectField
-                label="Field type"
-                onChange={(type: FieldType) => updateField(field.id, { type })}
-                options={fieldTypeOptions}
-                value={field.type}
-              />
-            </div>
-            <label className="field-row">
-              <span className="field-label">Description</span>
-              <textarea
-                className="agents-textarea"
-                onChange={(event) => updateField(field.id, { description: event.target.value })}
-                value={field.description}
-              />
-            </label>
-            <label className="field-row">
-              <span className="field-label">Examples (comma-separated)</span>
-              <input
-                className="agents-input"
-                onChange={(event) => updateField(field.id, { examples: event.target.value })}
-                value={field.examples}
-              />
-            </label>
-            {field.type === "enum" ? (
-              <label className="field-row">
-                <span className="field-label">Enum values (comma-separated)</span>
-                <input
-                  className="agents-input"
-                  onChange={(event) => updateField(field.id, { enum_values: event.target.value })}
-                  placeholder="e.g. yes, no, maybe"
-                  value={field.enum_values}
-                />
-              </label>
-            ) : null}
-            <label className="field-row">
-              <span className="field-label">Conditional prompt</span>
-              <textarea
-                className="agents-textarea"
-                onChange={(event) => updateField(field.id, { conditional_prompt: event.target.value })}
-                value={field.conditional_prompt}
-              />
-            </label>
-            <div className="toggle-row">
-              <Toggle
-                checked={field.required}
-                label="Required field"
-                onChange={(required) => updateField(field.id, { required })}
-              />
-              <button
-                aria-label="Delete analysis field"
-                className="icon-button"
-                onClick={() =>
-                  onChange({ fields: analysis.fields.filter((item) => item.id !== field.id) })
-                }
-                type="button"
-              >
-                <Icon name="trash" size={16} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button
-        className="agents-btn agents-btn-secondary list-footer-btn"
-        onClick={() =>
-          onChange({
-            fields: [
-              ...analysis.fields,
-              {
-                id: makeId("analysis"),
-                name: "",
-                type: "string",
-                description: "",
-                examples: "",
-                enum_values: "",
-                conditional_prompt: "",
-                required: false,
-              },
-            ],
-          })
-        }
-        type="button"
-      >
-        + Add analysis field
-      </button>
-    </>
-  );
+  return null;
 }
 
 function CreateAgentModal({

@@ -51,7 +51,8 @@ type IconName =
   | "search"
   | "trash"
   | "check"
-  | "x";
+  | "x"
+  | "back";
 
 type NavItem = {
   label: string;
@@ -163,6 +164,26 @@ const nameLimit = toolBounds.nameLength;
 
 function toolMeta(type: ToolType) {
   return toolTypes.find((item) => item.id === type) ?? toolTypes[0];
+}
+
+// cardSummary is the line a grid card shows under the description: where the
+// tool points, in the terms that matter for its type. A tool that is missing
+// that piece says so on the card rather than leaving the row blank.
+function cardSummary(tool: Tool): { method: string | null; line: string; tail: string | null } {
+  switch (tool.type) {
+    case "api_request":
+      return {
+        method: tool.method,
+        line: tool.url ? tool.url.replace(/^https?:\/\//, "") : "No endpoint set",
+        tail: `${tool.parameters.length} param${tool.parameters.length === 1 ? "" : "s"}`,
+      };
+    case "transfer_call":
+      return { method: null, line: tool.destination || "No destination set", tail: null };
+    case "send_text":
+      return { method: null, line: tool.textBody || "Message written by the agent", tail: null };
+    case "end_call":
+      return { method: null, line: tool.endMessage || "Hangs up when the call is done", tail: null };
+  }
 }
 
 function emptyTool(id: string, type: ToolType, name: string, description: string): Tool {
@@ -443,6 +464,13 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M10 11v6M14 11v6" />
         </>
       );
+    case "back":
+      return (
+        <>
+          <path d="M20 12H4" />
+          <path d="M10 6l-6 6 6 6" />
+        </>
+      );
     case "check":
       return <path d="M5 12.5l4 4 10-10" />;
     case "x":
@@ -587,28 +615,12 @@ const css = `
   padding: 6px 11px;
   white-space: nowrap;
 }
-.tools-content { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 20px 32px; }
-.tools-workspace {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
-  height: 100%;
-  min-height: 0;
-  width: 100%;
-}
-.tools-workspace > * { max-height: 100%; min-height: 0; }
-.tools-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px var(--app-shadow-soft);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.tools-panel-head { border-bottom: 1px solid var(--border); flex: 0 0 auto; padding: 16px; }
+.tools-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
+.tools-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.tools-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.tools-toolbar .tools-search-wrap { flex: 1 1 240px; max-width: 420px; }
+.tools-toolbar .tools-count { margin-left: auto; }
 .tools-panel-title-row { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
-.tools-panel-title { align-items: center; display: flex; font-size: 13px; font-weight: 800; gap: 8px; margin: 0; }
 .tools-count {
   background: var(--app-hover-2);
   border: 1px solid var(--border-strong);
@@ -619,8 +631,6 @@ const css = `
   line-height: 1;
   padding: 4px 8px;
 }
-.tools-panel-copy { color: var(--subtle); font-size: 12px; margin-top: 2px; }
-.tools-panel-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px; }
 .tools-btn {
   align-items: center;
   border: 1px solid var(--app-border-strong);
@@ -642,7 +652,6 @@ const css = `
 .tools-btn-secondary:hover { background: var(--app-hover-3); }
 .tools-btn-destructive { background: var(--app-rose-soft-2); border-color: var(--app-rose-border-strong); color: var(--app-rose-text); }
 .tools-btn-destructive:hover { background: var(--app-rose-border); }
-.tools-btn-block { width: 100%; }
 .tools-btn-sm { border-radius: 9px; font-size: 12px; gap: 6px; min-height: 32px; padding: 0 11px; }
 .tools-input, .tools-select, .tools-textarea {
   background: var(--panel);
@@ -672,30 +681,94 @@ const css = `
 .tools-select option { background: var(--surface); color: var(--text); }
 .tools-textarea { line-height: 1.55; min-height: 84px; padding: 10px 12px; resize: vertical; }
 .tools-mono { font-family: var(--font-geist-mono), monospace; font-size: 12.5px; }
-.tools-search-wrap { margin-top: 12px; position: relative; }
+.tools-search-wrap { position: relative; }
 .tools-search-icon { color: var(--subtle); left: 12px; position: absolute; top: 50%; transform: translateY(-50%); }
 .tools-search-input { padding-left: 36px; }
-.tools-list { display: flex; flex-direction: column; gap: 6px; }
-.tools-row {
-  align-items: center;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 13px;
+.tools-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+.tools-card-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px var(--app-shadow-soft);
   color: inherit;
   cursor: pointer;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  grid-template-columns: 34px minmax(0, 1fr);
-  padding: 9px 10px;
+  min-height: 186px;
+  padding: 16px;
   text-align: left;
-  transition: background .18s ease, border-color .18s ease;
-  width: 100%;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
-.tools-row:hover { background: var(--app-hover); }
-.tools-row.is-selected { background: var(--primary-soft); border-color: var(--app-primary-border); box-shadow: inset 0 0 0 1px var(--app-primary-ring); }
-.tools-row-name, .tools-row-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tools-row-name { font-size: 13px; font-weight: 800; }
-.tools-row-meta { color: var(--subtle); font-size: 11.5px; }
+.tools-card-item:hover {
+  background: var(--panel-hover);
+  border-color: var(--app-primary-border);
+  box-shadow: 0 12px 30px var(--app-shadow-soft);
+  transform: translateY(-2px);
+}
+.tools-card-item:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.tools-card-top { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.tools-card-name { font-size: 15px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tools-card-desc {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--muted);
+  display: -webkit-box;
+  font-size: 12.5px;
+  line-height: 1.55;
+  overflow: hidden;
+}
+.tools-card-foot {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  min-width: 0;
+  padding-top: 12px;
+}
+.tools-chip-method {
+  background: var(--app-hover-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  color: var(--subtle);
+  flex-shrink: 0;
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: .5px;
+  padding: 4px 7px;
+}
+.tools-chip-line { color: var(--subtle); font-size: 11.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tools-chip-tail { color: var(--faint); flex-shrink: 0; font-size: 11px; font-weight: 750; margin-left: auto; white-space: nowrap; }
+.tools-add-card {
+  align-items: center;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  min-height: 186px;
+  padding: 16px;
+  text-align: center;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.tools-add-card:hover { background: var(--app-hover); border-color: var(--app-primary-border); color: var(--text); }
+.tools-add-icon {
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  margin-bottom: 4px;
+  width: 40px;
+}
+.tools-add-label { font-size: 13.5px; font-weight: 800; }
+.tools-add-copy { color: var(--faint); font-size: 11.5px; max-width: 200px; }
 .tools-tile {
   align-items: center;
   border: 1px solid var(--app-border-strong);
@@ -726,7 +799,22 @@ const css = `
   padding: 20px;
   text-align: center;
 }
-.tools-detail { display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow-y: auto; padding-right: 4px; }
+.tools-detail { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 1120px; min-width: 0; width: 100%; }
+.tools-back {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 800;
+  gap: 8px;
+  padding: 2px 0;
+  transition: color .18s ease;
+  width: fit-content;
+}
+.tools-back:hover { color: var(--text); }
 .tools-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -817,8 +905,8 @@ const css = `
   border-radius: 16px;
   display: flex;
   flex-direction: column;
-  height: 100%;
   justify-content: center;
+  min-height: 340px;
   padding: 40px;
   text-align: center;
 }
@@ -917,7 +1005,6 @@ const css = `
 .tools-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .tools-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 @media (max-width: 1100px) {
-  .tools-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(190px, auto) minmax(0, 1fr); overflow-y: auto; }
   .tools-param-row { grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr); }
   .tools-param-row .tools-required { grid-column: 1 / -1; }
 }
@@ -927,13 +1014,14 @@ const css = `
   .tools-main { height: auto; overflow: visible; }
   .tools-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tools-user-card { display: none; }
-  .tools-content { overflow: visible; padding: 18px 20px; }
-  .tools-workspace { height: auto; overflow: visible; }
+  .tools-content { overflow: visible; padding: 18px 20px 26px; }
   .tools-topbar { padding: 18px 20px; }
 }
 @media (max-width: 640px) {
   .tools-nav { grid-template-columns: 1fr 1fr; }
-  .tools-content { padding: 14px; }
+  .tools-content { padding: 14px 14px 22px; }
+  .tools-toolbar .tools-search-wrap { max-width: none; }
+  .tools-toolbar .tools-btn-primary { flex: 1 1 auto; }
   .tools-grid-2, .tools-kv-row, .tools-param-row, .tools-type-grid { grid-template-columns: minmax(0, 1fr); }
   .tools-detail-head { grid-template-columns: minmax(0, 1fr); }
   .tools-modal-actions .tools-btn { flex: 1; }
@@ -983,7 +1071,6 @@ export default function ToolsPage() {
         if (cancelled) return;
         const mapped = stored.map(fromApi);
         setTools(mapped);
-        setSelectedId((current) => current ?? mapped[0]?.id ?? null);
         setLoadError(null);
       } catch (error) {
         if (cancelled) return;
@@ -1156,25 +1243,21 @@ export default function ToolsPage() {
         </header>
 
         <div className="tools-content">
-          <div className="tools-workspace">
-            <section className="tools-panel" aria-label="Tool list">
-              <div className="tools-panel-head">
-                <div className="tools-panel-title-row">
-                  <h2 className="tools-panel-title">
-                    Tools
-                    <span className="tools-count">{tools.length}</span>
-                  </h2>
-                </div>
-                <div className="tools-panel-copy">Pick a tool to configure it.</div>
-                <button
-                  className="tools-btn tools-btn-primary tools-btn-block"
-                  onClick={openCreate}
-                  style={{ marginTop: 12 }}
-                  type="button"
-                >
-                  <Icon name="plus" size={16} sw={2.4} />
-                  Create Tool
-                </button>
+          {selected ? (
+            // Keyed on the tool and the save epoch so opening another tool — or
+            // saving this one — restarts the pane on stored values rather than
+            // carrying a draft across.
+            <ToolDetail
+              key={`${selected.id}:${detailEpoch}`}
+              onBack={() => setSelectedId(null)}
+              onDelete={() => setPendingDelete(selected)}
+              onError={(message) => setNotice({ kind: "error", text: message })}
+              onSave={saveTool}
+              tool={selected}
+            />
+          ) : (
+            <div className="tools-browse">
+              <div className="tools-toolbar">
                 <div className="tools-search-wrap">
                   <span className="tools-search-icon">
                     <Icon name="search" size={15} />
@@ -1187,81 +1270,102 @@ export default function ToolsPage() {
                     value={query}
                   />
                 </div>
-              </div>
-              <div className="tools-panel-body">
-                {isLoading ? (
-                  <div className="tools-list-empty">
-                    <strong>Loading tools…</strong>
-                  </div>
-                ) : loadError ? (
-                  <div className="tools-list-empty">
-                    <strong>Could not load tools</strong>
-                    <span>{loadError}</span>
-                  </div>
-                ) : visibleTools.length === 0 ? (
-                  <div className="tools-list-empty">
-                    <strong>No tools found</strong>
-                    <span>{tools.length === 0 ? "Create your first tool." : "Try another search."}</span>
-                  </div>
-                ) : (
-                  <div className="tools-list">
-                    {visibleTools.map((tool) => {
-                      const meta = toolMeta(tool.type);
-
-                      return (
-                        <button
-                          className={`tools-row${tool.id === selectedId ? " is-selected" : ""}`}
-                          key={tool.id}
-                          onClick={() => setSelectedId(tool.id)}
-                          type="button"
-                        >
-                          <span className={`tools-tile tools-accent-${meta.accent}`}>
-                            <Icon name={meta.icon} size={16} />
-                          </span>
-                          <span style={{ minWidth: 0 }}>
-                            <span className="tools-row-name">{tool.name}</span>
-                            <span className="tools-row-meta">
-                              {tool.type === "api_request" && tool.url
-                                ? `${tool.method} ${tool.url.replace(/^https?:\/\//, "")}`
-                                : meta.label}
-                            </span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {selected ? (
-              // Keyed on the tool and the save epoch so switching tools — or
-              // saving one — restarts the pane on stored values rather than
-              // carrying a draft across.
-              <ToolDetail
-                key={`${selected.id}:${detailEpoch}`}
-                onDelete={() => setPendingDelete(selected)}
-                onError={(message) => setNotice({ kind: "error", text: message })}
-                onSave={saveTool}
-                tool={selected}
-              />
-            ) : (
-              <section className="tools-empty">
-                <span className="tools-empty-icon">
-                  <Icon name="wrench" size={32} sw={1.6} />
+                <span className="tools-count">
+                  {query.trim()
+                    ? `${visibleTools.length} of ${tools.length}`
+                    : `${tools.length} tool${tools.length === 1 ? "" : "s"}`}
                 </span>
-                <h2 className="tools-empty-title">Tools</h2>
-                <p className="tools-empty-copy">
-                  Tools let your agents take actions during calls — transfer, hang up, hit APIs,
-                  and more.
-                </p>
-                <p className="tools-empty-copy">
-                  Click &quot;Create Tool&quot; in the list to add your first tool.
-                </p>
-              </section>
-            )}
-          </div>
+                <button className="tools-btn tools-btn-primary" onClick={openCreate} type="button">
+                  <Icon name="plus" size={16} sw={2.4} />
+                  Create Tool
+                </button>
+              </div>
+
+              {isLoading ? (
+                <div className="tools-list-empty">
+                  <strong>Loading tools…</strong>
+                </div>
+              ) : loadError ? (
+                <div className="tools-list-empty">
+                  <strong>Could not load tools</strong>
+                  <span>{loadError}</span>
+                </div>
+              ) : tools.length === 0 ? (
+                <section className="tools-empty">
+                  <span className="tools-empty-icon">
+                    <Icon name="wrench" size={32} sw={1.6} />
+                  </span>
+                  <h2 className="tools-empty-title">No tools yet</h2>
+                  <p className="tools-empty-copy">
+                    Tools let your agents take actions during calls — transfer, hang up, hit APIs,
+                    and more.
+                  </p>
+                  <button
+                    className="tools-btn tools-btn-primary"
+                    onClick={openCreate}
+                    style={{ marginTop: 18 }}
+                    type="button"
+                  >
+                    <Icon name="plus" size={16} sw={2.4} />
+                    Create Tool
+                  </button>
+                </section>
+              ) : visibleTools.length === 0 ? (
+                <div className="tools-list-empty">
+                  <strong>No tools found</strong>
+                  <span>Try another search.</span>
+                </div>
+              ) : (
+                <div className="tools-grid">
+                  {visibleTools.map((tool) => {
+                    const meta = toolMeta(tool.type);
+                    const summary = cardSummary(tool);
+
+                    return (
+                      <button
+                        className="tools-card-item"
+                        key={tool.id}
+                        onClick={() => setSelectedId(tool.id)}
+                        type="button"
+                      >
+                        <span className="tools-card-top">
+                          <span className={`tools-tile tools-tile-lg tools-accent-${meta.accent}`}>
+                            <Icon name={meta.icon} size={20} />
+                          </span>
+                          <span className="tools-badge tools-badge-neutral">{meta.label}</span>
+                        </span>
+                        <span className="tools-card-name">{tool.name}</span>
+                        <span className="tools-card-desc">{tool.description || meta.blurb}</span>
+                        <span className="tools-card-foot">
+                          {summary.method ? (
+                            <span className="tools-chip-method">{summary.method}</span>
+                          ) : null}
+                          <span
+                            className={`tools-chip-line${summary.method ? " tools-mono" : ""}`}
+                          >
+                            {summary.line}
+                          </span>
+                          {summary.tail ? (
+                            <span className="tools-chip-tail">{summary.tail}</span>
+                          ) : null}
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  <button className="tools-add-card" onClick={openCreate} type="button">
+                    <span className="tools-add-icon">
+                      <Icon name="plus" size={20} sw={2.4} />
+                    </span>
+                    <span className="tools-add-label">Create Tool</span>
+                    <span className="tools-add-copy">Another action your agents can take.</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
       </main>
 
       {isCreateOpen ? (
@@ -1477,11 +1581,13 @@ function ToolDetail({
   onSave,
   onDelete,
   onError,
+  onBack,
 }: {
   tool: Tool;
   onSave: (draft: Tool) => Promise<void>;
   onDelete: () => void;
   onError: (message: string) => void;
+  onBack: () => void;
 }) {
   const [draft, setDraft] = useState<Tool>(tool);
   const [isSaving, setIsSaving] = useState(false);
@@ -1548,6 +1654,11 @@ function ToolDetail({
 
   return (
     <div className="tools-detail">
+      <button className="tools-back" onClick={onBack} type="button">
+        <Icon name="back" size={16} sw={2.2} />
+        All tools
+      </button>
+
       <section className="tools-card">
         <div className="tools-detail-head">
           <div className="tools-identity">

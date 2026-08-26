@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
@@ -263,11 +264,13 @@ function iconPaths(name: IconName): ReactNode {
 }
 
 function Icon({
+  className,
   name,
   size = 18,
   stroke = "currentColor",
   sw = 2,
 }: {
+  className?: string;
   name: IconName;
   size?: number;
   stroke?: string;
@@ -276,6 +279,7 @@ function Icon({
   return (
     <svg
       aria-hidden="true"
+      className={className}
       fill="none"
       height={size}
       stroke={stroke}
@@ -615,52 +619,42 @@ const css = `
 .phone-field-value[readonly], .phone-textarea-value[readonly] { color: var(--app-text-soft); }
 .phone-field-value.is-muted { color: var(--subtle); }
 .phone-assignment-grid { display: grid; gap: 8px; }
-.phone-assignment-row {
-  align-items: center;
+.phone-settings-grid { align-items: stretch; display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; }
+.phone-settings-grid > .phone-setting-row {
+  align-content: start;
   background: var(--panel);
   border: 1px solid var(--app-border);
-  border-radius: 11px;
-  display: grid;
-  gap: 12px;
-  grid-template-columns: 86px minmax(0, 1fr);
-  min-height: 48px;
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 12px;
 }
-.phone-assignment-row.is-empty { color: var(--subtle); }
+.phone-settings-grid > .phone-setting-row .phone-field-value { background: var(--surface); }
+.phone-settings-grid > .phone-setting-row .phone-assignment-row { background: var(--surface); }
+.phone-setting-span { grid-column: 1 / -1; }
+.phone-setting-span .phone-assignment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 780px) { .phone-setting-span .phone-assignment-grid { grid-template-columns: 1fr; } }
+.phone-assignment-row {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.phone-assignment-row:hover { border-color: var(--app-border-strong); }
+.phone-assignment-head { align-items: center; display: flex; gap: 8px; justify-content: space-between; min-width: 0; }
 .phone-assignment-direction {
+  background: var(--app-primary-soft-2);
+  border-radius: 6px;
   color: var(--primary-light);
-  font-size: 11px;
+  flex-shrink: 0;
+  font-size: 10px;
   font-weight: 850;
-  letter-spacing: .7px;
+  letter-spacing: .8px;
+  padding: 3px 7px;
   text-transform: uppercase;
 }
-.phone-assignment-main { display: grid; gap: 2px; min-width: 0; }
-.phone-assignment-select {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 800;
-  min-width: 0;
-  outline: none;
-  overflow: hidden;
-  padding: 0 22px 0 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-}
-.phone-assignment-select:disabled { cursor: not-allowed; opacity: .72; }
-.phone-assignment-select option { background: var(--surface); color: var(--text); }
-.phone-assignment-name {
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 800;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.phone-assignment-row.is-empty .phone-assignment-name { color: var(--subtle); }
 .phone-assignment-meta {
   align-items: center;
   color: var(--subtle);
@@ -668,8 +662,107 @@ const css = `
   font-size: 11.5px;
   gap: 6px;
   min-width: 0;
+  overflow: hidden;
 }
-.phone-assignment-dot { background: currentColor; border-radius: 50%; height: 4px; width: 4px; }
+.phone-assignment-meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phone-assignment-dot { background: currentColor; border-radius: 50%; flex-shrink: 0; height: 4px; width: 4px; }
+.phone-agent-select { min-width: 0; position: relative; }
+.phone-agent-trigger {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  gap: 9px;
+  min-height: 42px;
+  min-width: 0;
+  padding: 0 10px;
+  text-align: left;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  width: 100%;
+}
+.phone-agent-trigger:hover:not(:disabled) { background: var(--app-panel-hover); border-color: var(--app-border-strong); }
+.phone-agent-trigger:disabled { cursor: not-allowed; opacity: .6; }
+.phone-agent-select.is-open .phone-agent-trigger,
+.phone-agent-trigger:focus-visible {
+  border-color: var(--app-primary-ring-strong);
+  box-shadow: 0 0 0 4px var(--app-primary-ring);
+  outline: none;
+}
+.phone-agent-avatar {
+  align-items: center;
+  background: var(--app-primary-soft-2);
+  border: 1px solid var(--app-primary-ring);
+  border-radius: 8px;
+  color: var(--primary-light);
+  display: flex;
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-weight: 850;
+  height: 26px;
+  justify-content: center;
+  text-transform: uppercase;
+  width: 26px;
+}
+.phone-agent-avatar.is-empty { background: var(--app-border); border-color: var(--app-border-strong); color: var(--subtle); }
+.phone-agent-name {
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phone-agent-name.is-placeholder { color: var(--subtle); font-weight: 700; }
+.phone-agent-chevron { color: var(--faint); flex-shrink: 0; transform: rotate(90deg); transition: transform .18s ease, color .18s ease; }
+.phone-agent-select.is-open .phone-agent-chevron { color: var(--primary-light); transform: rotate(-90deg); }
+.phone-agent-popover {
+  --subtle: var(--app-subtle);
+  --primary-light: var(--app-primary-light);
+  --text: var(--app-text);
+  background: linear-gradient(180deg, var(--app-panel-hover), var(--app-elevated));
+  border: 1px solid var(--app-border-strong);
+  border-radius: 12px;
+  box-shadow: 0 22px 58px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
+  display: grid;
+  gap: 2px;
+  max-height: 260px;
+  overflow: auto;
+  padding: 6px;
+  position: fixed;
+  z-index: 100;
+}
+.phone-agent-option {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: var(--app-text);
+  cursor: pointer;
+  display: grid;
+  gap: 9px;
+  grid-template-columns: 26px minmax(0, 1fr) 18px;
+  min-height: 38px;
+  padding: 6px 8px;
+  text-align: left;
+  width: 100%;
+}
+.phone-agent-option:hover { background: var(--app-border); }
+.phone-agent-option.is-selected { background: var(--app-primary-soft-2); color: var(--app-primary-text); }
+.phone-agent-option-label { display: grid; gap: 1px; min-width: 0; }
+.phone-agent-option-name { font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phone-agent-option-meta { color: var(--app-muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phone-agent-option-check {
+  align-items: center;
+  color: var(--app-primary-text);
+  display: inline-flex;
+  height: 18px;
+  justify-content: center;
+  width: 18px;
+}
 .phone-detail-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .phone-meta-tile {
   background: var(--panel);
@@ -826,6 +919,9 @@ const css = `
 @media (max-width: 1180px) {
   .phone-workspace { grid-template-columns: minmax(240px, 280px) minmax(0, 1fr); }
   .phone-qr-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 780px) {
+  .phone-settings-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
   .phone-shell { display: block; height: auto; max-height: none; overflow: visible; }
@@ -1652,20 +1748,7 @@ function PhoneNumberDetail({
         </div>
 
         <div className="phone-qr-layout">
-          <div style={{ display: "grid", gap: 16, minWidth: 0 }}>
-            <div className="phone-setting-row">
-              <div className="phone-setting-icon">
-                <Icon name="tag" size={16} />
-              </div>
-              <div className="phone-setting-body">
-                <div>
-                  <div className="phone-setting-label">Phone Number Label</div>
-                  <div className="phone-setting-copy">This label is set when you create the WhatsApp login session.</div>
-                </div>
-                <input className="phone-field-value" readOnly value={displayName(phoneNumber)} />
-              </div>
-            </div>
-
+          <div className="phone-settings-grid">
             <div className="phone-setting-row">
               <div className="phone-setting-icon">
                 <Icon name="message" size={16} />
@@ -1681,33 +1764,7 @@ function PhoneNumberDetail({
               </div>
             </div>
 
-            <div className="phone-setting-row">
-              <div className="phone-setting-icon">
-                <Icon name="phone" size={16} />
-              </div>
-              <div className="phone-setting-body">
-                <div>
-                  <div className="phone-setting-label">Phone Number</div>
-                  <div className="phone-setting-copy">The number or WhatsApp identity associated with this login.</div>
-                </div>
-                <input className="phone-field-value" readOnly value={displayNumber(phoneNumber)} />
-              </div>
-            </div>
-
-            <div className="phone-setting-row">
-              <div className="phone-setting-icon">
-                <Icon name="globe" size={16} />
-              </div>
-              <div className="phone-setting-body">
-                <div>
-                  <div className="phone-setting-label">Provider</div>
-                  <div className="phone-setting-copy">The channel this number is provisioned through.</div>
-                </div>
-                <input className="phone-field-value is-muted" readOnly value="WhatsApp" />
-              </div>
-            </div>
-
-            <div className="phone-setting-row">
+            <div className="phone-setting-row phone-setting-span">
               <div className="phone-setting-icon">
                 <Icon name="agents" size={16} />
               </div>
@@ -1823,6 +1880,13 @@ function StatusChip({ compact = false, status }: { compact?: boolean; status: Ph
   );
 }
 
+function agentOptionMeta(agent: ApiAgentResource) {
+  const direction = agentCallDirection(agent);
+  const directionText =
+    direction === "both" ? "Both directions" : direction === "inbound" ? "Inbound only" : "Outbound only";
+  return `${directionText} - ${agent.agent?.status || "unknown"}`;
+}
+
 function AssignmentRow({
   agent,
   agents,
@@ -1842,22 +1906,8 @@ function AssignmentRow({
 
   return (
     <div className={`phone-assignment-row${agent ? "" : " is-empty"}`}>
-      <div className="phone-assignment-direction">{directionLabel}</div>
-      <div className="phone-assignment-main">
-        <select
-          aria-label={`${directionLabel} agent`}
-          className="phone-assignment-select"
-          disabled={disabled}
-          onChange={(event) => onChange(event.target.value)}
-          value={agent?.id ?? ""}
-        >
-          <option value="">No agent selected</option>
-          {agents.map((item) => (
-            <option key={item.id} value={item.id}>
-              {agentDisplayName(item)}
-            </option>
-          ))}
-        </select>
+      <div className="phone-assignment-head">
+        <span className="phone-assignment-direction">{directionLabel}</span>
         {agent ? (
           <div className="phone-assignment-meta">
             <span>{agent.direction === "both" ? "Both directions" : `${directionLabel} only`}</span>
@@ -1865,9 +1915,155 @@ function AssignmentRow({
             <span>{isSaving ? "Saving..." : agent.status}</span>
           </div>
         ) : (
-          <div className="phone-assignment-meta">{isSaving ? "Saving..." : "Available"}</div>
+          <div className="phone-assignment-meta">{isSaving ? "Saving..." : "Not assigned"}</div>
         )}
       </div>
+      <AgentSelect
+        agents={agents}
+        disabled={disabled}
+        label={`${directionLabel} agent`}
+        onChange={onChange}
+        value={agent?.id ?? ""}
+      />
+    </div>
+  );
+}
+
+function AgentSelect({
+  agents,
+  disabled,
+  label,
+  onChange,
+  value,
+}: {
+  agents: ApiAgentResource[];
+  disabled: boolean;
+  label: string;
+  onChange: (agentId: string) => void;
+  value: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<CSSProperties | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+
+  const selected = agents.find((item) => item.id === value) ?? null;
+  const isOpen = open && !disabled;
+
+  const updatePopoverStyle = useCallback(() => {
+    const node = triggerRef.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    const gap = 6;
+    const spaceBelow = window.innerHeight - rect.bottom - gap - 12;
+    const spaceAbove = rect.top - gap - 12;
+    const openUp = spaceBelow < 190 && spaceAbove > spaceBelow;
+    setPopoverStyle({
+      bottom: openUp ? window.innerHeight - rect.top + gap : undefined,
+      left: rect.left,
+      maxHeight: Math.max(140, Math.min(260, openUp ? spaceAbove : spaceBelow)),
+      top: openUp ? undefined : rect.bottom + gap,
+      width: rect.width,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    window.addEventListener("resize", updatePopoverStyle);
+    window.addEventListener("scroll", updatePopoverStyle, true);
+    return () => {
+      window.removeEventListener("resize", updatePopoverStyle);
+      window.removeEventListener("scroll", updatePopoverStyle, true);
+    };
+  }, [isOpen, updatePopoverStyle]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !popoverRef.current?.contains(target)) setOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const options = [{ description: "Leave this direction unassigned", id: "", name: "No agent selected" }].concat(
+    agents.map((item) => ({
+      description: agentOptionMeta(item),
+      id: item.id,
+      name: agentDisplayName(item),
+    })),
+  );
+
+  return (
+    <div className={`phone-agent-select${isOpen ? " is-open" : ""}`}>
+      <button
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={label}
+        className="phone-agent-trigger"
+        disabled={disabled}
+        onClick={() => {
+          if (!open) updatePopoverStyle();
+          setOpen((current) => !current);
+        }}
+        ref={triggerRef}
+        type="button"
+      >
+        <span className={`phone-agent-avatar${selected ? "" : " is-empty"}`}>
+          {selected ? agentDisplayName(selected).slice(0, 2) : "--"}
+        </span>
+        <span className={`phone-agent-name${selected ? "" : " is-placeholder"}`}>
+          {selected ? agentDisplayName(selected) : "No agent selected"}
+        </span>
+        <Icon className="phone-agent-chevron" name="chevron" size={15} sw={2.4} />
+      </button>
+      {isOpen && popoverStyle
+        ? createPortal(
+            <div className="phone-agent-popover" ref={popoverRef} role="listbox" style={popoverStyle}>
+              {options.map((option) => {
+                const isSelected = option.id === value;
+                return (
+                  <button
+                    aria-selected={isSelected}
+                    className={`phone-agent-option${isSelected ? " is-selected" : ""}`}
+                    key={option.id || "none"}
+                    onClick={() => {
+                      setOpen(false);
+                      if (option.id !== value) onChange(option.id);
+                    }}
+                    role="option"
+                    title={option.name}
+                    type="button"
+                  >
+                    <span className={`phone-agent-avatar${option.id ? "" : " is-empty"}`}>
+                      {option.id ? option.name.slice(0, 2) : "--"}
+                    </span>
+                    <span className="phone-agent-option-label">
+                      <span className="phone-agent-option-name">{option.name}</span>
+                      <span className="phone-agent-option-meta">{option.description}</span>
+                    </span>
+                    <span className="phone-agent-option-check">
+                      {isSelected ? <Icon name="check" size={14} sw={2.6} /> : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
