@@ -1,26 +1,681 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Theme tokens
+
+   Light is the default (bare `:root`). Dark is applied three ways so every
+   state resolves correctly:
+     1. `:root[data-theme="dark"]`      — explicit user choice
+     2. `prefers-color-scheme: dark`    — system default, guarded so an
+        explicit "light" choice still wins
+   Every colour used by the app is defined here in both themes; components
+   must reference `--app-*` tokens rather than raw literals.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Surfaces */
+  --app-bg: #f4f5f8;
+  --app-sidebar: #ffffff;
+  --app-surface: #ffffff;
+  --app-surface-2: #f2f4f7;
+  --app-panel: #f7f8fa;
+  --app-panel-hover: #e9ebf1;
+  --app-elevated: #ffffff;
+  --app-inset: #f3f4f8;
+  --app-topbar: rgba(255, 255, 255, 0.85);
+
+  /* Borders */
+  --app-border: rgba(15, 20, 35, 0.09);
+  --app-border-strong: rgba(15, 20, 35, 0.16);
+  --app-border-soft: rgba(15, 20, 35, 0.05);
+  --app-line: #d9dce4;
+  --app-line-soft: #e6e8ee;
+  --app-line-strong: #c4c9d4;
+
+  /* Text */
+  --app-text: #171a21;
+  --app-text-strong: #05070c;
+  --app-text-soft: #3d424e;
+  --app-muted: #5b6070;
+  --app-subtle: #656b79;
+  --app-faint: #6e7482;
+  --app-nav: #4c5261;
+  --app-nav-hover: #171a21;
+
+  /* Interaction */
+  --app-hover: rgba(15, 20, 35, 0.045);
+  --app-hover-2: rgba(15, 20, 35, 0.065);
+  --app-hover-3: rgba(15, 20, 35, 0.09);
+  --app-overlay: rgba(15, 20, 32, 0.4);
+  --app-shadow-color: rgba(15, 23, 42, 0.14);
+  --app-shadow-color-strong: rgba(15, 23, 42, 0.22);
+  --app-scrollbar: rgba(15, 20, 35, 0.18);
+  --app-shadow-soft: rgba(15, 23, 42, 0.07);
+  --app-input-focus: #ffffff;
+  --app-invert-bg: #14161c;
+  --app-invert-bg-hover: #05070c;
+  --app-invert-text: #ffffff;
+
+  /* Brand */
+  --app-primary: #4f46e5;
+  --app-primary-2: #5b53e8;
+  --app-primary-light: #4338ca;
+  --app-primary-soft: rgba(79, 70, 229, 0.1);
+  --app-primary-soft-2: rgba(79, 70, 229, 0.16);
+  --app-primary-ring: rgba(79, 70, 229, 0.22);
+  --app-primary-ring-strong: rgba(79, 70, 229, 0.4);
+  --app-primary-glow: rgba(79, 70, 229, 0.24);
+  --app-primary-text: #3730a3;
+  --app-primary-border: rgba(79, 70, 229, 0.32);
+  --app-on-accent: #ffffff;
+
+  /* Status — green */
+  --app-green: #047857;
+  --app-green-text: #065f46;
+  --app-green-soft: rgba(5, 150, 105, 0.1);
+  --app-green-soft-2: rgba(5, 150, 105, 0.16);
+  --app-green-border: rgba(5, 150, 105, 0.28);
+
+  /* Status — amber */
+  --app-amber: #b45309;
+  --app-amber-text: #92400e;
+  --app-amber-soft: rgba(217, 119, 6, 0.12);
+  --app-amber-border: rgba(217, 119, 6, 0.3);
+
+  /* Status — rose */
+  --app-rose: #e11d48;
+  --app-rose-text: #be123c;
+  --app-rose-soft: rgba(225, 29, 72, 0.09);
+  --app-rose-soft-2: rgba(225, 29, 72, 0.14);
+  --app-rose-border: rgba(225, 29, 72, 0.28);
+  --app-rose-border-strong: rgba(225, 29, 72, 0.45);
+
+  /* Status — sky / blue */
+  --app-sky: #0369a1;
+  --app-sky-text: #075985;
+  --app-sky-soft: rgba(2, 132, 199, 0.1);
+  --app-sky-border: rgba(2, 132, 199, 0.28);
+  --app-blue: #2563eb;
+  --app-blue-soft: rgba(37, 99, 235, 0.1);
+
+  /* Status — misc accents */
+  --app-orange: #c2410c;
+  --app-orange-soft: rgba(234, 88, 12, 0.12);
+  --app-pink: #db2777;
+  --app-pink-soft: rgba(219, 39, 119, 0.12);
+  --app-slate: #475569;
+  --app-slate-soft: rgba(71, 85, 105, 0.1);
+  --app-teal: #0d9488;
+  --app-purple: #9333ea;
+
+  /* Toasts (dark-on-light surfaces) */
+  --app-toast-success-bg: rgba(236, 253, 245, 0.98);
+  --app-toast-success-text: #065f46;
+  --app-toast-error-bg: rgba(255, 241, 242, 0.98);
+  --app-toast-error-text: #9f1239;
+
+  /* Landing page + legacy aliases */
+  --background: var(--app-bg);
+  --foreground: var(--app-text);
+  --ink: #050505;
+  --brand: #4f46e5;
+  --brand-bright: #6366f1;
+  --brand-light: #4338ca;
+  --live: #059669;
+
+  /* Landing page surfaces (page.tsx uses these through Tailwind vars) */
+  --site-bg: #ffffff;
+  --site-bg-alt: #f4f5f8;
+  --site-panel: #ffffff;
+  --site-nav: rgba(255, 255, 255, 0.85);
+  --site-text: #10131a;
+  --site-text-soft: #3d424e;
+  --site-text-muted: #5b6070;
+  --site-text-faint: #767c8a;
+  --site-border: rgba(15, 20, 35, 0.1);
+  --site-border-strong: rgba(15, 20, 35, 0.16);
+  --site-fill: rgba(15, 20, 35, 0.04);
+  --site-fill-2: rgba(15, 20, 35, 0.07);
+  --site-invert-bg: #0a0a0c;
+  --site-invert-text: #ffffff;
+  --site-grid: rgba(15, 20, 35, 0.05);
+  --site-console-shadow: rgba(15, 23, 42, 0.28);
+  --site-shimmer-1: #312e81;
+  --site-shimmer-2: #6366f1;
+}
+
+/* Dark — system preference, unless the user explicitly chose light */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --app-bg: #0a0a0c;
+    --app-sidebar: #0c0d10;
+    --app-surface: #111216;
+    --app-surface-2: #15161b;
+    --app-panel: #131418;
+    --app-panel-hover: #1b1c22;
+    --app-elevated: #17181d;
+    --app-inset: #0d0e12;
+    --app-topbar: rgba(10, 10, 12, 0.85);
+
+    --app-border: rgba(255, 255, 255, 0.06);
+    --app-border-strong: rgba(255, 255, 255, 0.1);
+    --app-border-soft: rgba(255, 255, 255, 0.035);
+    --app-line: #30313a;
+    --app-line-soft: #202127;
+    --app-line-strong: #3a3b45;
+
+    --app-text: #ededf0;
+    --app-text-strong: #ffffff;
+    --app-text-soft: #d4d4da;
+    --app-muted: #8b8b94;
+    --app-subtle: #7b7b85;
+    --app-faint: #5d5d68;
+    --app-nav: #9a9aa3;
+    --app-nav-hover: #d4d4da;
+
+    --app-hover: rgba(255, 255, 255, 0.04);
+    --app-hover-2: rgba(255, 255, 255, 0.06);
+    --app-hover-3: rgba(255, 255, 255, 0.09);
+    --app-overlay: rgba(0, 0, 0, 0.6);
+    --app-shadow-color: rgba(0, 0, 0, 0.45);
+    --app-shadow-color-strong: rgba(0, 0, 0, 0.6);
+    --app-scrollbar: rgba(255, 255, 255, 0.1);
+    --app-shadow-soft: rgba(0, 0, 0, 0.08);
+    --app-input-focus: #171820;
+    --app-invert-bg: #f5f5f6;
+    --app-invert-bg-hover: #ffffff;
+    --app-invert-text: #111217;
+
+    --app-primary: #4f46e5;
+    --app-primary-2: #6366f1;
+    --app-primary-light: #818cf8;
+    --app-primary-soft: rgba(99, 102, 241, 0.16);
+    --app-primary-soft-2: rgba(99, 102, 241, 0.24);
+    --app-primary-ring: rgba(99, 102, 241, 0.25);
+    --app-primary-ring-strong: rgba(129, 140, 248, 0.6);
+    --app-primary-glow: rgba(79, 70, 229, 0.4);
+    --app-primary-text: #c7d2fe;
+    --app-primary-border: rgba(99, 102, 241, 0.35);
+    --app-on-accent: #ffffff;
+
+    --app-green: #34d399;
+    --app-green-text: #6ee7b7;
+    --app-green-soft: rgba(52, 211, 153, 0.12);
+    --app-green-soft-2: rgba(52, 211, 153, 0.22);
+    --app-green-border: rgba(52, 211, 153, 0.25);
+
+    --app-amber: #fbbf24;
+    --app-amber-text: #fcd34d;
+    --app-amber-soft: rgba(251, 191, 36, 0.12);
+    --app-amber-border: rgba(251, 191, 36, 0.26);
+
+    --app-rose: #fb7185;
+    --app-rose-text: #fda4af;
+    --app-rose-soft: rgba(251, 113, 133, 0.1);
+    --app-rose-soft-2: rgba(251, 113, 133, 0.18);
+    --app-rose-border: rgba(251, 113, 133, 0.3);
+    --app-rose-border-strong: rgba(251, 113, 133, 0.6);
+
+    --app-sky: #38bdf8;
+    --app-sky-text: #7dd3fc;
+    --app-sky-soft: rgba(56, 189, 248, 0.12);
+    --app-sky-border: rgba(56, 189, 248, 0.28);
+    --app-blue: #60a5fa;
+    --app-blue-soft: rgba(96, 165, 250, 0.12);
+
+    --app-orange: #fb923c;
+    --app-orange-soft: rgba(251, 146, 60, 0.12);
+    --app-pink: #f472b6;
+    --app-pink-soft: rgba(244, 114, 182, 0.13);
+    --app-slate: #cbd5e1;
+    --app-slate-soft: rgba(148, 163, 184, 0.12);
+    --app-teal: #2dd4bf;
+    --app-purple: #c084fc;
+
+    --app-toast-success-bg: rgba(16, 44, 34, 0.97);
+    --app-toast-success-text: #d9fbe8;
+    --app-toast-error-bg: rgba(52, 20, 26, 0.97);
+    --app-toast-error-text: #fecdd3;
+
+    --ink: #050505;
+    --brand-light: #818cf8;
+    --live: #34d399;
+
+    --site-bg: #0a0a0c;
+    --site-bg-alt: #0e0f13;
+    --site-panel: #111216;
+    --site-nav: rgba(12, 13, 16, 0.85);
+    --site-text: #ffffff;
+    --site-text-soft: #d4d4d8;
+    --site-text-muted: #a1a1aa;
+    --site-text-faint: #71717a;
+    --site-border: rgba(255, 255, 255, 0.1);
+    --site-border-strong: rgba(255, 255, 255, 0.2);
+    --site-fill: rgba(255, 255, 255, 0.04);
+    --site-fill-2: rgba(255, 255, 255, 0.08);
+    --site-invert-bg: #ffffff;
+    --site-invert-text: #050505;
+    --site-grid: rgba(255, 255, 255, 0.045);
+    --site-console-shadow: rgba(0, 0, 0, 0.9);
+    --site-shimmer-1: #e0e7ff;
+    --site-shimmer-2: #818cf8;
+  }
+}
+
+/* Dark — explicit user choice (wins over system preference in both directions) */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --app-bg: #0a0a0c;
+  --app-sidebar: #0c0d10;
+  --app-surface: #111216;
+  --app-surface-2: #15161b;
+  --app-panel: #131418;
+  --app-panel-hover: #1b1c22;
+  --app-elevated: #17181d;
+  --app-inset: #0d0e12;
+  --app-topbar: rgba(10, 10, 12, 0.85);
+
+  --app-border: rgba(255, 255, 255, 0.06);
+  --app-border-strong: rgba(255, 255, 255, 0.1);
+  --app-border-soft: rgba(255, 255, 255, 0.035);
+  --app-line: #30313a;
+  --app-line-soft: #202127;
+  --app-line-strong: #3a3b45;
+
+  --app-text: #ededf0;
+  --app-text-strong: #ffffff;
+  --app-text-soft: #d4d4da;
+  --app-muted: #8b8b94;
+  --app-subtle: #7b7b85;
+  --app-faint: #5d5d68;
+  --app-nav: #9a9aa3;
+  --app-nav-hover: #d4d4da;
+
+  --app-hover: rgba(255, 255, 255, 0.04);
+  --app-hover-2: rgba(255, 255, 255, 0.06);
+  --app-hover-3: rgba(255, 255, 255, 0.09);
+  --app-overlay: rgba(0, 0, 0, 0.6);
+  --app-shadow-color: rgba(0, 0, 0, 0.45);
+  --app-shadow-color-strong: rgba(0, 0, 0, 0.6);
+  --app-scrollbar: rgba(255, 255, 255, 0.1);
+  --app-shadow-soft: rgba(0, 0, 0, 0.08);
+  --app-input-focus: #171820;
+  --app-invert-bg: #f5f5f6;
+  --app-invert-bg-hover: #ffffff;
+  --app-invert-text: #111217;
+
+  --app-primary: #4f46e5;
+  --app-primary-2: #6366f1;
+  --app-primary-light: #818cf8;
+  --app-primary-soft: rgba(99, 102, 241, 0.16);
+  --app-primary-soft-2: rgba(99, 102, 241, 0.24);
+  --app-primary-ring: rgba(99, 102, 241, 0.25);
+  --app-primary-ring-strong: rgba(129, 140, 248, 0.6);
+  --app-primary-glow: rgba(79, 70, 229, 0.4);
+  --app-primary-text: #c7d2fe;
+  --app-primary-border: rgba(99, 102, 241, 0.35);
+  --app-on-accent: #ffffff;
+
+  --app-green: #34d399;
+  --app-green-text: #6ee7b7;
+  --app-green-soft: rgba(52, 211, 153, 0.12);
+  --app-green-soft-2: rgba(52, 211, 153, 0.22);
+  --app-green-border: rgba(52, 211, 153, 0.25);
+
+  --app-amber: #fbbf24;
+  --app-amber-text: #fcd34d;
+  --app-amber-soft: rgba(251, 191, 36, 0.12);
+  --app-amber-border: rgba(251, 191, 36, 0.26);
+
+  --app-rose: #fb7185;
+  --app-rose-text: #fda4af;
+  --app-rose-soft: rgba(251, 113, 133, 0.1);
+  --app-rose-soft-2: rgba(251, 113, 133, 0.18);
+  --app-rose-border: rgba(251, 113, 133, 0.3);
+  --app-rose-border-strong: rgba(251, 113, 133, 0.6);
+
+  --app-sky: #38bdf8;
+  --app-sky-text: #7dd3fc;
+  --app-sky-soft: rgba(56, 189, 248, 0.12);
+  --app-sky-border: rgba(56, 189, 248, 0.28);
+  --app-blue: #60a5fa;
+  --app-blue-soft: rgba(96, 165, 250, 0.12);
+
+  --app-orange: #fb923c;
+  --app-orange-soft: rgba(251, 146, 60, 0.12);
+  --app-pink: #f472b6;
+  --app-pink-soft: rgba(244, 114, 182, 0.13);
+  --app-slate: #cbd5e1;
+  --app-slate-soft: rgba(148, 163, 184, 0.12);
+  --app-teal: #2dd4bf;
+  --app-purple: #c084fc;
+
+  --app-toast-success-bg: rgba(16, 44, 34, 0.97);
+  --app-toast-success-text: #d9fbe8;
+  --app-toast-error-bg: rgba(52, 20, 26, 0.97);
+  --app-toast-error-text: #fecdd3;
+
+  --ink: #050505;
+  --brand-light: #818cf8;
+  --live: #34d399;
+
+  --site-bg: #0a0a0c;
+  --site-bg-alt: #0e0f13;
+  --site-panel: #111216;
+  --site-nav: rgba(12, 13, 16, 0.85);
+  --site-text: #ffffff;
+  --site-text-soft: #d4d4d8;
+  --site-text-muted: #a1a1aa;
+  --site-text-faint: #71717a;
+  --site-border: rgba(255, 255, 255, 0.1);
+  --site-border-strong: rgba(255, 255, 255, 0.2);
+  --site-fill: rgba(255, 255, 255, 0.04);
+  --site-fill-2: rgba(255, 255, 255, 0.08);
+  --site-invert-bg: #ffffff;
+  --site-invert-text: #050505;
+  --site-grid: rgba(255, 255, 255, 0.045);
+  --site-console-shadow: rgba(0, 0, 0, 0.9);
+  --site-shimmer-1: #e0e7ff;
+  --site-shimmer-2: #818cf8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-brand: var(--brand);
+  --color-brand-bright: var(--brand-bright);
+  --color-brand-light: var(--brand-light);
+  --color-live: var(--live);
+
+  --color-site-bg: var(--site-bg);
+  --color-site-bg-alt: var(--site-bg-alt);
+  --color-site-panel: var(--site-panel);
+  --color-site-nav: var(--site-nav);
+  --color-site-text: var(--site-text);
+  --color-site-text-soft: var(--site-text-soft);
+  --color-site-text-muted: var(--site-text-muted);
+  --color-site-text-faint: var(--site-text-faint);
+  --color-site-border: var(--site-border);
+  --color-site-border-strong: var(--site-border-strong);
+  --color-site-fill: var(--site-fill);
+  --color-site-fill-2: var(--site-fill-2);
+  --color-site-invert-bg: var(--site-invert-bg);
+  --color-site-invert-text: var(--site-invert-text);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-manrope);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+* {
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--brand) 32%, transparent);
+  color: var(--site-text);
+}
+
+/* ---------- Theme toggle ----------
+   Selected state comes from `[data-theme-choice]` on <html>, which the inline
+   script sets before first paint. Nothing here depends on React state, so the
+   control is already correct in the very first painted frame. */
+.theme-toggle {
+  background: var(--app-panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 3px;
+}
+
+.theme-toggle-option {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--app-faint);
+  cursor: pointer;
+  display: flex;
+  height: 28px;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.theme-toggle-option:hover {
+  background: var(--app-hover);
+  color: var(--app-text);
+}
+
+.theme-toggle-option:focus-visible {
+  outline: 2px solid var(--app-primary-light);
+  outline-offset: 1px;
+}
+
+:root[data-theme-choice="light"] .theme-toggle-option[data-theme-value="light"],
+:root[data-theme-choice="dark"] .theme-toggle-option[data-theme-value="dark"],
+:root[data-theme-choice="system"] .theme-toggle-option[data-theme-value="system"],
+:root:not([data-theme-choice]) .theme-toggle-option[data-theme-value="system"] {
+  background: var(--app-primary-soft);
+  box-shadow: inset 0 0 0 1px var(--app-primary-ring);
+  color: var(--app-primary-light);
+}
+
+.theme-toggle-button {
+  align-items: center;
+  background: var(--site-fill);
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  color: var(--site-text-soft);
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+  width: 36px;
+}
+
+.theme-toggle-button:hover {
+  background: var(--site-fill-2);
+  color: var(--site-text);
+}
+
+.theme-toggle-button:focus-visible {
+  outline: 2px solid var(--brand-bright);
+  outline-offset: 2px;
+}
+
+.theme-toggle-icon {
+  display: none;
+}
+
+.theme-toggle-icon > svg {
+  display: block;
+}
+
+:root[data-theme="dark"] .theme-toggle-icon-light,
+:root[data-theme="light"] .theme-toggle-icon-dark,
+:root:not([data-theme]) .theme-toggle-icon-dark {
+  display: flex;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-1.5deg);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--live) 45%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes equalize {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* ---------- Utilities ---------- */
+.animate-float {
+  animation: float-soft 7s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 9s ease-in-out infinite;
+}
+
+.pulse-dot {
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
+.marquee-track {
+  animation: marquee 28s linear infinite;
+}
+
+.eq-bar {
+  transform-origin: bottom;
+  animation: equalize 1.1s ease-in-out infinite;
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--site-shimmer-1) 20%,
+    var(--site-shimmer-2) 40%,
+    var(--site-shimmer-1) 60%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+/* Faint blueprint grid used behind the hero and CTA sections */
+.bg-grid {
+  background-image: linear-gradient(to right, var(--site-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--site-grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Hero entrance — runs once on load */
+.rise {
+  opacity: 0;
+  animation: reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Scroll-driven reveal as progressive enhancement.
+   Without support (or with reduced motion) content stays fully visible. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      opacity: 0;
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 2% cover 26%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .animate-float,
+  .animate-float-slow,
+  .marquee-track,
+  .eq-bar,
+  .pulse-dot,
+  .text-shimmer {
+    animation: none;
+  }
+  .rise {
+    opacity: 1;
+  }
 }

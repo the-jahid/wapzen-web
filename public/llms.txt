@@ -1,0 +1,30 @@
+# WhatsCall Agent
+
+> WhatsCall Agent is a WhatsApp AI voice agent for sales teams. It auto-answers inbound calls, runs outbound follow-up calls, books appointments, and captures qualified leads from every WhatsApp conversation — 24/7, in 40+ languages.
+
+## What it does
+
+- Inbound voice agent: answers missed calls and WhatsApp voice requests on the first ring, qualifies intent, and routes urgent leads to a human.
+- Outbound follow-ups: calls new inquiries, no-shows, renewals, and cold leads with natural AI conversations at scale.
+- Appointment booking: checks availability, books the right slot, sends WhatsApp reminders, and updates the pipeline instantly.
+- Lead collector: captures name, phone, service interest, budget, location, urgency, preferred time, and objection notes — structured for your CRM.
+
+## How it works
+
+1. Greets every caller instantly in the business's tone and the caller's language.
+2. Qualifies the lead: intent, urgency, budget, preferred appointment time.
+3. Books the appointment or warm-transfers high-value calls to a human.
+4. Syncs summaries, reminders, and structured lead data back to the team on WhatsApp.
+
+## Key facts
+
+- Connects through the WhatsApp Business API and works with your existing WhatsApp number.
+- Speaks 40+ languages with automatic language detection.
+- 24/7 coverage with an average lead response time of about 3 minutes.
+- Most teams go live within a day; no developer required.
+- Transcripts and lead data stay encrypted inside your workspace.
+- Built for clinics, real estate teams, agencies, local services, and education consultancies.
+
+## Pages
+
+- [Home](/): product overview, capabilities, workflow, lead capture, FAQ, and demo request form.
