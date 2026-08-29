@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import {
+  navItemsForMode,
+  useWorkspaceMode,
+  WorkspaceModeToggle,
+} from "@/components/nav/workspaceMode";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { clerkAppearance } from "@/components/theme/clerkAppearance";
 import {
@@ -34,6 +39,8 @@ type IconName =
   | "agents"
   | "phone"
   | "phoneOut"
+  | "demo"
+  | "chat"
   | "phoneOff"
   | "calendar"
   | "chart"
@@ -54,12 +61,6 @@ type IconName =
   | "x"
   | "back";
 
-type NavItem = {
-  label: string;
-  icon: IconName;
-  href?: string;
-  badge?: string;
-};
 
 // The tool types the server stores. There is no DTMF variant: WhatsApp calls
 // carry no keypad signalling, so there would be nothing to send.
@@ -105,20 +106,6 @@ type Tool = {
 
 type Notice = { kind: "success" | "error"; text: string };
 
-const navItems: NavItem[] = [
-  { label: "Dashboard", icon: "grid", href: "/dashboard" },
-  { label: "Agents", icon: "agents", href: "/dashboard/agents" },
-  { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
-  { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
-  { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
-  { label: "API Keys", icon: "key", href: "/dashboard/api-keys" },
-  { label: "Calls", icon: "phone", href: "/dashboard/calls" },
-  { label: "Outbound", icon: "target", href: "/dashboard/outbound" },
-  { label: "Demo Call", icon: "phoneOut", href: "/dashboard/demo-call" },
-  { label: "Appointments", badge: "12", icon: "calendar" },
-  { label: "Analytics", icon: "chart" },
-  { label: "Settings", icon: "settings" },
-];
 
 const toolTypes: {
   id: ToolType;
@@ -374,6 +361,20 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M10.7 5.1A16 16 0 0112 5a2 2 0 012 1.7c.1.9.3 1.8.7 2.7a2 2 0 01-.5 2.1l-.8.8" />
           <path d="M6.6 6.6a19.8 19.8 0 002.9 8 19.5 19.5 0 006 6c1.3.6 2.6 1 4 1.2A2 2 0 0021.5 20v-2.6a2 2 0 00-1.7-2 12 12 0 01-2.7-.7" />
           <path d="M3 3l18 18" />
+        </>
+      );
+    case "demo":
+      return (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M10.2 8.6l5.6 3.4-5.6 3.4z" />
+        </>
+      );
+    case "chat":
+      return (
+        <>
+          <path d="M20.5 12.5a7.5 7.5 0 01-7.5 7.5H8l-4.5 2.5V12.5A7.5 7.5 0 0111 5h2a7.5 7.5 0 017.5 7.5z" />
+          <path d="M8.5 12h7M8.5 15.5h4" />
         </>
       );
     case "calendar":
@@ -2026,6 +2027,7 @@ function ToolDetail({
 function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: number }) {
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
+  const { mode } = useWorkspaceMode();
 
   return (
     <aside className="tools-sidebar">
@@ -2042,7 +2044,7 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
       </div>
       <div className="tools-nav-kicker">Menu</div>
       <nav className="tools-nav" aria-label="Dashboard navigation">
-        {navItems.map((item) => {
+        {navItemsForMode(mode).map((item) => {
           const badge = item.label === "Tools" ? String(toolCount) : item.badge;
           const content = (
             <>
@@ -2072,6 +2074,7 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
         })}
       </nav>
       <div className="tools-sidebar-footer">
+        <WorkspaceModeToggle />
         <ThemeToggle />
         <div className="tools-user-card">
           <UserButton appearance={clerkAppearance(resolvedTheme)} />

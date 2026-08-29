@@ -6,6 +6,11 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import {
+  navItemsForMode,
+  useWorkspaceMode,
+  WorkspaceModeToggle,
+} from "@/components/nav/workspaceMode";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { clerkAppearance } from "@/components/theme/clerkAppearance";
 import {
@@ -69,6 +74,8 @@ import {
 type Option<T extends string = string> = {
   id: T;
   label: string;
+  // Optional second line shown under the label inside a SelectField menu.
+  hint?: string;
   disabled?: boolean;
   status?: "available" | "selected";
 };
@@ -259,6 +266,8 @@ type IconName =
   | "agents"
   | "phone"
   | "phoneOut"
+  | "demo"
+  | "chat"
   | "calendar"
   | "chart"
   | "settings"
@@ -672,14 +681,25 @@ const phoneStatusLabels: Record<PhoneNumberStatus, string> = {
 
 // A login session stops producing new QR codes once it reaches one of these,
 // so polling stops there too.
-const terminalLoginStatuses = new Set<PhoneNumberStatus>(["connected", "failed", "expired"]);
+// A login that ended is "disconnected" whichever way it went; failed and expired
+// are only in the status union for older servers.
+const terminalLoginStatuses = new Set<PhoneNumberStatus>(["connected", "disconnected", "failed", "expired"]);
 
 const beginModeOptions: Option<BeginMessageMode>[] = [
-  { id: "agent_speaks_first", label: "Agent speaks first" },
-  { id: "agent_waits_for_user", label: "Agent waits for user" },
+  {
+    id: "agent_speaks_first",
+    label: "Agent speaks first",
+    hint: "Reads the welcome message word for word.",
+  },
+  {
+    id: "agent_waits_for_user",
+    label: "Agent waits for user",
+    hint: "Stays silent until the caller speaks.",
+  },
   {
     id: "agent_speaks_first_with_model_generated_message",
-    label: "Agent speaks first (model-generated)",
+    label: "Agent speaks first (AI)",
+    hint: "Improvises an opener, guided by the message.",
   },
 ];
 
@@ -691,20 +711,6 @@ const configSections: { id: ConfigSectionId; label: string; icon: IconName }[] =
   { id: "tools", label: "Tools", icon: "wrench" },
 ];
 
-const navItems: { label: string; badge?: string; icon: IconName; href?: string }[] = [
-  { label: "Dashboard", icon: "grid", href: "/dashboard" },
-  { label: "Agents", badge: "6", icon: "agents", href: "/dashboard/agents" },
-  { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
-  { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
-  { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
-  { label: "API Keys", icon: "key", href: "/dashboard/api-keys" },
-  { label: "Calls", icon: "phone", href: "/dashboard/calls" },
-  { label: "Outbound", icon: "target", href: "/dashboard/outbound" },
-  { label: "Demo Call", icon: "phoneOut", href: "/dashboard/demo-call" },
-  { label: "Appointments", badge: "12", icon: "calendar" },
-  { label: "Analytics", icon: "chart" },
-  { label: "Settings", icon: "settings" },
-];
 
 // defaultVoice mirrors the schema's voice defaults (OpenAI). Speed and volume
 // are persisted and applied to live calls; the ElevenLabs knobs
@@ -1086,6 +1092,20 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M16 8l5-5" />
           <path d="M21 3h-4M21 3v4" />
           <path d="M21 16.5v3a2 2 0 01-2.2 2 19.5 19.5 0 01-8.5-3 19.2 19.2 0 01-6-6 19.5 19.5 0 01-3-8.5A2 2 0 013.5 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L9.5 11.5a16 16 0 006 6l1.1-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.6 2z" />
+        </>
+      );
+    case "demo":
+      return (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M10.2 8.6l5.6 3.4-5.6 3.4z" />
+        </>
+      );
+    case "chat":
+      return (
+        <>
+          <path d="M20.5 12.5a7.5 7.5 0 01-7.5 7.5H8l-4.5 2.5V12.5A7.5 7.5 0 0111 5h2a7.5 7.5 0 017.5 7.5z" />
+          <path d="M8.5 12h7M8.5 15.5h4" />
         </>
       );
     case "calendar":
@@ -1624,7 +1644,7 @@ const css = `
 .editor-card-grow { min-height: 245px; }
 .editor-card-head { align-items: center; display: flex; gap: 12px; justify-content: space-between; margin-bottom: 12px; }
 .editor-card-title { font-size: 13.5px; font-weight: 850; letter-spacing: -.1px; margin: 0; }
-.mini-select { max-width: 190px; }
+.agents-textarea:disabled { color: var(--subtle); cursor: not-allowed; opacity: .55; resize: none; }
 .helper-line { color: var(--subtle); font-size: 12px; margin-top: 9px; }
 .config-notice {
   background: var(--app-primary-soft);
@@ -1877,7 +1897,28 @@ const css = `
   cursor: not-allowed;
   opacity: .75;
 }
+.select-field-option-text { display: grid; gap: 2px; min-width: 0; }
 .select-field-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.select-field-option-hint {
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: normal;
+}
+.select-field-option.is-selected .select-field-option-hint { color: var(--app-primary-text); opacity: .8; }
+.select-field-popover-rich .select-field-option { align-items: flex-start; min-height: 0; padding: 9px 9px 9px 10px; }
+.select-field-popover-rich .select-field-option + .select-field-option { margin-top: 2px; }
+.select-field-compact { display: inline-grid; max-width: 100%; }
+.select-field-compact .select-field-trigger {
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  min-height: 32px;
+  padding: 0 8px 0 11px;
+}
 .select-field-option-check {
   align-items: center;
   background: var(--app-primary-soft);
@@ -2824,14 +2865,21 @@ function SearchableSelect({
 }
 
 function SelectField<T extends string>({
+  // "compact" is the inline variant used inside card headers: a small pill
+  // trigger whose menu is wider than the trigger and right-aligned to it, so
+  // long option labels stay readable without stretching the header.
+  align = "start",
+  compact = false,
   disabled,
   label,
   onChange,
   options,
   value,
 }: {
+  align?: "start" | "end";
+  compact?: boolean;
   disabled?: boolean;
-  label: string;
+  label?: string;
   onChange: (value: T) => void;
   options: Option<T>[];
   value: T;
@@ -2857,11 +2905,19 @@ function SelectField<T extends string>({
       const openUp = availableBelow < 180 && availableAbove > availableBelow;
       const availableHeight = Math.max(96, Math.min(maxHeight, openUp ? availableAbove - gap : availableBelow - gap));
 
+      const width = compact
+        ? Math.min(Math.max(rect.width, 264), window.innerWidth - viewportPadding * 2)
+        : rect.width;
+      const left =
+        align === "end"
+          ? Math.max(viewportPadding, rect.right - width)
+          : Math.min(rect.left, window.innerWidth - viewportPadding - width);
+
       setPopoverStyle({
-        left: rect.left,
+        left,
         top: openUp ? undefined : rect.bottom + gap,
         bottom: openUp ? window.innerHeight - rect.top + gap : undefined,
-        width: rect.width,
+        width,
         maxHeight: availableHeight,
       });
     }
@@ -2873,7 +2929,7 @@ function SelectField<T extends string>({
       window.removeEventListener("resize", updatePopoverStyle);
       window.removeEventListener("scroll", updatePopoverStyle, true);
     };
-  }, [open]);
+  }, [align, compact, open]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -2895,10 +2951,12 @@ function SelectField<T extends string>({
 
   return (
     <div
-      className={`select-field${open ? " is-open" : ""}${disabled ? " field-row-disabled" : ""}`}
+      className={`select-field${compact ? " select-field-compact" : ""}${open ? " is-open" : ""}${
+        disabled ? " field-row-disabled" : ""
+      }`}
       ref={ref}
     >
-      <span className="field-label">{label}</span>
+      {label ? <span className="field-label">{label}</span> : null}
       <button
         aria-expanded={open}
         className="select-field-trigger"
@@ -2910,7 +2968,12 @@ function SelectField<T extends string>({
         <Icon className="select-field-chevron" name="chevron" size={16} sw={2.4} />
       </button>
       {open && !disabled && popoverStyle ? createPortal(
-        <div className="select-field-popover" ref={popoverRef} role="listbox" style={popoverStyle}>
+        <div
+          className={`select-field-popover${compact ? " select-field-popover-rich" : ""}`}
+          ref={popoverRef}
+          role="listbox"
+          style={popoverStyle}
+        >
           {options.map((option) => {
             const isSelected = option.id === value;
             return (
@@ -2928,7 +2991,12 @@ function SelectField<T extends string>({
                 title={option.label}
                 type="button"
               >
-                <span className="select-field-option-label">{option.label}</span>
+                <span className="select-field-option-text">
+                  <span className="select-field-option-label">{option.label}</span>
+                  {option.hint ? (
+                    <span className="select-field-option-hint">{option.hint}</span>
+                  ) : null}
+                </span>
                 {isSelected ? (
                   <span className="select-field-option-check">
                     <Icon name="check" size={12} sw={2.5} />
@@ -4166,26 +4234,33 @@ export default function AgentsPage() {
               <div className="agents-card editor-card">
                 <div className="editor-card-head">
                   <h3 className="editor-card-title">Welcome Message</h3>
-                  <select
-                    className="agents-select mini-select"
-                    onChange={(event) =>
-                      patchSelected({ begin_message_mode: event.target.value as BeginMessageMode })
+                  <SelectField
+                    align="end"
+                    compact
+                    onChange={(begin_message_mode: BeginMessageMode) =>
+                      patchSelected({ begin_message_mode })
                     }
+                    options={beginModeOptions}
                     value={selectedAgent.begin_message_mode}
-                  >
-                    <option value="agent_speaks_first">Agent begins (exact message)</option>
-                    <option value="agent_waits_for_user">User begins</option>
-                    <option value="agent_speaks_first_with_model_generated_message">
-                      Agent begins (AI-generated message)
-                    </option>
-                  </select>
+                  />
                 </div>
                 <textarea
                   className="agents-textarea"
+                  disabled={selectedAgent.begin_message_mode === "agent_waits_for_user"}
                   onChange={(event) => patchSelected({ welcome_message: event.target.value })}
+                  placeholder={
+                    selectedAgent.begin_message_mode ===
+                    "agent_speaks_first_with_model_generated_message"
+                      ? "Describe the opener the agent should improvise..."
+                      : "What the agent says as soon as the call connects..."
+                  }
                   value={selectedAgent.welcome_message}
                 />
-                <div className="helper-line">Starts after {selectedAgent.welcome_delay_ms} ms</div>
+                <div className="helper-line">
+                  {selectedAgent.begin_message_mode === "agent_waits_for_user"
+                    ? "The agent stays silent until the caller speaks."
+                    : `Starts after ${selectedAgent.welcome_delay_ms} ms`}
+                </div>
               </div>
 
               <div className="agents-card editor-card editor-card-grow">
@@ -4355,6 +4430,7 @@ export default function AgentsPage() {
 function Sidebar({ agentCount }: { agentCount: number }) {
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
+  const { mode } = useWorkspaceMode();
   return (
     <aside className="agents-sidebar">
       <div className="agents-logo">
@@ -4370,7 +4446,7 @@ function Sidebar({ agentCount }: { agentCount: number }) {
       </div>
       <div className="agents-nav-kicker">Menu</div>
       <nav className="agents-nav" aria-label="Dashboard navigation">
-        {navItems.map((item) => {
+        {navItemsForMode(mode).map((item) => {
           const content = (
             <>
               <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
@@ -4403,6 +4479,7 @@ function Sidebar({ agentCount }: { agentCount: number }) {
         })}
       </nav>
       <div className="agents-sidebar-footer">
+        <WorkspaceModeToggle />
         <ThemeToggle />
         <div className="agents-user-card">
           <UserButton appearance={clerkAppearance(resolvedTheme)} />

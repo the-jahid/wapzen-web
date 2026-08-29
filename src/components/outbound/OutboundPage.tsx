@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNo
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import {
+  navItemsForMode,
+  useWorkspaceMode,
+  WorkspaceModeToggle,
+} from "@/components/nav/workspaceMode";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { clerkAppearance } from "@/components/theme/clerkAppearance";
 import {
@@ -23,8 +28,7 @@ import CampaignLeadsWorkspace from "@/components/outbound/CampaignLeadsWorkspace
 import CampaignCallsWorkspace from "@/components/outbound/CampaignCallsWorkspace";
 import CampaignAnalyticsWorkspace from "@/components/outbound/CampaignAnalyticsWorkspace";
 
-type IconName = "grid" | "agents" | "phone" | "phoneOut" | "calendar" | "chart" | "settings" | "spark" | "key" | "book" | "wrench" | "target" | "plus" | "edit" | "trash" | "refresh" | "x";
-type NavItem = { label: string; icon: IconName; href?: string; badge?: string };
+type IconName = "grid" | "agents" | "phone" | "phoneOut" | "demo" | "chat" | "calendar" | "chart" | "settings" | "spark" | "key" | "book" | "wrench" | "target" | "plus" | "edit" | "trash" | "refresh" | "x";
 type Notice = { kind: "success" | "error"; text: string };
 type LoadState = "loading" | "ready" | "error";
 type CampaignTab = "overview" | "calls" | "leads" | "analytics";
@@ -35,21 +39,6 @@ type CampaignTab = "overview" | "calls" | "leads" | "analytics";
 // with no number assigned cannot dial, so phoneNumberId is what makes an option
 // selectable, and phoneLabel is only how it reads.
 type AgentOption = { id: string; name: string; phoneNumberId: string | null; phoneLabel: string | null };
-
-const navItems: NavItem[] = [
-  { label: "Dashboard", icon: "grid", href: "/dashboard" },
-  { label: "Agents", icon: "agents", href: "/dashboard/agents" },
-  { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
-  { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
-  { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
-  { label: "API Keys", icon: "key", href: "/dashboard/api-keys" },
-  { label: "Calls", icon: "phone", href: "/dashboard/calls" },
-  { label: "Outbound", icon: "target", href: "/dashboard/outbound" },
-  { label: "Demo Call", icon: "phoneOut", href: "/dashboard/demo-call" },
-  { label: "Appointments", badge: "12", icon: "calendar" },
-  { label: "Analytics", icon: "chart" },
-  { label: "Settings", icon: "settings" },
-];
 
 const campaignTabs: { id: CampaignTab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -65,6 +54,7 @@ const statusLabels: Record<OutboundCampaignStatus, string> = {
   completed: "Completed",
   failed: "Failed",
 };
+
 const numberFormatter = new Intl.NumberFormat("en-US");
 const moneyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormatter = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -75,6 +65,8 @@ function iconPaths(name: IconName): ReactNode {
     case "agents": return <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0112 0v1M19 8v4M21 10h-4" /></>;
     case "phone": return <path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.6A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.7 2.7a2 2 0 01-.5 2.1L8.1 9.9a16 16 0 006 6l1.4-1.2a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z" />;
     case "phoneOut": return <><path d="M16 8l5-5M21 3h-4M21 3v4" /><path d="M21 16.5v3a2 2 0 01-2.2 2 19.5 19.5 0 01-8.5-3 19.2 19.2 0 01-6-6 19.5 19.5 0 01-3-8.5A2 2 0 013.5 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L9.5 11.5a16 16 0 006 6l1.1-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.6 2z" /></>;
+    case "demo": return <><circle cx="12" cy="12" r="9" /><path d="M10.2 8.6l5.6 3.4-5.6 3.4z" /></>;
+    case "chat": return <><path d="M20.5 12.5a7.5 7.5 0 01-7.5 7.5H8l-4.5 2.5V12.5A7.5 7.5 0 0111 5h2a7.5 7.5 0 017.5 7.5z" /><path d="M8.5 12h7M8.5 15.5h4" /></>;
     case "calendar": return <><rect height="18" rx="2" width="18" x="3" y="4" /><path d="M16 2v4M8 2v4M3 10h18" /></>;
     case "chart": return <path d="M4 19V5M8 19v-6M12 19V9M16 19v-8M20 19V7" />;
     case "settings": return <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z" /></>;
@@ -113,16 +105,17 @@ function allowedStatuses(status: OutboundCampaignStatus): OutboundCampaignStatus
 function Sidebar({ campaignCount }: { campaignCount: number }) {
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
+  const { mode } = useWorkspaceMode();
   const displayName = user?.fullName || user?.firstName || "Account";
   const email = user?.primaryEmailAddress?.emailAddress || "";
   return <aside className="ob-sidebar">
     <div className="ob-logo"><span className="ob-logo-mark"><Icon name="spark" size={18} /></span><div><div className="ob-logo-name">Voca</div><div className="ob-logo-sub">AI Voice Agents</div></div></div>
     <div className="ob-nav-kicker">Menu</div>
-    <nav className="ob-nav">{navItems.map((item) => {
+    <nav className="ob-nav">{navItemsForMode(mode).map((item) => {
       const content = <><Icon name={item.icon} size={18} /><span>{item.label}</span>{item.label === "Outbound" && campaignCount > 0 ? <span className="ob-nav-badge">{campaignCount}</span> : item.badge ? <span className="ob-nav-badge">{item.badge}</span> : null}</>;
       return item.href ? <Link className={`ob-nav-item${item.label === "Outbound" ? " is-active" : ""}`} href={item.href} key={item.label}>{content}</Link> : <span className="ob-nav-item" key={item.label}>{content}</span>;
     })}</nav>
-    <div className="ob-sidebar-footer"><ThemeToggle /><div className="ob-user-card"><UserButton appearance={clerkAppearance(resolvedTheme)} /><div className="ob-user-copy"><div className="ob-user-name">{displayName}</div><div className="ob-user-email">{email}</div></div></div></div>
+    <div className="ob-sidebar-footer"><WorkspaceModeToggle /><ThemeToggle /><div className="ob-user-card"><UserButton appearance={clerkAppearance(resolvedTheme)} /><div className="ob-user-copy"><div className="ob-user-name">{displayName}</div><div className="ob-user-email">{email}</div></div></div></div>
   </aside>;
 }
 
