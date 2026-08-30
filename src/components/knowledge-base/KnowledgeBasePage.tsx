@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { motion } from "motion/react";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
@@ -67,11 +69,13 @@ function fromApi(base: ApiKnowledgeBase): KnowledgeBase {
 
 type IconName =
   | "grid"
+  | "list"
   | "agents"
   | "phone"
   | "phoneOut"
   | "demo"
   | "chat"
+  | "message"
   | "calendar"
   | "chart"
   | "settings"
@@ -96,6 +100,7 @@ type IconName =
 
 
 type Notice = { kind: "success" | "error"; text: string };
+type BrowseView = "list" | "grid";
 
 // Shown on the one control whose endpoint does not exist yet: re-indexing a
 // knowledge base from its sources.
@@ -117,6 +122,13 @@ function iconPaths(name: IconName): ReactNode {
           <rect height="5" rx="1.5" width="7" x="14" y="3" />
           <rect height="9" rx="1.5" width="7" x="14" y="12" />
           <rect height="5" rx="1.5" width="7" x="3" y="16" />
+        </>
+      );
+    case "list":
+      return (
+        <>
+          <path d="M8 6h13M8 12h13M8 18h13" />
+          <path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
         </>
       );
     case "agents":
@@ -151,6 +163,8 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M8.5 12h7M8.5 15.5h4" />
         </>
       );
+    case "message":
+      return <path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z" />;
     case "calendar":
       return (
         <>
@@ -418,6 +432,82 @@ const css = `
   margin-left: auto;
   padding: 6px 10px;
 }
+.kb-view-toggle {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+}
+.kb-view-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  transition: background .18s ease, box-shadow .18s ease, color .18s ease;
+  width: 34px;
+}
+.kb-view-btn:hover { color: var(--text); }
+.kb-view-btn.is-active {
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 1px var(--app-primary-ring);
+  color: var(--app-primary-text);
+}
+.expandable-card-backdrop {
+  background: var(--app-overlay);
+  inset: 0;
+  position: fixed;
+  z-index: 80;
+}
+.expandable-card-stage {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+  position: fixed;
+  z-index: 90;
+}
+.expandable-card-panel { pointer-events: auto; }
+.kb-expandable-card {
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
+  max-height: min(820px, calc(100vh - 48px));
+  max-width: 1040px;
+  overflow: auto;
+  padding: 16px;
+  width: 100%;
+}
+.kb-expandable-topline {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.kb-expandable-label { color: var(--subtle); font-size: 11px; font-weight: 850; letter-spacing: .7px; text-transform: uppercase; }
+.kb-expandable-close {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+.kb-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
+.kb-expandable-card .kb-detail-layout { max-width: none; }
 .kb-detail-layout { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 1320px; width: 100%; }
 .kb-detail-grid { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 320px; }
 .kb-back {
@@ -457,6 +547,32 @@ const css = `
 .kb-input:focus { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
 .kb-search .kb-input { padding-left: 34px; }
 .kb-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+.kb-list { display: flex; flex-direction: column; gap: 10px; }
+.kb-row {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 36px minmax(180px, 1.2fr) minmax(160px, .9fr) auto auto 18px;
+  padding: 13px 16px;
+  text-align: left;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  width: 100%;
+}
+.kb-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); }
+.kb-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.kb-row-identity { display: grid; gap: 3px; min-width: 0; }
+.kb-row-name { font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-row-sub { color: var(--subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-row-stats { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 11.5px; gap: 8px; min-width: 0; }
+.kb-row-stat { align-items: center; display: inline-flex; gap: 5px; white-space: nowrap; }
+.kb-row-time { align-items: center; color: var(--subtle); display: inline-flex; font-size: 11.5px; gap: 5px; white-space: nowrap; }
+.kb-row-chevron { color: var(--faint); display: inline-flex; transition: color .18s ease, transform .18s ease; }
+.kb-row:hover .kb-row-chevron { color: var(--primary-light); transform: translateX(2px); }
 .kb-card-item {
   color: inherit;
   cursor: pointer;
@@ -768,7 +884,7 @@ const css = `
   justify-content: center;
   padding: 24px;
   position: fixed;
-  z-index: 70;
+  z-index: 120;
 }
 .kb-modal {
   animation: kb-modal-in .18s ease;
@@ -804,12 +920,14 @@ const css = `
   padding: 12px 18px;
   position: fixed;
   transform: translateX(-50%);
-  z-index: 80;
+  z-index: 130;
 }
 .kb-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-green-text); }
 .kb-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 @media (max-width: 1240px) {
   .kb-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .kb-row { grid-template-columns: 36px minmax(180px, 1fr) minmax(150px, .8fr) auto 18px; }
+  .kb-row-time { display: none; }
 }
 @media (max-width: 980px) {
   .kb-shell { display: block; }
@@ -827,6 +945,10 @@ const css = `
   .kb-toolbar .kb-btn-primary { flex: 1 1 auto; }
   .kb-detail-actions { width: 100%; }
   .kb-detail-actions .kb-btn { flex: 1; }
+  .kb-row { gap: 10px; grid-template-columns: 36px minmax(0, 1fr) auto 18px; padding: 12px; }
+  .kb-row-stats { grid-column: 2 / -1; grid-row: 2; }
+  .expandable-card-stage { align-items: stretch; padding: 0; }
+  .kb-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; padding: 14px; }
 }
 `;
 
@@ -863,12 +985,14 @@ function sourceDetail(source: KnowledgeBaseSource) {
 
 export default function KnowledgeBasePage() {
   const { getToken, isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  const { mode } = useWorkspaceMode();
   const [bases, setBases] = useState<KnowledgeBase[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState("");
+  const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newMaxChunkSize, setNewMaxChunkSize] = useState(2000);
@@ -898,6 +1022,7 @@ export default function KnowledgeBasePage() {
   const authError = !isAuthLoaded ? null : !isSignedIn ? "Sign in to manage knowledge bases." : null;
   const effectiveLoadState = !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadError = authError ?? loadError;
+  const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -1129,11 +1254,25 @@ export default function KnowledgeBasePage() {
 
         <div className="kb-content">
           {selected ? (
+            <ExpandableCardDemoStandard
+              className="kb-expandable-card"
+              dismissDisabled={isAddingSources || Boolean(pendingDelete) || Boolean(pendingSourceDelete)}
+              layoutId={`knowledge-base-${selected.knowledge_base_id}`}
+              onClose={() => setSelectedId(null)}
+              open
+            >
             <div className="kb-detail-layout">
-              <button className="kb-back" onClick={() => setSelectedId(null)} type="button">
-                <Icon name="back" size={16} sw={2.2} />
-                All knowledge bases
-              </button>
+              <div className="kb-expandable-topline">
+                <span className="kb-expandable-label">Knowledge base details</span>
+                <button
+                  aria-label="Close knowledge base details"
+                  className="kb-expandable-close"
+                  onClick={() => setSelectedId(null)}
+                  type="button"
+                >
+                  <Icon name="x" size={16} sw={2.4} />
+                </button>
+              </div>
 
               <div className="kb-detail-grid">
               <div className="kb-detail-column">
@@ -1264,6 +1403,7 @@ export default function KnowledgeBasePage() {
               />
               </div>
             </div>
+            </ExpandableCardDemoStandard>
           ) : (
             <div className="kb-browse">
               <div className="kb-toolbar">
@@ -1276,6 +1416,28 @@ export default function KnowledgeBasePage() {
                     value={query}
                   />
                 </label>
+                <div aria-label="View" className="kb-view-toggle" role="group">
+                  <button
+                    aria-label="List view"
+                    aria-pressed={viewMode === "list"}
+                    className={`kb-view-btn${viewMode === "list" ? " is-active" : ""}`}
+                    onClick={() => setViewModeOverride("list")}
+                    title="List view"
+                    type="button"
+                  >
+                    <Icon name="list" size={16} sw={2.2} />
+                  </button>
+                  <button
+                    aria-label="Grid view"
+                    aria-pressed={viewMode === "grid"}
+                    className={`kb-view-btn${viewMode === "grid" ? " is-active" : ""}`}
+                    onClick={() => setViewModeOverride("grid")}
+                    title="Grid view"
+                    type="button"
+                  >
+                    <Icon name="grid" size={16} sw={2.2} />
+                  </button>
+                </div>
                 <span className="kb-count">
                   {effectiveLoadState === "loading"
                     ? "Loading…"
@@ -1322,12 +1484,62 @@ export default function KnowledgeBasePage() {
                 <div className="kb-empty">
                   <p>No knowledge bases match “{query}”.</p>
                 </div>
+              ) : viewMode === "list" ? (
+                <div className="kb-list">
+                  {filtered.map((base) => {
+                    const sourceCount = base.knowledge_base_sources.length;
+                    const chunkCount = base.knowledge_base_sources.reduce(
+                      (total, source) => total + source.chunk_count,
+                      0
+                    );
+                    return (
+                      <motion.button
+                        className="kb-row"
+                        key={base.knowledge_base_id}
+                        layoutId={`knowledge-base-${base.knowledge_base_id}`}
+                        onClick={() => setSelectedId(base.knowledge_base_id)}
+                        type="button"
+                      >
+                        <span className="kb-avatar">
+                          <Icon name="book" size={18} />
+                        </span>
+                        <span className="kb-row-identity">
+                          <span className="kb-row-name">{base.knowledge_base_name}</span>
+                          <span className="kb-row-sub">{cardSummary(base)}</span>
+                        </span>
+                        <span className="kb-row-stats">
+                          <span className="kb-row-stat">
+                            <Icon name="file" size={12} />
+                            {sourceCount} {sourceCount === 1 ? "source" : "sources"}
+                          </span>
+                          <span className="kb-row-stat">
+                            <Icon name="layers" size={12} />
+                            {chunkCount} {chunkCount === 1 ? "chunk" : "chunks"}
+                          </span>
+                          <span className="kb-row-stat">
+                            <Icon name="refresh" size={12} />
+                            {base.enable_auto_refresh ? "Auto" : "Manual"}
+                          </span>
+                        </span>
+                        <span className="kb-row-time" title="Last refreshed">
+                          <Icon name="clock" size={12} />
+                          {formatShortTimestamp(base.last_refreshed_timestamp)}
+                        </span>
+                        <StatusPill status={base.status} />
+                        <span className="kb-row-chevron">
+                          <Icon name="chevron" size={16} sw={2.3} />
+                        </span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="kb-grid">
                   {filtered.map((base) => (
-                    <button
+                    <motion.button
                       className="kb-card kb-card-item"
                       key={base.knowledge_base_id}
+                      layoutId={`knowledge-base-${base.knowledge_base_id}`}
                       onClick={() => setSelectedId(base.knowledge_base_id)}
                       type="button"
                     >
@@ -1356,7 +1568,7 @@ export default function KnowledgeBasePage() {
                           {formatShortTimestamp(base.last_refreshed_timestamp)}
                         </span>
                       </span>
-                    </button>
+                    </motion.button>
                   ))}
 
                   <button className="kb-add-card" onClick={openCreate} type="button">

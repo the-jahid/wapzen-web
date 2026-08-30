@@ -4,12 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { motion } from "motion/react";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
   useWorkspaceMode,
   WorkspaceModeToggle,
 } from "@/components/nav/workspaceMode";
+import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { clerkAppearance } from "@/components/theme/clerkAppearance";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
@@ -39,6 +42,7 @@ type IconName =
   | "phone"
   | "demo"
   | "chat"
+  | "message"
   | "calendar"
   | "chart"
   | "settings"
@@ -59,10 +63,55 @@ type IconName =
 // chat-agent contract.
 type ConfigSectionId = "model" | "knowledge-base" | "tools";
 
+// The editor's two tabs. "agent" is everything that configures the agent;
+// "conversation" is the record of what it has already said.
+type EditorTab = "agent" | "conversation";
+
+const editorTabs: { id: EditorTab; label: string }[] = [
+  { id: "agent", label: "Agent" },
+  { id: "conversation", label: "Conversation" },
+];
+
 
 const providerModels: Record<ChatModelProvider, string[]> = {
-  openai: ["gpt-4.1-mini", "gpt-4.1", "gpt-4o", "gpt-4o-mini"],
-  anthropic: ["claude-sonnet-5", "claude-opus-5", "claude-haiku-4-5-20251001"],
+  openai: [
+    "gpt-5.6-sol",
+    "gpt-5.6-terra",
+    "gpt-5.6-luna",
+    "gpt-5.5",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-5.4-nano",
+    "gpt-5.2",
+    "gpt-5.1",
+    "gpt-5-pro",
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-5-chat-latest",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
+    "gpt-4o",
+    "gpt-4o-mini",
+    "o3",
+    "o4-mini",
+  ],
+  anthropic: [
+    "claude-fable-5",
+    "claude-opus-5",
+    "claude-sonnet-5",
+    "claude-haiku-4-5-20251001",
+    "claude-sonnet-4-6",
+    "claude-sonnet-4-5-20250929",
+    "claude-sonnet-4-20250514",
+    "claude-opus-4-8",
+    "claude-opus-4-7",
+    "claude-opus-4-6",
+    "claude-opus-4-5-20251101",
+    "claude-opus-4-1",
+    "claude-opus-4-20250514",
+  ],
 };
 
 const phoneStatusLabels: Record<PhoneNumberStatus, string> = {
@@ -131,6 +180,8 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M8.5 12h7M8.5 15.5h4" />
         </>
       );
+    case "message":
+      return <path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z" />;
     case "calendar":
       return (
         <>
@@ -322,11 +373,61 @@ const css = `
 .chat-workspace {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(250px, 285px) minmax(380px, 1fr) minmax(320px, 380px);
+  grid-template-columns: minmax(0, 1fr);
   flex: 1 1 auto;
   min-height: 0;
 }
 .chat-workspace > * { min-height: 0; max-height: 100%; }
+.chat-agent-browser { margin: 0 auto; max-width: 1320px; width: 100%; }
+.expandable-card-backdrop { background: var(--app-overlay); inset: 0; position: fixed; z-index: 80; }
+.expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
+.expandable-card-panel { pointer-events: auto; }
+.chat-agent-expandable {
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
+  height: min(820px, calc(100vh - 48px));
+  max-width: 1180px;
+  overflow: hidden;
+  width: 100%;
+}
+.chat-agent-expanded-shell { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.chat-agent-expanded-topline {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--subtle);
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  font-weight: 850;
+  justify-content: space-between;
+  letter-spacing: .75px;
+  padding: 12px 16px;
+  text-transform: uppercase;
+}
+.chat-agent-expanded-close {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+.chat-agent-expanded-close:hover { background: var(--panel-hover); color: var(--text); }
+.chat-agent-expanded-grid {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 370px);
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px;
+}
 .chat-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -367,6 +468,95 @@ const css = `
   padding: 0 34px 0 12px;
 }
 .chat-select option { background: var(--surface); color: var(--text); }
+.chat-model-picker, .chat-provider-picker { position: relative; }
+.chat-modal-section:has(.chat-picker-trigger.is-open),
+.chat-accordion-item:has(.chat-picker-trigger.is-open) { position: relative; z-index: 5; }
+.chat-accordion-item:has(.chat-picker-trigger.is-open) { overflow: visible; }
+.chat-picker-trigger {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  gap: 3px 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 48px;
+  padding: 7px 10px 7px 12px;
+  text-align: left;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  width: 100%;
+}
+.chat-picker-trigger:hover { background: var(--panel-hover); border-color: var(--app-border-strong); }
+.chat-picker-trigger.is-open { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
+.chat-model-trigger {
+  min-height: 48px;
+}
+.chat-model-trigger-title { font-size: 13px; font-weight: 780; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-model-trigger-id { color: var(--faint); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-picker-trigger-chevron { color: var(--subtle); display: inline-flex; grid-column: 2; grid-row: 1 / 3; transition: transform .18s ease; }
+.chat-picker-trigger.is-open .chat-picker-trigger-chevron { color: var(--primary-light); transform: rotate(180deg); }
+.chat-picker-menu {
+  background: var(--surface);
+  border: 1px solid var(--app-border-strong);
+  border-radius: 12px;
+  box-shadow: 0 16px 42px var(--app-shadow-color);
+  display: grid;
+  gap: 8px;
+  left: 0;
+  margin-top: 7px;
+  padding: 8px;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 30;
+}
+.chat-provider-trigger { min-height: 48px; }
+.chat-provider-value { align-items: center; display: flex; font-size: 13px; font-weight: 780; gap: 9px; }
+.chat-provider-mark {
+  align-items: center;
+  background: var(--primary-soft);
+  border: 1px solid var(--app-primary-border);
+  border-radius: 7px;
+  color: var(--primary-light);
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 900;
+  height: 24px;
+  justify-content: center;
+  letter-spacing: -.2px;
+  width: 24px;
+}
+.chat-provider-menu { gap: 3px; padding: 6px; }
+.chat-provider-option { align-items: center; grid-template-columns: auto minmax(0, 1fr) auto; }
+.chat-provider-option .chat-model-option-check { grid-column: 3; grid-row: 1; }
+.chat-model-search { position: relative; }
+.chat-model-search-icon { color: var(--faint); display: inline-flex; left: 10px; position: absolute; top: 50%; transform: translateY(-50%); }
+.chat-model-search .chat-input { height: 36px; padding-left: 34px; }
+.chat-model-list { display: grid; gap: 3px; max-height: 252px; overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
+.chat-model-group + .chat-model-group { border-top: 1px solid var(--border); margin-top: 5px; padding-top: 7px; }
+.chat-model-group-title { color: var(--faint); font-size: 9.5px; font-weight: 850; letter-spacing: .8px; padding: 3px 8px 5px; text-transform: uppercase; }
+.chat-model-option {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  gap: 2px 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 8px;
+  text-align: left;
+  width: 100%;
+}
+.chat-model-option:hover { background: var(--app-hover); }
+.chat-model-option.is-selected { background: var(--primary-soft); color: var(--app-primary-text); }
+.chat-model-option-name { font-size: 12.5px; font-weight: 750; }
+.chat-model-option-id { color: var(--faint); font-size: 10px; }
+.chat-model-option-check { color: var(--primary-light); display: inline-flex; grid-column: 2; grid-row: 1 / 3; }
+.chat-model-empty { color: var(--subtle); font-size: 12px; padding: 18px 10px; text-align: center; }
 .chat-textarea {
   background: var(--panel);
   border: 1px solid var(--app-border);
@@ -380,24 +570,28 @@ const css = `
   transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
   width: 100%;
 }
-.chat-list { display: flex; flex-direction: column; gap: 6px; }
+.chat-list { display: flex; flex-direction: column; gap: 10px; }
 .chat-list-row {
   align-items: center;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
   color: var(--text);
   cursor: pointer;
   display: grid;
-  gap: 10px;
-  grid-template-columns: 32px minmax(0, 1fr);
-  padding: 9px 10px;
+  gap: 16px;
+  grid-template-areas: "avatar identity model resources status chevron";
+  grid-template-columns: 36px minmax(180px, 1.2fr) minmax(160px, .9fr) minmax(140px, .7fr) auto 18px;
+  padding: 13px 16px;
   text-align: left;
-  transition: background .18s ease, border-color .18s ease;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
   width: 100%;
 }
-.chat-list-row:hover { background: var(--app-hover); }
+.chat-list-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); }
+.chat-list-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
 .chat-list-row.is-active { background: var(--primary-soft); border-color: var(--app-primary-border); }
+.chat-list-row > .chat-avatar { grid-area: avatar; }
+.chat-list-row > .chat-pill { grid-area: status; }
 .chat-avatar {
   align-items: center;
   border-radius: 10px;
@@ -409,8 +603,15 @@ const css = `
   justify-content: center;
   width: 32px;
 }
-.chat-list-name { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-list-meta { align-items: center; color: var(--subtle); display: flex; font-size: 11px; gap: 6px; margin-top: 2px; }
+.chat-list-identity { display: grid; gap: 3px; grid-area: identity; min-width: 0; }
+.chat-list-name { font-size: 13.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-list-phone { color: var(--subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-list-model { color: var(--text); display: grid; font-size: 11.5px; font-weight: 700; gap: 2px; grid-area: model; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-list-meta-label { color: var(--faint); font-size: 9.5px; font-weight: 850; letter-spacing: .6px; text-transform: uppercase; }
+.chat-list-resources { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 11px; gap: 9px; grid-area: resources; }
+.chat-list-resources > span { align-items: center; display: inline-flex; gap: 4px; white-space: nowrap; }
+.chat-list-chevron { color: var(--faint); display: inline-flex; grid-area: chevron; transition: color .18s ease, transform .18s ease; }
+.chat-list-row:hover .chat-list-chevron { color: var(--primary-light); transform: translateX(2px); }
 .chat-empty-list { color: var(--subtle); font-size: 12.5px; padding: 18px 4px; text-align: center; }
 .chat-pill {
   align-items: center;
@@ -532,6 +733,14 @@ const css = `
   white-space: nowrap;
 }
 .chat-editor-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.chat-tabs { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex: 0 0 auto; gap: 4px; padding: 4px; }
+.chat-tab { background: transparent; border: 0; border-radius: 9px; color: var(--muted); cursor: pointer; font: inherit; font-size: 12px; font-weight: 750; min-height: 32px; padding: 0 14px; }
+.chat-tab:hover { color: var(--text); }
+.chat-tab.is-active { background: var(--surface); box-shadow: 0 1px 2px var(--app-shadow-soft); color: var(--text); }
+/* The conversations workspace scrolls its own two panes, so the card gives it a
+   height to work inside instead of growing with the transcript. */
+.chat-card-conversations { display: flex; flex: 1 1 auto; flex-direction: column; height: min(640px, 72vh); min-height: 420px; }
+.chat-card-conversations > .chat-card-head { flex: 0 0 auto; }
 .chat-config-panel { min-height: 0; }
 .chat-config-head { align-items: flex-start; }
 /* The agent list carries its own create button, as the voice workspace does,
@@ -578,7 +787,7 @@ const css = `
   justify-content: center;
   padding: 24px;
   position: fixed;
-  z-index: 70;
+  z-index: 120;
 }
 .chat-modal-card {
   background: var(--surface);
@@ -634,7 +843,7 @@ const css = `
   padding: 12px 18px;
   position: fixed;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 130;
 }
 .chat-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-green-text); }
 .chat-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
@@ -748,10 +957,7 @@ const css = `
 .chat-number-empty { color: var(--subtle); font-size: 12px; line-height: 1.55; }
 .chat-number-empty a { color: var(--primary-light); font-weight: 700; }
 @media (max-width: 1280px) {
-  /* Too narrow for three columns: the configuration drops below the editor
-     rather than disappearing, since it is where most of the agent is set up. */
-  .chat-workspace { grid-template-columns: minmax(230px, 260px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  .chat-config-panel { grid-column: 1 / -1; max-height: 420px; }
+  .chat-list-row { grid-template-areas: "avatar identity model status chevron" "avatar resources resources status chevron"; grid-template-columns: 36px minmax(180px, 1fr) minmax(150px, .8fr) auto 18px; gap: 8px 14px; }
 }
 @media (max-width: 900px) {
   .chat-number-grid { grid-template-columns: 1fr; }
@@ -765,6 +971,9 @@ const css = `
   .chat-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .chat-workspace { grid-template-columns: 1fr; }
   .chat-panel { max-height: none; }
+  .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr); overflow: auto; }
+  .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
+  .chat-agent-expanded-grid > .chat-config-panel { overflow: visible; }
 }
 @media (max-width: 640px) {
   .chat-nav { grid-template-columns: 1fr 1fr; }
@@ -775,6 +984,10 @@ const css = `
   .chat-modal-backdrop { padding: 14px; }
   .chat-modal-footer { flex-direction: column-reverse; }
   .chat-modal-footer .chat-btn { width: 100%; }
+  .chat-list-row { grid-template-areas: "avatar identity status chevron" "avatar model model model" "avatar resources resources resources"; grid-template-columns: 36px minmax(0, 1fr) auto 18px; padding: 12px; }
+  .expandable-card-stage { align-items: stretch; padding: 0; }
+  .chat-agent-expandable { border-radius: 0; height: 100vh; max-width: none; }
+  .chat-agent-expanded-grid { padding: 12px; }
 }
 `;
 
@@ -949,8 +1162,8 @@ export default function ChatAgentsPage() {
   }, [chatAgents, query]);
 
   const selected = useMemo(
-    () => chatAgents.find((agent) => agent.id === selectedId) ?? filtered[0] ?? chatAgents[0] ?? null,
-    [chatAgents, filtered, selectedId]
+    () => (selectedId ? chatAgents.find((agent) => agent.id === selectedId) ?? null : null),
+    [chatAgents, selectedId]
   );
 
   const queueSave = useCallback(
@@ -1221,7 +1434,7 @@ export default function ChatAgentsPage() {
       <main className="chat-main">
         <div className="chat-content">
           <section className="chat-workspace" aria-label="Chat agents workspace">
-            <div className="chat-panel">
+            <div className="chat-panel chat-agent-browser">
               <div className="chat-panel-head chat-list-head">
                 <div>
                   <h2 className="chat-panel-title">
@@ -1259,72 +1472,96 @@ export default function ChatAgentsPage() {
                   </div>
                 ) : (
                   <div className="chat-list">
-                    {filtered.map((agent) => (
-                      <button
-                        aria-pressed={agent.id === selected?.id}
-                        className={`chat-list-row${agent.id === selected?.id ? " is-active" : ""}`}
-                        key={agent.id}
-                        onClick={() => setSelectedId(agent.id)}
-                        type="button"
-                      >
-                        <span
-                          className="chat-avatar"
-                          style={{ background: avatarColor(agent.id) }}
+                    {filtered.map((agent) => {
+                      const phone = phoneNumbers.find((item) => item.id === agent.agent.phone_number_id);
+                      const knowledgeCount = agent.knowledge_base?.knowledge_base_ids?.length ?? 0;
+                      const toolCount = agent.tools?.tool_ids?.length ?? 0;
+                      return (
+                        <motion.button
+                          aria-pressed={agent.id === selected?.id}
+                          className={`chat-list-row${agent.id === selected?.id ? " is-active" : ""}`}
+                          key={agent.id}
+                          layoutId={`chat-agent-${agent.id}`}
+                          onClick={() => setSelectedId(agent.id)}
+                          type="button"
                         >
-                          {agent.agent.name.slice(0, 1).toUpperCase()}
-                        </span>
-                        <span style={{ minWidth: 0 }}>
-                          <span className="chat-list-name">{agent.agent.name}</span>
-                          <span className="chat-list-meta">
-                            <StatusPill status={agent.agent.status ?? "inactive"} />
+                          <span
+                            className="chat-avatar"
+                            style={{ background: avatarColor(agent.id) }}
+                          >
+                            {agent.agent.name.slice(0, 1).toUpperCase()}
                           </span>
-                        </span>
-                      </button>
-                    ))}
+                          <span className="chat-list-identity">
+                            <span className="chat-list-name">{agent.agent.name}</span>
+                            <span className="chat-list-phone">
+                              {phone ? phoneNumberLabel(phone) : "No phone number"}
+                            </span>
+                          </span>
+                          <span className="chat-list-model">
+                            <span className="chat-list-meta-label">Model</span>
+                            {agent.model?.name ?? chatAgentDefaults.model.name}
+                          </span>
+                          <span className="chat-list-resources">
+                            <span><Icon name="book" size={12} />{knowledgeCount} KB</span>
+                            <span><Icon name="wrench" size={12} />{toolCount} tools</span>
+                          </span>
+                          <StatusPill status={agent.agent.status ?? "inactive"} />
+                          <span className="chat-list-chevron">
+                            <Icon name="chevron" size={16} sw={2.3} />
+                          </span>
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             </div>
 
-            {selected ? (
-              <Editor
-                agent={selected}
-                assignableNumbers={assignableNumbers}
-                isRefreshingNumbers={isRefreshingNumbers}
-                isStartingLogin={isStartingLogin}
-                login={
-                  // A resolved (connected) session has nothing left to show: its
-                  // number is assigned, so the card is only back because that
-                  // assignment was removed and a fresh scan is what's wanted.
-                  numberLogin && numberLogin.status !== "connected" ? numberLogin : null
-                }
-                loginError={numberLoginError}
-                onDelete={deleteSelected}
-                onPatch={patchSelected}
-                onRefreshNumbers={refreshPhoneNumbers}
-                onStartLogin={startNumberLogin}
-              />
-            ) : (
-              <div className="chat-panel">
-                <div className="chat-message">
-                  No chat agent selected. Create one to see its configuration.
+            <ExpandableCardDemoStandard
+              className="chat-agent-expandable"
+              layoutId={`chat-agent-${selected?.id ?? "closed"}`}
+              onClose={() => setSelectedId("")}
+              open={Boolean(selected)}
+            >
+              {selected ? (
+                <div className="chat-agent-expanded-shell">
+                  <div className="chat-agent-expanded-topline">
+                    <span>Chat agent details</span>
+                    <button
+                      aria-label="Close chat agent details"
+                      className="chat-agent-expanded-close"
+                      onClick={() => setSelectedId("")}
+                      type="button"
+                    >
+                      <Icon name="x" size={16} sw={2.4} />
+                    </button>
+                  </div>
+                  <div className="chat-agent-expanded-grid">
+                    <Editor
+                      agent={selected}
+                      assignableNumbers={assignableNumbers}
+                      isRefreshingNumbers={isRefreshingNumbers}
+                      isStartingLogin={isStartingLogin}
+                      login={
+                        numberLogin && numberLogin.status !== "connected" ? numberLogin : null
+                      }
+                      loginError={numberLoginError}
+                      onDelete={deleteSelected}
+                      onPatch={patchSelected}
+                      onRefreshNumbers={refreshPhoneNumbers}
+                      onStartLogin={startNumberLogin}
+                    />
+                    <ConfigPanel
+                      agent={selected}
+                      knowledgeBases={knowledgeBases}
+                      onPatch={patchSelected}
+                      phoneNumbers={phoneNumbers}
+                      tools={tools}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {selected ? (
-              <ConfigPanel
-                agent={selected}
-                knowledgeBases={knowledgeBases}
-                onPatch={patchSelected}
-                phoneNumbers={phoneNumbers}
-                tools={tools}
-              />
-            ) : (
-              <div className="chat-panel">
-                <div className="chat-message">Configuration appears once an agent is selected.</div>
-              </div>
-            )}
+              ) : null}
+            </ExpandableCardDemoStandard>
           </section>
         </div>
       </main>
@@ -1467,34 +1704,23 @@ function CreateChatAgentModal({
           <div className="chat-modal-section">
             <h3 className="chat-modal-section-title">Model</h3>
             <div className="chat-modal-grid">
-              <label className="chat-field">
+              <div className="chat-field">
                 <span className="chat-control-label">Provider</span>
-                <select
-                  className="chat-select"
-                  onChange={(event) => {
-                    const provider = event.target.value as ChatModelProvider;
+                <ProviderPicker
+                  onChange={(provider) => {
                     patch({ provider, model: providerModels[provider][0] });
                   }}
                   value={form.provider}
-                >
-                  <option value="openai">OpenAI</option>
-                  <option value="anthropic">Anthropic</option>
-                </select>
-              </label>
-              <label className="chat-field">
+                />
+              </div>
+              <div className="chat-field">
                 <span className="chat-control-label">Model</span>
-                <select
-                  className="chat-select"
-                  onChange={(event) => patch({ model: event.target.value })}
+                <ModelPicker
+                  onChange={(model) => patch({ model })}
+                  provider={form.provider}
                   value={form.model}
-                >
-                  {providerModels[form.provider].map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                />
+              </div>
             </div>
             <label className="chat-field">
               <span className="chat-range-head">
@@ -1588,6 +1814,11 @@ function Editor({
   // not churn on every keystroke.
   // The draft carries the agent it belongs to, so switching agents mid-rename
   // drops the draft without an effect that resets it.
+  // Which half of the editor is on screen: the agent's own settings, or the
+  // WhatsApp threads it has answered. The choice is kept across agents on
+  // purpose — somebody reading conversations usually wants the next agent's
+  // conversations too, not its prompt.
+  const [tab, setTab] = useState<EditorTab>("agent");
   const [rename, setRename] = useState<{ agentId: string; name: string } | null>(null);
   const draftName = rename?.agentId === agent.id ? rename.name : null;
   const cancelledRename = useRef(false);
@@ -1679,41 +1910,70 @@ function Editor({
         </div>
       </div>
 
-      {agent.agent.phone_number_id ? null : (
-        <PhoneNumberSetupCard
-          agentName={agent.agent.name}
-          error={loginError}
-          isStarting={isStartingLogin}
-          isRefreshingNumbers={isRefreshingNumbers}
-          login={login}
-          numbers={assignableNumbers}
-          onSelectNumber={(phoneNumberId) =>
-            onPatch((current) => ({
-              ...current,
-              agent: { ...current.agent, phone_number_id: phoneNumberId },
-            }))
-          }
-          onRefreshNumbers={onRefreshNumbers}
-          onStartLogin={onStartLogin}
-        />
-      )}
-
-      <div className="chat-card chat-card-grow">
-        <div className="chat-card-head">
-          <h3 className="chat-card-title">System Prompt</h3>
-        </div>
-        <textarea
-          className="chat-textarea"
-          onChange={(event) =>
-            onPatch((current) => ({
-              ...current,
-              prompt: { ...current.prompt, system_prompt: event.target.value },
-            }))
-          }
-          style={{ minHeight: 185 }}
-          value={agent.prompt?.system_prompt ?? ""}
-        />
+      <div className="chat-tabs" role="tablist">
+        {editorTabs.map((entry) => (
+          <button
+            aria-selected={tab === entry.id}
+            className={`chat-tab${tab === entry.id ? " is-active" : ""}`}
+            key={entry.id}
+            onClick={() => setTab(entry.id)}
+            role="tab"
+            type="button"
+          >
+            {entry.label}
+          </button>
+        ))}
       </div>
+
+      {tab === "conversation" ? (
+        <div className="chat-card chat-card-conversations">
+          <div className="chat-card-head">
+            <h3 className="chat-card-title">Conversations</h3>
+          </div>
+          {/* Keyed by agent: a different agent is a different inbox, so the
+              workspace starts over rather than carrying the previous agent's
+              selection and filters into it. */}
+          <ChatConversationsWorkspace agentId={agent.id} key={agent.id} />
+        </div>
+      ) : (
+        <>
+          {agent.agent.phone_number_id ? null : (
+            <PhoneNumberSetupCard
+              agentName={agent.agent.name}
+              error={loginError}
+              isStarting={isStartingLogin}
+              isRefreshingNumbers={isRefreshingNumbers}
+              login={login}
+              numbers={assignableNumbers}
+              onSelectNumber={(phoneNumberId) =>
+                onPatch((current) => ({
+                  ...current,
+                  agent: { ...current.agent, phone_number_id: phoneNumberId },
+                }))
+              }
+              onRefreshNumbers={onRefreshNumbers}
+              onStartLogin={onStartLogin}
+            />
+          )}
+
+          <div className="chat-card chat-card-grow">
+            <div className="chat-card-head">
+              <h3 className="chat-card-title">System Prompt</h3>
+            </div>
+            <textarea
+              className="chat-textarea"
+              onChange={(event) =>
+                onPatch((current) => ({
+                  ...current,
+                  prompt: { ...current.prompt, system_prompt: event.target.value },
+                }))
+              }
+              style={{ minHeight: 185 }}
+              value={agent.prompt?.system_prompt ?? ""}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -1975,42 +2235,31 @@ function ConfigPanel({
             title="Model"
           >
             <div className="chat-fields">
-              <label className="chat-field">
+              <div className="chat-field">
                 <span className="chat-control-label">Provider</span>
-                <select
-                  className="chat-select"
-                  onChange={(event) => {
-                    const next = event.target.value as ChatModelProvider;
+                <ProviderPicker
+                  onChange={(next) => {
                     onPatch((current) => ({
                       ...current,
                       model: { ...current.model, provider: next, name: providerModels[next][0] },
                     }));
                   }}
                   value={provider}
-                >
-                  <option value="openai">OpenAI</option>
-                  <option value="anthropic">Anthropic</option>
-                </select>
-              </label>
-              <label className="chat-field">
+                />
+              </div>
+              <div className="chat-field">
                 <span className="chat-control-label">Model</span>
-                <select
-                  className="chat-select"
-                  onChange={(event) =>
+                <ModelPicker
+                  onChange={(model) =>
                     onPatch((current) => ({
                       ...current,
-                      model: { ...current.model, name: event.target.value },
+                      model: { ...current.model, name: model },
                     }))
                   }
+                  provider={provider}
                   value={agent.model?.name ?? providerModels[provider][0]}
-                >
-                  {providerModels[provider].map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                />
+              </div>
               <label className="chat-field">
                 <span className="chat-range-head">
                   <span className="chat-control-label" style={{ marginBottom: 0 }}>
@@ -2134,6 +2383,236 @@ function ConfigPanel({
         </div>
       </div>
     </aside>
+  );
+}
+
+function modelDisplayName(model: string): string {
+  const parts = model.replace(/-\d{8}$/, "").split("-");
+  if (parts[0] === "gpt") {
+    return `GPT-${parts[1]}${parts
+      .slice(2)
+      .map((part) => ` ${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+      .join("")}`;
+  }
+  return parts
+    .map((part, index) =>
+      index === 0 && /^o\d/.test(part)
+        ? part
+        : `${part.charAt(0).toUpperCase()}${part.slice(1)}`
+    )
+    .join(" ");
+}
+
+function modelGroup(provider: ChatModelProvider, model: string): string {
+  if (provider === "anthropic") {
+    if (model.includes("fable-5") || model.includes("opus-5") || model.includes("sonnet-5")) {
+      return "Claude 5";
+    }
+    if (model.includes("haiku")) return "Fast models";
+    return "Claude 4";
+  }
+  if (model.startsWith("gpt-5.6")) return "GPT-5.6";
+  if (model.startsWith("gpt-5")) return "GPT-5";
+  if (model.startsWith("o")) return "Reasoning models";
+  return "GPT-4";
+}
+
+const providerPickerOptions: Array<{ id: ChatModelProvider; label: string; mark: string }> = [
+  { id: "openai", label: "OpenAI", mark: "AI" },
+  { id: "anthropic", label: "Anthropic", mark: "A" },
+];
+
+function ProviderPicker({
+  onChange,
+  value,
+}: {
+  onChange: (provider: ChatModelProvider) => void;
+  value: ChatModelProvider;
+}) {
+  const [open, setOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const selected = providerPickerOptions.find((provider) => provider.id === value)!;
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!pickerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div className="chat-provider-picker" ref={pickerRef}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={`chat-picker-trigger chat-provider-trigger${open ? " is-open" : ""}`}
+        onClick={() => setOpen((current) => !current)}
+        type="button"
+      >
+        <span className="chat-provider-value">
+          <span className="chat-provider-mark">{selected.mark}</span>
+          {selected.label}
+        </span>
+        <span className="chat-picker-trigger-chevron">
+          <Icon name="chevron" size={16} sw={2.4} />
+        </span>
+      </button>
+      {open ? (
+        <div className="chat-picker-menu chat-provider-menu" role="listbox">
+          {providerPickerOptions.map((provider) => (
+            <button
+              aria-selected={provider.id === value}
+              className={`chat-model-option chat-provider-option${
+                provider.id === value ? " is-selected" : ""
+              }`}
+              key={provider.id}
+              onClick={() => {
+                onChange(provider.id);
+                setOpen(false);
+              }}
+              role="option"
+              type="button"
+            >
+              <span className="chat-provider-mark">{provider.mark}</span>
+              <span className="chat-model-option-name">{provider.label}</span>
+              {provider.id === value ? (
+                <span className="chat-model-option-check">
+                  <Icon name="check" size={15} sw={2.6} />
+                </span>
+              ) : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ModelPicker({
+  onChange,
+  provider,
+  value,
+}: {
+  onChange: (model: string) => void;
+  provider: ChatModelProvider;
+  value: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const models = providerModels[provider];
+  const filteredModels = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return models;
+    return models.filter(
+      (model) =>
+        model.toLowerCase().includes(normalized) ||
+        modelDisplayName(model).toLowerCase().includes(normalized)
+    );
+  }, [models, query]);
+  const groups = useMemo(() => {
+    const grouped = new Map<string, string[]>();
+    for (const model of filteredModels) {
+      const group = modelGroup(provider, model);
+      grouped.set(group, [...(grouped.get(group) ?? []), model]);
+    }
+    return [...grouped.entries()];
+  }, [filteredModels, provider]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!pickerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div className="chat-model-picker" ref={pickerRef}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={`chat-picker-trigger chat-model-trigger${open ? " is-open" : ""}`}
+        onClick={() => {
+          setOpen((current) => !current);
+          setQuery("");
+          if (!open) window.setTimeout(() => searchRef.current?.focus(), 0);
+        }}
+        type="button"
+      >
+        <span className="chat-model-trigger-title">{modelDisplayName(value)}</span>
+        <span className="chat-model-trigger-id">{value}</span>
+        <span className="chat-picker-trigger-chevron">
+          <Icon name="chevron" size={16} sw={2.4} />
+        </span>
+      </button>
+      {open ? (
+        <div className="chat-picker-menu chat-model-menu">
+          <div className="chat-model-search">
+            <span className="chat-model-search-icon">
+              <Icon name="search" size={15} sw={2.2} />
+            </span>
+            <input
+              aria-label="Search models"
+              className="chat-input"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={`Search ${provider === "openai" ? "OpenAI" : "Anthropic"} models`}
+              ref={searchRef}
+              value={query}
+            />
+          </div>
+          <div className="chat-model-list" role="listbox">
+            {groups.length ? (
+              groups.map(([group, groupModels]) => (
+                <div className="chat-model-group" key={group}>
+                  <div className="chat-model-group-title">{group}</div>
+                  {groupModels.map((model) => (
+                    <button
+                      aria-selected={model === value}
+                      className={`chat-model-option${model === value ? " is-selected" : ""}`}
+                      key={model}
+                      onClick={() => {
+                        onChange(model);
+                        setOpen(false);
+                        setQuery("");
+                      }}
+                      role="option"
+                      type="button"
+                    >
+                      <span className="chat-model-option-name">{modelDisplayName(model)}</span>
+                      <span className="chat-model-option-id">{model}</span>
+                      {model === value ? (
+                        <span className="chat-model-option-check">
+                          <Icon name="check" size={15} sw={2.6} />
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              ))
+            ) : (
+              <div className="chat-model-empty">No models match “{query}”.</div>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

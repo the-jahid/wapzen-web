@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
@@ -46,11 +48,15 @@ type IconName =
   | "user"
   | "hash"
   | "check"
+  | "copy"
   | "save"
+  | "list"
+  | "chevron"
   | "x";
 
 
 type DetailState = "idle" | "loading" | "ready" | "error";
+type ViewMode = "list" | "grid";
 type Notice = { kind: "success" | "error"; text: string };
 
 
@@ -221,6 +227,13 @@ function iconPaths(name: IconName): ReactNode {
       );
     case "check":
       return <path d="M5 12.5l4 4 10-10" />;
+    case "copy":
+      return (
+        <>
+          <rect height="12" rx="2" width="12" x="8" y="8" />
+          <path d="M4 16V6a2 2 0 012-2h10" />
+        </>
+      );
     case "save":
       return (
         <>
@@ -228,6 +241,15 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M17 21v-8H7v8M7 3v5h8" />
         </>
       );
+    case "list":
+      return (
+        <>
+          <path d="M9 6h11M9 12h11M9 18h11" />
+          <path d="M4 6h.01M4 12h.01M4 18h.01" />
+        </>
+      );
+    case "chevron":
+      return <path d="M8 10l4 4 4-4" />;
     case "x":
       return <path d="M18 6L6 18M6 6l12 12" />;
   }
@@ -235,11 +257,13 @@ function iconPaths(name: IconName): ReactNode {
 
 function Icon({
   name,
+  className,
   size = 18,
   stroke = "currentColor",
   sw = 2,
 }: {
   name: IconName;
+  className?: string;
   size?: number;
   stroke?: string;
   sw?: number;
@@ -247,6 +271,7 @@ function Icon({
   return (
     <svg
       aria-hidden="true"
+      className={className}
       fill="none"
       height={size}
       stroke={stroke}
@@ -266,6 +291,7 @@ const css = `
   --bg: var(--app-bg);
   --sidebar: var(--app-sidebar);
   --surface: var(--app-surface);
+  --surface-2: var(--app-surface-2);
   --panel: var(--app-panel);
   --panel-hover: var(--app-panel-hover);
   --border: var(--app-border);
@@ -307,6 +333,7 @@ const css = `
   flex-direction: column;
   flex-shrink: 0;
   height: 100vh;
+  overflow-y: auto;
   padding: 22px 16px;
   position: sticky;
   top: 0;
@@ -340,44 +367,65 @@ const css = `
 .calls-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
 .calls-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
 .calls-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.calls-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; }
-.calls-link-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; }
+.calls-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
 .calls-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
 .calls-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calls-user-email { color: var(--subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calls-main { display: flex; flex: 1; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
-.calls-content { padding: 20px 32px; flex: 1 1 auto; min-height: 0; overflow: hidden; }
-.calls-workspace {
-  align-items: stretch;
-  display: grid;
-  gap: 16px;
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-}
-.calls-workspace > * { min-height: 0; max-height: 100%; }
-.calls-resource-column {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px var(--app-shadow-soft);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.calls-resource-head {
+.calls-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
+.calls-topbar {
   align-items: center;
+  background: var(--app-topbar);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   display: flex;
   flex: 0 0 auto;
-  gap: 12px;
-  justify-content: space-between;
-  padding: 16px 16px 14px;
+  gap: 16px;
+  padding: 20px 32px;
 }
-.calls-resource-title { font-size: 13px; font-weight: 800; letter-spacing: -.1px; margin: 0; }
-.calls-resource-count { color: var(--subtle); font-size: 12px; margin-top: 2px; }
-.calls-resource-pad { padding: 16px; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.calls-topbar-heading { flex: 1; min-width: 0; }
+.calls-topbar-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
+.calls-topbar-copy { color: var(--subtle); font-size: 12.5px; margin-top: 3px; }
+.calls-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
+.calls-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.calls-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.calls-toolbar-search { flex: 1 1 240px; max-width: 420px; }
+.calls-toolbar .calls-count { margin-left: auto; }
+.calls-view-toggle {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+}
+.calls-view-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  transition: background .18s ease, box-shadow .18s ease, color .18s ease;
+  width: 34px;
+}
+.calls-view-btn:hover { color: var(--text); }
+.calls-view-btn.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); }
+.calls-view-btn:disabled { cursor: not-allowed; opacity: .45; }
+.calls-count {
+  background: var(--app-hover-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
 .calls-top-btn, .calls-ghost-btn, .calls-danger-btn {
   align-items: center;
   border: 1px solid var(--app-border-strong);
@@ -389,13 +437,13 @@ const css = `
   justify-content: center;
   min-height: 40px;
   padding: 0 14px;
-  transition: filter .18s ease, background .18s ease, border-color .18s ease;
+  transition: filter .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
   white-space: nowrap;
 }
+.calls-top-btn:hover, .calls-ghost-btn:hover, .calls-danger-btn:hover { transform: translateY(-1px); }
 .calls-top-btn, .calls-ghost-btn { background: var(--panel-hover); color: var(--text); }
-.calls-top-btn:hover, .calls-ghost-btn:hover { background: var(--app-panel-hover); }
-.calls-danger-btn { background: var(--panel-hover); color: var(--rose); }
-.calls-danger-btn:hover { background: var(--app-rose-soft); border-color: var(--app-rose-border); }
+.calls-danger-btn { background: var(--app-rose-soft-2); border-color: var(--app-rose-border-strong); color: var(--app-rose-text); }
+.calls-danger-btn:hover { background: var(--app-rose-border); }
 .calls-primary-btn {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));
@@ -410,31 +458,33 @@ const css = `
   justify-content: center;
   min-height: 40px;
   padding: 0 14px;
-  transition: filter .18s ease;
+  transition: filter .18s ease, transform .18s ease;
   white-space: nowrap;
 }
-.calls-primary-btn:hover { filter: brightness(1.08); }
+.calls-primary-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
 .calls-top-btn:disabled, .calls-ghost-btn:disabled, .calls-danger-btn:disabled, .calls-primary-btn:disabled {
   cursor: not-allowed;
   filter: grayscale(.35);
   opacity: .45;
+  transform: none;
 }
 .calls-icon-btn {
   align-items: center;
-  background: var(--panel-hover);
-  border: 1px solid var(--app-border-strong);
-  border-radius: 10px;
-  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  color: var(--subtle);
   cursor: pointer;
   display: inline-flex;
+  flex-shrink: 0;
   height: 40px;
   justify-content: center;
-  transition: background .18s ease;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
   width: 40px;
 }
-.calls-icon-btn:hover { background: var(--app-panel-hover); }
+.calls-icon-btn:hover { background: var(--app-hover-2); border-color: var(--app-border-strong); color: var(--app-text-strong); }
 .calls-icon-btn:disabled { cursor: not-allowed; opacity: .45; }
-.calls-search-wrap { margin-bottom: 12px; position: relative; }
+.calls-search-wrap { position: relative; }
 .calls-search-icon { color: var(--subtle); display: flex; left: 12px; pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); }
 .calls-search {
   background: var(--panel);
@@ -449,48 +499,113 @@ const css = `
 }
 .calls-search::placeholder { color: var(--faint); }
 .calls-search:focus { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
-.calls-resource-list { display: flex; flex-direction: column; gap: 8px; }
+.calls-list { display: flex; flex-direction: column; gap: 10px; }
+.calls-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
 .calls-list-message {
   align-items: center;
-  color: var(--subtle);
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  color: var(--muted);
   display: flex;
-  font-size: 12.5px;
+  flex-direction: column;
+  font-size: 13.5px;
+  font-weight: 650;
+  gap: 14px;
   justify-content: center;
-  min-height: 140px;
-  padding: 12px 2px;
+  min-height: 240px;
+  padding: 40px;
   text-align: center;
 }
+.calls-list-message p { margin: 0; max-width: 440px; }
+.calls-section .calls-list-message { border: 0; min-height: 90px; padding: 16px; }
 .calls-row {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 13px;
-  color: var(--text);
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: inherit;
   cursor: pointer;
   display: grid;
-  gap: 7px;
-  padding: 11px 10px;
+  gap: 16px;
+  grid-template-columns: 38px minmax(160px, 1.2fr) minmax(110px, .6fr) minmax(150px, .9fr) minmax(90px, .5fr) auto 18px;
+  padding: 13px 16px;
   text-align: left;
-  transition: background .18s ease, border-color .18s ease;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
   width: 100%;
 }
-.calls-row:hover { background: var(--app-hover); }
-.calls-row.is-active { background: var(--primary-soft); border-color: var(--app-primary-border); box-shadow: inset 0 0 0 1px var(--app-primary-ring); }
-.calls-row-top { align-items: center; display: flex; gap: 8px; min-width: 0; }
+.calls-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); transform: translateY(-1px); }
+.calls-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.calls-row.is-active { border-color: var(--app-primary-border); box-shadow: inset 0 0 0 1px var(--app-primary-ring); }
 .calls-row-dir {
   align-items: center;
-  background: var(--app-hover-2);
-  border-radius: 8px;
+  background: var(--primary-soft);
+  border: 1px solid var(--app-primary-ring);
+  border-radius: 11px;
   color: var(--primary-light);
   display: inline-flex;
-  flex-shrink: 0;
-  height: 26px;
+  flex: 0 0 auto;
+  height: 38px;
   justify-content: center;
-  width: 26px;
+  width: 38px;
 }
-.calls-row-peer { flex: 1; font-size: 13.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calls-row-meta { color: var(--subtle); display: flex; font-size: 11.5px; gap: 8px; justify-content: space-between; padding-left: 34px; }
-.calls-row-meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calls-detail { display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-y: auto; padding-right: 4px; }
+.calls-row-identity, .calls-row-field { display: block; min-width: 0; }
+.calls-row-field > span { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-row-label { color: var(--faint); display: block; font-size: 9.5px; font-weight: 850; letter-spacing: .7px; margin-bottom: 3px; text-transform: uppercase; }
+.calls-row-peer { display: block; font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-row-id { color: var(--faint); display: block; font-family: var(--font-geist-mono), monospace; font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-row-chevron { color: var(--faint); transform: rotate(-90deg); transition: color .18s ease; }
+.calls-row:hover .calls-row-chevron { color: var(--primary-light); }
+.calls-card-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px var(--app-shadow-soft);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 178px;
+  padding: 16px;
+  text-align: left;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  width: 100%;
+}
+.calls-card-item:hover {
+  background: var(--panel-hover);
+  border-color: var(--app-primary-border);
+  box-shadow: 0 12px 30px var(--app-shadow-soft);
+  transform: translateY(-2px);
+}
+.calls-card-item:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.calls-card-item.is-active { border-color: var(--app-primary-border); box-shadow: inset 0 0 0 1px var(--app-primary-ring); }
+.calls-card-top { align-items: center; display: flex; gap: 11px; min-width: 0; }
+.calls-card-identity { min-width: 0; }
+.calls-card-meta { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; margin-top: auto; }
+.calls-card-tile {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  min-width: 0;
+  padding: 9px 10px;
+}
+.calls-card-tile > span { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-card-foot { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
+.expandable-card-backdrop { background: var(--app-overlay); backdrop-filter: blur(6px); inset: 0; position: fixed; z-index: 80; }
+.expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
+.expandable-card-panel { pointer-events: auto; }
+.calls-expandable-card {
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
+  max-height: min(820px, calc(100vh - 48px));
+  max-width: 1000px;
+  overflow: auto;
+  padding: 16px;
+  width: 100%;
+}
+.calls-detail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .calls-detail-topbar {
   align-items: center;
   background: var(--surface);
@@ -556,7 +671,7 @@ const css = `
   font-weight: 800;
   gap: 6px;
   line-height: 1;
-  padding: 5px 8px;
+  padding: 6px 9px;
   white-space: nowrap;
 }
 .calls-status-ended { background: var(--app-green-soft); color: var(--green); }
@@ -568,7 +683,7 @@ const css = `
 .calls-dot { background: currentColor; border-radius: 50%; height: 6px; width: 6px; }
 .calls-dir-badge {
   align-items: center;
-  background: var(--app-border);
+  background: var(--app-hover-2);
   border: 1px solid var(--app-border-strong);
   border-radius: 999px;
   color: var(--app-text-soft);
@@ -577,12 +692,12 @@ const css = `
   font-weight: 800;
   gap: 5px;
   letter-spacing: .4px;
-  padding: 4px 9px;
+  padding: 5px 9px;
   text-transform: uppercase;
 }
 .calls-edit-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 200px) minmax(0, 1fr) auto; align-items: end; }
 .calls-field { display: grid; gap: 7px; min-width: 0; }
-.calls-field-label { color: var(--subtle); font-size: 11.5px; font-weight: 700; }
+.calls-field-label { color: var(--subtle); font-size: 11.5px; font-weight: 800; }
 .calls-input, .calls-select {
   background: var(--panel);
   border: 1px solid var(--app-border);
@@ -632,60 +747,52 @@ const css = `
 }
 .calls-turn.is-user .calls-turn-bubble { background: var(--app-green-soft); border-color: var(--app-green-soft-2); }
 .calls-turn-role { color: var(--faint); font-size: 10px; font-weight: 800; letter-spacing: .6px; margin-bottom: 3px; text-transform: uppercase; }
-.calls-empty-workspace {
-  align-items: center;
-  border: 1px dashed var(--border-strong);
-  border-radius: 16px;
-  color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 12px;
-  justify-content: center;
-  min-height: 340px;
-  padding: 40px;
-  text-align: center;
-}
-.calls-empty-workspace p { margin: 0; max-width: 440px; }
 .calls-toast {
   border-radius: 12px;
   bottom: 24px;
   box-shadow: 0 18px 50px var(--app-shadow-color);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 750;
   left: 50%;
   max-width: min(480px, calc(100vw - 48px));
   padding: 12px 18px;
   position: fixed;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 140;
 }
-.calls-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-green-text); }
+.calls-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .calls-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 @media (max-width: 1180px) {
-  .calls-workspace { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); }
   .calls-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calls-row { grid-template-columns: 38px minmax(150px, 1.2fr) minmax(150px, .9fr) minmax(90px, .5fr) auto 18px; }
+  .calls-row-direction { display: none; }
 }
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .calls-shell { display: block; height: auto; max-height: none; overflow: visible; }
   .calls-main { height: auto; overflow: visible; }
   .calls-content { overflow: visible; padding: 20px; }
-  .calls-workspace { grid-template-columns: 1fr; height: auto; }
-  .calls-workspace > * { max-height: none; }
-  .calls-detail, .calls-resource-pad { overflow: visible; }
-  .calls-sidebar { height: auto; position: static; width: 100%; }
+  .calls-sidebar { height: auto; overflow: visible; position: static; width: 100%; }
   .calls-sidebar-footer { margin-top: 18px; }
   .calls-user-card { display: none; }
   .calls-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .calls-topbar { padding: 18px 20px; }
   .calls-detail-topbar { align-items: flex-start; flex-direction: column; }
   .calls-top-actions { justify-content: flex-start; }
   .calls-edit-grid { grid-template-columns: 1fr; }
+  .calls-row { grid-template-columns: 38px minmax(150px, 1fr) minmax(90px, .55fr) auto 18px; }
+  .calls-row-created { display: none; }
 }
 @media (max-width: 640px) {
   .calls-nav { grid-template-columns: 1fr 1fr; }
-  .calls-content, .calls-modal-backdrop { padding: 14px; }
+  .calls-topbar, .calls-content { padding: 16px 14px; }
   .calls-meta-grid { grid-template-columns: 1fr; }
+  .calls-toolbar-search { max-width: none; min-width: 100%; }
+  .calls-toolbar .calls-count { margin-left: 0; }
+  .calls-row { gap: 10px; grid-template-columns: 38px minmax(0, 1fr) auto; padding: 11px; }
+  .calls-row-field, .calls-row-chevron { display: none; }
+  .expandable-card-stage { align-items: stretch; padding: 0; }
+  .calls-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; padding: 12px; }
+  .calls-top-actions .calls-top-btn, .calls-top-actions .calls-danger-btn { flex: 1 1 auto; }
 }
 `;
 
@@ -765,6 +872,7 @@ export default function CallsPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const [detail, setDetail] = useState<ApiCall | null>(null);
   const [detailState, setDetailState] = useState<DetailState>("idle");
@@ -796,8 +904,9 @@ export default function CallsPage() {
     );
   }, [calls, query]);
 
-  const selectedCall =
-    (selectedId ? calls.find((call) => call.id === selectedId) : null) ?? calls[0] ?? null;
+  const selectedCall = selectedId
+    ? calls.find((call) => call.id === selectedId) ?? null
+    : null;
   const selectedCallId = selectedCall?.id ?? null;
   // Prefer the freshly fetched detail (has transcript) when it matches the
   // selected row; otherwise fall back to the list row while it loads.
@@ -816,7 +925,7 @@ export default function CallsPage() {
         if (cancelled) return;
         setCalls(rows);
         setSelectedId((current) =>
-          current && rows.some((call) => call.id === current) ? current : rows[0]?.id ?? null
+          current && rows.some((call) => call.id === current) ? current : null
         );
         setLoadState("ready");
       } catch (error) {
@@ -922,7 +1031,7 @@ export default function CallsPage() {
       await apiDeleteCall(call.id, getToken);
       const remaining = calls.filter((item) => item.id !== call.id);
       setCalls(remaining);
-      setSelectedId((current) => (current === call.id ? remaining[0]?.id ?? null : current));
+      setSelectedId((current) => (current === call.id ? null : current));
       if (detail?.id === call.id) setDetail(null);
       setNotice({ kind: "success", text: "Call deleted" });
     } catch (error) {
@@ -947,24 +1056,37 @@ export default function CallsPage() {
       <Sidebar activeLabel="Calls" callCount={calls.length} />
 
       <main className="calls-main">
+        <header className="calls-topbar">
+          <div className="calls-topbar-heading">
+            <h1 className="calls-topbar-title">Calls</h1>
+            <div className="calls-topbar-copy">Review call activity, lifecycle details, and saved transcripts.</div>
+          </div>
+        </header>
         <div className="calls-content">
-          <section className="calls-workspace" aria-label="Calls workspace">
-            <CallList
-              calls={calls}
-              deletingId={deletingId}
-              effectiveLoadError={effectiveLoadError}
-              effectiveLoadState={effectiveLoadState}
-              filteredCalls={filteredCalls}
-              isAuthenticated={isAuthenticated}
-              onQueryChange={setQuery}
-              onRefresh={refresh}
-              onSelect={setSelectedId}
-              query={query}
-              selectedId={selectedCallId}
-            />
+          <CallList
+            calls={calls}
+            deletingId={deletingId}
+            effectiveLoadError={effectiveLoadError}
+            effectiveLoadState={effectiveLoadState}
+            filteredCalls={filteredCalls}
+            isAuthenticated={isAuthenticated}
+            onQueryChange={setQuery}
+            onRefresh={refresh}
+            onSelect={setSelectedId}
+            onViewModeChange={setViewMode}
+            query={query}
+            selectedId={selectedCallId}
+            viewMode={viewMode}
+          />
 
-            <section className="calls-detail">
-              {shownCall ? (
+          <ExpandableCardDemoStandard
+            className="calls-expandable-card"
+            layoutId={`call-${selectedCallId ?? "closed"}`}
+            onClose={() => setSelectedId(null)}
+            open={Boolean(shownCall)}
+          >
+            {shownCall ? (
+              <section className="calls-detail">
                 <CallDetail
                   call={shownCall}
                   deletingId={deletingId}
@@ -976,24 +1098,14 @@ export default function CallsPage() {
                   onCopy={copyToClipboard}
                   onDelete={removeCall}
                   onEndReasonChange={setEditEndReason}
+                  onClose={() => setSelectedId(null)}
                   onRefresh={refresh}
                   onSave={saveUpdate}
                   onStatusChange={setEditStatus}
                 />
-              ) : (
-                <div className="calls-empty-workspace">
-                  <Icon name="phone" size={30} stroke="#5d5d68" sw={1.6} />
-                  <p>
-                    {effectiveLoadState === "loading"
-                      ? "Loading calls..."
-                      : effectiveLoadState === "error"
-                        ? effectiveLoadError
-                        : "No calls yet. Calls appear here as your agents handle them."}
-                  </p>
-                </div>
-              )}
-            </section>
-          </section>
+              </section>
+            ) : null}
+          </ExpandableCardDemoStandard>
         </div>
       </main>
 
@@ -1073,8 +1185,10 @@ function CallList({
   onQueryChange,
   onRefresh,
   onSelect,
+  onViewModeChange,
   query,
   selectedId,
+  viewMode,
 }: {
   calls: ApiCall[];
   deletingId: string | null;
@@ -1085,28 +1199,15 @@ function CallList({
   onQueryChange: (value: string) => void;
   onRefresh: () => void;
   onSelect: (id: string) => void;
+  onViewModeChange: (mode: ViewMode) => void;
   query: string;
   selectedId: string | null;
+  viewMode: ViewMode;
 }) {
   return (
-    <section className="calls-resource-column" aria-label="Calls">
-      <div className="calls-resource-head">
-        <div>
-          <h1 className="calls-resource-title">Calls</h1>
-          <div className="calls-resource-count">{calls.length} total</div>
-        </div>
-        <button
-          className="calls-icon-btn"
-          disabled={!isAuthenticated || effectiveLoadState === "loading"}
-          onClick={onRefresh}
-          title="Refresh"
-          type="button"
-        >
-          <Icon name="refresh" size={16} sw={2.2} />
-        </button>
-      </div>
-      <div className="calls-resource-pad">
-        <div className="calls-search-wrap">
+    <section className="calls-browse" aria-label="Calls">
+      <div className="calls-toolbar">
+        <div className="calls-search-wrap calls-toolbar-search">
           <span className="calls-search-icon">
             <Icon name="search" size={16} sw={2.2} />
           </span>
@@ -1119,50 +1220,135 @@ function CallList({
             value={query}
           />
         </div>
-        <div className="calls-resource-list">
-          {effectiveLoadState === "loading" && calls.length === 0 ? (
-            <div className="calls-list-message">Loading calls...</div>
-          ) : effectiveLoadState === "error" ? (
-            <div className="calls-list-message">
-              <div>
-                <div>{effectiveLoadError}</div>
-                {isAuthenticated ? (
-                  <button className="calls-ghost-btn" onClick={onRefresh} style={{ marginTop: 12 }} type="button">
-                    Try again
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          ) : filteredCalls.length === 0 ? (
-            <div className="calls-list-message">
-              {query.trim() ? "No calls match your search." : "No calls yet."}
-            </div>
-          ) : (
-            filteredCalls.map((call) => (
-              <button
-                aria-pressed={call.id === selectedId}
-                className={`calls-row${call.id === selectedId ? " is-active" : ""}`}
-                key={call.id}
-                onClick={() => onSelect(call.id)}
-                style={deletingId === call.id ? { opacity: 0.5 } : undefined}
-                type="button"
-              >
-                <div className="calls-row-top">
-                  <span className="calls-row-dir" title={callTypeLabel(call.call_type)}>
-                    <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={14} sw={2.2} />
-                  </span>
-                  <span className="calls-row-peer">{peerLabel(call)}</span>
-                  <StatusChip status={call.status} />
-                </div>
-                <div className="calls-row-meta">
-                  <span>{formatDate(call.created_at)}</span>
-                  <span>{formatDuration(call.duration_seconds)}</span>
-                </div>
-              </button>
-            ))
-          )}
+        <div aria-label="View" className="calls-view-toggle" role="group">
+          <button
+            aria-label="List view"
+            aria-pressed={viewMode === "list"}
+            className={`calls-view-btn${viewMode === "list" ? " is-active" : ""}`}
+            onClick={() => onViewModeChange("list")}
+            title="List view"
+            type="button"
+          >
+            <Icon name="list" size={16} sw={2.2} />
+          </button>
+          <button
+            aria-label="Grid view"
+            aria-pressed={viewMode === "grid"}
+            className={`calls-view-btn${viewMode === "grid" ? " is-active" : ""}`}
+            onClick={() => onViewModeChange("grid")}
+            title="Grid view"
+            type="button"
+          >
+            <Icon name="grid" size={16} sw={2.2} />
+          </button>
         </div>
+        <span className="calls-count">
+          {query.trim() ? `${filteredCalls.length} of ${calls.length}` : `${calls.length} ${calls.length === 1 ? "call" : "calls"}`}
+        </span>
+        <button
+          className="calls-icon-btn"
+          disabled={!isAuthenticated || effectiveLoadState === "loading"}
+          onClick={onRefresh}
+          title="Refresh"
+          type="button"
+        >
+          <Icon name="refresh" size={16} sw={2.2} />
+        </button>
       </div>
+      {effectiveLoadState === "loading" && calls.length === 0 ? (
+        <div className="calls-list-message">Loading calls...</div>
+      ) : effectiveLoadState === "error" ? (
+        <div className="calls-list-message">
+          <p>{effectiveLoadError}</p>
+          {isAuthenticated ? (
+            <button className="calls-ghost-btn" onClick={onRefresh} type="button">
+              <Icon name="refresh" size={15} sw={2.2} />
+              Try again
+            </button>
+          ) : null}
+        </div>
+      ) : filteredCalls.length === 0 ? (
+        <div className="calls-list-message">
+          <p>{query.trim() ? "No calls match your search." : "No calls yet. Inbound and outbound calls appear here once they run."}</p>
+        </div>
+      ) : viewMode === "grid" ? (
+        <div className="calls-grid">
+          {filteredCalls.map((call) => (
+            <motion.button
+              aria-pressed={call.id === selectedId}
+              className={`calls-card-item${call.id === selectedId ? " is-active" : ""}`}
+              key={call.id}
+              layoutId={`call-${call.id}`}
+              onClick={() => onSelect(call.id)}
+              style={deletingId === call.id ? { opacity: 0.5 } : undefined}
+              type="button"
+            >
+              <span className="calls-card-top">
+                <span className="calls-row-dir" title={callTypeLabel(call.call_type)}>
+                  <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={16} sw={2.2} />
+                </span>
+                <span className="calls-card-identity">
+                  <span className="calls-row-peer">{peerLabel(call)}</span>
+                  <span className="calls-row-id">{call.call_id}</span>
+                </span>
+              </span>
+              <span className="calls-card-meta">
+                <span className="calls-card-tile">
+                  <span className="calls-row-label">Created</span>
+                  <span>{formatDate(call.created_at)}</span>
+                </span>
+                <span className="calls-card-tile">
+                  <span className="calls-row-label">Duration</span>
+                  <span>{formatDuration(call.duration_seconds)}</span>
+                </span>
+              </span>
+              <span className="calls-card-foot">
+                <StatusChip status={call.status} />
+                <span className="calls-dir-badge">
+                  <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={12} sw={2.4} />
+                  {callTypeLabel(call.call_type)}
+                </span>
+              </span>
+            </motion.button>
+          ))}
+        </div>
+      ) : (
+        <div className="calls-list">
+          {filteredCalls.map((call) => (
+            <motion.button
+              aria-pressed={call.id === selectedId}
+              className={`calls-row${call.id === selectedId ? " is-active" : ""}`}
+              key={call.id}
+              layoutId={`call-${call.id}`}
+              onClick={() => onSelect(call.id)}
+              style={deletingId === call.id ? { opacity: 0.5 } : undefined}
+              type="button"
+            >
+              <span className="calls-row-dir" title={callTypeLabel(call.call_type)}>
+                <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={15} sw={2.2} />
+              </span>
+              <span className="calls-row-identity">
+                <span className="calls-row-peer">{peerLabel(call)}</span>
+                <span className="calls-row-id">{call.call_id}</span>
+              </span>
+              <span className="calls-row-field calls-row-direction">
+                <span className="calls-row-label">Direction</span>
+                <span>{callTypeLabel(call.call_type)}</span>
+              </span>
+              <span className="calls-row-field calls-row-created">
+                <span className="calls-row-label">Created</span>
+                <span>{formatDate(call.created_at)}</span>
+              </span>
+              <span className="calls-row-field calls-row-duration">
+                <span className="calls-row-label">Duration</span>
+                <span>{formatDuration(call.duration_seconds)}</span>
+              </span>
+              <StatusChip status={call.status} />
+              <Icon className="calls-row-chevron" name="chevron" size={17} sw={2.2} />
+            </motion.button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -1176,6 +1362,7 @@ function CallDetail({
   editStatus,
   isSaving,
   onCopy,
+  onClose,
   onDelete,
   onEndReasonChange,
   onRefresh,
@@ -1190,6 +1377,7 @@ function CallDetail({
   editStatus: CallStatus;
   isSaving: boolean;
   onCopy: (value: string, label: string) => void;
+  onClose: () => void;
   onDelete: (call: ApiCall) => void;
   onEndReasonChange: (value: string) => void;
   onRefresh: () => void;
@@ -1216,7 +1404,7 @@ function CallDetail({
                 style={{ background: "transparent", border: 0, color: "inherit", cursor: "pointer", display: "inline-flex", padding: 0 }}
                 type="button"
               >
-                <Icon name="check" size={13} />
+                <Icon name="copy" size={13} />
               </button>
             </div>
           </div>
@@ -1234,6 +1422,9 @@ function CallDetail({
           <button className="calls-danger-btn" disabled={isDeleting} onClick={() => onDelete(call)} type="button">
             <Icon name="trash" size={15} sw={2.1} />
             {isDeleting ? "Deleting..." : "Delete"}
+          </button>
+          <button aria-label="Close call details" className="calls-icon-btn" onClick={onClose} type="button">
+            <Icon name="x" size={16} sw={2.2} />
           </button>
         </div>
       </div>

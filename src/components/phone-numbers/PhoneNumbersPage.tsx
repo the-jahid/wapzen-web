@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { motion } from "motion/react";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
@@ -516,6 +518,73 @@ const css = `
 }
 .phone-open-overlay:focus-visible { box-shadow: 0 0 0 3px var(--app-primary-ring-strong); outline: none; }
 .phone-card-agents, .phone-row-agents { position: relative; z-index: 2; }
+.expandable-card-backdrop {
+  background: var(--app-overlay);
+  inset: 0;
+  position: fixed;
+  z-index: 80;
+}
+.expandable-card-stage {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+  position: fixed;
+  z-index: 90;
+}
+.expandable-card-panel { pointer-events: auto; }
+.phone-expandable-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
+  display: flex;
+  flex-direction: column;
+  max-height: min(760px, calc(100vh - 48px));
+  max-width: 680px;
+  overflow: hidden;
+  width: 100%;
+}
+.phone-expandable-head {
+  align-items: flex-start;
+  background: linear-gradient(145deg, var(--app-primary-soft-2), transparent 58%);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 13px;
+  padding: 20px;
+}
+.phone-expandable-identity { flex: 1; min-width: 0; }
+.phone-expandable-title { font-size: 18px; font-weight: 850; letter-spacing: -.3px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phone-expandable-subtitle { color: var(--subtle); font-size: 12px; margin-top: 3px; }
+.phone-expandable-head .phone-status-chip { margin-left: auto; margin-top: 4px; }
+.phone-expandable-close {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 32px;
+  justify-content: center;
+  margin-left: 3px;
+  width: 32px;
+}
+.phone-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
+.phone-expandable-body { overflow: auto; padding: 16px; }
+.phone-expandable-body .phone-config-section { box-shadow: none; }
+.phone-expandable-actions {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 14px 16px;
+}
 .phone-card-top { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
 .phone-card-avatar {
   align-items: center;
@@ -1075,6 +1144,10 @@ const css = `
   .phone-grid { grid-template-columns: 1fr; }
   .phone-top-btn, .phone-ghost-btn, .phone-danger-btn { width: 100%; }
   .phone-top-actions { width: 100%; }
+  .expandable-card-stage { align-items: stretch; padding: 0; }
+  .phone-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; }
+  .phone-expandable-head { padding: 16px; }
+  .phone-expandable-actions .phone-top-btn, .phone-expandable-actions .phone-danger-btn { flex: 1 1 auto; width: auto; }
 }
 `;
 
@@ -1496,15 +1569,6 @@ export default function PhoneNumbersPage() {
     }
   }
 
-  async function copyToClipboard(value: string, label: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      setNotice({ kind: "success", text: `${label} copied` });
-    } catch {
-      setNotice({ kind: "error", text: `Could not copy ${label.toLowerCase()}` });
-    }
-  }
-
   async function refresh() {
     if (!isAuthenticated) return;
 
@@ -1586,45 +1650,7 @@ export default function PhoneNumbersPage() {
         </header>
 
         <div className="phone-content">
-          {selectedPhoneNumber ? (
-            <div className="phone-detail-layout">
-              <button className="phone-back" onClick={() => setSelectedId(null)} type="button">
-                <Icon name="back" size={16} sw={2.2} />
-                All phone numbers
-              </button>
-
-              <section className="phone-detail">
-                <DetailTopbar
-                  disconnectingId={disconnectingId}
-                  isAuthenticated={isAuthenticated}
-                  isLoading={effectiveLoadState === "loading"}
-                  isRestarting={isRestarting}
-                  onCopyId={(id) => copyToClipboard(id, "Phone number ID")}
-                  onCreate={() => setIsCreateOpen(true)}
-                  onDisconnect={disconnect}
-                  onRePair={rePair}
-                  onRefresh={refresh}
-                  phoneNumber={selectedPhoneNumber}
-                />
-
-                <div className="phone-detail-scroll">
-                  <PhoneNumberDetail
-                    agents={agents}
-                    assignments={selectedAssignments}
-                    assigningKey={assigningKey}
-                    effectiveLoadError={effectiveLoadError}
-                    effectiveLoadState={effectiveLoadState}
-                    isAuthenticated={isAuthenticated}
-                    mode={mode}
-                    onAssignAgent={assignAgent}
-                    onCreate={() => setIsCreateOpen(true)}
-                    onRetry={refresh}
-                    phoneNumber={selectedPhoneNumber}
-                  />
-                </div>
-              </section>
-            </div>
-          ) : (
+          <>
             <PhoneNumberGrid
               agents={agents}
               assigningKey={assigningKey}
@@ -1643,7 +1669,25 @@ export default function PhoneNumbersPage() {
               query={query}
               view={viewMode}
             />
-          )}
+            <PhoneNumberExpandableCard
+              agents={agents}
+              assigningKey={assigningKey}
+              assignments={selectedAssignments}
+              disconnectingId={disconnectingId}
+              effectiveLoadError={effectiveLoadError}
+              effectiveLoadState={effectiveLoadState}
+              isAuthenticated={isAuthenticated}
+              isRestarting={isRestarting}
+              mode={mode}
+              onAssignAgent={assignAgent}
+              onClose={() => setSelectedId(null)}
+              onCreate={() => setIsCreateOpen(true)}
+              onDisconnect={disconnect}
+              onRePair={rePair}
+              onRefresh={refresh}
+              phoneNumber={selectedPhoneNumber}
+            />
+          </>
         </div>
       </main>
 
@@ -1732,6 +1776,117 @@ function Sidebar({
         </div>
       </div>
     </aside>
+  );
+}
+
+function PhoneNumberExpandableCard({
+  agents,
+  assigningKey,
+  assignments,
+  disconnectingId,
+  effectiveLoadError,
+  effectiveLoadState,
+  isAuthenticated,
+  isRestarting,
+  mode,
+  onAssignAgent,
+  onClose,
+  onCreate,
+  onDisconnect,
+  onRePair,
+  onRefresh,
+  phoneNumber,
+}: {
+  agents: AssignedAgent[];
+  assigningKey: string | null;
+  assignments: PhoneAssignments;
+  disconnectingId: string | null;
+  effectiveLoadError: string;
+  effectiveLoadState: "loading" | "ready" | "error";
+  isAuthenticated: boolean;
+  isRestarting: boolean;
+  mode: WorkspaceMode;
+  onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
+  onClose: () => void;
+  onCreate: () => void;
+  onDisconnect: (phoneNumber: ApiPhoneNumber) => void;
+  onRePair: () => void;
+  onRefresh: () => void;
+  phoneNumber: ApiPhoneNumber | null;
+}) {
+  return (
+    <ExpandableCardDemoStandard
+      className="phone-expandable-card"
+      layoutId={`phone-number-${phoneNumber?.id ?? "closed"}`}
+      onClose={onClose}
+      open={Boolean(phoneNumber)}
+    >
+      {phoneNumber ? (
+        <>
+          <header className="phone-expandable-head">
+            <span className="phone-summary-icon">
+              <Icon name="phone" size={20} />
+            </span>
+            <div className="phone-expandable-identity">
+              <div className="phone-expandable-title">{displayName(phoneNumber)}</div>
+              <div className="phone-expandable-subtitle">WhatsApp · {displayNumber(phoneNumber)}</div>
+            </div>
+            <StatusChip compact status={phoneNumber.status} />
+            <button aria-label="Close phone number" className="phone-expandable-close" onClick={onClose} type="button">
+              <Icon name="x" size={16} sw={2.4} />
+            </button>
+          </header>
+
+          <div className="phone-expandable-body">
+            <PhoneNumberDetail
+              agents={agents}
+              assignments={assignments}
+              assigningKey={assigningKey}
+              effectiveLoadError={effectiveLoadError}
+              effectiveLoadState={effectiveLoadState}
+              isAuthenticated={isAuthenticated}
+              mode={mode}
+              onAssignAgent={onAssignAgent}
+              onCreate={onCreate}
+              onRetry={onRefresh}
+              phoneNumber={phoneNumber}
+            />
+          </div>
+
+          <footer className="phone-expandable-actions">
+            <button
+              className="phone-top-btn"
+              disabled={!isAuthenticated || effectiveLoadState === "loading" || isRestarting}
+              onClick={onRefresh}
+              type="button"
+            >
+              <Icon name="refresh" size={15} />
+              Refresh
+            </button>
+            {phoneNumber.status === "connected" ? (
+              <button
+                className="phone-top-btn"
+                disabled={!isAuthenticated || effectiveLoadState === "loading" || isRestarting}
+                onClick={onRePair}
+                type="button"
+              >
+                <Icon name="refresh" size={15} />
+                {isRestarting ? "Re-pairing..." : "Re-pair"}
+              </button>
+            ) : null}
+            <button
+              className="phone-danger-btn"
+              disabled={disconnectingId === phoneNumber.id}
+              onClick={() => onDisconnect(phoneNumber)}
+              type="button"
+            >
+              <Icon name="logOut" size={15} />
+              {rowActionLabel(phoneNumber, disconnectingId === phoneNumber.id)}
+            </button>
+          </footer>
+        </>
+      ) : null}
+    </ExpandableCardDemoStandard>
   );
 }
 
@@ -1913,7 +2068,7 @@ function PhoneNumberCard({ onSelect, ...rest }: BrowseItemProps) {
   const { phoneNumber } = rest;
 
   return (
-    <div className="phone-card-item">
+    <motion.div className="phone-card-item" layoutId={`phone-number-${phoneNumber.id}`}>
       <span className="phone-card-top">
         <span className="phone-card-avatar">
           <Icon name="phone" size={18} />
@@ -1936,7 +2091,7 @@ function PhoneNumberCard({ onSelect, ...rest }: BrowseItemProps) {
         </span>
       </span>
       <OpenOverlay label={displayName(phoneNumber)} onSelect={onSelect} />
-    </div>
+    </motion.div>
   );
 }
 
@@ -1944,7 +2099,7 @@ function PhoneNumberRow({ onSelect, ...rest }: BrowseItemProps) {
   const { phoneNumber } = rest;
 
   return (
-    <div className="phone-row">
+    <motion.div className="phone-row" layoutId={`phone-number-${phoneNumber.id}`}>
       <span className="phone-card-avatar">
         <Icon name="phone" size={18} />
       </span>
@@ -1961,7 +2116,7 @@ function PhoneNumberRow({ onSelect, ...rest }: BrowseItemProps) {
       </span>
       <StatusChip compact status={phoneNumber.status} />
       <OpenOverlay label={displayName(phoneNumber)} onSelect={onSelect} />
-    </div>
+    </motion.div>
   );
 }
 
@@ -2023,98 +2178,6 @@ function AgentChipPickers({
         );
       })}
     </>
-  );
-}
-
-function DetailTopbar({
-  disconnectingId,
-  isAuthenticated,
-  isLoading,
-  isRestarting,
-  onCopyId,
-  onCreate,
-  onDisconnect,
-  onRePair,
-  onRefresh,
-  phoneNumber,
-}: {
-  disconnectingId: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  isRestarting: boolean;
-  onCopyId: (id: string) => void;
-  onCreate: () => void;
-  onDisconnect: (phoneNumber: ApiPhoneNumber) => void;
-  onRePair: () => void;
-  onRefresh: () => void;
-  phoneNumber: ApiPhoneNumber | null;
-}) {
-  return (
-    <header className="phone-detail-topbar">
-      <div className="phone-selected-summary">
-        <span className="phone-summary-icon">
-          <Icon name="phone" size={20} />
-        </span>
-        <span style={{ minWidth: 0 }}>
-          <div className="phone-summary-title">{phoneNumber ? displayName(phoneNumber) : "Phone Numbers"}</div>
-          <div className="phone-summary-id">
-            {phoneNumber ? (
-              <>
-                <span className="phone-id-text">{phoneNumber.id}</span>
-                <button
-                  aria-label="Copy phone number ID"
-                  className="phone-icon-action"
-                  onClick={() => onCopyId(phoneNumber.id)}
-                  type="button"
-                >
-                  <Icon name="copy" size={13} />
-                </button>
-              </>
-            ) : (
-              <span>Select or create a WhatsApp number</span>
-            )}
-          </div>
-        </span>
-      </div>
-      <div className="phone-top-actions">
-        {phoneNumber ? <StatusChip status={phoneNumber.status} /> : null}
-        <button
-          className="phone-top-btn"
-          disabled={!isAuthenticated || isLoading || isRestarting}
-          onClick={onRefresh}
-          type="button"
-        >
-          <Icon name="refresh" size={15} />
-          {isRestarting ? "Refreshing..." : "Refresh"}
-        </button>
-        <button className="phone-top-btn" disabled={!isAuthenticated} onClick={onCreate} type="button">
-          <Icon name="plus" size={15} />
-          Create
-        </button>
-        {phoneNumber?.status === "connected" ? (
-          <button
-            className="phone-top-btn"
-            disabled={!isAuthenticated || isLoading || isRestarting}
-            onClick={onRePair}
-            type="button"
-          >
-            <Icon name="refresh" size={15} />
-            {isRestarting ? "Re-pairing..." : "Re-pair"}
-          </button>
-        ) : null}
-        {phoneNumber ? (
-          <button
-            className="phone-danger-btn"
-            disabled={disconnectingId === phoneNumber.id}
-            onClick={() => onDisconnect(phoneNumber)}
-            type="button"
-          >
-            <Icon name="logOut" size={15} />
-            {rowActionLabel(phoneNumber, disconnectingId === phoneNumber.id)}
-          </button>
-        ) : null}
-      </div>
-    </header>
   );
 }
 
@@ -2470,7 +2533,13 @@ function AgentSelect({
       )}
       {isOpen && popoverStyle
         ? createPortal(
-            <div className="phone-agent-popover" ref={popoverRef} role="listbox" style={popoverStyle}>
+            <div
+              className="phone-agent-popover"
+              data-expandable-card-ignore
+              ref={popoverRef}
+              role="listbox"
+              style={popoverStyle}
+            >
               {options.map((option) => {
                 const isSelected = option.id === value;
                 return (

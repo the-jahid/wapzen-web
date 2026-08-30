@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { motion } from "motion/react";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
@@ -36,6 +38,7 @@ import {
 
 type IconName =
   | "grid"
+  | "list"
   | "agents"
   | "phone"
   | "phoneOut"
@@ -59,6 +62,7 @@ type IconName =
   | "trash"
   | "check"
   | "x"
+  | "chevron"
   | "back";
 
 
@@ -105,6 +109,7 @@ type Tool = {
 };
 
 type Notice = { kind: "success" | "error"; text: string };
+type BrowseView = "list" | "grid";
 
 
 const toolTypes: {
@@ -337,6 +342,13 @@ function iconPaths(name: IconName): ReactNode {
           <rect height="5" rx="1.5" width="7" x="3" y="16" />
         </>
       );
+    case "list":
+      return (
+        <>
+          <path d="M8 6h13M8 12h13M8 18h13" />
+          <path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+        </>
+      );
     case "agents":
       return (
         <>
@@ -472,6 +484,8 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M10 6l-6 6 6 6" />
         </>
       );
+    case "chevron":
+      return <path d="M9 6l6 6-6 6" />;
     case "check":
       return <path d="M5 12.5l4 4 10-10" />;
     case "x":
@@ -618,9 +632,52 @@ const css = `
 }
 .tools-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
 .tools-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.expandable-card-backdrop { background: var(--app-overlay); inset: 0; position: fixed; z-index: 80; }
+.expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
+.expandable-card-panel { pointer-events: auto; }
+.tools-expandable-card {
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
+  max-height: min(820px, calc(100vh - 48px));
+  max-width: 1120px;
+  overflow: auto;
+  padding: 16px;
+  width: 100%;
+}
+.tools-expandable-card .tools-detail { max-width: none; }
 .tools-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .tools-toolbar .tools-search-wrap { flex: 1 1 240px; max-width: 420px; }
 .tools-toolbar .tools-count { margin-left: auto; }
+.tools-view-toggle {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+}
+.tools-view-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  transition: background .18s ease, box-shadow .18s ease, color .18s ease;
+  width: 34px;
+}
+.tools-view-btn:hover { color: var(--text); }
+.tools-view-btn.is-active {
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 1px var(--app-primary-ring);
+  color: var(--app-primary-text);
+}
 .tools-panel-title-row { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
 .tools-count {
   background: var(--app-hover-2);
@@ -686,6 +743,32 @@ const css = `
 .tools-search-icon { color: var(--subtle); left: 12px; position: absolute; top: 50%; transform: translateY(-50%); }
 .tools-search-input { padding-left: 36px; }
 .tools-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+.tools-list { display: flex; flex-direction: column; gap: 10px; }
+.tools-row {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 36px minmax(180px, 1.2fr) auto minmax(180px, 1fr) auto 18px;
+  padding: 13px 16px;
+  text-align: left;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  width: 100%;
+}
+.tools-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); }
+.tools-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.tools-row-identity { display: grid; gap: 3px; min-width: 0; }
+.tools-row-name { font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tools-row-desc { color: var(--subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tools-row-summary { align-items: center; display: flex; gap: 8px; min-width: 0; }
+.tools-row-line { color: var(--subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tools-row-tail { color: var(--faint); font-size: 11px; font-weight: 750; white-space: nowrap; }
+.tools-row-chevron { color: var(--faint); display: inline-flex; transition: color .18s ease, transform .18s ease; }
+.tools-row:hover .tools-row-chevron { color: var(--primary-light); transform: translateX(2px); }
 .tools-card-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -934,7 +1017,7 @@ const css = `
   justify-content: center;
   padding: 24px;
   position: fixed;
-  z-index: 70;
+  z-index: 120;
 }
 .tools-modal {
   animation: tools-modal-in .18s ease;
@@ -1001,13 +1084,15 @@ const css = `
   padding: 12px 18px;
   position: fixed;
   transform: translateX(-50%);
-  z-index: 80;
+  z-index: 130;
 }
 .tools-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .tools-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 @media (max-width: 1100px) {
   .tools-param-row { grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr); }
   .tools-param-row .tools-required { grid-column: 1 / -1; }
+  .tools-row { grid-template-columns: 36px minmax(180px, 1fr) auto minmax(150px, .8fr) 18px; }
+  .tools-row-tail { display: none; }
 }
 @media (max-width: 980px) {
   .tools-shell { display: block; height: auto; max-height: none; overflow: visible; }
@@ -1026,16 +1111,22 @@ const css = `
   .tools-grid-2, .tools-kv-row, .tools-param-row, .tools-type-grid { grid-template-columns: minmax(0, 1fr); }
   .tools-detail-head { grid-template-columns: minmax(0, 1fr); }
   .tools-modal-actions .tools-btn { flex: 1; }
+  .tools-row { gap: 10px; grid-template-columns: 36px minmax(0, 1fr) auto 18px; padding: 12px; }
+  .tools-row-summary { grid-column: 2 / -1; grid-row: 2; }
+  .expandable-card-stage { align-items: stretch; padding: 0; }
+  .tools-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; padding: 14px; }
 }
 `;
 
 export default function ToolsPage() {
   const { getToken } = useAuth();
+  const { mode } = useWorkspaceMode();
   const [tools, setTools] = useState<Tool[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [draftType, setDraftType] = useState<ToolType>("api_request");
   const [draftName, setDraftName] = useState("");
@@ -1114,6 +1205,7 @@ export default function ToolsPage() {
         toolMeta(tool.type).label.toLowerCase().includes(term)
     );
   }, [tools, query]);
+  const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
 
   function openCreate() {
     setDraftType("api_request");
@@ -1244,19 +1336,6 @@ export default function ToolsPage() {
         </header>
 
         <div className="tools-content">
-          {selected ? (
-            // Keyed on the tool and the save epoch so opening another tool — or
-            // saving this one — restarts the pane on stored values rather than
-            // carrying a draft across.
-            <ToolDetail
-              key={`${selected.id}:${detailEpoch}`}
-              onBack={() => setSelectedId(null)}
-              onDelete={() => setPendingDelete(selected)}
-              onError={(message) => setNotice({ kind: "error", text: message })}
-              onSave={saveTool}
-              tool={selected}
-            />
-          ) : (
             <div className="tools-browse">
               <div className="tools-toolbar">
                 <div className="tools-search-wrap">
@@ -1270,6 +1349,28 @@ export default function ToolsPage() {
                     placeholder="Search Tools"
                     value={query}
                   />
+                </div>
+                <div aria-label="View" className="tools-view-toggle" role="group">
+                  <button
+                    aria-label="List view"
+                    aria-pressed={viewMode === "list"}
+                    className={`tools-view-btn${viewMode === "list" ? " is-active" : ""}`}
+                    onClick={() => setViewModeOverride("list")}
+                    title="List view"
+                    type="button"
+                  >
+                    <Icon name="list" size={16} sw={2.2} />
+                  </button>
+                  <button
+                    aria-label="Grid view"
+                    aria-pressed={viewMode === "grid"}
+                    className={`tools-view-btn${viewMode === "grid" ? " is-active" : ""}`}
+                    onClick={() => setViewModeOverride("grid")}
+                    title="Grid view"
+                    type="button"
+                  >
+                    <Icon name="grid" size={16} sw={2.2} />
+                  </button>
                 </div>
                 <span className="tools-count">
                   {query.trim()
@@ -1316,6 +1417,43 @@ export default function ToolsPage() {
                   <strong>No tools found</strong>
                   <span>Try another search.</span>
                 </div>
+              ) : viewMode === "list" ? (
+                <div className="tools-list">
+                  {visibleTools.map((tool) => {
+                    const meta = toolMeta(tool.type);
+                    const summary = cardSummary(tool);
+                    return (
+                      <motion.button
+                        className="tools-row"
+                        key={tool.id}
+                        layoutId={`tool-${tool.id}`}
+                        onClick={() => setSelectedId(tool.id)}
+                        type="button"
+                      >
+                        <span className={`tools-tile tools-accent-${meta.accent}`}>
+                          <Icon name={meta.icon} size={17} />
+                        </span>
+                        <span className="tools-row-identity">
+                          <span className="tools-row-name">{tool.name}</span>
+                          <span className="tools-row-desc">{tool.description || meta.blurb}</span>
+                        </span>
+                        <span className="tools-badge tools-badge-neutral">{meta.label}</span>
+                        <span className="tools-row-summary">
+                          {summary.method ? (
+                            <span className="tools-chip-method">{summary.method}</span>
+                          ) : null}
+                          <span className={`tools-row-line${summary.method ? " tools-mono" : ""}`}>
+                            {summary.line}
+                          </span>
+                        </span>
+                        <span className="tools-row-tail">{summary.tail ?? "Ready"}</span>
+                        <span className="tools-row-chevron">
+                          <Icon name="chevron" size={16} sw={2.3} />
+                        </span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="tools-grid">
                   {visibleTools.map((tool) => {
@@ -1323,9 +1461,10 @@ export default function ToolsPage() {
                     const summary = cardSummary(tool);
 
                     return (
-                      <button
+                      <motion.button
                         className="tools-card-item"
                         key={tool.id}
+                        layoutId={`tool-${tool.id}`}
                         onClick={() => setSelectedId(tool.id)}
                         type="button"
                       >
@@ -1350,7 +1489,7 @@ export default function ToolsPage() {
                             <span className="tools-chip-tail">{summary.tail}</span>
                           ) : null}
                         </span>
-                      </button>
+                      </motion.button>
                     );
                   })}
 
@@ -1364,7 +1503,24 @@ export default function ToolsPage() {
                 </div>
               )}
             </div>
-          )}
+          <ExpandableCardDemoStandard
+            className="tools-expandable-card"
+            dismissDisabled={Boolean(pendingDelete)}
+            layoutId={`tool-${selected?.id ?? "closed"}`}
+            onClose={() => setSelectedId(null)}
+            open={Boolean(selected)}
+          >
+            {selected ? (
+              <ToolDetail
+                key={`${selected.id}:${detailEpoch}`}
+                onBack={() => setSelectedId(null)}
+                onDelete={() => setPendingDelete(selected)}
+                onError={(message) => setNotice({ kind: "error", text: message })}
+                onSave={saveTool}
+                tool={selected}
+              />
+            ) : null}
+          </ExpandableCardDemoStandard>
         </div>
 
       </main>

@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
@@ -28,10 +30,11 @@ import CampaignLeadsWorkspace from "@/components/outbound/CampaignLeadsWorkspace
 import CampaignCallsWorkspace from "@/components/outbound/CampaignCallsWorkspace";
 import CampaignAnalyticsWorkspace from "@/components/outbound/CampaignAnalyticsWorkspace";
 
-type IconName = "grid" | "agents" | "phone" | "phoneOut" | "demo" | "chat" | "calendar" | "chart" | "settings" | "spark" | "key" | "book" | "wrench" | "target" | "plus" | "edit" | "trash" | "refresh" | "x";
+type IconName = "grid" | "agents" | "phone" | "phoneOut" | "demo" | "chat" | "message" | "calendar" | "chart" | "settings" | "spark" | "key" | "book" | "wrench" | "target" | "plus" | "edit" | "trash" | "refresh" | "search" | "list" | "chevron" | "x";
 type Notice = { kind: "success" | "error"; text: string };
 type LoadState = "loading" | "ready" | "error";
 type CampaignTab = "overview" | "calls" | "leads" | "analytics";
+type ViewMode = "list" | "grid";
 
 // AgentOption is one pickable agent. A campaign is pointed at an agent, never at
 // a phone number: the agent carries the number it speaks on, so the number is
@@ -67,6 +70,7 @@ function iconPaths(name: IconName): ReactNode {
     case "phoneOut": return <><path d="M16 8l5-5M21 3h-4M21 3v4" /><path d="M21 16.5v3a2 2 0 01-2.2 2 19.5 19.5 0 01-8.5-3 19.2 19.2 0 01-6-6 19.5 19.5 0 01-3-8.5A2 2 0 013.5 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L9.5 11.5a16 16 0 006 6l1.1-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.6 2z" /></>;
     case "demo": return <><circle cx="12" cy="12" r="9" /><path d="M10.2 8.6l5.6 3.4-5.6 3.4z" /></>;
     case "chat": return <><path d="M20.5 12.5a7.5 7.5 0 01-7.5 7.5H8l-4.5 2.5V12.5A7.5 7.5 0 0111 5h2a7.5 7.5 0 017.5 7.5z" /><path d="M8.5 12h7M8.5 15.5h4" /></>;
+    case "message": return <path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z" />;
     case "calendar": return <><rect height="18" rx="2" width="18" x="3" y="4" /><path d="M16 2v4M8 2v4M3 10h18" /></>;
     case "chart": return <path d="M4 19V5M8 19v-6M12 19V9M16 19v-8M20 19V7" />;
     case "settings": return <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z" /></>;
@@ -79,6 +83,9 @@ function iconPaths(name: IconName): ReactNode {
     case "edit": return <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" /></>;
     case "trash": return <path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 11v6M14 11v6" />;
     case "refresh": return <><path d="M4 4v6h6M20 20v-6h-6" /><path d="M20 9a8 8 0 00-13.5-3L4 10M4 15a8 8 0 0013.5 3L20 14" /></>;
+    case "search": return <><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></>;
+    case "list": return <><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6h.01M4 12h.01M4 18h.01" /></>;
+    case "chevron": return <path d="M9 6l6 6-6 6" />;
     case "x": return <path d="M18 6L6 18M6 6l12 12" />;
   }
 }
@@ -140,12 +147,21 @@ export default function OutboundPage() {
   // campaign's counters move with its calls, so the detail is re-read rather
   // than left showing the totals from before the call.
   const [progressKey, setProgressKey] = useState(0);
+  const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const isAuthenticated = Boolean(isUserLoaded && isAuthLoaded && isUserSignedIn && isAuthSignedIn && user);
   const authError = !isUserLoaded || !isAuthLoaded ? null : !isAuthenticated ? "Sign in to view outbound campaigns." : null;
-  const selectedListCampaign = useMemo(() => (selectedId ? campaigns.find((campaign) => campaign.campaign_id === selectedId) : null) ?? campaigns[0] ?? null, [campaigns, selectedId]);
+  // Nothing is selected until a campaign is opened: the page browses the list
+  // first and shows one campaign in an expandable card only once it is picked.
+  const selectedListCampaign = useMemo(() => (selectedId ? campaigns.find((campaign) => campaign.campaign_id === selectedId) ?? null : null), [campaigns, selectedId]);
   const selectedCampaignId = selectedListCampaign?.campaign_id ?? null;
   const selected = detail?.campaign_id === selectedCampaignId ? detail : selectedListCampaign;
+  const filteredCampaigns = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return campaigns;
+    return campaigns.filter((campaign) => [campaign.campaign_name, campaign.campaign_id, campaign.status, campaign.agent_name ?? "", campaign.phone_number ?? ""].some((value) => value.toLowerCase().includes(normalized)));
+  }, [campaigns, query]);
 
   useEffect(() => {
     if (!isUserLoaded || !isAuthLoaded || !isAuthenticated) return;
@@ -156,7 +172,7 @@ export default function OutboundPage() {
         const rows = await apiListCampaigns(getToken);
         if (cancelled) return;
         setCampaigns(rows);
-        setSelectedId((current) => current && rows.some((campaign) => campaign.campaign_id === current) ? current : rows[0]?.campaign_id ?? null);
+        setSelectedId((current) => current && rows.some((campaign) => campaign.campaign_id === current) ? current : null);
         setLoadState("ready");
       } catch (error) { if (!cancelled) { setLoadState("error"); setLoadError(error instanceof Error ? error.message : "Failed to load outbound campaigns"); } }
     })();
@@ -214,7 +230,7 @@ export default function OutboundPage() {
     try {
       await apiDeleteCampaign(campaign.campaign_id, getToken);
       const remaining = campaigns.filter((item) => item.campaign_id !== campaign.campaign_id);
-      setCampaigns(remaining); setSelectedId(remaining[0]?.campaign_id ?? null); setDetail(null); setNotice({ kind: "success", text: "Outbound campaign deleted" });
+      setCampaigns(remaining); setSelectedId(null); setDetail(null); setNotice({ kind: "success", text: "Outbound campaign deleted" });
     } catch (error) { setNotice({ kind: "error", text: error instanceof Error ? error.message : "Failed to delete the campaign" }); }
     finally { setDeletingId(null); }
   }
@@ -232,31 +248,113 @@ export default function OutboundPage() {
     <style dangerouslySetInnerHTML={{ __html: css }} />
     <Sidebar campaignCount={campaigns.length} />
     <main className="ob-main">
-      <header className="ob-page-head"><h1 className="ob-page-title">Outbound</h1><p className="ob-page-copy">Create and manage outbound campaigns.</p></header>
-      {notice ? <div className={`ob-notice ${notice.kind}`}>{notice.text}</div> : null}
-      <div className="ob-body">
-        <section className="ob-card ob-list-column">
-          <div className="ob-list-head"><div><h2>Campaigns</h2><p>{campaigns.length} total</p></div><div className="ob-list-head-actions"><button className="ob-primary-btn ob-list-create" disabled={!isAuthenticated} onClick={() => setCreateOpen(true)} type="button"><Icon name="plus" size={14} />New campaign</button><button aria-label="Refresh campaigns" className="ob-icon-btn" disabled={!isAuthenticated || loadState === "loading"} onClick={() => setReloadKey((key) => key + 1)} type="button"><Icon name="refresh" size={16} /></button></div></div>
-          <div className="ob-list">
-            {effectiveLoadState === "loading" ? <div className="ob-list-message">Loading campaigns…</div> : null}
-            {effectiveLoadState === "error" ? <div className="ob-list-message error">{effectiveLoadError}</div> : null}
-            {effectiveLoadState === "ready" && campaigns.length === 0 ? <div className="ob-list-message">No campaigns yet.</div> : null}
-            {effectiveLoadState === "ready" ? campaigns.map((campaign) => <button className={`ob-list-item${campaign.campaign_id === selectedCampaignId ? " is-active" : ""}`} key={campaign.campaign_id} onClick={() => setSelectedId(campaign.campaign_id)} type="button"><div className="ob-list-top"><strong>{campaign.campaign_name}</strong><StatusChip status={campaign.status} /></div><div className="ob-list-stats"><span>{formatNumber(campaign.leads_count)} leads</span><span>{formatNumber(campaign.calls_placed)} calls</span></div><div className="ob-list-budget">{campaign.agent_name ? `${campaign.agent_name}${campaign.phone_number ? ` · ${campaign.phone_number}` : ""}` : "No agent"} · {formatMoney(campaign.budget_usd)}</div></button>) : null}
+      <header className="ob-topbar">
+        <div className="ob-topbar-heading">
+          <h1 className="ob-topbar-title">Outbound</h1>
+          <p className="ob-topbar-copy">Create and manage outbound campaigns — pick an agent, load leads, and watch the calls land.</p>
+        </div>
+      </header>
+      <div className="ob-content">
+        {selected ? (
+          <ExpandableCardDemoStandard
+            className="ob-expandable-card"
+            dismissDisabled={isEditOpen || Boolean(deletingId)}
+            layoutId={`campaign-${selected.campaign_id}`}
+            onClose={() => setSelectedId(null)}
+            open
+          >
+            <div className="ob-detail">
+              <div className="ob-expandable-topline">
+                <span className="ob-expandable-label">Campaign details</span>
+                <button aria-label="Close campaign details" className="ob-expandable-close" onClick={() => setSelectedId(null)} type="button"><Icon name="x" size={16} /></button>
+              </div>
+              <div className="ob-card ob-detail-head"><div className="ob-detail-title"><span className="ob-detail-icon"><Icon name="target" size={22} /></span><div style={{ minWidth: 0 }}><div className="ob-name-row"><h2>{selected.campaign_name}</h2><StatusChip status={selected.status} /></div><p className="ob-id">{selected.campaign_id}</p></div></div><div className="ob-actions"><button className="ob-secondary-btn" onClick={() => setEditOpen(true)} type="button"><Icon name="edit" size={15} />Edit</button><button className="ob-danger-btn" disabled={selected.status === "running" || deletingId === selected.campaign_id} onClick={() => deleteCampaign(selected)} title={selected.status === "running" ? "Pause the campaign before deleting it" : undefined} type="button"><Icon name="trash" size={15} />{deletingId === selected.campaign_id ? "Deleting…" : "Delete"}</button></div></div>
+              <div aria-label="Campaign sections" className="ob-card ob-tabs" role="tablist">{campaignTabs.map((tab) => <button aria-controls={`campaign-${tab.id}-panel`} aria-selected={activeTab === tab.id} className={activeTab === tab.id ? "is-active" : ""} id={`campaign-${tab.id}-tab`} key={tab.id} onClick={() => setActiveTab(tab.id)} role="tab" type="button">{tab.label}{tab.id === "leads" && selected.leads_count > 0 ? <span>{selected.leads_count}</span> : null}{tab.id === "calls" && selected.calls_placed > 0 ? <span>{selected.calls_placed}</span> : null}</button>)}</div>
+              {detailState === "error" ? <div className="ob-card ob-inline-error">{detailError}</div> : null}
+              {activeTab === "overview" ? <div aria-labelledby="campaign-overview-tab" className="ob-tab-panel" id="campaign-overview-panel" role="tabpanel"><div className="ob-stat-grid"><StatCard label="Leads" value={formatNumber(selected.leads_count)} /><StatCard label="Calls placed" value={formatNumber(selected.calls_placed)} /><StatCard label="Pickup rate" note={`${formatNumber(selected.answered_calls)} answered`} value={formatPercent(selected.pickup_rate)} /><StatCard label="Success rate" note={`${formatNumber(selected.successful_calls)} successful`} value={formatPercent(selected.success_rate)} /></div><div className="ob-card ob-details-card"><h3>Campaign details</h3><div className="ob-detail-grid"><DetailItem label="Status" value={statusLabels[selected.status]} /><DetailItem label="Agent" value={selected.agent_name ?? "No agent"} /><DetailItem label="Calls from" value={selected.phone_number ?? (selected.agent_id ? "Agent has no number" : "—")} /><DetailItem label="Budget" value={formatMoney(selected.budget_usd)} /><DetailItem label="Answered calls" value={formatNumber(selected.answered_calls)} /><DetailItem label="Successful calls" value={formatNumber(selected.successful_calls)} /><DetailItem label="Calls today" value={formatNumber(selected.today_calls)} /><DetailItem label="Today calls date" value={selected.today_calls_date ?? "—"} /><DetailItem label="Total usage" value={formatDuration(selected.total_usage_seconds)} /><DetailItem label="Started" value={formatDate(selected.started_at)} /><DetailItem label="Completed" value={formatDate(selected.completed_at)} /><DetailItem label="Created" value={formatDate(selected.created_at)} /><DetailItem label="Updated" value={formatDate(selected.updated_at)} /></div></div></div> : null}
+              {activeTab === "leads" ? <div aria-labelledby="campaign-leads-tab" id="campaign-leads-panel" role="tabpanel"><CampaignLeadsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onCallPlaced={noteCampaignProgress} onCountChange={updateSelectedLeadCount} /></div> : null}
+              {activeTab === "calls" ? <div aria-labelledby="campaign-calls-tab" id="campaign-calls-panel" role="tabpanel"><CampaignCallsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onProgress={noteCampaignProgress} /></div> : null}
+              {activeTab === "analytics" ? <div aria-labelledby="campaign-analytics-tab" id="campaign-analytics-panel" role="tabpanel"><CampaignAnalyticsWorkspace campaignId={selected.campaign_id} key={`${selected.campaign_id}-${progressKey}`} /></div> : null}
+            </div>
+          </ExpandableCardDemoStandard>
+        ) : (
+          <div className="ob-browse">
+            <div className="ob-toolbar">
+              <div className="ob-toolbar-search">
+                <span className="ob-search-icon"><Icon name="search" size={16} /></span>
+                <input aria-label="Search campaigns" className="ob-search" onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, agent, status..." type="search" value={query} />
+              </div>
+              <div aria-label="View" className="ob-view-toggle" role="group">
+                <button aria-label="List view" aria-pressed={viewMode === "list"} className={`ob-view-btn${viewMode === "list" ? " is-active" : ""}`} onClick={() => setViewMode("list")} title="List view" type="button"><Icon name="list" size={16} /></button>
+                <button aria-label="Grid view" aria-pressed={viewMode === "grid"} className={`ob-view-btn${viewMode === "grid" ? " is-active" : ""}`} onClick={() => setViewMode("grid")} title="Grid view" type="button"><Icon name="grid" size={16} /></button>
+              </div>
+              <span className="ob-count">{query.trim() ? `${filteredCampaigns.length} of ${campaigns.length}` : `${campaigns.length} ${campaigns.length === 1 ? "campaign" : "campaigns"}`}</span>
+              <button aria-label="Refresh campaigns" className="ob-icon-btn" disabled={!isAuthenticated || loadState === "loading"} onClick={() => setReloadKey((key) => key + 1)} title="Refresh" type="button"><Icon name="refresh" size={16} /></button>
+              <button className="ob-primary-btn" disabled={!isAuthenticated} onClick={() => setCreateOpen(true)} type="button"><Icon name="plus" size={15} />New campaign</button>
+            </div>
+
+            {effectiveLoadState === "loading" ? (
+              <div className="ob-list-message"><p>Loading campaigns…</p></div>
+            ) : effectiveLoadState === "error" ? (
+              <div className="ob-list-message error">
+                <p>{effectiveLoadError}</p>
+                {authError ? null : <button className="ob-secondary-btn" onClick={() => setReloadKey((key) => key + 1)} type="button"><Icon name="refresh" size={15} />Try again</button>}
+              </div>
+            ) : campaigns.length === 0 ? (
+              <div className="ob-list-message">
+                <Icon name="target" size={30} />
+                <h2>No campaigns yet</h2>
+                <p>Create a campaign to pick an agent, add leads, and start dialling.</p>
+                <button className="ob-primary-btn" onClick={() => setCreateOpen(true)} type="button"><Icon name="plus" size={15} />New campaign</button>
+              </div>
+            ) : filteredCampaigns.length === 0 ? (
+              <div className="ob-list-message"><p>No campaigns match your search.</p></div>
+            ) : viewMode === "grid" ? (
+              <div className="ob-grid">
+                {filteredCampaigns.map((campaign) => (
+                  <motion.button className="ob-card-item" key={campaign.campaign_id} layoutId={`campaign-${campaign.campaign_id}`} onClick={() => setSelectedId(campaign.campaign_id)} type="button">
+                    <span className="ob-card-top">
+                      <span className="ob-target"><Icon name="target" size={18} /></span>
+                      <StatusChip status={campaign.status} />
+                    </span>
+                    <span className="ob-card-identity">
+                      <span className="ob-row-name">{campaign.campaign_name}</span>
+                      <span className="ob-row-id">{campaign.campaign_id}</span>
+                    </span>
+                    <span className="ob-card-meta">
+                      <span className="ob-card-tile"><span className="ob-row-label">Leads</span><span>{formatNumber(campaign.leads_count)}</span></span>
+                      <span className="ob-card-tile"><span className="ob-row-label">Calls</span><span>{formatNumber(campaign.calls_placed)}</span></span>
+                    </span>
+                    <span className="ob-card-foot">
+                      <span>{campaign.agent_name ? `${campaign.agent_name}${campaign.phone_number ? ` · ${campaign.phone_number}` : ""}` : "No agent"}</span>
+                      <span>{formatMoney(campaign.budget_usd)}</span>
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+            ) : (
+              <div className="ob-list">
+                {filteredCampaigns.map((campaign) => (
+                  <motion.button className="ob-row" key={campaign.campaign_id} layoutId={`campaign-${campaign.campaign_id}`} onClick={() => setSelectedId(campaign.campaign_id)} type="button">
+                    <span className="ob-target"><Icon name="target" size={17} /></span>
+                    <span className="ob-row-identity">
+                      <span className="ob-row-name">{campaign.campaign_name}</span>
+                      <span className="ob-row-id">{campaign.campaign_id}</span>
+                    </span>
+                    <span className="ob-row-field ob-row-leads"><span className="ob-row-label">Leads</span><span>{formatNumber(campaign.leads_count)}</span></span>
+                    <span className="ob-row-field ob-row-calls"><span className="ob-row-label">Calls</span><span>{formatNumber(campaign.calls_placed)}</span></span>
+                    <span className="ob-row-field"><span className="ob-row-label">Agent</span><span>{campaign.agent_name ? `${campaign.agent_name}${campaign.phone_number ? ` · ${campaign.phone_number}` : ""}` : "No agent"}</span></span>
+                    <StatusChip status={campaign.status} />
+                    <span className="ob-row-chevron"><Icon name="chevron" size={17} /></span>
+                  </motion.button>
+                ))}
+              </div>
+            )}
           </div>
-        </section>
-        <section className="ob-detail">
-          {selected ? <>
-            <div className="ob-card ob-detail-head"><div className="ob-detail-title"><span className="ob-target"><Icon name="target" size={22} /></span><div><div className="ob-name-row"><h2>{selected.campaign_name}</h2><StatusChip status={selected.status} /></div><p className="ob-id">{selected.campaign_id}</p></div></div><div className="ob-actions"><button className="ob-secondary-btn" onClick={() => setEditOpen(true)} type="button"><Icon name="edit" size={15} />Edit</button><button className="ob-danger-btn" disabled={selected.status === "running" || deletingId === selected.campaign_id} onClick={() => deleteCampaign(selected)} title={selected.status === "running" ? "Pause the campaign before deleting it" : undefined} type="button"><Icon name="trash" size={15} />{deletingId === selected.campaign_id ? "Deleting…" : "Delete"}</button></div></div>
-            <div aria-label="Campaign sections" className="ob-card ob-tabs" role="tablist">{campaignTabs.map((tab) => <button aria-controls={`campaign-${tab.id}-panel`} aria-selected={activeTab === tab.id} className={activeTab === tab.id ? "is-active" : ""} id={`campaign-${tab.id}-tab`} key={tab.id} onClick={() => setActiveTab(tab.id)} role="tab" type="button">{tab.label}{tab.id === "leads" && selected.leads_count > 0 ? <span>{selected.leads_count}</span> : null}{tab.id === "calls" && selected.calls_placed > 0 ? <span>{selected.calls_placed}</span> : null}</button>)}</div>
-            {detailState === "error" ? <div className="ob-card ob-inline-error">{detailError}</div> : null}
-            {activeTab === "overview" ? <div aria-labelledby="campaign-overview-tab" className="ob-tab-panel" id="campaign-overview-panel" role="tabpanel"><div className="ob-stat-grid"><StatCard label="Leads" value={formatNumber(selected.leads_count)} /><StatCard label="Calls placed" value={formatNumber(selected.calls_placed)} /><StatCard label="Pickup rate" note={`${formatNumber(selected.answered_calls)} answered`} value={formatPercent(selected.pickup_rate)} /><StatCard label="Success rate" note={`${formatNumber(selected.successful_calls)} successful`} value={formatPercent(selected.success_rate)} /></div><div className="ob-card ob-details-card"><h3>Campaign details</h3><div className="ob-detail-grid"><DetailItem label="Status" value={statusLabels[selected.status]} /><DetailItem label="Agent" value={selected.agent_name ?? "No agent"} /><DetailItem label="Calls from" value={selected.phone_number ?? (selected.agent_id ? "Agent has no number" : "—")} /><DetailItem label="Budget" value={formatMoney(selected.budget_usd)} /><DetailItem label="Answered calls" value={formatNumber(selected.answered_calls)} /><DetailItem label="Successful calls" value={formatNumber(selected.successful_calls)} /><DetailItem label="Calls today" value={formatNumber(selected.today_calls)} /><DetailItem label="Today calls date" value={selected.today_calls_date ?? "—"} /><DetailItem label="Total usage" value={formatDuration(selected.total_usage_seconds)} /><DetailItem label="Started" value={formatDate(selected.started_at)} /><DetailItem label="Completed" value={formatDate(selected.completed_at)} /><DetailItem label="Created" value={formatDate(selected.created_at)} /><DetailItem label="Updated" value={formatDate(selected.updated_at)} /></div></div></div> : null}
-            {activeTab === "leads" ? <div aria-labelledby="campaign-leads-tab" id="campaign-leads-panel" role="tabpanel"><CampaignLeadsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onCallPlaced={noteCampaignProgress} onCountChange={updateSelectedLeadCount} /></div> : null}
-            {activeTab === "calls" ? <div aria-labelledby="campaign-calls-tab" id="campaign-calls-panel" role="tabpanel"><CampaignCallsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onProgress={noteCampaignProgress} /></div> : null}
-            {activeTab === "analytics" ? <div aria-labelledby="campaign-analytics-tab" id="campaign-analytics-panel" role="tabpanel"><CampaignAnalyticsWorkspace campaignId={selected.campaign_id} key={`${selected.campaign_id}-${progressKey}`} /></div> : null}
-          </> : effectiveLoadState === "ready" ? <div className="ob-card ob-empty"><Icon name="target" size={30} /><h2>No campaign selected</h2><p>Create a campaign to get started.</p><button className="ob-primary-btn" onClick={() => setCreateOpen(true)} type="button"><Icon name="plus" size={16} />New campaign</button></div> : <div className="ob-card ob-empty"><p>Loading campaign…</p></div>}
-        </section>
+        )}
       </div>
     </main>
+    {notice ? <div className={`ob-toast ${notice.kind}`} role="status">{notice.text}</div> : null}
     {isCreateOpen ? <CreateCampaignModal agents={agentOptions} onClose={() => setCreateOpen(false)} onSubmit={createCampaign} /> : null}
     {isEditOpen && selected ? <EditCampaignModal agents={agentOptions} campaign={selected} onClose={() => setEditOpen(false)} onSubmit={updateCampaign} /> : null}
   </div>;
@@ -315,12 +413,469 @@ function Field({ children, hint, label }: { children: ReactNode; hint?: string; 
 function Modal({ children, onClose, title }: { children: ReactNode; onClose: () => void; title: string }) { return <div className="ob-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="presentation"><div aria-modal="true" className="ob-modal" role="dialog"><div className="ob-modal-head"><h2>{title}</h2><button aria-label="Close" className="ob-icon-btn" onClick={onClose} type="button"><Icon name="x" size={18} /></button></div>{children}</div></div>; }
 
 const css = `
-.ob-shell{--bg:var(--app-bg);--surface:var(--app-surface);--surface-2:var(--app-surface-2);--border:var(--app-line);--text:var(--app-text);--muted:var(--app-muted);--faint:var(--app-faint);--primary:var(--app-primary);background:var(--bg);color:var(--text);display:flex;min-height:100vh;width:100%}.ob-shell *{box-sizing:border-box}
-.ob-sidebar{background:var(--app-sidebar);border-right:1px solid var(--app-line-soft);display:flex;flex:0 0 248px;flex-direction:column;min-height:100vh;padding:22px 16px;position:sticky;top:0}.ob-logo{align-items:center;display:flex;gap:11px;padding:4px 8px 27px}.ob-logo-mark{align-items:center;background:linear-gradient(145deg,var(--app-primary-2),var(--app-primary));border-radius:11px;box-shadow:0 5px 16px var(--app-primary-glow);display:flex;height:36px;justify-content:center;width:36px}.ob-logo-name{font-size:16px;font-weight:800}.ob-logo-sub{color:var(--muted);font-size:11px}.ob-nav-kicker{color:var(--faint);font-size:10px;font-weight:800;letter-spacing:.9px;padding:0 10px 9px;text-transform:uppercase}.ob-nav{display:flex;flex-direction:column;gap:3px}.ob-nav-item{align-items:center;border-radius:10px;color:var(--app-nav);display:flex;font-size:13.5px;font-weight:600;gap:11px;min-height:39px;padding:8px 10px;text-decoration:none}.ob-nav-item:hover{background:var(--app-hover);color:var(--app-text-soft)}.ob-nav-item.is-active{background:var(--app-primary-soft-2);box-shadow:inset 0 0 0 1px var(--app-primary-border);color:var(--app-primary-text)}.ob-nav-badge{background:var(--primary);border-radius:20px;color:var(--app-on-accent);font-size:10px;font-weight:800;margin-left:auto;padding:2px 7px}.ob-sidebar-footer{display:grid;gap:12px;margin-top:auto;padding-top:22px}.ob-user-card{align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:13px;display:flex;gap:10px;padding:10px}.ob-user-copy{min-width:0}.ob-user-name,.ob-user-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ob-user-name{font-size:12.5px;font-weight:750}.ob-user-email{color:var(--muted);font-size:11px;margin-top:2px}
-.ob-main{display:flex;flex:1;flex-direction:column;gap:16px;min-width:0;padding:22px 24px 34px}.ob-page-head{display:block}.ob-page-title{font-size:24px;font-weight:850;letter-spacing:-.5px;margin:0}.ob-page-copy{color:var(--muted);font-size:13px;margin:5px 0 0}.ob-primary-btn,.ob-secondary-btn,.ob-danger-btn{align-items:center;border-radius:11px;cursor:pointer;display:inline-flex;font-size:13px;font-weight:800;gap:8px;justify-content:center;min-height:40px;padding:0 14px}.ob-primary-btn{background:linear-gradient(140deg,var(--app-primary-2),var(--app-primary));border:0;box-shadow:0 5px 15px var(--app-primary-glow);color:var(--app-on-accent)}.ob-secondary-btn{background:var(--app-panel-hover);border:1px solid var(--app-line);color:var(--text)}.ob-danger-btn{background:var(--app-rose-soft);border:1px solid var(--app-rose-border);color:var(--app-rose)}.ob-primary-btn:disabled,.ob-secondary-btn:disabled,.ob-danger-btn:disabled,.ob-icon-btn:disabled{cursor:not-allowed;opacity:.45}.ob-notice{border-radius:10px;font-size:13px;font-weight:650;padding:11px 14px}.ob-notice.success{background:var(--app-green-soft);border:1px solid var(--app-green-border);color:var(--app-green-text)}.ob-notice.error{background:var(--app-rose-soft);border:1px solid var(--app-rose-border);color:var(--app-rose-text)}
-.ob-body{align-items:start;display:grid;gap:16px;grid-template-columns:304px minmax(0,1fr)}.ob-card{background:var(--surface);border:1px solid var(--border);border-radius:16px}.ob-list-column{overflow:hidden;position:sticky;top:22px}.ob-list-head{align-items:center;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;padding:15px 16px}.ob-list-head h2{font-size:14px;margin:0}.ob-list-head p{color:var(--muted);font-size:11.5px;margin:3px 0 0}.ob-list-head-actions{align-items:center;display:flex;gap:4px}.ob-list-create{font-size:11.5px;min-height:34px;padding:0 10px;white-space:nowrap}.ob-icon-btn{align-items:center;background:transparent;border:1px solid transparent;border-radius:9px;color:var(--muted);cursor:pointer;display:inline-flex;height:34px;justify-content:center;width:34px}.ob-icon-btn:hover{background:var(--app-hover-2);color:var(--app-text-strong)}.ob-list{display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 180px);overflow-y:auto;padding:10px}.ob-list-message{color:var(--muted);font-size:12.5px;padding:24px 10px;text-align:center}.ob-list-message.error{color:var(--app-rose-text)}.ob-list-item{background:transparent;border:1px solid transparent;border-radius:13px;color:var(--text);cursor:pointer;display:grid;gap:9px;padding:12px 11px;text-align:left;width:100%}.ob-list-item:hover{background:var(--app-hover)}.ob-list-item.is-active{background:var(--surface-2);border-color:var(--app-primary-border)}.ob-list-top{align-items:center;display:flex;gap:8px}.ob-list-top strong{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ob-list-stats{color:var(--muted);display:flex;font-size:11.5px;gap:12px}.ob-list-budget{color:var(--app-nav);font-size:11.5px}
-.ob-status{align-items:center;border-radius:999px;display:inline-flex;flex-shrink:0;font-size:10px;font-weight:800;gap:5px;padding:4px 8px;text-transform:capitalize}.ob-status-dot{background:currentColor;border-radius:50%;height:5px;width:5px}.ob-status-draft{background:var(--app-slate-soft);color:var(--app-slate)}.ob-status-running{background:var(--app-green-soft);color:var(--app-green)}.ob-status-paused{background:var(--app-amber-soft);color:var(--app-amber)}.ob-status-completed{background:var(--app-primary-soft);color:var(--app-primary-text)}.ob-status-failed{background:var(--app-rose-soft);color:var(--app-rose)}
-.ob-detail{display:grid;gap:16px;margin-top:-66px;min-width:0}.ob-detail-head{align-items:center;display:flex;gap:18px;justify-content:space-between;padding:18px}.ob-detail-title{align-items:center;display:flex;gap:13px;min-width:0}.ob-target{align-items:center;background:var(--app-primary-soft-2);border:1px solid var(--app-primary-border);border-radius:13px;color:var(--app-primary-text);display:flex;flex-shrink:0;height:46px;justify-content:center;width:46px}.ob-name-row{align-items:center;display:flex;flex-wrap:wrap;gap:10px}.ob-name-row h2{font-size:19px;letter-spacing:-.3px;margin:0}.ob-id{color:var(--faint);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;margin:5px 0 0;overflow:hidden;text-overflow:ellipsis}.ob-actions{display:flex;gap:8px}.ob-tabs{align-items:stretch;display:flex;gap:24px;overflow-x:auto;padding:0 18px}.ob-tabs button{align-items:center;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;display:flex;font-size:12.5px;font-weight:700;gap:7px;min-height:48px;padding:0 2px;white-space:nowrap}.ob-tabs button:hover{color:var(--app-text-soft)}.ob-tabs button.is-active{border-bottom-color:var(--app-primary-2);color:var(--app-text-strong)}.ob-tabs button span{background:var(--app-primary-soft-2);border-radius:999px;color:var(--app-primary-text);font-size:9px;min-width:19px;padding:2px 6px}.ob-tab-panel{display:grid;gap:16px}.ob-stat-grid{display:grid;gap:12px;grid-template-columns:repeat(4,minmax(0,1fr))}.ob-stat{display:grid;gap:5px;min-height:98px;padding:15px}.ob-stat>span{color:var(--faint);font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase}.ob-stat>strong{font-size:25px;letter-spacing:-.5px}.ob-stat>small{color:var(--muted);font-size:11px}.ob-details-card{padding:18px}.ob-details-card h3{font-size:14px;margin:0 0 16px}.ob-detail-grid{display:grid;gap:1px;grid-template-columns:repeat(3,minmax(0,1fr));overflow:hidden}.ob-detail-item{background:var(--app-panel);display:grid;gap:6px;min-height:76px;padding:14px}.ob-detail-item span{color:var(--muted);font-size:11px}.ob-detail-item strong{font-size:13px;overflow-wrap:anywhere}.ob-inline-error{color:var(--app-rose-text);font-size:13px;padding:13px 16px}.ob-empty{align-items:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;justify-content:center;min-height:310px;padding:30px;text-align:center}.ob-empty h2{color:var(--text);font-size:17px;margin:3px 0 0}.ob-empty p{font-size:13px;margin:0 0 8px}
-.ob-modal-overlay{align-items:center;background:var(--app-overlay);display:flex;inset:0;justify-content:center;padding:20px;position:fixed;z-index:50}.ob-modal{background:var(--app-elevated);border:1px solid var(--app-line);border-radius:17px;box-shadow:0 28px 80px var(--app-shadow-color);max-width:470px;overflow:hidden;width:100%}.ob-modal-head{align-items:center;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;padding:16px 18px}.ob-modal-head h2{font-size:17px;margin:0}.ob-modal-body{display:grid;gap:16px;padding:18px}.ob-field{display:grid;gap:7px}.ob-field>span{font-size:12px;font-weight:750}.ob-field small{color:var(--muted);font-size:10.5px;font-weight:500;margin-left:7px}.ob-input{background:var(--app-inset);border:1px solid var(--app-line);border-radius:10px;color:var(--app-text);font:inherit;min-height:42px;outline:none;padding:9px 11px;width:100%}.ob-input:focus{border-color:var(--app-primary-2);box-shadow:0 0 0 3px var(--app-primary-ring)}.ob-input option{background:var(--app-elevated)}.ob-form-error{background:var(--app-rose-soft);border:1px solid var(--app-rose-border);border-radius:9px;color:var(--app-rose-text);font-size:12px;padding:9px 11px}.ob-modal-actions{border-top:1px solid var(--border);display:flex;gap:9px;justify-content:flex-end;padding:14px 18px}
-@media(max-width:1050px){.ob-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ob-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:820px){.ob-shell{display:block}.ob-sidebar{min-height:auto;position:static;width:100%}.ob-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ob-sidebar-footer{padding-top:16px}.ob-user-card{display:none}.ob-body{grid-template-columns:1fr}.ob-detail{margin-top:0}.ob-list-column{position:static}.ob-list{max-height:none}.ob-main{padding:18px 14px 28px}}@media(max-width:560px){.ob-detail-head{align-items:stretch;flex-direction:column}.ob-actions{width:100%}.ob-actions button{flex:1}.ob-stat-grid,.ob-detail-grid{grid-template-columns:1fr}.ob-nav{grid-template-columns:1fr}}
+.ob-shell {
+  --bg: var(--app-bg);
+  --sidebar: var(--app-sidebar);
+  --surface: var(--app-surface);
+  --surface-2: var(--app-surface-2);
+  --panel: var(--app-panel);
+  --panel-hover: var(--app-panel-hover);
+  --border: var(--app-border);
+  --border-strong: var(--app-border-strong);
+  --text: var(--app-text);
+  --muted: var(--app-muted);
+  --subtle: var(--app-subtle);
+  --faint: var(--app-faint);
+  --primary: var(--app-primary);
+  --primary-2: var(--app-primary-2);
+  --primary-soft: var(--app-primary-soft);
+  --primary-light: var(--app-primary-light);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  height: 100vh;
+  max-height: 100vh;
+  width: 100vw;
+  max-width: 100vw;
+  overflow: hidden;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ob-shell * { box-sizing: border-box; }
+.ob-shell button, .ob-shell input, .ob-shell select, .ob-shell textarea { font: inherit; }
+.ob-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
+.ob-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
+.ob-shell ::-webkit-scrollbar-track { background: transparent; }
+.ob-sidebar {
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex: 0 0 248px;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 22px 16px;
+  position: sticky;
+  top: 0;
+}
+.ob-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.ob-logo-mark {
+  align-items: center;
+  background: linear-gradient(140deg,var(--primary-2),var(--primary));
+  border-radius: 10px;
+  box-shadow: 0 4px 14px var(--app-primary-glow);
+  color: var(--app-on-accent);
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+.ob-logo-name { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
+.ob-logo-sub { color: var(--subtle); font-size: 11px; font-weight: 500; margin-top: -1px; }
+.ob-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
+.ob-nav { display: flex; flex-direction: column; gap: 3px; }
+.ob-nav-item {
+  align-items: center;
+  border-radius: 10px;
+  color: var(--app-nav);
+  display: flex;
+  font-size: 13.5px;
+  font-weight: 600;
+  gap: 11px;
+  padding: 9px 10px;
+  text-decoration: none;
+  transition: background .18s ease, color .18s ease;
+}
+.ob-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
+.ob-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
+.ob-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
+.ob-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
+.ob-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
+.ob-user-copy { min-width: 0; }
+.ob-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-user-email { color: var(--subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
+.ob-topbar {
+  align-items: center;
+  background: var(--app-topbar);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex: 0 0 auto;
+  gap: 16px;
+  padding: 20px 32px;
+}
+.ob-topbar-heading { flex: 1; min-width: 0; }
+.ob-topbar-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
+.ob-topbar-copy { color: var(--subtle); font-size: 12.5px; margin: 3px 0 0; }
+.ob-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
+.ob-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.ob-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.ob-toolbar-search { flex: 1 1 240px; max-width: 420px; position: relative; }
+.ob-search-icon { color: var(--subtle); display: flex; left: 12px; pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); }
+.ob-search {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  color: var(--text);
+  height: 40px;
+  outline: none;
+  padding: 0 12px 0 38px;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  width: 100%;
+}
+.ob-search::placeholder { color: var(--faint); }
+.ob-search:focus { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
+.ob-view-toggle {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+}
+.ob-view-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  transition: background .18s ease, box-shadow .18s ease, color .18s ease;
+  width: 34px;
+}
+.ob-view-btn:hover { color: var(--text); }
+.ob-view-btn.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); }
+.ob-count {
+  background: var(--app-hover-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  margin-left: auto;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.ob-primary-btn, .ob-secondary-btn, .ob-danger-btn {
+  align-items: center;
+  border-radius: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  transition: background .18s ease, border-color .18s ease, filter .18s ease, transform .18s ease;
+  white-space: nowrap;
+}
+.ob-primary-btn:hover, .ob-secondary-btn:hover, .ob-danger-btn:hover { transform: translateY(-1px); }
+.ob-primary-btn { background: linear-gradient(140deg,var(--primary-2),var(--primary)); border: 1px solid transparent; box-shadow: 0 4px 14px var(--app-primary-glow); color: var(--app-on-accent); }
+.ob-secondary-btn { background: var(--panel-hover); border: 1px solid var(--app-border-strong); color: var(--text); }
+.ob-danger-btn { background: var(--app-rose-soft-2); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+.ob-danger-btn:hover { background: var(--app-rose-border); }
+.ob-primary-btn:disabled, .ob-secondary-btn:disabled, .ob-danger-btn:disabled, .ob-icon-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(.35);
+  opacity: .45;
+  transform: none;
+}
+.ob-icon-btn {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 40px;
+  justify-content: center;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+  width: 40px;
+}
+.ob-icon-btn:hover { background: var(--app-hover-2); border-color: var(--app-border-strong); color: var(--app-text-strong); }
+.ob-list { display: flex; flex-direction: column; gap: 10px; }
+.ob-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+.ob-list-message {
+  align-items: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  font-size: 13.5px;
+  font-weight: 650;
+  gap: 14px;
+  justify-content: center;
+  min-height: 260px;
+  padding: 40px;
+  text-align: center;
+}
+.ob-list-message p { margin: 0; max-width: 440px; }
+.ob-list-message h2 { color: var(--text); font-size: 17px; margin: 0; }
+.ob-list-message.error { color: var(--app-rose-text); }
+.ob-row {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 38px minmax(170px, 1.2fr) minmax(90px, .5fr) minmax(90px, .5fr) minmax(160px, 1fr) auto 18px;
+  padding: 13px 16px;
+  text-align: left;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  width: 100%;
+}
+.ob-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); transform: translateY(-1px); }
+.ob-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.ob-target {
+  align-items: center;
+  background: var(--primary-soft);
+  border: 1px solid var(--app-primary-ring);
+  border-radius: 11px;
+  color: var(--primary-light);
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+.ob-row-identity, .ob-row-field { display: block; min-width: 0; }
+.ob-row-field > span { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-row-label { color: var(--faint); display: block; font-size: 9.5px; font-weight: 850; letter-spacing: .7px; margin-bottom: 3px; text-transform: uppercase; }
+.ob-row-name { display: block; font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-row-id { color: var(--faint); display: block; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-row-chevron { color: var(--faint); display: inline-flex; transition: color .18s ease, transform .18s ease; }
+.ob-row:hover .ob-row-chevron { color: var(--primary-light); transform: translateX(2px); }
+.ob-card-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px var(--app-shadow-soft);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 190px;
+  padding: 16px;
+  text-align: left;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  width: 100%;
+}
+.ob-card-item:hover {
+  background: var(--panel-hover);
+  border-color: var(--app-primary-border);
+  box-shadow: 0 12px 30px var(--app-shadow-soft);
+  transform: translateY(-2px);
+}
+.ob-card-item:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.ob-card-top { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.ob-card-identity { min-width: 0; }
+.ob-card-meta { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; margin-top: auto; }
+.ob-card-tile { background: var(--panel); border: 1px solid var(--app-border); border-radius: 11px; min-width: 0; padding: 9px 10px; }
+.ob-card-tile > span { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-card-foot { align-items: center; color: var(--subtle); display: flex; font-size: 11.5px; gap: 8px; justify-content: space-between; }
+.ob-card-foot span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-status {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  gap: 5px;
+  line-height: 1;
+  padding: 5px 9px;
+  text-transform: capitalize;
+}
+.ob-status-dot { background: currentColor; border-radius: 50%; height: 5px; width: 5px; }
+.ob-status-draft { background: var(--app-slate-soft); color: var(--app-slate); }
+.ob-status-running { background: var(--app-green-soft); color: var(--app-green); }
+.ob-status-paused { background: var(--app-amber-soft); color: var(--app-amber); }
+.ob-status-completed { background: var(--app-primary-soft); color: var(--app-primary-text); }
+.ob-status-failed { background: var(--app-rose-soft); color: var(--app-rose); }
+.expandable-card-backdrop { background: var(--app-overlay); backdrop-filter: blur(6px); inset: 0; position: fixed; z-index: 80; }
+.expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
+.expandable-card-panel { pointer-events: auto; }
+.ob-expandable-card {
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
+  max-height: min(860px, calc(100vh - 48px));
+  max-width: 1120px;
+  overflow: auto;
+  padding: 16px;
+  width: 100%;
+}
+.ob-expandable-topline { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.ob-expandable-label { color: var(--subtle); font-size: 11px; font-weight: 850; letter-spacing: .7px; text-transform: uppercase; }
+.ob-expandable-close {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  transition: background .18s ease, color .18s ease;
+  width: 32px;
+}
+.ob-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
+.ob-detail { display: grid; gap: 16px; min-width: 0; }
+.ob-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px var(--app-shadow-soft); }
+.ob-detail-head { align-items: center; display: flex; flex-wrap: wrap; gap: 18px; justify-content: space-between; padding: 18px; }
+.ob-detail-title { align-items: center; display: flex; gap: 13px; min-width: 0; }
+.ob-detail-icon {
+  align-items: center;
+  background: var(--primary-soft);
+  border: 1px solid var(--app-primary-ring);
+  border-radius: 12px;
+  color: var(--primary-light);
+  display: flex;
+  flex-shrink: 0;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+.ob-name-row { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; }
+.ob-name-row h2 { font-size: 20px; font-weight: 850; letter-spacing: -.35px; margin: 0; }
+.ob-id { color: var(--faint); font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 11px; margin: 5px 0 0; overflow: hidden; text-overflow: ellipsis; }
+.ob-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ob-tabs { align-items: stretch; display: flex; gap: 24px; overflow-x: auto; padding: 0 18px; }
+.ob-tabs button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--subtle);
+  cursor: pointer;
+  display: flex;
+  font-size: 12.5px;
+  font-weight: 750;
+  gap: 7px;
+  min-height: 48px;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+.ob-tabs button:hover { color: var(--app-text-soft); }
+.ob-tabs button.is-active { border-bottom-color: var(--primary-2); color: var(--app-text-strong); }
+.ob-tabs button span { background: var(--primary-soft); border-radius: 999px; color: var(--app-primary-text); font-size: 9.5px; min-width: 19px; padding: 2px 6px; }
+.ob-tab-panel { display: grid; gap: 16px; }
+.ob-stat-grid { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ob-stat { display: grid; gap: 5px; min-height: 98px; padding: 15px; }
+.ob-stat > span { color: var(--faint); font-size: 10.5px; font-weight: 850; letter-spacing: .7px; text-transform: uppercase; }
+.ob-stat > strong { font-size: 25px; font-weight: 850; letter-spacing: -.5px; }
+.ob-stat > small { color: var(--subtle); font-size: 11px; }
+.ob-details-card { padding: 18px; }
+.ob-details-card h3 { font-size: 14px; font-weight: 850; margin: 0 0 16px; }
+.ob-detail-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ob-detail-item { background: var(--panel); border: 1px solid var(--app-border); border-radius: 12px; display: grid; gap: 5px; min-width: 0; padding: 12px 14px; }
+.ob-detail-item span { color: var(--faint); font-size: 10.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+.ob-detail-item strong { font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+.ob-inline-error { color: var(--app-rose-text); font-size: 13px; padding: 13px 16px; }
+.ob-modal-overlay {
+  align-items: center;
+  background: var(--app-overlay);
+  backdrop-filter: blur(3px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 120;
+}
+.ob-modal {
+  background: var(--app-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  box-shadow: 0 28px 80px var(--app-shadow-color-strong);
+  max-width: 470px;
+  overflow: hidden;
+  width: 100%;
+}
+.ob-modal-head { align-items: center; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; padding: 16px 18px; }
+.ob-modal-head h2 { font-size: 17px; font-weight: 850; letter-spacing: -.2px; margin: 0; }
+.ob-modal-body { display: grid; gap: 16px; padding: 18px; }
+.ob-field { display: grid; gap: 7px; }
+.ob-field > span { font-size: 12px; font-weight: 800; }
+.ob-field small { color: var(--subtle); font-size: 10.5px; font-weight: 500; margin-left: 7px; }
+.ob-input {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  color: var(--text);
+  min-height: 42px;
+  outline: none;
+  padding: 9px 11px;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  width: 100%;
+}
+.ob-input::placeholder { color: var(--faint); }
+.ob-input:focus { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
+.ob-input option { background: var(--app-elevated); }
+.ob-form-error { background: var(--app-rose-soft); border: 1px solid var(--app-rose-border); border-radius: 10px; color: var(--app-rose-text); font-size: 12px; padding: 9px 11px; }
+.ob-modal-actions { border-top: 1px solid var(--border); display: flex; gap: 9px; justify-content: flex-end; padding: 14px 18px; }
+.ob-toast {
+  border-radius: 12px;
+  bottom: 24px;
+  box-shadow: 0 18px 50px var(--app-shadow-color);
+  font-size: 13px;
+  font-weight: 750;
+  left: 50%;
+  max-width: min(480px, calc(100vw - 48px));
+  padding: 12px 18px;
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 140;
+}
+.ob-toast.success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
+.ob-toast.error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+@media (max-width: 1180px) {
+  .ob-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ob-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ob-row { grid-template-columns: 38px minmax(160px, 1.2fr) minmax(90px, .5fr) minmax(150px, 1fr) auto 18px; }
+  .ob-row-calls { display: none; }
+}
+@media (max-width: 980px) {
+  .ob-shell { display: block; height: auto; max-height: none; overflow: visible; }
+  .ob-main { height: auto; overflow: visible; }
+  .ob-content { overflow: visible; padding: 20px; }
+  .ob-sidebar { height: auto; overflow: visible; position: static; width: 100%; }
+  .ob-sidebar-footer { margin-top: 18px; }
+  .ob-user-card { display: none; }
+  .ob-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ob-topbar { padding: 18px 20px; }
+  .ob-detail-head { align-items: flex-start; flex-direction: column; }
+  .ob-row { grid-template-columns: 38px minmax(150px, 1fr) minmax(150px, .9fr) auto 18px; }
+  .ob-row-leads { display: none; }
+}
+@media (max-width: 640px) {
+  .ob-nav { grid-template-columns: 1fr 1fr; }
+  .ob-topbar, .ob-content { padding: 16px 14px; }
+  .ob-stat-grid, .ob-detail-grid { grid-template-columns: 1fr; }
+  .ob-toolbar-search { max-width: none; min-width: 100%; }
+  .ob-count { margin-left: 0; }
+  .ob-row { gap: 10px; grid-template-columns: 38px minmax(0, 1fr) auto; padding: 11px; }
+  .ob-row-field, .ob-row-chevron { display: none; }
+  .ob-actions { width: 100%; }
+  .ob-actions button { flex: 1; }
+  .expandable-card-stage { align-items: stretch; padding: 0; }
+  .ob-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; padding: 12px; }
+}
 `;

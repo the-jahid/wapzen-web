@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { siteConfig } from "@/lib/site";
 import { ThemeToggleButton } from "@/components/theme/ThemeToggle";
+import { WisprFlowText } from "@/blocks/wispr-flow-text-animation";
+import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -73,33 +75,6 @@ const iconPaths: Record<IconName, string[]> = {
   ],
   bolt: ["M13 3 5 13.5h5.5L11 21l8-10.5h-5.5L13 3Z"],
 };
-
-const metrics: Array<[string, string]> = [
-  ["24/7", "always-on coverage"],
-  ["3 min", "avg. lead response"],
-  ["2-way", "voice + WhatsApp"],
-  ["40+", "languages spoken"],
-];
-
-const trustLogos = [
-  "BrightClinic",
-  "Estate Co.",
-  "LumeAgency",
-  "NorthDental",
-  "SkylineEdu",
-  "Vantage Auto",
-];
-
-const capturedFields = [
-  "Full name",
-  "Phone number",
-  "Service interest",
-  "Budget range",
-  "Location",
-  "Urgency",
-  "Preferred time",
-  "Objection notes",
-];
 
 const capabilities: Array<{
   icon: IconName;
@@ -320,6 +295,83 @@ const jsonLd = {
   ],
 };
 
+// Rides the curve behind the hero: one call, the way the agent handles it.
+const heroTranscript =
+  "Hi, thanks for calling — I can help with that. Let me check the calendar… " +
+  "I have Thursday at 2pm or Friday morning, which works better for you? Great, " +
+  "Thursday at 2 it is — I have sent the details to this number on WhatsApp. " +
+  "What is the best email for the confirmation? Perfect, got it. And roughly how " +
+  "many people is this for, so the team can prepare? Understood. You will get a " +
+  "reminder the day before, and if anything changes just reply here and I will " +
+  "move it. Thanks for calling — talk soon.";
+
+const heroPeople = [
+  {
+    id: 1,
+    name: "John Doe",
+    designation: "Software Engineer",
+    image:
+      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80",
+  },
+  {
+    id: 2,
+    name: "Robert Johnson",
+    designation: "Product Manager",
+    image:
+      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+  },
+  {
+    id: 3,
+    name: "Jane Smith",
+    designation: "Data Scientist",
+    image:
+      "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+  },
+  {
+    id: 4,
+    name: "Emily Davis",
+    designation: "UX Designer",
+    image:
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
+  },
+  {
+    id: 5,
+    name: "Tyler Durden",
+    designation: "Soap Developer",
+    image:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80",
+  },
+  {
+    id: 6,
+    name: "Dora",
+    designation: "The Explorer",
+    image:
+      "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3534&q=80",
+  },
+];
+
+function StarRating({ count = 5 }: { count?: number }) {
+  return (
+    <div
+      aria-label={count + " out of 5 stars"}
+      className="flex items-center gap-0.5 text-amber-400"
+      role="img"
+    >
+      {Array.from({ length: count }, (_, i) => (
+        <svg
+          aria-hidden="true"
+          className="h-4 w-4"
+          fill="currentColor"
+          key={i}
+          viewBox="0 0 24 24"
+        >
+          <path d={iconPaths.star[0]} />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
 function Icon({ name, className = "h-6 w-6" }: { name: IconName; className?: string }) {
   return (
     <svg
@@ -355,102 +407,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* Wide "live call console" shown under the hero */
-function CallConsole() {
-  return (
-    <div
-      aria-hidden="true"
-      className="overflow-hidden rounded-2xl border border-site-border bg-site-panel shadow-[0_60px_120px_-40px_var(--site-console-shadow)]"
-    >
-      {/* window bar */}
-      <div className="flex items-center justify-between border-b border-site-border bg-site-fill px-5 py-3">
-        <div className="flex items-center gap-2">
-          {[
-            "bg-site-text-faint/40",
-            "bg-site-text-faint/60",
-            "bg-site-text-faint/80",
-          ].map((c, i) => (
-            <span className={`h-2.5 w-2.5 rounded-full ${c}`} key={i} />
-          ))}
-        </div>
-        <p className="flex items-center gap-2 text-xs font-medium text-site-text-muted">
-          <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-live" />
-          Live call · WhatsCall Agent
-        </p>
-        <span className="rounded-md bg-site-fill-2 px-2 py-1 font-mono text-[0.65rem] font-semibold text-site-text-soft">
-          00:42
-        </span>
-      </div>
-
-      <div className="grid gap-px bg-site-fill-2 lg:grid-cols-[1.15fr_0.85fr_1fr]">
-        {/* transcript */}
-        <div className="space-y-3 bg-site-panel p-5">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-site-text-faint">
-            Transcript
-          </p>
-          <div className="max-w-[85%] rounded-xl rounded-tl-sm bg-site-fill-2 px-3.5 py-2.5 text-sm text-site-text-soft">
-            Hi, do you have any openings this week?
-          </div>
-          <div className="ml-auto max-w-[90%] rounded-xl rounded-tr-sm bg-linear-to-br from-brand-bright to-brand px-3.5 py-2.5 text-sm font-medium text-white">
-            We do — Thursday 2:30pm or Friday 11am. Which works best?
-          </div>
-          <div className="max-w-[60%] rounded-xl rounded-tl-sm bg-site-fill-2 px-3.5 py-2.5 text-sm text-site-text-soft">
-            Thursday is perfect.
-          </div>
-        </div>
-
-        {/* waveform + status */}
-        <div className="flex flex-col bg-site-panel p-5">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-site-text-faint">
-            Voice
-          </p>
-          <div className="mt-3 flex flex-1 items-center justify-center gap-1 rounded-xl bg-site-fill px-4 py-6">
-            {[0.4, 0.7, 1, 0.55, 0.85, 0.3, 0.95, 0.6, 0.75, 0.45, 0.9, 0.5, 0.7, 0.35].map(
-              (h, i) => (
-                <span
-                  key={i}
-                  className="eq-bar w-1 rounded-full bg-linear-to-t from-brand to-brand-light"
-                  style={{ height: `${h * 48}px`, animationDelay: `${i * 90}ms` }}
-                />
-              )
-            )}
-          </div>
-          <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-site-border bg-site-fill px-3.5 py-2.5">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-live/15 text-live">
-              <Icon name="check" className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-xs font-semibold text-site-text">Appointment booked</p>
-              <p className="text-[0.7rem] text-site-text-faint">Thu 2:30pm · WhatsApp reminder sent</p>
-            </div>
-          </div>
-        </div>
-
-        {/* captured lead */}
-        <div className="bg-site-panel p-5">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-site-text-faint">
-            Captured lead
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {capturedFields.map((field) => (
-              <span
-                className="rounded-full border border-site-border bg-site-fill px-3 py-1.5 text-xs text-site-text-muted"
-                key={field}
-              >
-                {field}
-              </span>
-            ))}
-          </div>
-          <div className="mt-4 rounded-xl bg-site-fill px-3.5 py-2.5 text-xs leading-5 text-site-text-faint">
-            Synced to CRM and posted to the team&apos;s WhatsApp thread the moment
-            the call ends.
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function SectionHeading({
   eyebrow,
   title,
@@ -472,6 +428,85 @@ function SectionHeading({
         {title}
       </h2>
       {sub ? <p className="mt-4 text-base leading-7 text-site-text-muted">{sub}</p> : null}
+    </div>
+  );
+}
+
+const deckBars = [34, 52, 28, 64, 40, 74, 50, 66, 44, 80, 58, 88];
+
+function FeyDeck() {
+  const layer = (i: number) => ({ "--i": i } as React.CSSProperties);
+  return (
+    <div className="fey-deck">
+      <div className="fey-floor" />
+      {[5, 4, 3, 2, 1].map((i) => (
+        <div className="fey-panel" key={i} style={layer(i)} />
+      ))}
+      <div className="fey-panel" style={layer(0)}>
+        <div className="flex h-full flex-col p-5 text-left">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="grid h-5 w-5 place-items-center rounded-md bg-linear-to-br from-brand-bright to-brand text-white">
+                <Icon name="phone" className="h-3 w-3" />
+              </span>
+              <span className="text-[10px] font-semibold tracking-wide text-white/75">
+                WhatsCall
+              </span>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white/50">
+              <span className="h-1 w-1 rounded-full bg-emerald-400" />
+              Live
+            </span>
+          </div>
+
+          <div className="mt-5 flex items-end justify-between">
+            <div>
+              <p className="text-[8px] font-semibold uppercase tracking-[0.2em] text-white/35">
+                Calls answered
+              </p>
+              <p className="font-display text-2xl font-bold text-white">1,284</p>
+            </div>
+            <p className="pb-1 text-[10px] font-bold text-emerald-400">+24.6%</p>
+          </div>
+
+          <div className="relative mt-4 h-24 overflow-hidden rounded-lg border border-white/[0.07] bg-white/[0.02]">
+            <div className="absolute inset-0 bg-[radial-gradient(90%_100%_at_50%_100%,rgba(99,102,241,0.4),transparent_72%)]" />
+            <div className="absolute inset-x-2.5 bottom-2 flex items-end gap-[3px]">
+              {deckBars.map((height, i) => (
+                <span
+                  className="flex-1 rounded-[2px] bg-white/30"
+                  key={i}
+                  style={{ height: `${height * 0.8}px` }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-2">
+            <div className="h-1.5 w-4/5 rounded-full bg-white/12" />
+            <div className="h-1.5 w-3/5 rounded-full bg-white/[0.07]" />
+            <div className="h-1.5 w-2/3 rounded-full bg-white/[0.07]" />
+          </div>
+
+          <div className="mt-auto grid grid-cols-3 gap-2">
+            {[
+              ["Booked", "32"],
+              ["Leads", "57"],
+              ["Missed", "0"],
+            ].map(([label, value]) => (
+              <div
+                className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-2.5 py-2"
+                key={label}
+              >
+                <p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-white/35">
+                  {label}
+                </p>
+                <p className="mt-0.5 text-xs font-bold text-white/85">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -553,106 +588,82 @@ export default function Home() {
       </header>
 
       <main id="main">
-        {/* ============ HERO (centered) ============ */}
-        <section aria-labelledby="hero-heading" className="relative overflow-hidden" id="top">
-          <div className="bg-grid absolute inset-0 [mask-image:radial-gradient(70%_50%_at_50%_0%,#000_30%,transparent_100%)]" />
-          <div className="absolute left-1/2 top-[-18rem] h-[36rem] w-[60rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(99,102,241,0.16),transparent)] blur-3xl" />
+        {/* ============ HERO ============ */}
+        <section
+          aria-label="Hero"
+          className="relative overflow-hidden border-b border-site-border bg-[#030303]"
+          id="top"
+        >
+          {/* Ambient backdrop */}
+          <div
+            aria-hidden="true"
+            className="bg-grid absolute inset-0 opacity-40 [mask-image:radial-gradient(60%_60%_at_50%_45%,#000_20%,transparent_100%)]"
+          />
+          <WisprFlowText
+            className="pointer-events-none absolute inset-0 h-full w-full [mask-image:radial-gradient(75%_70%_at_50%_52%,#000_15%,transparent_100%)]"
+            fontSize={13}
+            speed={18}
+            strokeColor="rgba(255,255,255,0.04)"
+            text={heroTranscript}
+            textColor="#ffffff"
+            textOpacity={0.09}
+          />
 
-          <div className="relative mx-auto max-w-7xl px-5 pb-20 pt-36 sm:px-8 sm:pt-44 lg:px-10">
-            <div className="mx-auto max-w-3xl text-center">
-              <p className="rise mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-site-border bg-site-fill px-4 py-2 text-sm font-medium text-site-text-soft">
-                <span className="pulse-dot h-2 w-2 rounded-full bg-live" />
-                Voice automation for WhatsApp-first sales teams
-              </p>
-              <h1
-                className="rise text-balance font-display text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
-                id="hero-heading"
-                style={{ animationDelay: "80ms" }}
-              >
-                The WhatsApp <span className="text-shimmer">AI voice agent</span>{" "}
-                that never misses a lead
+          <div className="relative z-10 mx-auto grid min-h-svh max-w-7xl items-center gap-16 px-5 py-32 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10">
+            <div className="relative z-10 flex flex-col items-center gap-7 text-center lg:items-start lg:text-left">
+              <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                One agent behind every call.
               </h1>
-              <p
-                className="rise mx-auto mt-6 max-w-2xl text-lg leading-8 text-site-text-muted sm:text-xl"
-                style={{ animationDelay: "160ms" }}
-              >
-                Auto-answer inbound calls, run outbound follow-ups, book
-                appointments, and collect qualified leads from every WhatsApp
-                conversation — around the clock.
+              <p className="max-w-xl text-balance text-sm leading-7 text-white/55 sm:text-base">
+                The WhatsApp AI voice agent that answers, qualifies, and books
+                appointments — so no lead ever goes cold.
               </p>
-              <div
-                className="rise mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-                style={{ animationDelay: "240ms" }}
-              >
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <Show when="signed-out">
+                  <SignUpButton mode="modal">
+                    <button
+                      className="rounded-xl bg-linear-to-b from-brand-bright to-brand px-6 py-3 text-sm font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
+                      type="button"
+                    >
+                      Start free
+                    </button>
+                  </SignUpButton>
+                </Show>
+                <Show when="signed-in">
+                  <a
+                    className="rounded-xl bg-linear-to-b from-brand-bright to-brand px-6 py-3 text-sm font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
+                    href="/dashboard"
+                  >
+                    Open dashboard
+                  </a>
+                </Show>
                 <a
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-b from-brand-bright to-brand px-7 py-3.5 text-base font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
+                  className="rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/85 backdrop-blur transition hover:border-white/30 hover:text-white"
                   href="#demo"
                 >
-                  Start booking calls
-                  <Icon
-                    name="arrow"
-                    className="h-5 w-5 transition-transform group-hover:translate-x-0.5"
-                  />
-                </a>
-                <a
-                  className="inline-flex items-center justify-center rounded-xl border border-site-border-strong px-7 py-3.5 text-base font-semibold text-site-text transition hover:border-site-border-strong hover:bg-site-fill-2"
-                  href="#workflow"
-                >
-                  See how it works
+                  Book a demo
                 </a>
               </div>
-              <ul
-                className="rise mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-site-text-faint"
-                style={{ animationDelay: "300ms" }}
-              >
-                {["No credit card required", "Live in under a day", "Keeps your number"].map(
-                  (point) => (
-                    <li className="flex items-center gap-2" key={point}>
-                      <Icon name="check" className="h-4 w-4 text-site-text-muted" />
-                      {point}
-                    </li>
-                  )
-                )}
-              </ul>
-            </div>
 
-            {/* live call console */}
-            <div
-              className="rise relative mx-auto mt-16 max-w-5xl"
-              style={{ animationDelay: "360ms" }}
-            >
-              <CallConsole />
-            </div>
-
-            {/* metrics strip */}
-            <dl
-              className="rise mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-y-8 sm:grid-cols-4 sm:divide-x sm:divide-white/[0.08]"
-              style={{ animationDelay: "420ms" }}
-            >
-              {metrics.map(([value, label]) => (
-                <div className="text-center" key={label}>
-                  <dt className="sr-only">{label}</dt>
-                  <dd className="font-display text-3xl font-bold text-site-text">{value}</dd>
-                  <dd className="mt-1 text-sm font-medium text-site-text-faint">{label}</dd>
+              <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
+                <div className="flex flex-row items-center justify-center pr-4">
+                  <AnimatedTooltip items={heroPeople} />
                 </div>
-              ))}
-            </dl>
-          </div>
+                <div className="flex flex-col items-center gap-1.5 sm:items-start">
+                  <StarRating />
+                  <p className="text-xs text-white/45">
+                    Trusted by sales teams answering every WhatsApp call
+                  </p>
+                </div>
+              </div>
+            </div>
 
-          {/* trust strip */}
-          <div className="relative border-t border-site-border py-8">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-site-text-faint">
-                Trusted by appointment-driven teams
-              </p>
-              {trustLogos.map((logo) => (
-                <span
-                  key={logo}
-                  className="whitespace-nowrap font-display text-base font-bold tracking-tight text-site-text-faint"
-                >
-                  {logo}
-                </span>
-              ))}
+            {/* Fey-style stacked screens */}
+            <div
+              aria-hidden="true"
+              className="fey-stage flex items-center justify-center lg:justify-start lg:pl-4"
+            >
+              <FeyDeck />
             </div>
           </div>
         </section>

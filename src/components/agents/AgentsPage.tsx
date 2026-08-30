@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createPortal } from "react-dom";
+import { motion } from "motion/react";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
@@ -85,6 +87,7 @@ type CallDirection = "inbound" | "outbound" | "both";
 type LlmProvider = "openai" | "anthropic";
 type ModelSectionProvider = LlmProvider | "openai_realtime";
 type LlmModel =
+  | "gpt-5.6-sol"
   | "gpt-5.6-terra"
   | "gpt-5.6-luna"
   | "gpt-5.5"
@@ -113,6 +116,7 @@ type LlmModel =
   | "o1"
   | "o1-mini"
   | "o1-preview"
+  | "claude-opus-5"
   | "claude-sonnet-5"
   | "claude-sonnet-4-6"
   | "claude-sonnet-4-5-20250929"
@@ -263,6 +267,7 @@ type CreateForm = {
 
 type IconName =
   | "grid"
+  | "list"
   | "agents"
   | "phone"
   | "phoneOut"
@@ -444,6 +449,7 @@ const modelSectionProviders: Option<ModelSectionProvider>[] = [
 
 const llmModels: Record<LlmProvider, Option<LlmModel>[]> = {
   openai: [
+    { id: "gpt-5.6-sol", label: "GPT 5.6 Sol" },
     { id: "gpt-5.6-terra", label: "GPT 5.6 Terra" },
     { id: "gpt-5.6-luna", label: "GPT 5.6 Luna" },
     { id: "gpt-5.5", label: "GPT 5.5" },
@@ -474,6 +480,10 @@ const llmModels: Record<LlmProvider, Option<LlmModel>[]> = {
     { id: "o1-preview", label: "o1 Preview" },
   ],
   anthropic: [
+    {
+      id: "claude-opus-5",
+      label: "Claude Opus 5",
+    },
     {
       id: "claude-sonnet-5",
       label: "Claude Sonnet 5 — 1180ms · $0.013/min · 40 Intelligence",
@@ -1076,6 +1086,13 @@ function iconPaths(name: IconName): ReactNode {
           <rect height="5" rx="1.5" width="7" x="3" y="16" />
         </>
       );
+    case "list":
+      return (
+        <>
+          <path d="M9 6h11M9 12h11M9 18h11" />
+          <path d="M4 6h.01M4 12h.01M4 18h.01" />
+        </>
+      );
     case "agents":
       return (
         <>
@@ -1409,7 +1426,9 @@ const css = `
   align-items: stretch;
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(250px, 285px) minmax(470px, 1fr) minmax(330px, 370px);
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 1320px;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -1466,24 +1485,66 @@ const css = `
 .search-wrap { margin-bottom: 12px; position: relative; }
 .search-icon { color: var(--subtle); left: 12px; position: absolute; top: 50%; transform: translateY(-50%); }
 .search-input { padding-left: 38px; }
-.agents-list { display: flex; flex-direction: column; gap: 8px; }
-.agent-row {
+.agents-browse { display: flex; flex-direction: column; gap: 16px; min-height: 0; width: 100%; }
+.agents-browse-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.agents-browse-search { flex: 1 1 240px; margin-bottom: 0; max-width: 420px; }
+.agents-browse-count {
+  background: var(--app-hover-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  margin-left: auto;
+  padding: 6px 10px;
+}
+.agents-view-toggle {
+  background: var(--panel);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+}
+.agents-view-btn {
   align-items: center;
   background: transparent;
-  border: 1px solid transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--subtle);
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  width: 34px;
+}
+.agents-view-btn.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); }
+.agents-view-btn:disabled { cursor: not-allowed; opacity: .45; }
+.agents-browse-toolbar .agents-btn-sm { min-height: 40px; padding: 0 15px; }
+.agents-list { display: flex; flex: 1 1 auto; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+.agent-row {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 13px;
   color: inherit;
   cursor: pointer;
   display: grid;
-  gap: 10px;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
-  padding: 10px;
+  gap: 16px;
+  grid-template-columns: 38px minmax(170px, 1.2fr) minmax(110px, .62fr) minmax(155px, .85fr) minmax(130px, .7fr) auto 18px;
+  padding: 13px 16px;
   text-align: left;
-  transition: background .18s ease, border-color .18s ease;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
   width: 100%;
 }
-.agent-row:hover { background: var(--app-hover); }
+.agent-row:hover { background: var(--app-hover); border-color: var(--app-border-strong); transform: translateY(-1px); }
 .agent-row.is-selected { background: var(--primary-soft); border-color: var(--app-primary-border); box-shadow: inset 0 0 0 1px var(--app-primary-ring); }
+.agent-row-identity { display: block; min-width: 0; }
+.agent-row-meta { display: block; min-width: 0; }
+.agent-row-meta-label { color: var(--faint); display: block; font-size: 9.5px; font-weight: 800; letter-spacing: .65px; margin-bottom: 3px; text-transform: uppercase; }
+.agent-row-meta-value { color: var(--subtle); display: block; font-size: 11.5px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-row-chevron { color: var(--faint); transform: rotate(-90deg); }
 .agent-avatar {
   align-items: center;
   border: 1px solid var(--app-border-strong);
@@ -1870,7 +1931,7 @@ const css = `
   overflow: auto;
   padding: 6px;
   position: fixed;
-  z-index: 100;
+  z-index: 160;
 }
 .select-field-option {
   align-items: center;
@@ -1991,6 +2052,57 @@ const css = `
 }
 .search-select-status.is-available { color: var(--green); }
 .search-select-status.is-selected { color: var(--rose); }
+.expandable-card-backdrop {
+  background: rgba(3, 4, 10, .76);
+  backdrop-filter: blur(10px);
+  inset: 0;
+  position: fixed;
+  z-index: 80;
+}
+.expandable-card-stage {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+  position: fixed;
+  z-index: 90;
+}
+.expandable-card-panel { pointer-events: auto; }
+.voice-agent-expandable {
+  background: var(--bg);
+  border: 1px solid var(--app-border-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 100px var(--app-shadow-color);
+  height: min(880px, calc(100vh - 48px));
+  max-width: 1240px;
+  overflow: hidden;
+  width: 100%;
+}
+.voice-agent-expanded-shell { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.voice-agent-expanded-bar {
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  padding: 13px 16px 13px 20px;
+}
+.voice-agent-expanded-kicker { color: var(--faint); font-size: 9.5px; font-weight: 850; letter-spacing: .8px; text-transform: uppercase; }
+.voice-agent-expanded-title { font-size: 15px; font-weight: 850; margin-top: 2px; }
+.voice-agent-expanded-grid {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 370px);
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px;
+}
+.voice-agent-expanded-grid .agents-editor { min-height: 0; }
+.voice-agent-expanded-grid .config-panel { min-height: 0; }
 .modal-backdrop {
   align-items: center;
   background: var(--app-overlay);
@@ -1999,7 +2111,7 @@ const css = `
   justify-content: center;
   padding: 24px;
   position: fixed;
-  z-index: 50;
+  z-index: 120;
 }
 .modal-card {
   background: var(--surface);
@@ -2336,7 +2448,7 @@ const css = `
   padding: 12px 18px;
   position: fixed;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 170;
 }
 .toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-green-text); }
 .toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
@@ -2588,10 +2700,11 @@ const css = `
 .voice-load-more { justify-self: center; }
 @media (max-width: 1500px) {
   .agents-content { overflow-y: auto; }
-  .agents-workspace { grid-template-columns: minmax(240px, 280px) minmax(470px, 1fr); height: auto; }
-  .agents-workspace > * { max-height: none; }
-  .agents-panel, .agents-editor, .agents-panel-pad { overflow: visible; }
-  .config-panel { grid-column: 1 / -1; position: static; }
+  .agents-workspace { grid-template-columns: minmax(0, 1fr); height: 100%; }
+}
+@media (max-width: 1100px) {
+  .agent-row { grid-template-columns: 38px minmax(170px, 1fr) minmax(110px, .6fr) minmax(150px, .8fr) auto 18px; }
+  .agent-row-resources { display: none; }
 }
 @media (max-width: 980px) {
   .agents-shell { display: block; height: auto; max-height: none; overflow: visible; }
@@ -2616,13 +2729,23 @@ const css = `
   .voice-grid { grid-template-columns: 1fr; }
   .agent-detail-head { grid-template-columns: 1fr; }
   .agent-actions { justify-content: flex-start; }
+  .voice-agent-expanded-grid { grid-template-columns: 1fr; overflow-y: auto; }
+  .voice-agent-expanded-grid .agents-editor,
+  .voice-agent-expanded-grid .config-panel { max-height: none; overflow: visible; }
+}
+@media (max-width: 760px) {
+  .agent-row { grid-template-columns: 38px minmax(150px, 1fr) minmax(105px, .65fr) auto 18px; }
+  .agent-row-phone { display: none; }
+  .expandable-card-stage { padding: 10px; }
+  .voice-agent-expandable { border-radius: 16px; height: calc(100vh - 20px); }
 }
 @media (max-width: 560px) {
   .agents-nav { grid-template-columns: 1fr 1fr; }
   .agents-content, .modal-backdrop { padding: 14px; }
   .agent-key-form { grid-template-columns: 1fr; }
-  .agent-row { grid-template-columns: 36px minmax(0, 1fr); }
-  .agent-row .status-pill { grid-column: 2; justify-self: start; }
+  .agent-row { gap: 10px; grid-template-columns: 36px minmax(0, 1fr) auto; padding: 11px; }
+  .agent-row-meta, .agent-row-chevron { display: none; }
+  .agent-row .status-pill { grid-column: auto; justify-self: end; }
   .agent-heading-row { align-items: flex-start; flex-direction: column; }
   .agent-actions, .agents-btn { width: 100%; }
   .modal-footer { flex-direction: column-reverse; }
@@ -2970,6 +3093,7 @@ function SelectField<T extends string>({
       {open && !disabled && popoverStyle ? createPortal(
         <div
           className={`select-field-popover${compact ? " select-field-popover-rich" : ""}`}
+          data-expandable-card-ignore
           ref={popoverRef}
           role="listbox"
           style={popoverStyle}
@@ -3765,7 +3889,7 @@ export default function AgentsPage() {
         const loaded = resources.map(agentFromApi);
         setAgents(loaded);
         setSelectedId((current) =>
-          current && loaded.some((agent) => agent.id === current) ? current : loaded[0]?.id ?? null
+          current && loaded.some((agent) => agent.id === current) ? current : null
         );
         setLoadState("ready");
       } catch (error) {
@@ -3798,7 +3922,9 @@ export default function AgentsPage() {
     return () => clearTimeout(timer);
   }, [notice]);
 
-  const selectedAgent = agents.find((agent) => agent.id === selectedId) ?? agents[0] ?? null;
+  const selectedAgent = selectedId
+    ? agents.find((agent) => agent.id === selectedId) ?? null
+    : null;
 
   // Only connected numbers can carry calls, so connected numbers are the
   // selectable pool. Conflicts stay visible as disabled options.
@@ -4137,7 +4263,7 @@ export default function AgentsPage() {
       await apiDeleteAgent(selectedAgent.id, getToken);
       const remaining = agents.filter((agent) => agent.id !== selectedAgent.id);
       setAgents(remaining);
-      setSelectedId(remaining[0]?.id ?? null);
+      setSelectedId(null);
       setNotice({ kind: "success", text: `Agent "${selectedAgent.name}" deleted` });
       setIsDeleteConfirmOpen(false);
     } catch (error) {
@@ -4178,7 +4304,7 @@ export default function AgentsPage() {
                 </Link>
               </div>
             </div>
-          ) : !selectedAgent ? (
+          ) : agents.length === 0 ? (
             <div className="workspace-message">
               <p>No voice agents yet. Create your first agent to get started.</p>
               <button className="agents-btn agents-btn-primary" onClick={openCreateModal} type="button">
@@ -4194,10 +4320,37 @@ export default function AgentsPage() {
               onCreate={openCreateModal}
               onQueryChange={setQuery}
               onSelect={setSelectedId}
+              phoneNumbers={phoneNumbers}
               query={query}
-              selectedId={selectedAgent.id}
+              selectedId={selectedAgent?.id ?? ""}
             />
 
+            <ExpandableCardDemoStandard
+              className="voice-agent-expandable"
+              dismissDisabled={
+                isDeleteConfirmOpen || configModalSection !== null || isCreateOpen
+              }
+              layoutId={`voice-agent-${selectedAgent?.id ?? "none"}`}
+              onClose={() => setSelectedId(null)}
+              open={Boolean(selectedAgent)}
+            >
+              {selectedAgent ? (
+                <div className="voice-agent-expanded-shell">
+                  <div className="voice-agent-expanded-bar">
+                    <div>
+                      <div className="voice-agent-expanded-kicker">Voice agent editor</div>
+                      <div className="voice-agent-expanded-title">{selectedAgent.name}</div>
+                    </div>
+                    <button
+                      aria-label="Close agent details"
+                      className="agents-icon-btn"
+                      onClick={() => setSelectedId(null)}
+                      type="button"
+                    >
+                      <Icon name="x" size={18} sw={2.2} />
+                    </button>
+                  </div>
+                  <div className="voice-agent-expanded-grid">
             <section className="agents-editor">
               <EditorHeader
                 agent={selectedAgent}
@@ -4353,6 +4506,10 @@ export default function AgentsPage() {
                 </div>
               </div>
             </aside>
+                  </div>
+                </div>
+              ) : null}
+            </ExpandableCardDemoStandard>
           </section>
           )}
         </div>
@@ -4501,6 +4658,7 @@ function AgentList({
   onCreate,
   onQueryChange,
   onSelect,
+  phoneNumbers,
   query,
   selectedId,
 }: {
@@ -4509,27 +4667,19 @@ function AgentList({
   onCreate: () => void;
   onQueryChange: (value: string) => void;
   onSelect: (id: string) => void;
+  phoneNumbers: ApiPhoneNumber[];
   query: string;
   selectedId: string;
 }) {
   return (
-    <aside className="agents-panel">
-      <div className="agents-column-head agents-column-head-split">
-        <div>
-          <h2 className="agents-column-title">Agents</h2>
-          <div className="agents-column-copy">{agents.length} voice agents configured</div>
-        </div>
-        <button className="agents-btn agents-btn-primary agents-btn-sm" onClick={onCreate} type="button">
-          <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
-          New Agent
-        </button>
-      </div>
-      <div className="agents-panel-pad">
-        <div className="search-wrap">
+    <div className="agents-browse">
+      <div className="agents-browse-toolbar">
+        <div className="search-wrap agents-browse-search">
           <span className="search-icon">
             <Icon name="search" size={16} sw={2.2} />
           </span>
           <input
+            aria-label="Search agents"
             className="agents-input search-input"
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Search agents..."
@@ -4537,29 +4687,82 @@ function AgentList({
             value={query}
           />
         </div>
-        <div className="agents-list">
+        <div aria-label="View" className="agents-view-toggle" role="group">
+          <button
+            aria-label="List view"
+            aria-pressed="true"
+            className="agents-view-btn is-active"
+            title="List view"
+            type="button"
+          >
+            <Icon name="list" size={16} sw={2.2} />
+          </button>
+          <button
+            aria-label="Grid view unavailable"
+            aria-pressed="false"
+            className="agents-view-btn"
+            disabled
+            title="Agents use list view"
+            type="button"
+          >
+            <Icon name="grid" size={16} sw={2.2} />
+          </button>
+        </div>
+        <span className="agents-browse-count">
+          {query.trim()
+            ? `${filteredAgents.length} of ${agents.length}`
+            : `${agents.length} ${agents.length === 1 ? "agent" : "agents"}`}
+        </span>
+        <button className="agents-btn agents-btn-primary agents-btn-sm" onClick={onCreate} type="button">
+          <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
+          New Agent
+        </button>
+      </div>
+      <div className="agents-list">
           {filteredAgents.length ? (
-            filteredAgents.map((agent) => (
-              <button
+            filteredAgents.map((agent) => {
+              const phone = phoneNumbers.find((number) => number.id === agent.phone_number_id);
+              return (
+              <motion.button
                 className={`agent-row${agent.id === selectedId ? " is-selected" : ""}`}
                 key={agent.id}
+                layoutId={`voice-agent-${agent.id}`}
                 onClick={() => onSelect(agent.id)}
                 type="button"
               >
                 <AgentAvatar agent={agent} />
-                <span style={{ display: "block", minWidth: 0 }}>
+                <span className="agent-row-identity">
                   <span className="agent-name">{agent.name}</span>
                   <span className="agent-role">{agent.role}</span>
                 </span>
+                <span className="agent-row-meta">
+                  <span className="agent-row-meta-label">Direction</span>
+                  <span className="agent-row-meta-value">
+                    {optionLabel(callDirectionOptions, agent.call_direction)}
+                  </span>
+                </span>
+                <span className="agent-row-meta agent-row-phone">
+                  <span className="agent-row-meta-label">Phone number</span>
+                  <span className="agent-row-meta-value">
+                    {phone ? phoneNumberDetail(phone) : "Not connected"}
+                  </span>
+                </span>
+                <span className="agent-row-meta agent-row-resources">
+                  <span className="agent-row-meta-label">Resources</span>
+                  <span className="agent-row-meta-value">
+                    {agent.knowledge_base_ids.length} KB · {agent.tool_ids.length} tools
+                  </span>
+                </span>
                 <StatusPill status={agent.status} />
-              </button>
-            ))
+                <Icon className="agent-row-chevron" name="chevron" size={17} sw={2.2} />
+              </motion.button>
+              );
+            })
           ) : (
             <div className="empty-list">No agents found</div>
           )}
-        </div>
       </div>
-    </aside>
+    </div>
   );
 }
 

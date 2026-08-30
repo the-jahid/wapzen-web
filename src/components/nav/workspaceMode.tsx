@@ -18,6 +18,7 @@ export type NavIconName =
   | "target"
   | "demo"
   | "chat"
+  | "message"
   | "calendar"
   | "chart"
   | "settings";
@@ -33,7 +34,7 @@ const STORAGE_KEY = "voca.workspace-mode";
 
 // Routes that only exist in one mode. Landing on one of these switches the
 // sidebar to that mode, so a link or a bookmark always shows a coherent menu.
-const chatOnlyPaths = ["/dashboard/chat"];
+const chatOnlyPaths = ["/dashboard/chat", "/dashboard/conversations"];
 const voiceOnlyPaths = [
   "/dashboard/agents",
   "/dashboard/calls",
@@ -42,7 +43,6 @@ const voiceOnlyPaths = [
 ];
 
 const voiceNavItems: WorkspaceNavItem[] = [
-  { label: "Dashboard", icon: "grid", href: "/dashboard" },
   { label: "Agents", icon: "agents", href: "/dashboard/agents" },
   { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
   { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
@@ -50,25 +50,19 @@ const voiceNavItems: WorkspaceNavItem[] = [
   { label: "API Keys", icon: "key", href: "/dashboard/api-keys" },
   { label: "Calls", icon: "phone", href: "/dashboard/calls" },
   { label: "Outbound", icon: "target", href: "/dashboard/outbound" },
-  { label: "Voice", icon: "demo", href: "/dashboard/demo-call" },
-  { label: "Appointments", badge: "12", icon: "calendar" },
-  { label: "Analytics", icon: "chart" },
-  { label: "Settings", icon: "settings" },
 ];
 
 // Chat mode drops everything that only makes sense for a phone call — the voice
-// agent list, the call log, outbound campaigns and the call demo. "Dashboard"
-// goes too: /dashboard redirects to the voice agents workspace, so in chat mode
-// it would only bounce the user back out.
+// agent list, the call log and outbound campaigns.
 const chatNavItems: WorkspaceNavItem[] = [
   { label: "Chat Agents", icon: "chat", href: "/dashboard/chat" },
+  // The account's whole chat inbox. It sits under the agents that produce it,
+  // and the same threads are also readable per agent in the editor's
+  // Conversation tab.
+  { label: "Conversations", icon: "message", href: "/dashboard/conversations" },
   { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
   { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
   { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
-  { label: "API Keys", icon: "key", href: "/dashboard/api-keys" },
-  { label: "Appointments", badge: "12", icon: "calendar" },
-  { label: "Analytics", icon: "chart" },
-  { label: "Settings", icon: "settings" },
 ];
 
 export function navItemsForMode(mode: WorkspaceMode): WorkspaceNavItem[] {

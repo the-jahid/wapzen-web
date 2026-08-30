@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   navItemsForMode,
@@ -27,6 +29,7 @@ type IconName =
   | "phoneOut"
   | "demo"
   | "chat"
+  | "message"
   | "calendar"
   | "chart"
   | "settings"
@@ -36,6 +39,10 @@ type IconName =
   | "book"
   | "wrench"
   | "plus"
+  | "search"
+  | "list"
+  | "chevron"
+  | "x"
   | "copy"
   | "check"
   | "trash"
@@ -97,6 +104,8 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M8.5 12h7M8.5 15.5h4" />
         </>
       );
+    case "message":
+      return <path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z" />;
     case "calendar":
       return (
         <>
@@ -148,6 +157,24 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.8-3.8a6 6 0 01-7.9 7.9l-6.9 6.9a2.1 2.1 0 01-3-3l6.9-6.9a6 6 0 017.9-7.9l-3.8 3.8z" />;
     case "plus":
       return <path d="M12 5v14M5 12h14" />;
+    case "search":
+      return (
+        <>
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-4-4" />
+        </>
+      );
+    case "list":
+      return (
+        <>
+          <path d="M9 6h11M9 12h11M9 18h11" />
+          <path d="M4 6h.01M4 12h.01M4 18h.01" />
+        </>
+      );
+    case "chevron":
+      return <path d="M8 10l4 4 4-4" />;
+    case "x":
+      return <path d="M6 6l12 12M18 6L6 18" />;
     case "copy":
       return (
         <>
@@ -290,7 +317,15 @@ const css = `
 .api-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
 .api-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .api-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.api-main { flex: 1; min-width: 0; }
+.api-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.api-topbar {
+  background: var(--app-topbar);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+  padding: 20px 32px;
+}
+.api-topbar-title { font-size: 21px; font-weight: 850; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
+.api-topbar-copy { color: var(--subtle); font-size: 12.5px; margin-top: 3px; }
 .api-content {
   display: grid;
   gap: 18px;
@@ -298,6 +333,53 @@ const css = `
   max-width: 1180px;
   padding: 34px 32px;
 }
+.api-content.api-browse { display: flex; flex: 1 1 auto; flex-direction: column; gap: 16px; max-width: 1320px; padding: 20px 32px 32px; width: 100%; }
+.api-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.api-search-wrap { flex: 1 1 240px; max-width: 420px; position: relative; }
+.api-search-wrap > svg { color: var(--subtle); left: 12px; position: absolute; top: 50%; transform: translateY(-50%); z-index: 1; }
+.api-search-input { padding-left: 38px; }
+.api-view-toggle { background: var(--panel); border: 1px solid var(--app-border); border-radius: 11px; display: inline-flex; gap: 2px; padding: 3px; }
+.api-view-btn { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--subtle); display: inline-flex; height: 30px; justify-content: center; width: 34px; }
+.api-view-btn.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); }
+.api-view-btn:disabled { cursor: not-allowed; opacity: .45; }
+.api-count { background: var(--app-hover-2); border: 1px solid var(--border-strong); border-radius: 999px; color: var(--subtle); font-size: 11px; font-weight: 800; line-height: 1; margin-left: auto; padding: 6px 10px; }
+.api-refresh-button { height: 42px; width: 42px; }
+.api-key-list { display: flex; flex-direction: column; gap: 10px; }
+.api-key-row {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 38px minmax(150px, 1fr) minmax(150px, .9fr) minmax(150px, .85fr) minmax(150px, .85fr) auto 18px;
+  padding: 13px 16px;
+  text-align: left;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  width: 100%;
+}
+.api-key-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); transform: translateY(-1px); }
+.api-row-icon { align-items: center; background: var(--primary-soft); border: 1px solid var(--app-primary-ring); border-radius: 11px; color: var(--primary-light); display: inline-flex; flex: 0 0 auto; height: 38px; justify-content: center; width: 38px; }
+.api-row-identity, .api-row-meta { display: block; min-width: 0; }
+.api-row-label { color: var(--faint); display: block; font-size: 9.5px; font-weight: 850; letter-spacing: .7px; margin-bottom: 3px; text-transform: uppercase; }
+.api-row-chevron { color: var(--faint); transform: rotate(-90deg); }
+.expandable-card-backdrop { background: rgba(3, 4, 10, .76); backdrop-filter: blur(10px); inset: 0; position: fixed; z-index: 80; }
+.expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
+.expandable-card-panel { pointer-events: auto; }
+.api-expandable-card { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 20px; box-shadow: 0 30px 90px var(--app-shadow-color-strong); display: flex; flex-direction: column; max-height: min(720px, calc(100vh - 48px)); max-width: 720px; overflow: hidden; width: 100%; }
+.api-expandable-head { align-items: center; background: linear-gradient(145deg, var(--app-primary-soft-2), transparent 58%); border-bottom: 1px solid var(--border); display: flex; gap: 13px; padding: 18px 20px; }
+.api-expandable-heading { flex: 1; min-width: 0; }
+.api-expandable-title { font-size: 17px; font-weight: 850; letter-spacing: -.25px; }
+.api-expandable-body { display: grid; gap: 16px; overflow-y: auto; padding: 20px; }
+.api-create-form-expanded { padding: 0; }
+.api-expandable-body .api-secret { border-radius: 14px; }
+.api-detail-grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+.api-detail-grid > div { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; min-width: 0; padding: 14px; }
+.api-detail-value { color: var(--text); display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.api-mono { font-family: var(--font-geist-mono), monospace; }
+.api-expandable-actions { align-items: center; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 14px 18px; }
 .api-header {
   align-items: end;
   display: flex;
@@ -517,7 +599,7 @@ const css = `
   justify-content: center;
   padding: 24px;
   position: fixed;
-  z-index: 70;
+  z-index: 120;
 }
 .api-modal {
   animation: api-modal-in .18s ease;
@@ -566,7 +648,7 @@ const css = `
   padding: 12px 18px;
   position: fixed;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 140;
 }
 .api-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .api-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
@@ -576,17 +658,28 @@ const css = `
   .api-sidebar-footer { margin-top: 18px; }
   .api-user-card { display: none; }
   .api-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .api-content { padding: 22px 20px; }
+  .api-topbar { padding: 18px 20px; }
+  .api-content, .api-content.api-browse { padding: 20px; }
   .api-header { align-items: stretch; flex-direction: column; }
   .api-stat { min-width: 0; }
+  .api-key-row { grid-template-columns: 38px minmax(150px, 1fr) minmax(145px, .85fr) auto 18px; }
+  .api-row-last-used, .api-row-created { display: none; }
 }
 @media (max-width: 640px) {
   .api-nav { grid-template-columns: 1fr 1fr; }
-  .api-content { padding: 16px 14px; }
+  .api-topbar, .api-content, .api-content.api-browse { padding: 16px 14px; }
   .api-create-form, .api-secret-row { grid-template-columns: 1fr; }
   .api-actions { justify-content: flex-start; }
   .api-btn { width: 100%; }
   .api-modal-actions .api-btn { flex: 1; }
+  .api-search-wrap { max-width: none; min-width: 100%; }
+  .api-count { margin-left: 0; }
+  .api-key-row { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; padding: 11px; }
+  .api-row-meta, .api-row-chevron { display: none; }
+  .api-detail-grid { grid-template-columns: 1fr; }
+  .expandable-card-stage { align-items: stretch; padding: 0; }
+  .api-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; }
+  .api-expandable-actions .api-btn { flex: 1 1 auto; width: auto; }
 }
 `;
 
@@ -625,6 +718,9 @@ export default function ApiKeysPage() {
   const [defaultingId, setDefaultingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ApiKey | null>(null);
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [notice, setNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -679,7 +775,19 @@ export default function ApiKeysPage() {
   const effectiveLoadState = authError ? "error" : loadState;
   const effectiveLoadError = authError ?? loadError;
 
-  const defaultKey = useMemo(() => apiKeys.find((key) => key.isDefault), [apiKeys]);
+  const selectedKey = selectedId
+    ? apiKeys.find((key) => key.id === selectedId) ?? null
+    : null;
+  const filteredKeys = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return apiKeys;
+    return apiKeys.filter((key) =>
+      [key.name, key.id, maskKey(key), key.isDefault ? "default" : "active"]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalized)
+    );
+  }, [apiKeys, query]);
   const isNameTooLong = name.trim().length > apiKeyNameLimit;
 
   async function createKey() {
@@ -692,6 +800,7 @@ export default function ApiKeysPage() {
       setCreatedKey(created);
       setAvailableKeySecrets((current) => ({ ...current, [created.id]: created.key }));
       setName("");
+      setSelectedId(null);
       setNotice({ kind: "success", text: `API key "${created.name}" created` });
     } catch (error) {
       setNotice({
@@ -769,6 +878,7 @@ export default function ApiKeysPage() {
       const keys = await apiListApiKeys(getToken);
       setApiKeys(keys);
       if (createdKey?.id === key.id) setCreatedKey(null);
+      if (selectedId === key.id) setSelectedId(null);
       setAvailableKeySecrets((current) => {
         const next = { ...current };
         delete next[key.id];
@@ -791,216 +901,223 @@ export default function ApiKeysPage() {
       <Sidebar activeLabel="API Keys" apiKeyCount={apiKeys.length} />
 
       <main className="api-main">
-        <div className="api-content">
-          <header className="api-header">
-            <div className="api-title-wrap">
-              <div className="api-eyebrow">Developer access</div>
-              <h1 className="api-title">API Keys</h1>
-              <div className="api-subtitle">User-owned bearer keys for live API access.</div>
-            </div>
-            <div className="api-stat" aria-label={`${apiKeys.length} active API keys`}>
-              <span className="api-stat-icon">
-                <Icon name="key" size={18} />
-              </span>
-              <span>
-                <span className="api-stat-value">{apiKeys.length}</span>
-                <span className="api-stat-label">active keys</span>
-              </span>
-            </div>
-          </header>
+        <header className="api-topbar">
+          <div>
+            <h1 className="api-topbar-title">API Keys</h1>
+            <div className="api-topbar-copy">User-owned bearer keys for live API access.</div>
+          </div>
+        </header>
 
-          <section className="api-card" aria-labelledby="create-api-key-title">
-            <div className="api-card-head">
-              <div>
-                <h2 className="api-card-title" id="create-api-key-title">Create API key</h2>
-                <div className="api-card-copy">New keys are shown once after creation.</div>
-              </div>
+        <div className="api-content api-browse">
+          <div className="api-toolbar">
+            <div className="api-search-wrap">
+              <Icon name="search" size={16} sw={2.2} />
+              <input
+                aria-label="Search API keys"
+                className="api-input api-search-input"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search API keys..."
+                type="search"
+                value={query}
+              />
             </div>
-            <form
-              className="api-create-form"
-              onSubmit={(event) => {
-                event.preventDefault();
-                createKey();
-              }}
-            >
-              <label className="api-field">
-                <span className="api-field-label">Name</span>
-                <input
-                  className="api-input"
-                  maxLength={apiKeyNameLimit}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Production"
-                  value={name}
-                />
-              </label>
-              <button
-                className="api-btn api-btn-primary"
-                disabled={isCreating || isNameTooLong || !isAuthenticated}
-                type="submit"
-              >
-                <Icon name="plus" size={16} stroke="#fff" sw={2.4} />
-                {isCreating ? "Creating..." : "Create key"}
+            <div aria-label="View" className="api-view-toggle" role="group">
+              <button aria-label="List view" aria-pressed="true" className="api-view-btn is-active" type="button">
+                <Icon name="list" size={16} sw={2.2} />
               </button>
-            </form>
-          </section>
+              <button aria-label="Grid view unavailable" aria-pressed="false" className="api-view-btn" disabled type="button">
+                <Icon name="grid" size={16} sw={2.2} />
+              </button>
+            </div>
+            <span className="api-count">
+              {query.trim()
+                ? `${filteredKeys.length} of ${apiKeys.length}`
+                : `${apiKeys.length} ${apiKeys.length === 1 ? "key" : "keys"}`}
+            </span>
+            {isAuthenticated ? (
+              <button
+                aria-label="Refresh API keys"
+                className="api-icon-button api-refresh-button"
+                onClick={() => {
+                  setLoadState("loading");
+                  setReloadKey((key) => key + 1);
+                }}
+                type="button"
+              >
+                <Icon name="refresh" size={16} />
+              </button>
+            ) : null}
+            <motion.button
+              className="api-btn api-btn-primary"
+              disabled={!isAuthenticated}
+              layoutId="api-key-create"
+              onClick={() => {
+                setSelectedId(null);
+                setCreatedKey(null);
+                setIsCreateOpen(true);
+              }}
+              type="button"
+            >
+              <Icon name="plus" size={16} stroke="#fff" sw={2.4} />
+              New API Key
+            </motion.button>
+          </div>
 
-          {createdKey ? (
-            <section className="api-card api-secret" aria-labelledby="created-api-key-title">
-              <div className="api-card-head">
-                <div>
-                  <h2 className="api-card-title" id="created-api-key-title">New API key</h2>
-                  <div className="api-card-copy">Copy this value before leaving the page.</div>
-                </div>
-                <button className="api-icon-button" onClick={() => setCreatedKey(null)} type="button">
-                  <Icon name="check" size={16} />
-                </button>
-              </div>
-              <div className="api-secret-body">
-                <div className="api-secret-row">
-                  <input className="api-secret-input" readOnly value={createdKey.key} />
-                  <button className="api-btn api-btn-secondary" onClick={copyCreatedKey} type="button">
-                    <Icon name="copy" size={16} />
-                    Copy key
-                  </button>
-                </div>
-              </div>
-            </section>
-          ) : null}
-
-          <section className="api-card" aria-labelledby="api-keys-list-title">
-            <div className="api-card-head">
-              <div>
-                <h2 className="api-card-title" id="api-keys-list-title">Active keys</h2>
-                <div className="api-card-copy">
-                  {defaultKey ? `Default: ${defaultKey.name}` : "No default key selected"}
-                </div>
-              </div>
+          {effectiveLoadState === "loading" ? (
+            <div className="api-message">Loading API keys...</div>
+          ) : effectiveLoadState === "error" ? (
+            <div className="api-message">
+              <p>{effectiveLoadError}</p>
               {isAuthenticated ? (
-                <button
-                  className="api-btn api-btn-secondary"
+                <button className="api-btn api-btn-secondary" onClick={() => setReloadKey((key) => key + 1)} type="button">
+                  Try again
+                </button>
+              ) : (
+                <Link className="api-btn api-btn-secondary" href="/">Go to sign in</Link>
+              )}
+            </div>
+          ) : filteredKeys.length === 0 ? (
+            <div className="api-message">
+              <p>{apiKeys.length ? `No API keys match “${query}”.` : "No active API keys."}</p>
+            </div>
+          ) : (
+            <div className="api-key-list">
+              {filteredKeys.map((key) => (
+                <motion.button
+                  className="api-key-row"
+                  key={key.id}
+                  layoutId={`api-key-${key.id}`}
                   onClick={() => {
-                    setLoadState("loading");
-                    setReloadKey((key) => key + 1);
+                    setIsCreateOpen(false);
+                    setSelectedId(key.id);
                   }}
                   type="button"
                 >
-                  <Icon name="refresh" size={16} />
-                  Refresh
+                  <span className="api-row-icon"><Icon name="key" size={17} /></span>
+                  <span className="api-row-identity">
+                    <span className="api-key-name">{key.name}</span>
+                    <span className="api-key-id">id {shortId(key.id)}</span>
+                  </span>
+                  <span className="api-row-meta">
+                    <span className="api-row-label">Key</span>
+                    <span className="api-key-mask">{maskKey(key)}</span>
+                  </span>
+                  <span className="api-row-meta api-row-last-used">
+                    <span className="api-row-label">Last used</span>
+                    <span className="api-muted">{formatDate(key.lastUsedAt)}</span>
+                  </span>
+                  <span className="api-row-meta api-row-created">
+                    <span className="api-row-label">Created</span>
+                    <span className="api-muted">{formatDate(key.createdAt)}</span>
+                  </span>
+                  {key.isDefault ? (
+                    <span className="api-pill api-pill-default"><span className="api-dot" />Default</span>
+                  ) : (
+                    <span className="api-pill api-pill-secondary">Active</span>
+                  )}
+                  <Icon className="api-row-chevron" name="chevron" size={17} sw={2.2} />
+                </motion.button>
+              ))}
+            </div>
+          )}
+
+          <ExpandableCardDemoStandard
+            className="api-expandable-card"
+            layoutId="api-key-create"
+            onClose={() => setIsCreateOpen(false)}
+            open={isCreateOpen}
+          >
+            <div className="api-expandable-head">
+              <span className="api-row-icon"><Icon name="plus" size={18} /></span>
+              <div className="api-expandable-heading">
+                <div className="api-expandable-title">Create API key</div>
+                <div className="api-card-copy">New keys are shown only once after creation.</div>
+              </div>
+              <button aria-label="Close API key creation" className="api-icon-button" onClick={() => setIsCreateOpen(false)} type="button">
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+            <div className="api-expandable-body">
+              <form
+                className="api-create-form api-create-form-expanded"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  createKey();
+                }}
+              >
+                <label className="api-field">
+                  <span className="api-field-label">Name</span>
+                  <input autoFocus className="api-input" maxLength={apiKeyNameLimit} onChange={(event) => setName(event.target.value)} placeholder="Production" value={name} />
+                </label>
+                <button className="api-btn api-btn-primary" disabled={isCreating || isNameTooLong || !isAuthenticated} type="submit">
+                  <Icon name="plus" size={16} stroke="#fff" sw={2.4} />
+                  {isCreating ? "Creating..." : "Create key"}
                 </button>
+              </form>
+              {createdKey ? (
+                <section className="api-secret" aria-labelledby="created-api-key-title">
+                  <div className="api-secret-body">
+                    <div>
+                      <h2 className="api-card-title" id="created-api-key-title">Copy your new key now</h2>
+                      <div className="api-card-copy">This plaintext value cannot be shown again.</div>
+                    </div>
+                    <div className="api-secret-row">
+                      <input className="api-secret-input" readOnly value={createdKey.key} />
+                      <button className="api-btn api-btn-secondary" onClick={copyCreatedKey} type="button">
+                        <Icon name="copy" size={16} />Copy key
+                      </button>
+                    </div>
+                  </div>
+                </section>
               ) : null}
             </div>
+          </ExpandableCardDemoStandard>
 
-            {effectiveLoadState === "loading" ? (
-              <div className="api-message">Loading API keys...</div>
-            ) : effectiveLoadState === "error" ? (
-              <div className="api-message">
-                <p>{effectiveLoadError}</p>
-                {isAuthenticated ? (
-                  <button
-                    className="api-btn api-btn-secondary"
-                    onClick={() => {
-                      setLoadState("loading");
-                      setReloadKey((key) => key + 1);
-                    }}
-                    type="button"
-                  >
-                    Try again
+          <ExpandableCardDemoStandard
+            className="api-expandable-card"
+            dismissDisabled={Boolean(pendingDelete)}
+            layoutId={`api-key-${selectedKey?.id ?? "closed"}`}
+            onClose={() => setSelectedId(null)}
+            open={Boolean(selectedKey)}
+          >
+            {selectedKey ? (
+              <>
+                <div className="api-expandable-head">
+                  <span className="api-row-icon"><Icon name="key" size={18} /></span>
+                  <div className="api-expandable-heading">
+                    <div className="api-expandable-title">{selectedKey.name}</div>
+                    <div className="api-card-copy">API key details and access controls</div>
+                  </div>
+                  {selectedKey.isDefault ? <span className="api-pill api-pill-default"><span className="api-dot" />Default</span> : <span className="api-pill api-pill-secondary">Active</span>}
+                  <button aria-label="Close API key details" className="api-icon-button" onClick={() => setSelectedId(null)} type="button">
+                    <Icon name="x" size={16} />
                   </button>
-                ) : (
-                  <Link className="api-btn api-btn-secondary" href="/">
-                    Go to sign in
-                  </Link>
-                )}
-              </div>
-            ) : apiKeys.length === 0 ? (
-              <div className="api-message">
-                <p>No active API keys.</p>
-              </div>
-            ) : (
-              <div className="api-table-wrap">
-                <table className="api-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Key</th>
-                      <th>Status</th>
-                      <th>Last used</th>
-                      <th>Created</th>
-                      <th aria-label="Actions" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {apiKeys.map((key) => {
-                      const isCopyable = secretFor(key) !== null;
-
-                      return (
-                      <tr key={key.id}>
-                        <td>
-                          <div className="api-key-name">{key.name}</div>
-                          <div className="api-key-id">id {shortId(key.id)}</div>
-                        </td>
-                        <td>
-                          <span className="api-key-value">
-                            <span className="api-key-mask">{maskKey(key)}</span>
-                            {isCopyable ? (
-                              <button
-                                aria-label={`Copy ${key.name} API key`}
-                                className={`api-copy-button${copiedKeyId === key.id ? " api-copy-success" : ""}`}
-                                onClick={() => copyKey(key)}
-                                title="Copy API key"
-                                type="button"
-                              >
-                                <Icon name={copiedKeyId === key.id ? "check" : "copy"} size={15} />
-                              </button>
-                            ) : null}
-                          </span>
-                        </td>
-                        <td>
-                          {key.isDefault ? (
-                            <span className="api-pill api-pill-default">
-                              <span className="api-dot" />
-                              Default
-                            </span>
-                          ) : (
-                            <span className="api-pill api-pill-secondary">Active</span>
-                          )}
-                        </td>
-                        <td>
-                          <span className="api-muted">{formatDate(key.lastUsedAt)}</span>
-                        </td>
-                        <td>
-                          <span className="api-muted">{formatDate(key.createdAt)}</span>
-                        </td>
-                        <td>
-                          <div className="api-actions">
-                            <button
-                              className="api-btn api-btn-secondary"
-                              disabled={key.isDefault || defaultingId === key.id}
-                              onClick={() => setDefault(key)}
-                              type="button"
-                            >
-                              <Icon name="star" size={15} />
-                              {defaultingId === key.id ? "Saving..." : "Set default"}
-                            </button>
-                            <button
-                              aria-label={`Delete ${key.name}`}
-                              className="api-icon-button api-btn-danger"
-                              disabled={deletingId === key.id}
-                              onClick={() => setPendingDelete(key)}
-                              type="button"
-                            >
-                              <Icon name="trash" size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+                </div>
+                <div className="api-expandable-body">
+                  <div className="api-detail-grid">
+                    <div><span className="api-row-label">Key ID</span><span className="api-detail-value api-mono">{selectedKey.id}</span></div>
+                    <div><span className="api-row-label">Key</span><span className="api-detail-value api-mono">{maskKey(selectedKey)}</span></div>
+                    <div><span className="api-row-label">Last used</span><span className="api-detail-value">{formatDate(selectedKey.lastUsedAt)}</span></div>
+                    <div><span className="api-row-label">Created</span><span className="api-detail-value">{formatDate(selectedKey.createdAt)}</span></div>
+                  </div>
+                </div>
+                <div className="api-expandable-actions">
+                  {secretFor(selectedKey) ? (
+                    <button className="api-btn api-btn-secondary" onClick={() => copyKey(selectedKey)} type="button">
+                      <Icon name={copiedKeyId === selectedKey.id ? "check" : "copy"} size={15} />
+                      {copiedKeyId === selectedKey.id ? "Copied" : "Copy key"}
+                    </button>
+                  ) : null}
+                  <button className="api-btn api-btn-secondary" disabled={selectedKey.isDefault || defaultingId === selectedKey.id} onClick={() => setDefault(selectedKey)} type="button">
+                    <Icon name="star" size={15} />{defaultingId === selectedKey.id ? "Saving..." : "Set default"}
+                  </button>
+                  <button className="api-btn api-btn-destructive" disabled={deletingId === selectedKey.id} onClick={() => setPendingDelete(selectedKey)} type="button">
+                    <Icon name="trash" size={15} />Delete key
+                  </button>
+                </div>
+              </>
+            ) : null}
+          </ExpandableCardDemoStandard>
         </div>
       </main>
 
