@@ -557,7 +557,11 @@ export default function Home() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <ThemeToggleButton />
             <Show when="signed-out">
-              <SignInButton mode="modal">
+              <SignInButton
+                forceRedirectUrl="/dashboard"
+                mode="modal"
+                signUpForceRedirectUrl="/dashboard"
+              >
                 <button
                   className="rounded-xl px-4 py-2 text-sm font-semibold text-site-text-muted transition hover:text-site-text"
                   type="button"
@@ -565,7 +569,11 @@ export default function Home() {
                   Log in
                 </button>
               </SignInButton>
-              <SignUpButton mode="modal">
+              <SignUpButton
+                forceRedirectUrl="/dashboard"
+                mode="modal"
+                signInForceRedirectUrl="/dashboard"
+              >
                 <button
                   className="rounded-xl bg-linear-to-b from-brand-bright to-brand px-4 py-2 text-sm font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
                   type="button"
@@ -620,7 +628,11 @@ export default function Home() {
               </p>
               <div className="mt-2 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <Show when="signed-out">
-                  <SignUpButton mode="modal">
+                  <SignUpButton
+                    forceRedirectUrl="/dashboard"
+                    mode="modal"
+                    signInForceRedirectUrl="/dashboard"
+                  >
                     <button
                       className="rounded-xl bg-linear-to-b from-brand-bright to-brand px-6 py-3 text-sm font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
                       type="button"

@@ -73,7 +73,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    // Signing in or up without a pending `redirect_url` lands on the dashboard
+    // instead of bouncing back to the landing page.
+    <ClerkProvider
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
       <html
         lang="en"
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full antialiased`}
