@@ -63,6 +63,7 @@ type IconName =
   | "copy"
   | "check"
   | "x"
+  | "menu"
   | "chevron"
   | "back"
   | "list"
@@ -265,6 +266,8 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M5 12.5l4 4 10-10" />;
     case "x":
       return <path d="M18 6L6 18M6 6l12 12" />;
+    case "menu":
+      return <path d="M4 6h16M4 12h16M4 18h16" />;
     case "chevron":
       return <path d="M9 6l6 6-6 6" />;
     case "back":
@@ -405,20 +408,7 @@ const css = `
 .phone-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .phone-user-email { color: var(--subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .phone-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
-.phone-topbar {
-  align-items: center;
-  background: var(--app-topbar);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex: 0 0 auto;
-  gap: 16px;
-  padding: 20px 32px;
-}
-.phone-topbar-wrap { flex: 1; min-width: 0; }
-.phone-topbar-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
-.phone-topbar-copy { color: var(--subtle); font-size: 12.5px; margin-top: 3px; }
-.phone-content { flex: 1 1 auto; min-width: 0; padding: 20px 32px 32px; }
+.phone-content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 32px; }
 .phone-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
 .phone-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .phone-toolbar .phone-search-wrap { flex: 1 1 240px; margin-bottom: 0; max-width: 420px; }
@@ -471,6 +461,7 @@ const css = `
   color: inherit;
   display: grid;
   gap: 16px;
+  grid-template-areas: "avatar identity agents time status";
   grid-template-columns: 36px minmax(0, 1.1fr) minmax(0, 1.4fr) auto auto;
   padding: 13px 16px;
   position: relative;
@@ -479,11 +470,13 @@ const css = `
   width: 100%;
 }
 .phone-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); }
-.phone-row-identity { display: grid; gap: 3px; min-width: 0; }
+.phone-row > .phone-card-avatar { grid-area: avatar; }
+.phone-row > .phone-status-chip { grid-area: status; justify-self: end; }
+.phone-row-identity { display: grid; gap: 3px; grid-area: identity; min-width: 0; }
 .phone-row-name { font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .phone-row-sub { color: var(--subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.phone-row-agents { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
-.phone-row-time { align-items: center; color: var(--subtle); display: inline-flex; font-size: 11.5px; gap: 5px; white-space: nowrap; }
+.phone-row-agents { display: flex; flex-wrap: wrap; gap: 6px; grid-area: agents; min-width: 0; }
+.phone-row-time { align-items: center; grid-area: time; color: var(--subtle); display: inline-flex; font-size: 11.5px; gap: 5px; white-space: nowrap; }
 .phone-card-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1117,37 +1110,138 @@ const css = `
   width: 34px;
 }
 .phone-modal-close:hover { color: var(--app-text-strong); }
+/* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
+.phone-mobilebar { display: none; }
+.phone-sidebar-backdrop { display: none; }
+.phone-mobilebar-menu {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+.phone-mobilebar-menu:hover { background: var(--app-hover); color: var(--text); }
+/* Wide screens: a little more room around the capped content. */
+@media (min-width: 1680px) {
+  .phone-content { padding: 28px 40px 36px; }
+}
 @media (max-width: 1180px) {
   .phone-qr-layout { grid-template-columns: 1fr; }
+}
+/* Laptops: the last-connected time goes, and the agent pickers drop under
+   the number so neither side is squeezed. */
+@media (max-width: 1080px) {
+  .phone-row { gap: 10px 14px; grid-template-areas: "avatar identity status" "avatar agents agents"; grid-template-columns: 36px minmax(0, 1fr) auto; }
+  .phone-row-time { display: none; }
+}
+@media (max-width: 1100px) {
+  .phone-sidebar { padding: 18px 12px; width: 216px; }
+  .phone-content { padding: 20px 20px 28px; }
+  .phone-expandable-card { max-height: min(760px, calc(100dvh - 32px)); }
+  .expandable-card-stage { padding: 16px; }
+}
+/* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar. */
+@media (max-width: 900px) {
+  .phone-shell { display: block; min-height: 100dvh; max-width: 100%; width: 100%; }
+  .phone-mobilebar {
+    align-items: center;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    height: 56px;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 55;
+  }
+  .phone-mobilebar-logo { padding: 0; }
+  .phone-mobilebar-logo .phone-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
+  .phone-sidebar-backdrop {
+    background: var(--app-overlay);
+    display: block;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: fixed;
+    transition: opacity .2s ease;
+    z-index: 65;
+  }
+  .phone-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .phone-sidebar {
+    box-shadow: 0 24px 70px var(--app-shadow-color);
+    height: 100dvh;
+    left: 0;
+    max-width: 86vw;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 22px 16px;
+    position: fixed;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform .24s ease, visibility .24s;
+    visibility: hidden;
+    width: 280px;
+    z-index: 68;
+  }
+  .phone-sidebar.is-open { transform: none; visibility: visible; }
+  .phone-content { padding: 16px; }
+  .phone-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .phone-detail-topbar { align-items: flex-start; flex-direction: column; }
+  .phone-top-actions { justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone-sidebar, .phone-sidebar-backdrop { transition: none; }
 }
 @media (max-width: 780px) {
   .phone-settings-grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 900px) {
-  .phone-shell { display: block; }
-  .phone-topbar, .phone-content { padding-left: 20px; padding-right: 20px; }
-  .phone-sidebar { min-height: 0; position: static; width: 100%; }
-  .phone-sidebar-footer { margin-top: 18px; }
-  .phone-user-card { display: none; }
-  .phone-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .phone-detail-topbar { align-items: flex-start; flex-direction: column; }
-  .phone-top-actions { justify-content: flex-start; }
-}
-@media (max-width: 1080px) {
-  .phone-row { grid-template-columns: 36px minmax(0, 1fr) auto; }
-  .phone-row-agents { grid-column: 2 / -1; }
-  .phone-row-time { display: none; }
-}
+/* Phones: one column, the search gets its own line, and the number's detail
+   card goes full screen. */
 @media (max-width: 640px) {
-  .phone-nav { grid-template-columns: 1fr 1fr; }
-  .phone-topbar, .phone-content, .phone-modal-backdrop { padding: 14px; }
+  .phone-content { padding: 12px 12px calc(16px + env(safe-area-inset-bottom)); }
+  .phone-toolbar { gap: 8px; }
+  .phone-toolbar .phone-search-wrap { flex: 1 1 100%; max-width: none; }
+  .phone-count { margin-left: 0; margin-right: auto; order: 2; }
+  .phone-view-toggle { order: 3; }
+  .phone-create-btn { min-height: 36px; order: 4; }
+  .phone-search, .phone-input { font-size: 16px; } /* stops iOS zooming on focus */
   .phone-grid { grid-template-columns: 1fr; }
+  .phone-card-item, .phone-add-card { min-height: 0; }
+  .phone-card-item:hover { transform: none; }
+  .phone-row { padding: 12px; }
   .phone-top-btn, .phone-ghost-btn, .phone-danger-btn { width: 100%; }
   .phone-top-actions { width: 100%; }
+  .phone-empty-workspace { min-height: 240px; padding: 28px 18px; }
   .expandable-card-stage { align-items: stretch; padding: 0; }
-  .phone-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; }
-  .phone-expandable-head { padding: 16px; }
+  .phone-expandable-card { border: 0; border-radius: 0; height: 100dvh; max-height: 100dvh; max-width: none; }
+  .phone-expandable-head { gap: 10px; padding: 14px; }
+  .phone-expandable-head .phone-summary-icon { height: 38px; width: 38px; }
+  .phone-expandable-title { font-size: 16px; }
+  .phone-expandable-body { flex: 1 1 auto; padding: 12px; }
+  .phone-expandable-actions { padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
   .phone-expandable-actions .phone-top-btn, .phone-expandable-actions .phone-danger-btn { flex: 1 1 auto; width: auto; }
+  .phone-setting-span .phone-assignment-grid { grid-template-columns: 1fr; }
+  .phone-modal-backdrop { align-items: flex-end; padding: 0; }
+  .phone-modal-card { border-radius: 18px 18px 0 0; max-width: none; width: 100%; }
+  .phone-modal-head, .phone-modal-body { padding: 16px; }
+  .phone-modal-footer { flex-direction: column-reverse; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .phone-modal-footer > * { width: 100%; }
+  .phone-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
+}
+/* Narrow phones: the create button keeps only its icon. */
+@media (max-width: 400px) {
+  .phone-create-label { display: none; }
+  .phone-create-btn { padding: 0 10px; }
+  .phone-row { gap: 8px 10px; grid-template-columns: 32px minmax(0, 1fr) auto; }
+  .phone-row > .phone-card-avatar { height: 32px; width: 32px; }
+  .phone-expandable-head .phone-summary-icon { display: none; }
 }
 `;
 
@@ -1638,17 +1732,6 @@ export default function PhoneNumbersPage() {
       <Sidebar activeLabel="Phone Numbers" phoneCount={totalCount} />
 
       <main className="phone-main">
-        <header className="phone-topbar">
-          <div className="phone-topbar-wrap">
-            <h1 className="phone-topbar-title">Phone Numbers</h1>
-            <div className="phone-topbar-copy">
-              {mode === "chat"
-                ? "The WhatsApp numbers your chat agents reply from — pair one by QR, then assign its chat agent."
-                : "The WhatsApp numbers your voice agents call from and answer on — pair one by QR, then assign the agents that take its inbound and outbound calls."}
-            </div>
-          </div>
-        </header>
-
         <div className="phone-content">
           <>
             <PhoneNumberGrid
@@ -1721,9 +1804,45 @@ function Sidebar({
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
   const { mode } = useWorkspaceMode();
+  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
+  // menu button; on wider screens the class is inert and it is always shown.
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   return (
-    <aside className="phone-sidebar">
+    <>
+    <header className="phone-mobilebar">
+      <div className="phone-logo phone-mobilebar-logo">
+        <div className="phone-logo-mark">
+          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+      </div>
+      <button
+        aria-controls="phone-sidebar"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        className="phone-mobilebar-menu"
+        onClick={() => setIsOpen((open) => !open)}
+        type="button"
+      >
+        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
+      </button>
+    </header>
+    <div
+      aria-hidden="true"
+      className={`phone-sidebar-backdrop${isOpen ? " is-open" : ""}`}
+      onClick={() => setIsOpen(false)}
+    />
+    <aside className={`phone-sidebar${isOpen ? " is-open" : ""}`} id="phone-sidebar">
       <div className="phone-logo">
         <div className="phone-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
@@ -1754,7 +1873,7 @@ function Sidebar({
           const className = `phone-nav-item${item.label === activeLabel ? " is-active" : ""}`;
 
           return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
+            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
               {content}
             </Link>
           ) : (
@@ -1776,6 +1895,7 @@ function Sidebar({
         </div>
       </div>
     </aside>
+    </>
   );
 }
 
@@ -1970,9 +2090,15 @@ function PhoneNumberGrid({
               ? `${filteredPhoneNumbers.length} of ${phoneNumbers.length}`
               : `${phoneNumbers.length} ${phoneNumbers.length === 1 ? "number" : "numbers"}`}
         </span>
-        <button className="phone-create-btn" disabled={!isAuthenticated} onClick={onCreate} type="button">
+        <button
+          aria-label="New Number"
+          className="phone-create-btn"
+          disabled={!isAuthenticated}
+          onClick={onCreate}
+          type="button"
+        >
           <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
-          New Number
+          <span className="phone-create-label">New Number</span>
         </button>
       </div>
 

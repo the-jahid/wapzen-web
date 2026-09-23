@@ -62,6 +62,7 @@ type IconName =
   | "trash"
   | "check"
   | "x"
+  | "menu"
   | "chevron"
   | "back";
 
@@ -490,6 +491,8 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M5 12.5l4 4 10-10" />;
     case "x":
       return <path d="M18 6L6 18M6 6l12 12" />;
+    case "menu":
+      return <path d="M4 6h16M4 12h16M4 18h16" />;
   }
 }
 
@@ -607,19 +610,6 @@ const css = `
 .tools-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tools-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tools-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
-.tools-topbar {
-  align-items: center;
-  background: var(--app-topbar);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex: 0 0 auto;
-  gap: 16px;
-  padding: 20px 32px;
-}
-.tools-title-wrap { flex: 1; min-width: 0; }
-.tools-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
-.tools-subtitle { color: var(--subtle); font-size: 12.5px; margin-top: 3px; }
 .tools-demo-pill {
   background: var(--app-amber-soft);
   border: 1px solid var(--app-amber-border);
@@ -630,7 +620,7 @@ const css = `
   padding: 6px 11px;
   white-space: nowrap;
 }
-.tools-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
+.tools-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 24px 32px 32px; }
 .tools-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
 .expandable-card-backdrop { background: var(--app-overlay); inset: 0; position: fixed; z-index: 80; }
 .expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
@@ -753,6 +743,7 @@ const css = `
   cursor: pointer;
   display: grid;
   gap: 16px;
+  grid-template-areas: "avatar identity type summary tail chevron";
   grid-template-columns: 36px minmax(180px, 1.2fr) auto minmax(180px, 1fr) auto 18px;
   padding: 13px 16px;
   text-align: left;
@@ -761,13 +752,15 @@ const css = `
 }
 .tools-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); }
 .tools-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
-.tools-row-identity { display: grid; gap: 3px; min-width: 0; }
+.tools-row > .tools-tile { grid-area: avatar; }
+.tools-row-type { grid-area: type; justify-self: start; }
+.tools-row-identity { display: grid; gap: 3px; grid-area: identity; min-width: 0; }
 .tools-row-name { font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tools-row-desc { color: var(--subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tools-row-summary { align-items: center; display: flex; gap: 8px; min-width: 0; }
+.tools-row-summary { align-items: center; display: flex; gap: 8px; grid-area: summary; min-width: 0; }
 .tools-row-line { color: var(--subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tools-row-tail { color: var(--faint); font-size: 11px; font-weight: 750; white-space: nowrap; }
-.tools-row-chevron { color: var(--faint); display: inline-flex; transition: color .18s ease, transform .18s ease; }
+.tools-row-tail { color: var(--faint); font-size: 11px; font-weight: 750; grid-area: tail; white-space: nowrap; }
+.tools-row-chevron { color: var(--faint); display: inline-flex; grid-area: chevron; transition: color .18s ease, transform .18s ease; }
 .tools-row:hover .tools-row-chevron { color: var(--primary-light); transform: translateX(2px); }
 .tools-card-item {
   background: var(--surface);
@@ -1088,33 +1081,123 @@ const css = `
 }
 .tools-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .tools-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+/* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
+.tools-mobilebar { display: none; }
+.tools-sidebar-backdrop { display: none; }
+.tools-mobilebar-menu {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+.tools-mobilebar-menu:hover { background: var(--app-hover); color: var(--text); }
+/* Wide screens: a little more room around the capped content. */
+@media (min-width: 1680px) {
+  .tools-content { padding: 28px 40px 36px; }
+}
+/* Laptops: the param count goes and the endpoint folds under the name. */
+@media (max-width: 1240px) {
+  .tools-row { gap: 8px 14px; grid-template-areas: "avatar identity type chevron" "avatar summary summary chevron"; grid-template-columns: 36px minmax(0, 1fr) auto 18px; }
+  .tools-row-tail { display: none; }
+}
 @media (max-width: 1100px) {
   .tools-param-row { grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr); }
   .tools-param-row .tools-required { grid-column: 1 / -1; }
-  .tools-row { grid-template-columns: 36px minmax(180px, 1fr) auto minmax(150px, .8fr) 18px; }
-  .tools-row-tail { display: none; }
+  .tools-sidebar { padding: 18px 12px; width: 216px; }
+  .tools-content { padding: 20px 20px 28px; }
+  .expandable-card-stage { padding: 16px; }
+  .tools-expandable-card { max-height: min(820px, calc(100dvh - 32px)); }
 }
-@media (max-width: 980px) {
-  .tools-shell { display: block; height: auto; max-height: none; overflow: visible; }
-  .tools-sidebar { height: auto; width: 100%; }
+/* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar,
+   and the page scrolls as a whole. */
+@media (max-width: 900px) {
+  .tools-shell { display: block; height: auto; max-height: none; min-height: 100dvh; max-width: 100%; overflow: visible; width: 100%; }
+  .tools-mobilebar {
+    align-items: center;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    height: 56px;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  .tools-mobilebar-logo { padding: 0; }
+  .tools-mobilebar-logo .tools-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
+  .tools-sidebar-backdrop {
+    background: var(--app-overlay);
+    display: block;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: fixed;
+    transition: opacity .2s ease;
+    z-index: 70;
+  }
+  .tools-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .tools-sidebar {
+    box-shadow: 0 24px 70px var(--app-shadow-color);
+    height: 100dvh;
+    left: 0;
+    max-width: 86vw;
+    position: fixed;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform .24s ease, visibility .24s;
+    visibility: hidden;
+    width: 280px;
+    z-index: 75;
+  }
+  .tools-sidebar.is-open { transform: none; visibility: visible; }
   .tools-main { height: auto; overflow: visible; }
-  .tools-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .tools-user-card { display: none; }
-  .tools-content { overflow: visible; padding: 18px 20px 26px; }
-  .tools-topbar { padding: 18px 20px; }
+  .tools-content { overflow: visible; padding: 16px; }
+  .tools-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 }
+@media (prefers-reduced-motion: reduce) {
+  .tools-sidebar, .tools-sidebar-backdrop { transition: none; }
+}
+/* Phones: search on its own line, single-column forms, full-screen detail
+   card and bottom-sheet dialogs. */
 @media (max-width: 640px) {
-  .tools-nav { grid-template-columns: 1fr 1fr; }
-  .tools-content { padding: 14px 14px 22px; }
-  .tools-toolbar .tools-search-wrap { max-width: none; }
-  .tools-toolbar .tools-btn-primary { flex: 1 1 auto; }
+  .tools-content { padding: 12px 12px calc(16px + env(safe-area-inset-bottom)); }
+  .tools-toolbar { gap: 8px; }
+  .tools-toolbar .tools-search-wrap { flex: 1 1 100%; max-width: none; }
+  .tools-toolbar .tools-count { margin-left: 0; margin-right: auto; order: 2; }
+  .tools-view-toggle { order: 3; }
+  .tools-toolbar-new { order: 4; }
+  .tools-shell input, .tools-shell select, .tools-shell textarea { font-size: 16px; } /* stops iOS zooming on focus */
+  .tools-grid { grid-template-columns: 1fr; }
+  .tools-card-item { min-height: 0; }
+  .tools-card-item:hover { transform: none; }
   .tools-grid-2, .tools-kv-row, .tools-param-row, .tools-type-grid { grid-template-columns: minmax(0, 1fr); }
   .tools-detail-head { grid-template-columns: minmax(0, 1fr); }
-  .tools-modal-actions .tools-btn { flex: 1; }
-  .tools-row { gap: 10px; grid-template-columns: 36px minmax(0, 1fr) auto 18px; padding: 12px; }
-  .tools-row-summary { grid-column: 2 / -1; grid-row: 2; }
+  .tools-row { gap: 8px 10px; grid-template-areas: "avatar identity type" "avatar summary summary"; grid-template-columns: 36px minmax(0, 1fr) auto; padding: 12px; }
+  .tools-row-chevron { display: none; }
   .expandable-card-stage { align-items: stretch; padding: 0; }
-  .tools-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; padding: 14px; }
+  .tools-expandable-card { border: 0; border-radius: 0; height: 100dvh; max-height: 100dvh; max-width: none; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .tools-modal-overlay { align-items: flex-end; padding: 0; }
+  .tools-modal { border-radius: 18px 18px 0 0; max-height: calc(100dvh - 24px); max-width: none; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .tools-modal-sm { max-width: none; }
+  .tools-modal-actions { flex-direction: column-reverse; }
+  .tools-modal-actions .tools-btn { width: 100%; }
+  .tools-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
+}
+/* Narrow phones: the create button keeps only its icon, and the type badge
+   drops under the name. */
+@media (max-width: 400px) {
+  .tools-toolbar-new-label { display: none; }
+  .tools-toolbar-new { padding: 0 11px; }
+  .tools-row { grid-template-areas: "avatar identity" "avatar type" "avatar summary"; grid-template-columns: 32px minmax(0, 1fr); }
+  .tools-row > .tools-tile { height: 32px; width: 32px; }
 }
 `;
 
@@ -1325,16 +1408,6 @@ export default function ToolsPage() {
       <Sidebar activeLabel="Tools" toolCount={tools.length} />
 
       <main className="tools-main">
-        <header className="tools-topbar">
-          <div className="tools-title-wrap">
-            <h1 className="tools-title">Tools</h1>
-            <div className="tools-subtitle">
-              Actions your agents can take during a call — hit an API, send a message, hand over,
-              hang up. Attach them to an agent from its Tools section.
-            </div>
-          </div>
-        </header>
-
         <div className="tools-content">
             <div className="tools-browse">
               <div className="tools-toolbar">
@@ -1377,9 +1450,14 @@ export default function ToolsPage() {
                     ? `${visibleTools.length} of ${tools.length}`
                     : `${tools.length} tool${tools.length === 1 ? "" : "s"}`}
                 </span>
-                <button className="tools-btn tools-btn-primary" onClick={openCreate} type="button">
+                <button
+                  aria-label="Create Tool"
+                  className="tools-btn tools-btn-primary tools-toolbar-new"
+                  onClick={openCreate}
+                  type="button"
+                >
                   <Icon name="plus" size={16} sw={2.4} />
-                  Create Tool
+                  <span className="tools-toolbar-new-label">Create Tool</span>
                 </button>
               </div>
 
@@ -1437,7 +1515,7 @@ export default function ToolsPage() {
                           <span className="tools-row-name">{tool.name}</span>
                           <span className="tools-row-desc">{tool.description || meta.blurb}</span>
                         </span>
-                        <span className="tools-badge tools-badge-neutral">{meta.label}</span>
+                        <span className="tools-badge tools-badge-neutral tools-row-type">{meta.label}</span>
                         <span className="tools-row-summary">
                           {summary.method ? (
                             <span className="tools-chip-method">{summary.method}</span>
@@ -2184,9 +2262,45 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
   const { mode } = useWorkspaceMode();
+  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
+  // menu button; on wider screens the class is inert and it is always shown.
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   return (
-    <aside className="tools-sidebar">
+    <>
+    <header className="tools-mobilebar">
+      <div className="tools-logo tools-mobilebar-logo">
+        <div className="tools-logo-mark">
+          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+      </div>
+      <button
+        aria-controls="tools-sidebar"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        className="tools-mobilebar-menu"
+        onClick={() => setIsOpen((open) => !open)}
+        type="button"
+      >
+        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
+      </button>
+    </header>
+    <div
+      aria-hidden="true"
+      className={`tools-sidebar-backdrop${isOpen ? " is-open" : ""}`}
+      onClick={() => setIsOpen(false)}
+    />
+    <aside className={`tools-sidebar${isOpen ? " is-open" : ""}`} id="tools-sidebar">
       <div className="tools-logo">
         <div className="tools-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
@@ -2214,7 +2328,7 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
           const className = `tools-nav-item${item.label === activeLabel ? " is-active" : ""}`;
 
           return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
+            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
               {content}
             </Link>
           ) : (
@@ -2241,5 +2355,6 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
         </div>
       </div>
     </aside>
+    </>
   );
 }

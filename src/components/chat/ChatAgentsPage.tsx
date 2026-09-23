@@ -57,6 +57,7 @@ type IconName =
   | "refresh"
   | "chevron"
   | "check"
+  | "menu"
   | "x";
 
 // The collapsible parts of the configuration panel, one per section of the
@@ -254,6 +255,8 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M6 9l6 6 6-6" />;
     case "check":
       return <path d="M5 12.5l4 4 10-10" />;
+    case "menu":
+      return <path d="M4 6h16M4 12h16M4 18h16" />;
     case "x":
       return <path d="M6 6l12 12M18 6L6 18" />;
   }
@@ -592,6 +595,25 @@ const css = `
 .chat-list-row.is-active { background: var(--primary-soft); border-color: var(--app-primary-border); }
 .chat-list-row > .chat-avatar { grid-area: avatar; }
 .chat-list-row > .chat-pill { grid-area: status; }
+/* Loading placeholders: the real row grid with pulsing blocks in place of each
+   field, so the list does not jump when the agents arrive. */
+.chat-list-skeleton { cursor: default; }
+.chat-list-skeleton:hover { background: var(--surface); border-color: var(--border); box-shadow: none; }
+.chat-list-skeleton > .chat-skel-avatar { grid-area: avatar; }
+.chat-list-skeleton > .chat-skel-pill { grid-area: status; }
+.chat-skel {
+  animation: chat-skel-pulse 1.4s ease-in-out infinite;
+  background: var(--panel-hover);
+  border-radius: 6px;
+  display: block;
+  height: 12px;
+  max-width: 100%;
+}
+.chat-skel-sm { height: 9px; }
+.chat-skel-avatar { border-radius: 10px; height: 32px; width: 32px; }
+.chat-skel-pill { border-radius: 999px; height: 20px; width: 64px; }
+@keyframes chat-skel-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .chat-skel { animation: none; } }
 .chat-avatar {
   align-items: center;
   border-radius: 10px;
@@ -956,38 +978,134 @@ const css = `
 .chat-number-hint.is-blocked { color: var(--faint); }
 .chat-number-empty { color: var(--subtle); font-size: 12px; line-height: 1.55; }
 .chat-number-empty a { color: var(--primary-light); font-weight: 700; }
-@media (max-width: 1280px) {
-  .chat-list-row { grid-template-areas: "avatar identity model status chevron" "avatar resources resources status chevron"; grid-template-columns: 36px minmax(180px, 1fr) minmax(150px, .8fr) auto 18px; gap: 8px 14px; }
+/* The top bar and drawer backdrop only exist below the tablet breakpoint. */
+.chat-topbar { display: none; }
+.chat-sidebar-backdrop { display: none; }
+/* Large desktops: the list is capped at 1320px, so give the wide screen a
+   little more breathing room rather than stretching the rows. */
+@media (min-width: 1680px) {
+  .chat-content { padding: 28px 40px; }
 }
+/* Laptops: fold the resource counts under the model so nothing truncates. */
+@media (max-width: 1280px) {
+  .chat-list-row { grid-template-areas: "avatar identity model status chevron" "avatar resources resources status chevron"; grid-template-columns: 36px minmax(160px, 1fr) minmax(130px, .8fr) auto 18px; gap: 8px 14px; }
+  .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
+}
+/* Small laptops / landscape tablets: a slimmer sidebar keeps the list usable. */
+@media (max-width: 1100px) {
+  .chat-sidebar { padding: 18px 12px; width: 216px; }
+  .chat-content { padding: 18px 20px; }
+  .chat-agent-expandable { height: min(820px, calc(100dvh - 32px)); }
+  .expandable-card-stage { padding: 16px; }
+}
+/* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar,
+   and the page scrolls as a whole instead of each pane on its own. */
 @media (max-width: 900px) {
-  .chat-number-grid { grid-template-columns: 1fr; }
-  .chat-qr-frame { justify-self: center; max-width: 260px; width: 100%; }
-  .chat-shell { display: block; height: auto; max-height: none; overflow: visible; }
+  .chat-shell { display: block; height: auto; max-height: none; min-height: 100dvh; overflow: visible; width: 100%; max-width: 100%; }
+  .chat-topbar {
+    align-items: center;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    height: 56px;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  .chat-topbar-logo { padding: 0; }
+  .chat-topbar-logo .chat-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
+  .chat-topbar-menu { height: 38px; width: 38px; }
+  .chat-sidebar-backdrop {
+    background: var(--app-overlay);
+    display: block;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: fixed;
+    transition: opacity .2s ease;
+    z-index: 70;
+  }
+  .chat-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .chat-sidebar {
+    box-shadow: 0 24px 70px var(--app-shadow-color);
+    height: 100dvh;
+    left: 0;
+    max-width: 86vw;
+    overflow-y: auto;
+    padding: 22px 16px;
+    position: fixed;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform .24s ease, visibility .24s;
+    visibility: hidden;
+    width: 280px;
+    z-index: 75;
+  }
+  .chat-sidebar.is-open { transform: none; visibility: visible; }
   .chat-main { height: auto; overflow: visible; }
-  .chat-content { padding: 20px; }
-  .chat-sidebar { height: auto; position: static; width: 100%; }
-  .chat-sidebar-footer { margin-top: 18px; }
-  .chat-user-card { display: none; }
-  .chat-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .chat-content { padding: 16px; }
   .chat-workspace { grid-template-columns: 1fr; }
   .chat-panel { max-height: none; }
+  .chat-agent-browser { overflow: visible; }
+  .chat-agent-browser > .chat-panel-body { overflow: visible; }
+  .chat-number-grid { grid-template-columns: 1fr; }
+  .chat-qr-frame { justify-self: center; max-width: 260px; width: 100%; }
   .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr); overflow: auto; }
   .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
   .chat-agent-expanded-grid > .chat-config-panel { overflow: visible; }
+  .chat-list-row { grid-template-areas: "avatar identity status chevron" "avatar model resources resources"; grid-template-columns: 36px minmax(0, 1fr) auto 18px; gap: 8px 12px; }
+  .chat-list-model { align-items: baseline; display: flex; gap: 6px; }
+  .chat-list-resources { justify-content: flex-end; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .chat-sidebar, .chat-sidebar-backdrop { transition: none; }
+}
+/* Phones: one column everywhere, the agent editor goes full screen, and
+   touch targets grow a little. */
 @media (max-width: 640px) {
-  .chat-nav { grid-template-columns: 1fr 1fr; }
-  .chat-content { padding: 14px; }
+  .chat-content { padding: 12px; }
+  .chat-panel-head { padding: 12px 14px; }
+  .chat-panel-body { padding: 12px 14px; }
   .chat-fields-2 { grid-template-columns: 1fr; }
   .chat-composer { grid-template-columns: 1fr; }
   .chat-modal-grid { grid-template-columns: 1fr; }
-  .chat-modal-backdrop { padding: 14px; }
-  .chat-modal-footer { flex-direction: column-reverse; }
+  .chat-modal-backdrop { align-items: flex-end; padding: 0; }
+  .chat-modal-card { border-radius: 18px 18px 0 0; max-height: calc(100dvh - 24px); }
+  .chat-modal-head, .chat-modal-body { padding: 16px; }
+  .chat-modal-footer { flex-direction: column-reverse; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
   .chat-modal-footer .chat-btn { width: 100%; }
-  .chat-list-row { grid-template-areas: "avatar identity status chevron" "avatar model model model" "avatar resources resources resources"; grid-template-columns: 36px minmax(0, 1fr) auto 18px; padding: 12px; }
+  .chat-input, .chat-select { font-size: 16px; } /* stops iOS zooming on focus */
+  .chat-list-row { grid-template-areas: "avatar identity status chevron" "avatar model model model" "avatar resources resources resources"; padding: 12px; }
+  .chat-list-resources { justify-content: flex-start; }
   .expandable-card-stage { align-items: stretch; padding: 0; }
-  .chat-agent-expandable { border-radius: 0; height: 100vh; max-width: none; }
-  .chat-agent-expanded-grid { padding: 12px; }
+  .chat-agent-expandable { border: 0; border-radius: 0; height: 100dvh; max-width: none; }
+  .chat-agent-expanded-grid { gap: 12px; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .chat-detail-head { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .chat-editor-actions { justify-content: stretch; }
+  .chat-editor-actions .chat-btn { flex: 1 1 0; }
+  .chat-heading { font-size: 18px; }
+  .chat-heading-input { width: 100%; }
+  .chat-card { padding: 14px; }
+  .chat-card-head { flex-wrap: wrap; }
+  .chat-mini-select { max-width: 100%; width: 100%; }
+  .chat-tabs { width: 100%; }
+  .chat-tab { flex: 1 1 0; }
+  .chat-number-pane-head { flex-wrap: wrap; }
+  .chat-number-pane-note { white-space: normal; }
+  .chat-card-conversations { height: min(640px, calc(100dvh - 220px)); min-height: 380px; }
+  .chat-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
+}
+/* Narrow phones: the create button drops its label so the header fits. */
+@media (max-width: 420px) {
+  .chat-list-head .chat-btn-label { display: none; }
+  .chat-list-head .chat-btn { min-height: 36px; padding: 0 11px; }
+  .chat-list-row { gap: 6px 10px; grid-template-columns: 32px minmax(0, 1fr) auto; grid-template-areas: "avatar identity status" "avatar model model" "avatar resources resources"; padding: 11px; }
+  .chat-list-chevron { display: none; }
+  .chat-avatar { height: 30px; width: 30px; }
+  .chat-accordion-button { gap: 8px; grid-template-columns: 28px minmax(0, 1fr) minmax(0, auto) 18px; padding: 11px 10px; }
 }
 `;
 
@@ -1076,6 +1194,9 @@ export default function ChatAgentsPage() {
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
   const [chatAgents, setChatAgents] = useState<ApiChatAgent[]>([]);
+  // True until the first agent fetch settles, so an empty list is only called
+  // empty once the server has actually said so.
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string>("");
   const [query, setQuery] = useState("");
   const [knowledgeBases, setKnowledgeBases] = useState<ApiKnowledgeBase[]>([]);
@@ -1128,9 +1249,9 @@ export default function ChatAgentsPage() {
         apiListPhoneNumbers(getToken),
       ]);
       if (cancelled) return;
+      setIsLoading(false);
       if (agentResult.status === "fulfilled") {
         setChatAgents(agentResult.value);
-        setSelectedId((current) => current || agentResult.value[0]?.id || "");
       } else {
         setNotice({
           kind: "error",
@@ -1443,15 +1564,18 @@ export default function ChatAgentsPage() {
                     </span>
                     Chat agents
                   </h2>
-                  <div className="chat-panel-copy">{chatAgents.length} chat agents</div>
+                  <div className="chat-panel-copy">
+                    {isLoading ? "Loading chat agents..." : `${chatAgents.length} chat agents`}
+                  </div>
                 </div>
                 <button
+                  aria-label="New chat agent"
                   className="chat-btn chat-btn-primary chat-btn-sm"
                   onClick={openCreateModal}
                   type="button"
                 >
                   <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
-                  New chat agent
+                  <span className="chat-btn-label">New chat agent</span>
                 </button>
               </div>
               <div className="chat-panel-body">
@@ -1466,7 +1590,28 @@ export default function ChatAgentsPage() {
                     value={query}
                   />
                 </div>
-                {filtered.length === 0 ? (
+                {isLoading ? (
+                  <div aria-busy="true" aria-label="Loading chat agents" className="chat-list">
+                    {[0, 1, 2].map((row) => (
+                      <div aria-hidden="true" className="chat-list-row chat-list-skeleton" key={row}>
+                        <span className="chat-skel chat-skel-avatar" />
+                        <span className="chat-list-identity">
+                          <span className="chat-skel" style={{ width: "58%" }} />
+                          <span className="chat-skel chat-skel-sm" style={{ width: "38%" }} />
+                        </span>
+                        <span className="chat-list-model">
+                          <span className="chat-skel chat-skel-sm" style={{ width: 42 }} />
+                          <span className="chat-skel" style={{ width: 84 }} />
+                        </span>
+                        <span className="chat-list-resources">
+                          <span className="chat-skel chat-skel-sm" style={{ width: 96 }} />
+                        </span>
+                        <span className="chat-skel chat-skel-pill" />
+                        <span className="chat-list-chevron" />
+                      </div>
+                    ))}
+                  </div>
+                ) : filtered.length === 0 ? (
                   <div className="chat-empty-list">
                     {chatAgents.length === 0 ? "No chat agents yet." : "No agent matches that search."}
                   </div>
@@ -2668,9 +2813,45 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
   const { mode } = useWorkspaceMode();
+  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
+  // menu button; on wider screens the class is inert and it is always shown.
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   return (
-    <aside className="chat-sidebar">
+    <>
+    <header className="chat-topbar">
+      <div className="chat-logo chat-topbar-logo">
+        <div className="chat-logo-mark">
+          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+      </div>
+      <button
+        aria-controls="chat-sidebar"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        className="chat-icon-btn chat-topbar-menu"
+        onClick={() => setIsOpen((open) => !open)}
+        type="button"
+      >
+        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
+      </button>
+    </header>
+    <div
+      aria-hidden="true"
+      className={`chat-sidebar-backdrop${isOpen ? " is-open" : ""}`}
+      onClick={() => setIsOpen(false)}
+    />
+    <aside className={`chat-sidebar${isOpen ? " is-open" : ""}`} id="chat-sidebar">
       <div className="chat-logo">
         <div className="chat-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
@@ -2697,7 +2878,7 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
           const className = `chat-nav-item${item.label === activeLabel ? " is-active" : ""}`;
 
           return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
+            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
               {content}
             </Link>
           ) : (
@@ -2724,5 +2905,6 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
         </div>
       </div>
     </aside>
+    </>
   );
 }

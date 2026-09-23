@@ -89,6 +89,7 @@ type IconName =
   | "trash"
   | "check"
   | "x"
+  | "menu"
   | "refresh"
   | "file"
   | "text"
@@ -236,6 +237,8 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M5 12.5l4 4 10-10" />;
     case "x":
       return <path d="M6 6l12 12M18 6L6 18" />;
+    case "menu":
+      return <path d="M4 6h16M4 12h16M4 18h16" />;
     case "refresh":
       return (
         <>
@@ -404,20 +407,7 @@ const css = `
 .kb-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kb-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kb-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
-.kb-topbar {
-  align-items: center;
-  background: var(--app-topbar);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex: 0 0 auto;
-  gap: 16px;
-  padding: 20px 32px;
-}
-.kb-topbar-wrap { flex: 1; min-width: 0; }
-.kb-topbar-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
-.kb-topbar-copy { color: var(--subtle); font-size: 12.5px; margin-top: 3px; }
-.kb-content { flex: 1 1 auto; min-width: 0; padding: 20px 32px 32px; }
+.kb-content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 32px; }
 .kb-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
 .kb-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .kb-toolbar .kb-search { flex: 1 1 240px; max-width: 420px; }
@@ -557,6 +547,7 @@ const css = `
   cursor: pointer;
   display: grid;
   gap: 16px;
+  grid-template-areas: "avatar identity stats time status chevron";
   grid-template-columns: 36px minmax(180px, 1.2fr) minmax(160px, .9fr) auto auto 18px;
   padding: 13px 16px;
   text-align: left;
@@ -565,13 +556,15 @@ const css = `
 }
 .kb-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); }
 .kb-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
-.kb-row-identity { display: grid; gap: 3px; min-width: 0; }
+.kb-row > .kb-avatar { grid-area: avatar; }
+.kb-row > .kb-pill { grid-area: status; justify-self: end; }
+.kb-row-identity { display: grid; gap: 3px; grid-area: identity; min-width: 0; }
 .kb-row-name { font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kb-row-sub { color: var(--subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kb-row-stats { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 11.5px; gap: 8px; min-width: 0; }
+.kb-row-stats { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 11.5px; gap: 8px; grid-area: stats; min-width: 0; }
 .kb-row-stat { align-items: center; display: inline-flex; gap: 5px; white-space: nowrap; }
-.kb-row-time { align-items: center; color: var(--subtle); display: inline-flex; font-size: 11.5px; gap: 5px; white-space: nowrap; }
-.kb-row-chevron { color: var(--faint); display: inline-flex; transition: color .18s ease, transform .18s ease; }
+.kb-row-time { align-items: center; color: var(--subtle); display: inline-flex; font-size: 11.5px; gap: 5px; grid-area: time; white-space: nowrap; }
+.kb-row-chevron { color: var(--faint); display: inline-flex; grid-area: chevron; transition: color .18s ease, transform .18s ease; }
 .kb-row:hover .kb-row-chevron { color: var(--primary-light); transform: translateX(2px); }
 .kb-card-item {
   color: inherit;
@@ -924,31 +917,120 @@ const css = `
 }
 .kb-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-green-text); }
 .kb-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+/* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
+.kb-mobilebar { display: none; }
+.kb-sidebar-backdrop { display: none; }
+.kb-mobilebar-menu {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+.kb-mobilebar-menu:hover { background: var(--app-hover); color: var(--text); }
+/* Wide screens: a little more room around the capped content. */
+@media (min-width: 1680px) {
+  .kb-content { padding: 28px 40px 36px; }
+}
+/* Laptops: the refresh time goes and the stats fold under the name. */
 @media (max-width: 1240px) {
   .kb-detail-grid { grid-template-columns: minmax(0, 1fr); }
-  .kb-row { grid-template-columns: 36px minmax(180px, 1fr) minmax(150px, .8fr) auto 18px; }
+  .kb-row { gap: 8px 14px; grid-template-areas: "avatar identity status chevron" "avatar stats stats chevron"; grid-template-columns: 36px minmax(0, 1fr) auto 18px; }
   .kb-row-time { display: none; }
 }
-@media (max-width: 980px) {
-  .kb-shell { display: block; }
-  .kb-sidebar { min-height: auto; position: static; width: 100%; }
-  .kb-sidebar-footer { margin-top: 18px; }
-  .kb-user-card { display: none; }
-  .kb-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .kb-topbar { padding: 18px 20px; }
-  .kb-content { padding: 18px 20px 26px; }
+@media (max-width: 1100px) {
+  .kb-sidebar { padding: 18px 12px; width: 216px; }
+  .kb-content { padding: 20px 20px 28px; }
+  .expandable-card-stage { padding: 16px; }
+  .kb-expandable-card { max-height: min(820px, calc(100dvh - 32px)); }
 }
+/* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar. */
+@media (max-width: 900px) {
+  .kb-shell { display: block; min-height: 100dvh; max-width: 100%; width: 100%; }
+  .kb-mobilebar {
+    align-items: center;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    height: 56px;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  .kb-mobilebar-logo { padding: 0; }
+  .kb-mobilebar-logo .kb-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
+  .kb-sidebar-backdrop {
+    background: var(--app-overlay);
+    display: block;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: fixed;
+    transition: opacity .2s ease;
+    z-index: 70;
+  }
+  .kb-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .kb-sidebar {
+    box-shadow: 0 24px 70px var(--app-shadow-color);
+    height: 100dvh;
+    left: 0;
+    max-width: 86vw;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 22px 16px;
+    position: fixed;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform .24s ease, visibility .24s;
+    visibility: hidden;
+    width: 280px;
+    z-index: 75;
+  }
+  .kb-sidebar.is-open { transform: none; visibility: visible; }
+  .kb-content { padding: 16px; }
+  .kb-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-sidebar, .kb-sidebar-backdrop { transition: none; }
+}
+/* Phones: search on its own line, one column, full-screen detail card and
+   bottom-sheet dialogs. */
 @media (max-width: 640px) {
-  .kb-nav { grid-template-columns: 1fr 1fr; }
-  .kb-content { padding: 14px 14px 22px; }
-  .kb-toolbar .kb-search { max-width: none; }
-  .kb-toolbar .kb-btn-primary { flex: 1 1 auto; }
+  .kb-content { padding: 12px 12px calc(16px + env(safe-area-inset-bottom)); }
+  .kb-toolbar { gap: 8px; }
+  .kb-toolbar .kb-search { flex: 1 1 100%; max-width: none; }
+  .kb-count { margin-left: 0; margin-right: auto; order: 2; }
+  .kb-view-toggle { order: 3; }
+  .kb-toolbar-new { order: 4; }
+  .kb-input, .kb-shell textarea, .kb-shell select { font-size: 16px; } /* stops iOS zooming on focus */
+  .kb-grid { grid-template-columns: 1fr; }
+  .kb-card-item { min-height: 0; }
+  .kb-card-item:hover { transform: none; }
+  .kb-detail-head { padding: 14px; }
   .kb-detail-actions { width: 100%; }
   .kb-detail-actions .kb-btn { flex: 1; }
-  .kb-row { gap: 10px; grid-template-columns: 36px minmax(0, 1fr) auto 18px; padding: 12px; }
-  .kb-row-stats { grid-column: 2 / -1; grid-row: 2; }
+  .kb-row { gap: 8px 10px; grid-template-areas: "avatar identity status" "avatar stats stats"; grid-template-columns: 36px minmax(0, 1fr) auto; padding: 12px; }
+  .kb-row-chevron { display: none; }
   .expandable-card-stage { align-items: stretch; padding: 0; }
-  .kb-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; padding: 14px; }
+  .kb-expandable-card { border: 0; border-radius: 0; height: 100dvh; max-height: 100dvh; max-width: none; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .kb-modal-overlay { align-items: flex-end; padding: 0; }
+  .kb-modal { border-radius: 18px 18px 0 0; max-height: calc(100dvh - 24px); max-width: none; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .kb-modal-wide { max-width: none; }
+  .kb-modal-actions { flex-direction: column-reverse; }
+  .kb-modal-actions > * { width: 100%; }
+  .kb-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
+}
+@media (max-width: 400px) {
+  .kb-row { grid-template-columns: 32px minmax(0, 1fr) auto; }
+  .kb-row > .kb-avatar { height: 32px; width: 32px; }
 }
 `;
 
@@ -1242,16 +1324,6 @@ export default function KnowledgeBasePage() {
       <Sidebar activeLabel="Knowledge Base" count={bases.length} />
 
       <main className="kb-main">
-        <header className="kb-topbar">
-          <div className="kb-topbar-wrap">
-            <h1 className="kb-topbar-title">Knowledge Base</h1>
-            <div className="kb-topbar-copy">
-              Documents your agents can quote from mid-call — files, raw text and pages, chunked
-              and indexed into a namespace they can search.
-            </div>
-          </div>
-        </header>
-
         <div className="kb-content">
           {selected ? (
             <ExpandableCardDemoStandard
@@ -1445,7 +1517,12 @@ export default function KnowledgeBasePage() {
                       ? `${filtered.length} of ${bases.length}`
                       : `${bases.length} ${bases.length === 1 ? "base" : "bases"}`}
                 </span>
-                <button className="kb-btn kb-btn-primary" onClick={openCreate} type="button">
+                <button
+                  aria-label="New knowledge base"
+                  className="kb-btn kb-btn-primary kb-toolbar-new"
+                  onClick={openCreate}
+                  type="button"
+                >
                   <Icon name="plus" size={15} stroke="#fff" sw={2.4} />
                   New
                 </button>
@@ -2580,9 +2657,45 @@ function Sidebar({ activeLabel, count }: { activeLabel: string; count: number })
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
   const { mode } = useWorkspaceMode();
+  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
+  // menu button; on wider screens the class is inert and it is always shown.
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   return (
-    <aside className="kb-sidebar">
+    <>
+    <header className="kb-mobilebar">
+      <div className="kb-logo kb-mobilebar-logo">
+        <div className="kb-logo-mark">
+          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+      </div>
+      <button
+        aria-controls="kb-sidebar"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        className="kb-mobilebar-menu"
+        onClick={() => setIsOpen((open) => !open)}
+        type="button"
+      >
+        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
+      </button>
+    </header>
+    <div
+      aria-hidden="true"
+      className={`kb-sidebar-backdrop${isOpen ? " is-open" : ""}`}
+      onClick={() => setIsOpen(false)}
+    />
+    <aside className={`kb-sidebar${isOpen ? " is-open" : ""}`} id="kb-sidebar">
       <div className="kb-logo">
         <div className="kb-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
@@ -2613,7 +2726,7 @@ function Sidebar({ activeLabel, count }: { activeLabel: string; count: number })
           const className = `kb-nav-item${item.label === activeLabel ? " is-active" : ""}`;
 
           return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
+            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
               {content}
             </Link>
           ) : (
@@ -2640,5 +2753,6 @@ function Sidebar({ activeLabel, count }: { activeLabel: string; count: number })
         </div>
       </div>
     </aside>
+    </>
   );
 }

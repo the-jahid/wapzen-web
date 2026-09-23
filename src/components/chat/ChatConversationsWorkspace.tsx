@@ -67,6 +67,9 @@ export default function ChatConversationsWorkspace({
   const [threadError, setThreadError] = useState("");
   const [threadLoading, setThreadLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  // The delete confirmation over the open thread. The thread card stays put
+  // underneath it, so Escape and outside clicks answer the dialog, not the card.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   // The transcript is a scrolling pane, so a message sent from the bottom of a
@@ -217,7 +220,6 @@ export default function ChatConversationsWorkspace({
 
   const removeThread = useCallback(async () => {
     if (!summary) return;
-    if (!window.confirm(`Delete the conversation with ${conversationTitle(summary)}? Its messages go with it.`)) return;
     setBusy(true);
     setThreadError("");
     try {
@@ -230,8 +232,23 @@ export default function ChatConversationsWorkspace({
       setThreadError(deleteError instanceof Error ? deleteError.message : "Failed to delete this conversation");
     } finally {
       setBusy(false);
+      setConfirmingDelete(false);
     }
   }, [getToken, summary]);
+
+  // Escape cancels the dialog. It listens in the capture phase and stops there,
+  // so the thread card (and the agent editor around it, on the chat-agent page)
+  // do not also take the key as their own cue to close.
+  useEffect(() => {
+    if (!confirmingDelete) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.stopImmediatePropagation();
+      if (!busy) setConfirmingDelete(false);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [busy, confirmingDelete]);
 
   return (
     <section className="cv-workspace">
@@ -377,6 +394,7 @@ export default function ChatConversationsWorkspace({
             ) : (
               <ExpandableCardDemoStandard
                 className="cv-expandable-thread"
+                dismissDisabled={confirmingDelete}
                 layoutId={`conversation-${selectedId}`}
                 onClose={() => setSelectedId("")}
                 open
@@ -404,7 +422,12 @@ export default function ChatConversationsWorkspace({
                     <button disabled={busy || !summary} onClick={toggleStatus} type="button">
                       {summary?.status === "closed" ? "Reopen" : "Close"}
                     </button>
-                    <button className="danger" disabled={busy || !summary} onClick={removeThread} type="button">
+                    <button
+                      className="danger"
+                      disabled={busy || !summary}
+                      onClick={() => setConfirmingDelete(true)}
+                      type="button"
+                    >
                       Delete
                     </button>
                   </div>
@@ -501,6 +524,56 @@ export default function ChatConversationsWorkspace({
           </div>
         </div>
       ) : null}
+
+      {confirmingDelete && summary ? (
+        <div
+          className="cv-modal-overlay"
+          // Outside-click handlers on the cards behind skip anything marked
+          // with this, so a click here never closes them.
+          data-expandable-card-ignore
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !busy) setConfirmingDelete(false);
+          }}
+        >
+          <div
+            aria-describedby="cv-delete-copy"
+            aria-labelledby="cv-delete-title"
+            aria-modal="true"
+            className="cv-modal"
+            role="alertdialog"
+          >
+            <div className="cv-modal-icon">
+              <TrashIcon />
+            </div>
+            <h2 className="cv-modal-title" id="cv-delete-title">
+              Delete conversation
+            </h2>
+            <p className="cv-modal-copy" id="cv-delete-copy">
+              The conversation with <strong>{conversationTitle(summary)}</strong> and all of its
+              messages will be deleted. This cannot be undone.
+            </p>
+            <div className="cv-modal-actions">
+              <button
+                autoFocus
+                className="cv-modal-btn"
+                disabled={busy}
+                onClick={() => setConfirmingDelete(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="cv-modal-btn cv-modal-btn-danger"
+                disabled={busy}
+                onClick={() => void removeThread()}
+                type="button"
+              >
+                {busy ? "Deleting…" : "Delete conversation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -594,6 +667,14 @@ function ChatIcon() {
   );
 }
 
+function TrashIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" viewBox="0 0 24 24" width="20">
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </svg>
+  );
+}
+
 function BotIcon() {
   return (
     <svg aria-hidden="true" fill="none" height="15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" viewBox="0 0 24 24" width="15">
@@ -663,7 +744,7 @@ const workspaceCSS = `
 .expandable-card-backdrop{background:var(--app-overlay);inset:0;position:fixed;z-index:80}
 .expandable-card-stage{align-items:center;display:flex;inset:0;justify-content:center;padding:24px;pointer-events:none;position:fixed;z-index:90}
 .expandable-card-panel{pointer-events:auto}
-.cv-expandable-thread{background:var(--app-surface-2);border:1px solid var(--app-line-strong);border-radius:20px;box-shadow:0 30px 90px var(--app-shadow-color),0 0 0 1px var(--app-primary-ring);display:flex;flex-direction:column;height:min(720px,calc(100vh - 48px));max-width:900px;min-height:420px;overflow:hidden;width:100%}
+.cv-expandable-thread{background:var(--app-surface-2);border:1px solid var(--app-line-strong);border-radius:20px;box-shadow:0 30px 90px var(--app-shadow-color),0 0 0 1px var(--app-primary-ring);display:flex;flex-direction:column;height:min(720px,calc(100dvh - 48px));max-width:900px;min-height:420px;overflow:hidden;width:100%}
 .cv-expandable-thread .cv-back{display:flex}
 
 .cv-list{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;padding-right:3px}
@@ -734,6 +815,24 @@ const workspaceCSS = `
 .cv-send:hover{filter:brightness(1.08)}
 .cv-send:disabled{cursor:not-allowed;filter:grayscale(.35);opacity:.45}
 
+/* Delete confirmation. It sits above the thread card (z-index 90). */
+.cv-modal-overlay{align-items:center;animation:cv-fade-in .16s ease;backdrop-filter:blur(3px);background:var(--app-overlay);display:flex;inset:0;justify-content:center;padding:24px;position:fixed;z-index:120}
+.cv-modal{animation:cv-modal-in .18s ease;background:var(--app-surface);border:1px solid var(--app-line);border-radius:18px;box-shadow:0 30px 80px var(--app-shadow-color-strong);max-width:420px;padding:22px;width:100%}
+.cv-modal-icon{align-items:center;background:var(--app-rose-soft);border:1px solid var(--app-rose-border);border-radius:12px;color:var(--app-rose);display:inline-flex;height:42px;justify-content:center;margin-bottom:14px;width:42px}
+.cv-modal-title{color:var(--app-text-strong);font-size:17px;font-weight:850;letter-spacing:-.2px;margin:0}
+.cv-modal-copy{color:var(--app-muted);font-size:13px;line-height:1.55;margin:8px 0 0}
+.cv-modal-copy strong{color:var(--app-text-strong);font-weight:800}
+.cv-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.cv-modal-btn{background:var(--app-elevated);border:1px solid var(--app-line);border-radius:10px;color:var(--app-text);cursor:pointer;font:inherit;font-size:12.5px;font-weight:800;height:38px;padding:0 16px}
+.cv-modal-btn:hover{background:var(--app-panel-hover)}
+.cv-modal-btn:focus-visible{outline:2px solid var(--app-primary);outline-offset:2px}
+.cv-modal-btn-danger{background:var(--app-rose);border-color:transparent;color:#fff}
+.cv-modal-btn-danger:hover{background:var(--app-rose);filter:brightness(1.08)}
+.cv-modal-btn:disabled{cursor:not-allowed;opacity:.55}
+@keyframes cv-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes cv-modal-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.cv-modal-overlay,.cv-modal{animation:none}}
+
 /* Tablet: the list gives up its comfort before the transcript does. */
 @media(max-width:1100px){
   .cv-row{grid-template-areas:"avatar identity meta status chevron";grid-template-columns:36px minmax(180px,1fr) minmax(140px,.8fr) auto 18px}
@@ -751,17 +850,37 @@ const workspaceCSS = `
   .cv-body{grid-template-columns:minmax(0,1fr)}
   .cv-row{gap:10px;grid-template-areas:"avatar identity status chevron" "avatar meta meta meta";grid-template-columns:36px minmax(0,1fr) auto 18px;padding:12px}
   .cv-back{display:flex}
+  .cv-modal-actions{flex-direction:column-reverse}
+  .cv-modal-btn{width:100%}
   .cv-thread-actions button{padding:5px 7px}
   .cv-msg{max-width:92%}
   .cv-send{padding:0 12px;width:44px}
   .cv-send-label{display:none}
   .expandable-card-stage{align-items:stretch;padding:0}
-  .cv-expandable-thread{border-radius:0;height:100vh;max-width:none;min-height:0}
+  .cv-expandable-thread{border:0;border-radius:0;height:100dvh;max-width:none;min-height:0}
+  .cv-composer{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  /* 16px stops iOS Safari zooming the page when a field is focused. */
+  .cv-search input,.cv-filter,.cv-composer textarea{font-size:16px}
+  .cv-search,.cv-filter{height:40px}
+  .cv-icon-button{height:40px;width:40px}
+  .cv-modal-overlay{align-items:flex-end;padding:0}
+  .cv-modal{border-radius:18px 18px 0 0;max-width:none;padding:20px 18px calc(18px + env(safe-area-inset-bottom))}
 }
 
 @media(max-width:420px){
   .cv-avatar-lg{display:none}
   .cv-thread-head{gap:8px;padding:10px}
   .cv-messages{padding:11px}
+  .cv-row{gap:6px 10px;grid-template-areas:"avatar identity status" "avatar meta meta";grid-template-columns:32px minmax(0,1fr) auto;padding:11px}
+  .cv-avatar{height:32px;width:32px}
+  .cv-row-chevron{display:none}
+  .cv-row-agent{max-width:18ch}
+  .cv-thread-actions button{font-size:10.5px;padding:5px 6px}
+}
+
+/* Touch screens cannot hover, so the message times are always shown there. */
+@media(hover:none){
+  .cv-bubble-time{opacity:1}
+  .cv-msg{margin-bottom:12px}
 }
 `;

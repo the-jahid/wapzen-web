@@ -35,7 +35,9 @@ type IconName =
   | "calendar"
   | "chart"
   | "settings"
-  | "spark";
+  | "spark"
+  | "menu"
+  | "x";
 
 function iconPaths(name: IconName): ReactNode {
   switch (name) {
@@ -123,6 +125,10 @@ function iconPaths(name: IconName): ReactNode {
       );
     case "spark":
       return <path d="M12 4l1.7 4.6L18 10l-4.3 1.4L12 16l-1.7-4.6L6 10l4.3-1.4L12 4z" />;
+    case "menu":
+      return <path d="M4 6h16M4 12h16M4 18h16" />;
+    case "x":
+      return <path d="M6 6l12 12M18 6L6 18" />;
   }
 }
 
@@ -190,9 +196,45 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
   const { mode } = useWorkspaceMode();
+  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
+  // menu button; on wider screens the class is inert and it is always shown.
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   return (
-    <aside className="conv-sidebar">
+    <>
+    <header className="conv-topbar">
+      <div className="conv-logo conv-topbar-logo">
+        <div className="conv-logo-mark">
+          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+      </div>
+      <button
+        aria-controls="conv-sidebar"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        className="conv-topbar-menu"
+        onClick={() => setIsOpen((open) => !open)}
+        type="button"
+      >
+        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
+      </button>
+    </header>
+    <div
+      aria-hidden="true"
+      className={`conv-sidebar-backdrop${isOpen ? " is-open" : ""}`}
+      onClick={() => setIsOpen(false)}
+    />
+    <aside className={`conv-sidebar${isOpen ? " is-open" : ""}`} id="conv-sidebar">
       <div className="conv-logo">
         <div className="conv-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
@@ -217,7 +259,7 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
           const className = `conv-nav-item${item.label === activeLabel ? " is-active" : ""}`;
 
           return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
+            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
               {content}
             </Link>
           ) : (
@@ -239,6 +281,7 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
         </div>
       </div>
     </aside>
+    </>
   );
 }
 
@@ -334,18 +377,85 @@ const css = `
   width: 100%;
 }
 .conv-warning { background: var(--app-amber-soft); border: 1px solid var(--app-amber-border); border-radius: 10px; color: var(--app-amber); flex: 0 0 auto; font-size: 11.5px; margin-bottom: 12px; padding: 9px 11px; }
-@media (max-width: 1100px) {
-  .conv-sidebar { width: 216px; }
+/* The top bar and drawer backdrop only exist below the tablet breakpoint. */
+.conv-topbar { display: none; }
+.conv-sidebar-backdrop { display: none; }
+.conv-topbar-menu {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
 }
+.conv-topbar-menu:hover { background: var(--app-hover); color: var(--text); }
+/* Wide screens: keep the rows from stretching into one long line. */
+@media (min-width: 1680px) {
+  .conv-content { padding: 24px 40px 28px; }
+  .conv-panel { margin: 0 auto; max-width: 1480px; }
+}
+@media (max-width: 1100px) {
+  .conv-sidebar { padding: 18px 12px; width: 216px; }
+  .conv-content { padding: 16px 20px 20px; }
+}
+/* Tablets and phones: the sidebar becomes a drawer behind a top bar, and the
+   workspace fills what is left of the screen. */
 @media (max-width: 900px) {
-  /* Below the sidebar's breakpoint the workspace takes the whole width; the
-     menu is reachable from the pages that still show it. */
-  .conv-sidebar { display: none; }
+  .conv-shell { flex-direction: column; height: 100dvh; max-height: 100dvh; max-width: 100%; width: 100%; }
+  .conv-topbar {
+    align-items: center;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 12px;
+    height: 56px;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 60;
+  }
+  .conv-topbar-logo { padding: 0; }
+  .conv-topbar-logo .conv-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
+  .conv-sidebar-backdrop {
+    background: var(--app-overlay);
+    display: block;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: fixed;
+    transition: opacity .2s ease;
+    z-index: 70;
+  }
+  .conv-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .conv-sidebar {
+    box-shadow: 0 24px 70px var(--app-shadow-color);
+    height: 100dvh;
+    left: 0;
+    max-width: 86vw;
+    overflow-y: auto;
+    padding: 22px 16px;
+    position: fixed;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform .24s ease, visibility .24s;
+    visibility: hidden;
+    width: 280px;
+    z-index: 75;
+  }
+  .conv-sidebar.is-open { transform: none; visibility: visible; }
+  .conv-main { flex: 1 1 auto; height: auto; min-height: 0; }
   .conv-content { padding: 14px 16px 18px; }
   .conv-panel { border-radius: 14px; padding: 12px; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .conv-sidebar, .conv-sidebar-backdrop { transition: none; }
+}
 @media (max-width: 560px) {
-  .conv-content { padding: 12px 11px 14px; }
+  .conv-content { padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
   .conv-panel { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; }
 }
 `;
