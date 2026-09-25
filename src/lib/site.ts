@@ -1,21 +1,20 @@
 export const siteConfig = {
-  name: "WhatsCall Agent",
+  name: "Wapzen",
   // Set NEXT_PUBLIC_SITE_URL in production so canonical/OG/sitemap URLs
   // point at the real domain.
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://whatscallagent.com",
-  title: "WhatsApp AI Voice Agent That Never Misses a Lead | WhatsCall Agent",
+  title: "WhatsApp AI Chat Agent & Voice Agent Builder | Wapzen",
   description:
-    "WhatsCall Agent answers your WhatsApp calls with AI — qualifies leads, books appointments, and runs outbound follow-ups 24/7 in 40+ languages. Live in a day.",
+    "Create WhatsApp AI chat agents for messages and voice agents for inbound or outbound calls. Connect your number, add knowledge and tools, and review conversations with Wapzen.",
   keywords: [
+    "WhatsApp AI chat agent",
+    "WhatsApp chat agent builder",
     "WhatsApp AI voice agent",
-    "AI voice agent",
-    "AI phone agent",
-    "WhatsApp Business API calls",
-    "AI appointment booking",
-    "AI receptionist",
-    "outbound AI calls",
-    "lead qualification AI",
-    "WhatsApp automation",
-    "speed to lead",
+    "WhatsApp voice agent maker",
+    "WhatsApp AI agent builder",
+    "WhatsApp AI chatbot",
+    "inbound WhatsApp calls",
+    "outbound WhatsApp calls",
+    "WhatsApp knowledge base",
   ],
 } as const;

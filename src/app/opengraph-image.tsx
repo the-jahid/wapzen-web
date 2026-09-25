@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { siteConfig } from "@/lib/site";
 
 export const alt =
-  "WhatsCall Agent — WhatsApp AI voice agent that answers calls, books appointments, and captures leads 24/7";
+  "Wapzen — build WhatsApp AI chat agents and voice agents for messages and calls";
 
 export const size = {
   width: 1200,
@@ -59,7 +59,7 @@ export default function Image() {
               maxWidth: 950,
             }}
           >
-            The WhatsApp AI voice agent that never misses a lead
+            Build WhatsApp AI chat and voice agents
           </div>
           <div
             style={{
@@ -69,13 +69,13 @@ export default function Image() {
               maxWidth: 900,
             }}
           >
-            Answers calls, qualifies leads, and books appointments 24/7 — in
-            40+ languages.
+            Reply to messages, handle inbound and outbound calls, and review
+            conversations in one dashboard.
           </div>
         </div>
 
         <div style={{ display: "flex", gap: 16 }}>
-          {["24/7 coverage", "Voice + WhatsApp", "40+ languages"].map((tag) => (
+          {["AI chat", "AI voice", "Outbound campaigns"].map((tag) => (
             <div
               key={tag}
               style={{

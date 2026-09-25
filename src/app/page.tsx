@@ -3,7 +3,7 @@ import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { siteConfig } from "@/lib/site";
 import { ThemeToggleButton } from "@/components/theme/ThemeToggle";
 import { WisprFlowText } from "@/blocks/wispr-flow-text-animation";
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -23,7 +23,9 @@ type IconName =
   | "arrow"
   | "star"
   | "globe"
-  | "bolt";
+  | "bolt"
+  | "message"
+  | "book";
 
 const iconPaths: Record<IconName, string[]> = {
   phone: [
@@ -74,131 +76,98 @@ const iconPaths: Record<IconName, string[]> = {
     "M12 4a12.5 12.5 0 0 0 0 16",
   ],
   bolt: ["M13 3 5 13.5h5.5L11 21l8-10.5h-5.5L13 3Z"],
+  message: ["M4 5.5h16v11H9l-5 3v-14Z", "M8 9h8", "M8 12.5h6"],
+  book: ["M5 4.5h12a2 2 0 0 1 2 2V20H7a2 2 0 0 1-2-2V4.5Z", "M5 17a2 2 0 0 1 2-2h12", "M9 8h6"],
 };
-
-const capabilities: Array<{
-  icon: IconName;
-  title: string;
-  body: string;
-  tags: string[];
-}> = [
-  {
-    icon: "phone",
-    title: "Inbound voice agent",
-    body: "Answers missed calls and WhatsApp voice requests, qualifies intent, and routes urgent leads to your team — on the first ring, every time.",
-    tags: ["First-ring pickup", "Intent detection", "Smart routing"],
-  },
-  {
-    icon: "broadcast",
-    title: "Outbound follow-ups",
-    body: "Calls new inquiries, no-shows, renewals, and cold leads with natural AI conversations at scale.",
-    tags: ["No-show recovery", "Renewal calls", "Lead reactivation"],
-  },
-  {
-    icon: "calendar",
-    title: "Appointment booking",
-    body: "Checks availability, books the right slot, sends reminders, and updates the pipeline instantly.",
-    tags: ["Calendar sync", "Reminders", "Instant updates"],
-  },
-  {
-    icon: "lead",
-    title: "Lead collector",
-    body: "Captures the details sales teams actually need from every call — structured, deduplicated, and pushed straight to your CRM or WhatsApp.",
-    tags: ["Structured data", "CRM push", "Deduplication"],
-  },
-];
 
 const steps = [
   {
-    title: "Greets every caller",
-    body: "Picks up instantly in your business tone, in the caller's language — no hold music, no voicemail.",
+    title: "Connect your number",
+    body: "Pair a WhatsApp number from the dashboard by scanning a QR code.",
   },
   {
-    title: "Qualifies the lead",
-    body: "Captures intent, urgency, budget, and the preferred appointment time in a natural conversation.",
+    title: "Create your agents",
+    body: "Set up a chat agent for messages and a voice agent for inbound or outbound calls.",
   },
   {
-    title: "Books or transfers",
-    body: "Reserves the right calendar slot or warm-transfers high-value calls straight to a human.",
+    title: "Add your context",
+    body: "Write the system prompt, attach knowledge bases, and choose the tools each agent can use.",
   },
   {
-    title: "Syncs to WhatsApp",
-    body: "Sends summaries, reminders, and structured lead data back to your team the moment the call ends.",
+    title: "Review activity",
+    body: "Read chat conversations, inspect call transcripts, and track outbound campaign performance.",
   },
 ];
 
 const pipeline: Array<[string, string, string]> = [
-  ["New lead", "Captured from ad, WhatsApp, website, or missed call", "#e4e4e7"],
-  ["Qualified", "Need, location, budget, and service match confirmed", "#818cf8"],
-  ["Booked", "Appointment slot, agent, and reminder sequence are set", "#34d399"],
-  ["Follow-up", "No-shows, quotes, renewals, and reactivation calls", "#52525b"],
+  ["Connect", "Pair your WhatsApp number with a QR code", "#e4e4e7"],
+  ["Configure", "Set prompts, models, voices, and agent tools", "#818cf8"],
+  ["Respond", "Handle text messages and voice calls", "#34d399"],
+  ["Review", "See conversations, transcripts, and campaign activity", "#52525b"],
 ];
 
 const leadFeatures: Array<{ icon: IconName; title: string; body: string }> = [
   {
+    icon: "message",
+    title: "Chat conversations",
+    body: "Review saved WhatsApp message threads and reply from the dashboard.",
+  },
+  {
+    icon: "phone",
+    title: "Call transcripts",
+    body: "Inspect call history and the conversation recorded for each call.",
+  },
+  {
     icon: "analytics",
-    title: "Real-time lead scoring",
-    body: "Prioritize buyers who are ready to book today, not next quarter.",
+    title: "Campaign analytics",
+    body: "Track call activity and outcomes across outbound campaigns.",
   },
   {
-    icon: "calendar",
-    title: "Calendar-ready data",
-    body: "Send booked slots and reminders straight back into WhatsApp.",
-  },
-  {
-    icon: "shield",
-    title: "Private by default",
-    body: "Transcripts and lead data stay encrypted and inside your workspace.",
-  },
-  {
-    icon: "clock",
-    title: "Zero wait time",
-    body: "Every caller is answered on the first ring, day or night.",
+    icon: "spark",
+    title: "Agent controls",
+    body: "Edit prompts, models, knowledge, tools, and agent status as you go.",
   },
 ];
 
-const testimonials: Array<{
-  quote: string;
-  name: string;
-  role: string;
-  initials: string;
-}> = [
+const agentModes: Array<{ icon: IconName; title: string; body: string; detail: string }> = [
   {
-    quote:
-      "It books consultations while we sleep. Our speed-to-lead went from hours to seconds and no-shows dropped by a third.",
-    name: "Amira Hassan",
-    role: "Owner, BrightClinic",
-    initials: "AH",
+    icon: "message",
+    title: "AI chat agent for WhatsApp messages",
+    body: "Answer incoming text messages with a configurable OpenAI or Anthropic model. Set a system prompt and attach knowledge bases and API tools.",
+    detail: "Best for questions, support, and ongoing text conversations.",
   },
   {
-    quote:
-      "The agent qualifies and routes every WhatsApp lead before an agent even opens their laptop. It feels like three extra hires.",
-    name: "Diego Marín",
-    role: "Sales Lead, Estate Co.",
-    initials: "DM",
+    icon: "phone",
+    title: "AI voice agent for WhatsApp calls",
+    body: "Configure a spoken agent for inbound, outbound, or both call directions. Choose a voice provider, transcriber, prompt, and connected tools.",
+    detail: "Best for phone conversations and outbound call campaigns.",
   },
 ];
 
 const faqs: Array<{ q: string; a: string }> = [
   {
-    q: "How does the AI voice agent connect to WhatsApp?",
-    a: "It plugs into the WhatsApp Business API, so it answers voice notes and calls from your existing number with no app changes for your customers.",
+    q: "What is Wapzen?",
+    a: "Wapzen is a builder for WhatsApp AI chat agents and voice agents. You can configure responses to incoming text messages, handle WhatsApp calls, and manage outbound call campaigns from a dashboard.",
   },
   {
-    q: "Will callers know they're talking to AI?",
-    a: "The voice is natural and on-brand. You decide whether it discloses that it's an assistant, and it can warm-transfer to a human at any point.",
+    q: "Can I make a WhatsApp AI chat agent?",
+    a: "Yes. Create a chat agent, choose an OpenAI or Anthropic model, write its system prompt, and attach knowledge bases or API tools. An active agent can reply to incoming WhatsApp text messages on its connected number.",
   },
   {
-    q: "What does the agent collect on each call?",
-    a: "Name, phone, intent, budget, location, preferred time, and objection notes — structured and pushed to your CRM or sent over WhatsApp.",
+    q: "Can I build a WhatsApp voice agent for inbound and outbound calls?",
+    a: "Yes. Set a voice agent to handle inbound calls, outbound calls, or both. Configure its prompt, language, voice provider, transcriber, knowledge bases, and tools.",
   },
   {
-    q: "How long does setup take?",
-    a: "Most teams go live within a day. You share your scripts, calendar, and routing rules, and we tune the agent to match.",
+    q: "How do I connect a WhatsApp number?",
+    a: "Start a WhatsApp login in the dashboard and scan the QR code with the number you want to connect. Assign the connected number to the agent you configure.",
   },
   {
-    q: "Which languages does it speak?",
-    a: "The agent speaks 40+ languages and switches automatically to match the caller, so international leads get the same experience as local ones.",
+    q: "Can agents use my business information and external APIs?",
+    a: "Yes. Add text or files to a knowledge base and attach it to an agent. You can also create API request tools for actions in external systems and attach those tools to an agent.",
+  },
+  {
+    q: "Where can I review messages and calls?",
+    a: "The dashboard includes WhatsApp chat conversations, call history with transcripts, and outbound campaign activity and analytics.",
   },
 ];
 
@@ -206,19 +175,19 @@ const footerColumns: Array<{ title: string; links: Array<[string, string]> }> = 
   {
     title: "Product",
     links: [
+      ["Chat and voice agents", "#agent-types"],
       ["Capabilities", "#capabilities"],
-      ["Workflow", "#workflow"],
-      ["Lead capture", "#lead-capture"],
-      ["Book a demo", "#demo"],
+      ["How it works", "#workflow"],
+      ["Get started", "#get-started"],
     ],
   },
   {
-    title: "Use cases",
+    title: "Features",
     links: [
-      ["Clinics", "#capabilities"],
-      ["Real estate", "#capabilities"],
-      ["Agencies", "#capabilities"],
-      ["Education", "#capabilities"],
+      ["AI chat agent", "#agent-types"],
+      ["AI voice agent", "#agent-types"],
+      ["Outbound campaigns", "#capabilities"],
+      ["Knowledge bases", "#capabilities"],
     ],
   },
   {
@@ -226,8 +195,8 @@ const footerColumns: Array<{ title: string; links: Array<[string, string]> }> = 
     links: [
       ["FAQ", "#faq"],
       ["How it works", "#workflow"],
-      ["Testimonials", "#testimonials"],
-      ["Contact", "#demo"],
+      ["Conversation history", "#conversation-history"],
+      ["Create an agent", "#get-started"],
     ],
   },
 ];
@@ -275,12 +244,11 @@ const jsonLd = {
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       featureList: [
-        "Inbound AI voice agent for WhatsApp calls",
-        "Outbound AI follow-up calls",
-        "AI appointment booking with calendar sync",
-        "Automatic lead capture and qualification",
-        "Warm transfer to human agents",
-        "40+ languages with automatic detection",
+        "WhatsApp AI chat agents for incoming text messages",
+        "WhatsApp AI voice agents for inbound and outbound calls",
+        "Outbound call campaigns",
+        "Knowledge bases and API request tools for agents",
+        "Chat conversations, call transcripts, and campaign analytics",
       ],
     },
     {
@@ -295,82 +263,11 @@ const jsonLd = {
   ],
 };
 
-// Rides the curve behind the hero: one call, the way the agent handles it.
+// Ambient text behind the hero illustrates a configurable agent conversation.
 const heroTranscript =
-  "Hi, thanks for calling — I can help with that. Let me check the calendar… " +
-  "I have Thursday at 2pm or Friday morning, which works better for you? Great, " +
-  "Thursday at 2 it is — I have sent the details to this number on WhatsApp. " +
-  "What is the best email for the confirmation? Perfect, got it. And roughly how " +
-  "many people is this for, so the team can prepare? Understood. You will get a " +
-  "reminder the day before, and if anything changes just reply here and I will " +
-  "move it. Thanks for calling — talk soon.";
-
-const heroPeople = [
-  {
-    id: 1,
-    name: "John Doe",
-    designation: "Software Engineer",
-    image:
-      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80",
-  },
-  {
-    id: 2,
-    name: "Robert Johnson",
-    designation: "Product Manager",
-    image:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
-  },
-  {
-    id: 3,
-    name: "Jane Smith",
-    designation: "Data Scientist",
-    image:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    designation: "UX Designer",
-    image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
-  },
-  {
-    id: 5,
-    name: "Tyler Durden",
-    designation: "Soap Developer",
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80",
-  },
-  {
-    id: 6,
-    name: "Dora",
-    designation: "The Explorer",
-    image:
-      "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3534&q=80",
-  },
-];
-
-function StarRating({ count = 5 }: { count?: number }) {
-  return (
-    <div
-      aria-label={count + " out of 5 stars"}
-      className="flex items-center gap-0.5 text-amber-400"
-      role="img"
-    >
-      {Array.from({ length: count }, (_, i) => (
-        <svg
-          aria-hidden="true"
-          className="h-4 w-4"
-          fill="currentColor"
-          key={i}
-          viewBox="0 0 24 24"
-        >
-          <path d={iconPaths.star[0]} />
-        </svg>
-      ))}
-    </div>
-  );
-}
+  "WhatsApp message received. The chat agent checks its prompt and business knowledge, " +
+  "then replies in the conversation. An incoming call is handled by the voice agent. " +
+  "The dashboard keeps the chat thread, call history, and transcript ready to review.";
 
 function Icon({ name, className = "h-6 w-6" }: { name: IconName; className?: string }) {
   return (
@@ -393,7 +290,7 @@ function Icon({ name, className = "h-6 w-6" }: { name: IconName; className?: str
 
 function Logo() {
   return (
-    <span className="grid h-8 w-8 place-items-center rounded-lg bg-linear-to-br from-brand-bright to-brand text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)]">
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-linear-to-br from-brand-bright to-brand text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)]">
       <Icon name="phone" className="h-4.5 w-4.5" />
     </span>
   );
@@ -450,23 +347,23 @@ function FeyDeck() {
                 <Icon name="phone" className="h-3 w-3" />
               </span>
               <span className="text-[10px] font-semibold tracking-wide text-white/75">
-                WhatsCall
+                Wapzen
               </span>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white/50">
               <span className="h-1 w-1 rounded-full bg-emerald-400" />
-              Live
+              Preview
             </span>
           </div>
 
           <div className="mt-5 flex items-end justify-between">
             <div>
               <p className="text-[8px] font-semibold uppercase tracking-[0.2em] text-white/35">
-                Calls answered
+                Agent channels
               </p>
-              <p className="font-display text-2xl font-bold text-white">1,284</p>
+              <p className="font-display text-2xl font-bold text-white">Chat + voice</p>
             </div>
-            <p className="pb-1 text-[10px] font-bold text-emerald-400">+24.6%</p>
+            <p className="pb-1 text-[10px] font-bold text-emerald-400">WhatsApp</p>
           </div>
 
           <div className="relative mt-4 h-24 overflow-hidden rounded-lg border border-white/[0.07] bg-white/[0.02]">
@@ -490,9 +387,9 @@ function FeyDeck() {
 
           <div className="mt-auto grid grid-cols-3 gap-2">
             {[
-              ["Booked", "32"],
-              ["Leads", "57"],
-              ["Missed", "0"],
+              ["Messages", "AI chat"],
+              ["Calls", "AI voice"],
+              ["Actions", "Tools"],
             ].map(([label, value]) => (
               <div
                 className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-2.5 py-2"
@@ -529,32 +426,39 @@ export default function Home() {
       </a>
 
       {/* ============ HEADER (floating pill) ============ */}
-      <header className="fixed inset-x-0 top-0 z-50 px-4">
+      <header className="fixed inset-x-0 top-0 z-50 px-3 min-[375px]:px-4">
         <nav
           aria-label="Primary"
-          className="mx-auto mt-4 flex h-14 max-w-5xl items-center justify-between rounded-2xl border border-site-border bg-site-nav px-3 backdrop-blur-xl sm:px-4"
+          className="mx-auto mt-3 flex h-14 max-w-5xl items-center justify-between gap-2 rounded-2xl border border-site-border bg-site-nav px-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl min-[375px]:mt-4 sm:px-4"
         >
-          <a className="flex items-center gap-2.5 pl-1" href="#top">
+          <a className="flex min-w-0 items-center gap-2 sm:gap-2.5 sm:pl-1" href="#top">
             <Logo />
-            <span className="font-display text-[0.95rem] font-bold tracking-tight">
-              WhatsCall Agent
-            </span>
+            <Show when="signed-out">
+              <span className="whitespace-nowrap font-display text-[0.85rem] font-bold tracking-tight min-[375px]:text-[0.9rem] sm:text-[0.95rem]">
+                Wapzen
+              </span>
+            </Show>
+            <Show when="signed-in">
+              <span className="hidden whitespace-nowrap font-display text-[0.95rem] font-bold tracking-tight sm:inline">
+                Wapzen
+              </span>
+            </Show>
           </a>
           <div className="hidden items-center gap-7 text-sm font-medium text-site-text-muted md:flex">
             <a className="transition hover:text-site-text" href="#capabilities">
-              Capabilities
+              Features
             </a>
             <a className="transition hover:text-site-text" href="#workflow">
-              Workflow
+              How it works
             </a>
-            <a className="transition hover:text-site-text" href="#lead-capture">
-              Lead capture
+            <a className="transition hover:text-site-text" href="#agent-types">
+              Chat + voice
             </a>
             <a className="transition hover:text-site-text" href="#faq">
               FAQ
             </a>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <ThemeToggleButton />
             <Show when="signed-out">
               <SignInButton
@@ -563,28 +467,16 @@ export default function Home() {
                 signUpForceRedirectUrl="/dashboard"
               >
                 <button
-                  className="rounded-xl px-4 py-2 text-sm font-semibold text-site-text-muted transition hover:text-site-text"
+                  className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-xl bg-brand px-3 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(79,70,229,0.18)] transition hover:bg-brand-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-bright sm:px-4"
                   type="button"
                 >
                   Log in
                 </button>
               </SignInButton>
-              <SignUpButton
-                forceRedirectUrl="/dashboard"
-                mode="modal"
-                signInForceRedirectUrl="/dashboard"
-              >
-                <button
-                  className="rounded-xl bg-linear-to-b from-brand-bright to-brand px-4 py-2 text-sm font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
-                  type="button"
-                >
-                  Start free
-                </button>
-              </SignUpButton>
             </Show>
             <Show when="signed-in">
               <a
-                className="rounded-xl bg-linear-to-b from-brand-bright to-brand px-4 py-2 text-sm font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
+                className="whitespace-nowrap rounded-lg bg-linear-to-b from-brand-bright to-brand px-2.5 py-2 text-xs font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110 min-[375px]:rounded-xl min-[375px]:px-3 min-[375px]:text-sm sm:px-4"
                 href="/dashboard"
               >
                 Dashboard
@@ -619,12 +511,13 @@ export default function Home() {
 
           <div className="relative z-10 mx-auto grid min-h-svh max-w-7xl items-center gap-16 px-5 py-32 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10">
             <div className="relative z-10 flex flex-col items-center gap-7 text-center lg:items-start lg:text-left">
-              <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
-                One agent behind every call.
+              <h1 className="font-display text-[2.15rem] font-bold leading-[1.08] tracking-tight text-white min-[375px]:text-4xl sm:text-6xl sm:leading-normal lg:text-7xl">
+                Build WhatsApp AI chat and voice agents.
               </h1>
               <p className="max-w-xl text-balance text-sm leading-7 text-white/55 sm:text-base">
-                The WhatsApp AI voice agent that answers, qualifies, and books
-                appointments — so no lead ever goes cold.
+                Create a WhatsApp AI chat agent for messages and a voice agent for
+                inbound or outbound calls. Connect your number, add your business
+                knowledge, and review chats and calls in one dashboard.
               </p>
               <div className="mt-2 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <Show when="signed-out">
@@ -637,7 +530,7 @@ export default function Home() {
                       className="rounded-xl bg-linear-to-b from-brand-bright to-brand px-6 py-3 text-sm font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
                       type="button"
                     >
-                      Start free
+                      Create an agent
                     </button>
                   </SignUpButton>
                 </Show>
@@ -651,23 +544,15 @@ export default function Home() {
                 </Show>
                 <a
                   className="rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/85 backdrop-blur transition hover:border-white/30 hover:text-white"
-                  href="#demo"
+                  href="#capabilities"
                 >
-                  Book a demo
+                  Explore features
                 </a>
               </div>
 
-              <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
-                <div className="flex flex-row items-center justify-center pr-4">
-                  <AnimatedTooltip items={heroPeople} />
-                </div>
-                <div className="flex flex-col items-center gap-1.5 sm:items-start">
-                  <StarRating />
-                  <p className="text-xs text-white/45">
-                    Trusted by sales teams answering every WhatsApp call
-                  </p>
-                </div>
-              </div>
+              <p className="mt-4 text-sm font-medium text-white/55">
+                AI message replies · Inbound and outbound calls · Knowledge bases and tools
+              </p>
             </div>
 
             {/* Fey-style stacked screens */}
@@ -680,62 +565,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ============ CAPABILITIES (numbered editorial rows) ============ */}
-        <section
-          aria-labelledby="capabilities-heading"
-          className="mx-auto max-w-7xl scroll-mt-24 px-5 py-20 sm:px-8 sm:py-28 lg:px-10"
-          id="capabilities"
-        >
-          <div className="reveal grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end">
-            <div>
-              <Eyebrow>One agent, every call flow</Eyebrow>
-              <h2
-                className="mt-5 font-display text-3xl font-bold tracking-tight text-site-text sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]"
-                id="capabilities-heading"
-              >
-                Everything between first reply and booked appointment
-              </h2>
-            </div>
-            <p className="max-w-md text-base leading-7 text-site-text-muted lg:justify-self-end">
-              Replace the patchwork of missed calls, slow replies, and manual
-              follow-ups with one always-on AI voice agent.
-            </p>
-          </div>
-
-          <div className="mt-14 border-t border-site-border">
-            {capabilities.map((cap, index) => (
-              <article
-                className="reveal group grid gap-4 border-b border-site-border py-8 transition hover:bg-site-fill sm:grid-cols-[4rem_1fr] lg:grid-cols-[4rem_1.2fr_1.6fr_auto] lg:items-center lg:gap-8"
-                key={cap.title}
-              >
-                <span className="font-mono text-sm font-semibold text-site-text-faint">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div className="flex items-center gap-4">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-site-border bg-site-fill text-brand-light">
-                    <Icon name={cap.icon} className="h-5 w-5" />
-                  </span>
-                  <h3 className="font-display text-xl font-bold text-site-text">
-                    {cap.title}
-                  </h3>
-                </div>
-                <p className="text-sm leading-6 text-site-text-muted sm:col-start-2 lg:col-start-3">
-                  {cap.body}
-                </p>
-                <div className="flex flex-wrap gap-2 sm:col-start-2 lg:col-start-4 lg:max-w-[13rem] lg:justify-end">
-                  {cap.tags.map((tag) => (
-                    <span
-                      className="rounded-full border border-site-border px-3 py-1 text-xs text-site-text-faint"
-                      key={tag}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        {/* ============ CAPABILITIES ============ */}
+        <FeaturesSection />
 
         {/* ============ WORKFLOW (horizontal steps) ============ */}
         <section
@@ -745,10 +576,10 @@ export default function Home() {
         >
           <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
             <SectionHeading
-              eyebrow="Live call workflow"
+              eyebrow="How it works"
               id="workflow-heading"
-              sub="The agent talks like a trained receptionist, keeps context across WhatsApp and voice, and hands your team a clean next action instead of a raw transcript."
-              title="Let the AI move leads while your team stays focused"
+              sub="Start with a connected WhatsApp number, then configure the agent for the conversations you want it to handle."
+              title="From QR connection to active AI agent"
             />
 
             <ol className="relative mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
@@ -774,26 +605,26 @@ export default function Home() {
             <div className="reveal mt-12 flex justify-center">
               <div className="inline-flex items-center gap-3 rounded-2xl border border-site-border bg-site-fill px-5 py-4 text-sm font-medium text-site-text-soft">
                 <Icon name="routing" className="h-5 w-5 shrink-0 text-site-text-muted" />
-                Smart transfer rules, fallback numbers, and human handoff
+                Control agents, connected numbers, knowledge bases, and tools from the dashboard
               </div>
             </div>
           </div>
         </section>
 
-        {/* ============ LEAD CAPTURE ============ */}
+        {/* ============ CONVERSATION HISTORY ============ */}
         <section
-          aria-labelledby="lead-capture-heading"
+          aria-labelledby="conversation-history-heading"
           className="mx-auto grid max-w-7xl scroll-mt-24 gap-14 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:px-10"
-          id="lead-capture"
+          id="conversation-history"
         >
           <div className="reveal order-2 overflow-hidden rounded-2xl border border-site-border bg-site-panel lg:order-1">
             <div className="flex items-center justify-between border-b border-site-border bg-site-fill px-6 py-4">
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-site-text-faint">
-                Pipeline snapshot
+                Agent workflow
               </p>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-site-border px-3 py-1 text-xs font-semibold text-site-text-soft">
-                <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-live" />
-                Live
+                <span className="h-1.5 w-1.5 rounded-full bg-live" />
+                Overview
               </span>
             </div>
             <div className="divide-y divide-white/[0.06]">
@@ -816,16 +647,17 @@ export default function Home() {
           </div>
 
           <div className="reveal order-1 lg:order-2">
-            <Eyebrow>Lead capture</Eyebrow>
+            <Eyebrow>Conversation history</Eyebrow>
             <h2
               className="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]"
-              id="lead-capture-heading"
+              id="conversation-history-heading"
             >
-              Turn every missed call into usable CRM data
+              Review WhatsApp chats, calls, and campaigns
             </h2>
             <p className="mt-5 text-base leading-7 text-site-text-muted">
-              Collect the details sales teams actually need: service interest,
-              urgency, budget, preferred time, location, and objection notes.
+              See what your agents handled. The dashboard brings together chat
+              conversations, call transcripts, and outbound campaign activity
+              so your team can follow up with context.
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {leadFeatures.map((feature) => (
@@ -846,42 +678,38 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ============ TESTIMONIALS ============ */}
+        {/* ============ AGENT TYPES ============ */}
         <section
-          aria-labelledby="testimonials-heading"
+          aria-labelledby="agent-types-heading"
           className="scroll-mt-24 border-y border-site-border bg-site-bg-alt"
-          id="testimonials"
+          id="agent-types"
         >
           <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24 lg:px-10">
             <SectionHeading
-              eyebrow="Why teams switch"
-              id="testimonials-heading"
-              title="Speed-to-lead that pays for itself"
+              eyebrow="Choose your channel"
+              id="agent-types-heading"
+              title="Make a WhatsApp chat agent or voice agent"
+              sub="Build each agent around your prompts, business knowledge, and the actions it needs to take."
             />
             <div className="mt-12 grid gap-6 lg:grid-cols-2">
-              {testimonials.map((t) => (
-                <figure
+              {agentModes.map((mode) => (
+                <article
                   className="reveal flex h-full flex-col rounded-2xl border border-site-border bg-site-fill p-8"
-                  key={t.name}
+                  key={mode.title}
                 >
-                  <div aria-hidden="true" className="flex gap-1 text-site-text-soft">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Icon key={i} name="star" className="h-4.5 w-4.5 fill-current" />
-                    ))}
-                  </div>
-                  <blockquote className="mt-5 flex-1 text-lg leading-8 text-site-text-soft">
-                    “{t.quote}”
-                  </blockquote>
-                  <figcaption className="mt-6 flex items-center gap-3 border-t border-site-border pt-5">
-                    <span className="grid h-11 w-11 place-items-center rounded-full border border-site-border bg-site-fill-2 font-display text-sm font-bold text-site-text">
-                      {t.initials}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-site-text">{t.name}</p>
-                      <p className="text-sm text-site-text-faint">{t.role}</p>
-                    </div>
-                  </figcaption>
-                </figure>
+                  <span className="grid h-12 w-12 place-items-center rounded-xl border border-site-border bg-site-fill-2 text-brand-light">
+                    <Icon name={mode.icon} className="h-6 w-6" />
+                  </span>
+                  <h3 className="mt-5 font-display text-xl font-bold text-site-text">
+                    {mode.title}
+                  </h3>
+                  <p className="mt-4 flex-1 text-base leading-7 text-site-text-soft">
+                    {mode.body}
+                  </p>
+                  <p className="mt-6 border-t border-site-border pt-5 text-sm text-site-text-faint">
+                    {mode.detail}
+                  </p>
+                </article>
               ))}
             </div>
           </div>
@@ -896,7 +724,7 @@ export default function Home() {
           <SectionHeading
             eyebrow="Questions"
             id="faq-heading"
-            title="Everything you need to know"
+            title="WhatsApp AI agent questions answered"
           />
           <div className="reveal mt-10 space-y-3">
             {faqs.map((faq) => (
@@ -926,11 +754,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ============ DEMO / CTA ============ */}
+        {/* ============ GET STARTED ============ */}
         <section
-          aria-labelledby="demo-heading"
+          aria-labelledby="get-started-heading"
           className="relative scroll-mt-24 overflow-hidden border-t border-site-border bg-site-bg-alt py-20 sm:py-28"
-          id="demo"
+          id="get-started"
         >
           <div className="bg-grid absolute inset-0 [mask-image:radial-gradient(70%_70%_at_50%_40%,#000_20%,transparent_100%)]" />
           <div className="absolute right-[-10%] top-[-20%] h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.14),transparent_65%)] blur-3xl" />
@@ -938,24 +766,23 @@ export default function Home() {
             <div className="reveal">
               <Eyebrow>
                 <Icon name="spark" className="h-4 w-4" />
-                Booking engine
+                Agent builder
               </Eyebrow>
               <h2
                 className="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]"
-                id="demo-heading"
+                id="get-started-heading"
               >
-                Capture the lead, book the slot, send the follow-up
+                Create your WhatsApp AI agent in Wapzen
               </h2>
               <p className="mt-5 max-w-xl text-base leading-7 text-site-text-muted">
-                Built for clinics, real estate teams, agencies, local services,
-                and education consultancies — any business where speed-to-lead
-                decides the sale.
+                Set up the agent that fits your workflow: text replies, inbound
+                voice calls, outbound campaigns, or a combination of them.
               </p>
               <ul className="mt-8 space-y-3">
                 {[
-                  "Live in under a day, no developer required",
-                  "Works with your existing WhatsApp number",
-                  "Cancel anytime — keep all your captured leads",
+                  "Connect a WhatsApp number by scanning a QR code",
+                  "Set prompts, models, voices, and languages",
+                  "Attach knowledge bases and API request tools",
                 ].map((point) => (
                   <li className="flex items-center gap-3 text-sm text-site-text-soft" key={point}>
                     <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-site-border-strong text-site-text-soft">
@@ -967,64 +794,37 @@ export default function Home() {
               </ul>
             </div>
 
-            <form className="reveal rounded-2xl border border-site-border bg-site-bg p-6 sm:p-8">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-2 text-sm font-semibold text-site-text-soft">
-                  Full name
-                  <input
-                    autoComplete="name"
-                    className="h-12 rounded-xl border border-site-border bg-site-fill px-4 text-base text-site-text outline-none transition placeholder:text-site-text-faint focus:border-brand-bright focus:bg-site-fill-2 focus:ring-4 focus:ring-brand-bright/15"
-                    name="name"
-                    placeholder="Your name"
-                    type="text"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-semibold text-site-text-soft">
-                  WhatsApp number
-                  <input
-                    autoComplete="tel"
-                    className="h-12 rounded-xl border border-site-border bg-site-fill px-4 text-base text-site-text outline-none transition placeholder:text-site-text-faint focus:border-brand-bright focus:bg-site-fill-2 focus:ring-4 focus:ring-brand-bright/15"
-                    name="phone"
-                    placeholder="+1 555 000 0000"
-                    type="tel"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-semibold text-site-text-soft sm:col-span-2">
-                  Business type
-                  <select
-                    className="h-12 rounded-xl border border-site-border bg-site-fill px-4 text-base text-site-text outline-none transition focus:border-brand-bright focus:bg-site-fill-2 focus:ring-4 focus:ring-brand-bright/15 [&>option]:text-ink"
-                    name="businessType"
-                  >
-                    <option>Appointment-based service</option>
-                    <option>Real estate sales</option>
-                    <option>Clinic or healthcare</option>
-                    <option>Education consultancy</option>
-                    <option>Agency or local service</option>
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm font-semibold text-site-text-soft sm:col-span-2">
-                  Main call goal
-                  <textarea
-                    className="min-h-28 resize-none rounded-xl border border-site-border bg-site-fill px-4 py-3 text-base text-site-text outline-none transition placeholder:text-site-text-faint focus:border-brand-bright focus:bg-site-fill-2 focus:ring-4 focus:ring-brand-bright/15"
-                    name="goal"
-                    placeholder="Example: qualify new WhatsApp leads and book consultation calls"
-                  />
-                </label>
-              </div>
-              <button
-                className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-b from-brand-bright to-brand px-6 py-3.5 text-base font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110"
-                type="button"
-              >
-                Request voice agent demo
-                <Icon
-                  name="arrow"
-                  className="h-5 w-5 transition-transform group-hover:translate-x-0.5"
-                />
-              </button>
-              <p className="mt-3 text-center text-xs text-site-text-faint">
-                No credit card required · Replies within one business day
+            <div className="reveal rounded-2xl border border-site-border bg-site-bg p-6 sm:p-8">
+              <h3 className="font-display text-xl font-bold text-site-text">
+                Start with the channel you need
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-site-text-muted">
+                Open the dashboard to create an agent and connect your number.
+                You can adjust its behavior as your business needs change.
               </p>
-            </form>
+              <div className="mt-6 grid gap-3">
+                <a className="rounded-xl border border-site-border bg-site-fill px-5 py-4 transition hover:border-brand-bright/40" href="#agent-types">
+                  <span className="font-semibold text-site-text">WhatsApp AI chat agent</span>
+                  <span className="mt-1 block text-sm text-site-text-muted">For incoming text messages and saved conversations</span>
+                </a>
+                <a className="rounded-xl border border-site-border bg-site-fill px-5 py-4 transition hover:border-brand-bright/40" href="#agent-types">
+                  <span className="font-semibold text-site-text">WhatsApp AI voice agent</span>
+                  <span className="mt-1 block text-sm text-site-text-muted">For inbound calls and outbound campaigns</span>
+                </a>
+              </div>
+              <Show when="signed-out">
+                <SignUpButton forceRedirectUrl="/dashboard" mode="modal" signInForceRedirectUrl="/dashboard">
+                  <button className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-b from-brand-bright to-brand px-6 py-3.5 text-base font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110" type="button">
+                    Create an agent <Icon name="arrow" className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <a className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-b from-brand-bright to-brand px-6 py-3.5 text-base font-bold text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition hover:brightness-110" href="/dashboard">
+                  Open dashboard <Icon name="arrow" className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              </Show>
+            </div>
           </div>
         </section>
       </main>
@@ -1037,16 +837,16 @@ export default function Home() {
               <a className="flex items-center gap-2.5" href="#top">
                 <Logo />
                 <span className="font-display text-base font-bold tracking-tight text-site-text">
-                  WhatsCall Agent
+                  Wapzen
                 </span>
               </a>
               <p className="mt-4 text-sm leading-6 text-site-text-faint">
-                The WhatsApp AI voice agent that answers, qualifies, and books —
-                so no lead ever goes cold.
+                Build WhatsApp AI chat agents for messages and voice agents for
+                inbound and outbound calls.
               </p>
               <div className="mt-5 flex items-center gap-2 text-xs text-site-text-faint">
                 <Icon name="globe" className="h-4 w-4" />
-                40+ languages · 24/7 coverage
+                Chat · Voice · Campaigns
               </div>
             </div>
             {footerColumns.map((col) => (
@@ -1071,17 +871,7 @@ export default function Home() {
             <p>
               © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
             </p>
-            <div className="flex items-center gap-6">
-              <a className="transition hover:text-site-text" href="#top">
-                Privacy
-              </a>
-              <a className="transition hover:text-site-text" href="#top">
-                Terms
-              </a>
-              <a className="transition hover:text-site-text" href="#top">
-                Security
-              </a>
-            </div>
+            <a className="transition hover:text-site-text" href="#top">Back to top</a>
           </div>
         </div>
       </footer>
