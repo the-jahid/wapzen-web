@@ -32,6 +32,9 @@ export type WorkspaceNavItem = {
 
 const STORAGE_KEY = "voca.workspace-mode";
 
+// Chat is the workspace a new browser opens in, until the user picks one.
+const defaultMode: WorkspaceMode = "chat";
+
 // Routes that only exist in one mode. Landing on one of these switches the
 // sidebar to that mode, so a link or a bookmark always shows a coherent menu.
 const chatOnlyPaths = ["/dashboard/chat", "/dashboard/conversations"];
@@ -75,14 +78,14 @@ let current: WorkspaceMode | null = null;
 const listeners = new Set<() => void>();
 
 function readStored(): WorkspaceMode {
-  if (typeof window === "undefined") return "voice";
+  if (typeof window === "undefined") return defaultMode;
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === "voice" || stored === "chat") return stored;
   } catch {
     // localStorage unavailable (private mode, blocked cookies) — use the default.
   }
-  return "voice";
+  return defaultMode;
 }
 
 function getSnapshot(): WorkspaceMode {
@@ -93,7 +96,7 @@ function getSnapshot(): WorkspaceMode {
 // Rendered on the server before any browser storage is readable; the client
 // snapshot takes over right after hydration, which React handles on its own.
 function getServerSnapshot(): WorkspaceMode {
-  return "voice";
+  return defaultMode;
 }
 
 function subscribe(listener: () => void): () => void {
