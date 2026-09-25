@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
@@ -1374,9 +1375,6 @@ const css = `
 .agents-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .agents-logo-mark {
   align-items: center;
-  background: linear-gradient(140deg,var(--primary-2),var(--primary));
-  border-radius: 10px;
-  box-shadow: 0 4px 14px var(--app-primary-glow);
   display: flex;
   height: 34px;
   justify-content: center;
@@ -4592,7 +4590,7 @@ function Sidebar({ agentCount }: { agentCount: number }) {
     <aside className="agents-sidebar">
       <Link aria-label="Wapzen home" className="agents-logo" href="/">
         <div className="agents-logo-mark">
-          <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>

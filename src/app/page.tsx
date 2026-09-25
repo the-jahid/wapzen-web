@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { ThemeToggleButton } from "@/components/theme/ThemeToggle";
 import { WisprFlowText } from "@/blocks/wispr-flow-text-animation";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { BrandMark } from "@/components/brand/BrandMark";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -212,9 +213,9 @@ const jsonLd = {
       description: siteConfig.description,
       logo: {
         "@type": "ImageObject",
-        url: `${siteConfig.url}/opengraph-image`,
+        url: `${siteConfig.url}/brand/wapzen-logo.png`,
         width: 1200,
-        height: 630,
+        height: 323,
       },
     },
     {
@@ -290,8 +291,8 @@ function Icon({ name, className = "h-6 w-6" }: { name: IconName; className?: str
 
 function Logo() {
   return (
-    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-linear-to-br from-brand-bright to-brand text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)]">
-      <Icon name="phone" className="h-4.5 w-4.5" />
+    <span className="grid h-8 w-8 shrink-0 place-items-center">
+      <BrandMark priority />
     </span>
   );
 }
@@ -343,8 +344,8 @@ function FeyDeck() {
         <div className="flex h-full flex-col p-5 text-left">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="grid h-5 w-5 place-items-center rounded-md bg-linear-to-br from-brand-bright to-brand text-white">
-                <Icon name="phone" className="h-3 w-3" />
+              <span className="grid h-5 w-5 place-items-center">
+                <BrandMark />
               </span>
               <span className="text-[10px] font-semibold tracking-wide text-white/75">
                 Wapzen

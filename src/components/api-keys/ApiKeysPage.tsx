@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { motion } from "motion/react";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
@@ -287,9 +288,6 @@ const css = `
 .api-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .api-logo-mark {
   align-items: center;
-  background: linear-gradient(140deg,var(--primary-2),var(--primary));
-  border-radius: 10px;
-  box-shadow: 0 4px 14px var(--app-primary-glow);
   display: flex;
   height: 34px;
   justify-content: center;
@@ -1189,7 +1187,7 @@ function Sidebar({ activeLabel, apiKeyCount }: { activeLabel: string; apiKeyCoun
     <aside className="api-sidebar">
       <Link aria-label="Wapzen home" className="api-logo" href="/">
         <div className="api-logo-mark">
-          <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>

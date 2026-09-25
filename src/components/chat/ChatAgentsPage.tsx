@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import Image from "next/image";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion } from "motion/react";
@@ -342,9 +343,6 @@ const css = `
 .chat-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .chat-logo-mark {
   align-items: center;
-  background: linear-gradient(140deg,var(--primary-2),var(--primary));
-  border-radius: 10px;
-  box-shadow: 0 4px 14px var(--app-primary-glow);
   display: flex;
   height: 34px;
   justify-content: center;
@@ -2831,7 +2829,7 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
     <header className="chat-topbar">
       <Link aria-label="Wapzen home" className="chat-logo chat-topbar-logo" href="/">
         <div className="chat-logo-mark">
-          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
       </Link>
@@ -2854,7 +2852,7 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
     <aside className={`chat-sidebar${isOpen ? " is-open" : ""}`} id="chat-sidebar">
       <Link aria-label="Wapzen home" className="chat-logo" href="/">
         <div className="chat-logo-mark">
-          <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
@@ -377,9 +378,6 @@ const css = `
 .phone-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .phone-logo-mark {
   align-items: center;
-  background: linear-gradient(140deg,var(--primary-2),var(--primary));
-  border-radius: 10px;
-  box-shadow: 0 4px 14px var(--app-primary-glow);
   display: flex;
   height: 34px;
   justify-content: center;
@@ -1822,7 +1820,7 @@ function Sidebar({
     <header className="phone-mobilebar">
       <Link aria-label="Wapzen home" className="phone-logo phone-mobilebar-logo" href="/">
         <div className="phone-logo-mark">
-          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
       </Link>
@@ -1845,7 +1843,7 @@ function Sidebar({
     <aside className={`phone-sidebar${isOpen ? " is-open" : ""}`} id="phone-sidebar">
       <Link aria-label="Wapzen home" className="phone-logo" href="/">
         <div className="phone-logo-mark">
-          <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>

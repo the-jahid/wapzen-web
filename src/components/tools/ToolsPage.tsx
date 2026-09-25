@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
@@ -580,9 +581,6 @@ const css = `
 .tools-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .tools-logo-mark {
   align-items: center;
-  background: linear-gradient(140deg,var(--primary-2),var(--primary));
-  border-radius: 10px;
-  box-shadow: 0 4px 14px var(--app-primary-glow);
   display: flex;
   height: 34px;
   justify-content: center;
@@ -2280,7 +2278,7 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
     <header className="tools-mobilebar">
       <Link aria-label="Wapzen home" className="tools-logo tools-mobilebar-logo" href="/">
         <div className="tools-logo-mark">
-          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
       </Link>
@@ -2303,7 +2301,7 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
     <aside className={`tools-sidebar${isOpen ? " is-open" : ""}`} id="tools-sidebar">
       <Link aria-label="Wapzen home" className="tools-logo" href="/">
         <div className="tools-logo-mark">
-          <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>

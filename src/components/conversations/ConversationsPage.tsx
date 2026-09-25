@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
@@ -214,7 +215,7 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
     <header className="conv-topbar">
       <Link aria-label="Wapzen home" className="conv-logo conv-topbar-logo" href="/">
         <div className="conv-logo-mark">
-          <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
       </Link>
@@ -237,7 +238,7 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
     <aside className={`conv-sidebar${isOpen ? " is-open" : ""}`} id="conv-sidebar">
       <Link aria-label="Wapzen home" className="conv-logo" href="/">
         <div className="conv-logo-mark">
-          <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
+          <BrandMark />
         </div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
@@ -331,9 +332,6 @@ const css = `
 .conv-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .conv-logo-mark {
   align-items: center;
-  background: linear-gradient(140deg,var(--primary-2),var(--primary));
-  border-radius: 10px;
-  box-shadow: 0 4px 14px var(--app-primary-glow);
   display: flex;
   height: 34px;
   justify-content: center;

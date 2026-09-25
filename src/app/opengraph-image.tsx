@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { siteConfig } from "@/lib/site";
 
@@ -11,7 +13,11 @@ export const size = {
 
 export const contentType = "image/png";
 
-export default function Image() {
+export default async function Image() {
+  // The white lockup reads on the dark card; process.cwd() is the project root.
+  const logo = await readFile(join(process.cwd(), "public/brand/wapzen-logo-white.png"));
+  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -29,24 +35,9 @@ export default function Image() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 18,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "linear-gradient(135deg, #46e09a, #14b8a6)",
-              color: "#06120f",
-              fontSize: 34,
-              fontWeight: 800,
-            }}
-          >
-            ☎
-          </div>
-          <div style={{ fontSize: 36, fontWeight: 700 }}>{siteConfig.name}</div>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse renders plain <img> only */}
+          <img alt={siteConfig.name} height={86} src={logoSrc} width={319} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
