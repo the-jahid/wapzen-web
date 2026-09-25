@@ -374,7 +374,7 @@ const css = `
   top: 0;
   width: 248px;
 }
-.phone-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.phone-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .phone-logo-mark {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));
@@ -1820,12 +1820,12 @@ function Sidebar({
   return (
     <>
     <header className="phone-mobilebar">
-      <div className="phone-logo phone-mobilebar-logo">
+      <Link aria-label="Wapzen home" className="phone-logo phone-mobilebar-logo" href="/">
         <div className="phone-logo-mark">
           <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
-      </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
+      </Link>
       <button
         aria-controls="phone-sidebar"
         aria-expanded={isOpen}
@@ -1843,17 +1843,17 @@ function Sidebar({
       onClick={() => setIsOpen(false)}
     />
     <aside className={`phone-sidebar${isOpen ? " is-open" : ""}`} id="phone-sidebar">
-      <div className="phone-logo">
+      <Link aria-label="Wapzen home" className="phone-logo" href="/">
         <div className="phone-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
           <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
             AI Voice Agents
           </div>
         </div>
-      </div>
+      </Link>
       <div className="phone-nav-kicker">Menu</div>
       <nav className="phone-nav" aria-label="Dashboard navigation">
         {navItemsForMode(mode).map((item) => {

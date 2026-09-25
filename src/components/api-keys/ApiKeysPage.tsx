@@ -284,7 +284,7 @@ const css = `
   top: 0;
   width: 248px;
 }
-.api-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.api-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .api-logo-mark {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));
@@ -1187,17 +1187,17 @@ function Sidebar({ activeLabel, apiKeyCount }: { activeLabel: string; apiKeyCoun
 
   return (
     <aside className="api-sidebar">
-      <div className="api-logo">
+      <Link aria-label="Wapzen home" className="api-logo" href="/">
         <div className="api-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
           <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
             AI Voice Agents
           </div>
         </div>
-      </div>
+      </Link>
       <div className="api-nav-kicker">Menu</div>
       <nav className="api-nav" aria-label="Dashboard navigation">
         {navItemsForMode(mode).map((item) => {

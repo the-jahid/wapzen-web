@@ -577,7 +577,7 @@ const css = `
   padding: 22px 16px;
   width: 248px;
 }
-.tools-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.tools-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .tools-logo-mark {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));
@@ -2278,12 +2278,12 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
   return (
     <>
     <header className="tools-mobilebar">
-      <div className="tools-logo tools-mobilebar-logo">
+      <Link aria-label="Wapzen home" className="tools-logo tools-mobilebar-logo" href="/">
         <div className="tools-logo-mark">
           <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
-      </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
+      </Link>
       <button
         aria-controls="tools-sidebar"
         aria-expanded={isOpen}
@@ -2301,17 +2301,17 @@ function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: n
       onClick={() => setIsOpen(false)}
     />
     <aside className={`tools-sidebar${isOpen ? " is-open" : ""}`} id="tools-sidebar">
-      <div className="tools-logo">
+      <Link aria-label="Wapzen home" className="tools-logo" href="/">
         <div className="tools-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
           <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
             AI Voice Agents
           </div>
         </div>
-      </div>
+      </Link>
       <div className="tools-nav-kicker">Menu</div>
       <nav className="tools-nav" aria-label="Dashboard navigation">
         {navItemsForMode(mode).map((item) => {

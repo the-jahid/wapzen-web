@@ -212,12 +212,12 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
   return (
     <>
     <header className="conv-topbar">
-      <div className="conv-logo conv-topbar-logo">
+      <Link aria-label="Wapzen home" className="conv-logo conv-topbar-logo" href="/">
         <div className="conv-logo-mark">
           <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
-      </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
+      </Link>
       <button
         aria-controls="conv-sidebar"
         aria-expanded={isOpen}
@@ -235,15 +235,15 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
       onClick={() => setIsOpen(false)}
     />
     <aside className={`conv-sidebar${isOpen ? " is-open" : ""}`} id="conv-sidebar">
-      <div className="conv-logo">
+      <Link aria-label="Wapzen home" className="conv-logo" href="/">
         <div className="conv-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
           <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>AI Voice Agents</div>
         </div>
-      </div>
+      </Link>
       <div className="conv-nav-kicker">Menu</div>
       <nav className="conv-nav" aria-label="Dashboard navigation">
         {navItemsForMode(mode).map((item) => {
@@ -328,7 +328,7 @@ const css = `
   top: 0;
   width: 248px;
 }
-.conv-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.conv-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .conv-logo-mark {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));

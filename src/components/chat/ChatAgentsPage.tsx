@@ -339,7 +339,7 @@ const css = `
   top: 0;
   width: 248px;
 }
-.chat-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.chat-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .chat-logo-mark {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));
@@ -2829,12 +2829,12 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
   return (
     <>
     <header className="chat-topbar">
-      <div className="chat-logo chat-topbar-logo">
+      <Link aria-label="Wapzen home" className="chat-logo chat-topbar-logo" href="/">
         <div className="chat-logo-mark">
           <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
-      </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
+      </Link>
       <button
         aria-controls="chat-sidebar"
         aria-expanded={isOpen}
@@ -2852,17 +2852,17 @@ function Sidebar({ activeLabel }: { activeLabel: string }) {
       onClick={() => setIsOpen(false)}
     />
     <aside className={`chat-sidebar${isOpen ? " is-open" : ""}`} id="chat-sidebar">
-      <div className="chat-logo">
+      <Link aria-label="Wapzen home" className="chat-logo" href="/">
         <div className="chat-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
           <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
             AI Voice Agents
           </div>
         </div>
-      </div>
+      </Link>
       <div className="chat-nav-kicker">Menu</div>
       <nav className="chat-nav" aria-label="Dashboard navigation">
         {navItemsForMode(mode).map((item) => {

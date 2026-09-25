@@ -374,7 +374,7 @@ const css = `
   top: 0;
   width: 248px;
 }
-.kb-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.kb-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .kb-logo-mark {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));
@@ -2673,12 +2673,12 @@ function Sidebar({ activeLabel, count }: { activeLabel: string; count: number })
   return (
     <>
     <header className="kb-mobilebar">
-      <div className="kb-logo kb-mobilebar-logo">
+      <Link aria-label="Wapzen home" className="kb-logo kb-mobilebar-logo" href="/">
         <div className="kb-logo-mark">
           <Icon name="spark" size={16} stroke="#fff" sw={2.2} />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
-      </div>
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
+      </Link>
       <button
         aria-controls="kb-sidebar"
         aria-expanded={isOpen}
@@ -2696,17 +2696,17 @@ function Sidebar({ activeLabel, count }: { activeLabel: string; count: number })
       onClick={() => setIsOpen(false)}
     />
     <aside className={`kb-sidebar${isOpen ? " is-open" : ""}`} id="kb-sidebar">
-      <div className="kb-logo">
+      <Link aria-label="Wapzen home" className="kb-logo" href="/">
         <div className="kb-logo-mark">
           <Icon name="spark" size={18} stroke="#fff" sw={2.2} />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Voca</div>
+          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
           <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
             AI Voice Agents
           </div>
         </div>
-      </div>
+      </Link>
       <div className="kb-nav-kicker">Menu</div>
       <nav className="kb-nav" aria-label="Dashboard navigation">
         {navItemsForMode(mode).map((item) => {

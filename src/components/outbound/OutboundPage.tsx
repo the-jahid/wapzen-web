@@ -116,7 +116,7 @@ function Sidebar({ campaignCount }: { campaignCount: number }) {
   const displayName = user?.fullName || user?.firstName || "Account";
   const email = user?.primaryEmailAddress?.emailAddress || "";
   return <aside className="ob-sidebar">
-    <div className="ob-logo"><span className="ob-logo-mark"><Icon name="spark" size={18} /></span><div><div className="ob-logo-name">Voca</div><div className="ob-logo-sub">AI Voice Agents</div></div></div>
+    <Link aria-label="Wapzen home" className="ob-logo" href="/"><span className="ob-logo-mark"><Icon name="spark" size={18} /></span><div><div className="ob-logo-name">Wapzen</div><div className="ob-logo-sub">AI Voice Agents</div></div></Link>
     <div className="ob-nav-kicker">Menu</div>
     <nav className="ob-nav">{navItemsForMode(mode).map((item) => {
       const content = <><Icon name={item.icon} size={18} /><span>{item.label}</span>{item.label === "Outbound" && campaignCount > 0 ? <span className="ob-nav-badge">{campaignCount}</span> : item.badge ? <span className="ob-nav-badge">{item.badge}</span> : null}</>;
@@ -459,7 +459,7 @@ const css = `
   position: sticky;
   top: 0;
 }
-.ob-logo { align-items: center; display: flex; gap: 11px; padding: 4px 8px 26px; }
+.ob-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
 .ob-logo-mark {
   align-items: center;
   background: linear-gradient(140deg,var(--primary-2),var(--primary));

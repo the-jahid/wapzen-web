@@ -428,13 +428,13 @@ const defaultSettings: CampaignSettings = {
   ringDurationSeconds: 20,
   callDurationLimitMinutes: 30,
   voicemailDrop:
-    "Hi {{first_name}}, this is Ava from Voca about your solar quote. I'll try again tomorrow, or call us back any time.",
+    "Hi {{first_name}}, this is Ava from Wapzen about your solar quote. I'll try again tomorrow, or call us back any time.",
   ivrBypass: "If a menu answers, press 1 for sales, then wait for a human greeting before starting the script.",
   callingDays: ["mon", "tue", "wed", "thu", "fri"],
   callingStart: "08:00",
   callingEnd: "18:00",
-  callWebhookUrl: "https://hooks.voca.ai/outbound/call",
-  leadWebhookUrl: "https://hooks.voca.ai/outbound/lead",
+  callWebhookUrl: "https://hooks.wapzen.ai/outbound/call",
+  leadWebhookUrl: "https://hooks.wapzen.ai/outbound/lead",
   webhookVersion: "v2",
 };
 
