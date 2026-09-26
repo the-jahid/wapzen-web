@@ -1,11 +1,8 @@
 /*
  * The root uses `display: contents`, so the rail (desktop) or the top bar
- * (stacked) is itself the child of the page's flex shell. Content is laid out
- * at the open width and clipped by the collapsed rail, so nothing reflows as
- * it widens; only the pills that should read as icon-sized shrink with it.
+ * (stacked) is itself the child of the page's flex shell.
  */
 .root {
-  --rail: 72px;
   --rail-open: 264px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   display: contents;
@@ -21,7 +18,7 @@
   color: var(--app-text);
 }
 .panel * { box-sizing: border-box; }
-.panel > * { flex-shrink: 0; width: calc(var(--rail-open) - 32px); }
+.panel > * { flex-shrink: 0; }
 
 /* ---------- Desktop rail ---------- */
 .rail {
@@ -30,31 +27,20 @@
   z-index: 40;
   align-self: flex-start;
   flex-shrink: 0;
-  width: var(--rail);
+  width: var(--rail-open);
   height: 100vh;
   height: 100dvh;
 }
 .rail .panel {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--rail);
-  overflow: hidden;
+  overflow-y: auto;
   border-right: 1px solid var(--app-border);
-  transition: width 280ms var(--ease), box-shadow 280ms ease;
 }
-.rail .panel[data-open] {
-  width: var(--rail-open);
-  box-shadow: 24px 0 60px -30px rgba(0, 0, 0, 0.45);
-}
-
-.reveal { transition: opacity 200ms ease, transform 280ms var(--ease); }
-.rail .panel:not([data-open]) .reveal { opacity: 0; transform: translateX(-6px); }
 
 /* ---------- Brand ---------- */
 .logo { display: flex; align-items: center; gap: 11px; padding: 4px 3px 26px; color: inherit; text-decoration: none; }
 .logo:focus-visible, .navItem:focus-visible, .topbarLogo:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; border-radius: 10px; }
 .logoMark { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 34px; height: 34px; }
-.logo .reveal { display: flex; flex-direction: column; white-space: nowrap; }
+.logoText { display: flex; flex-direction: column; white-space: nowrap; }
 .logoName { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
 .logoTagline { margin-top: -1px; color: var(--app-subtle); font-size: 11px; font-weight: 500; }
 
@@ -74,31 +60,16 @@
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 0.18s ease, color 0.18s ease, width 280ms var(--ease);
+  transition: background 0.18s ease, color 0.18s ease;
 }
 .navItem:hover { background: var(--app-hover); color: var(--app-text-soft); }
 .navItem[data-active] { background: var(--app-primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.rail .panel:not([data-open]) .navItem { width: 40px; }
 .navIcon { position: relative; display: flex; flex-shrink: 0; justify-content: center; width: 18px; }
 .navLabel { min-width: 0; }
 .badge { margin-left: auto; padding: 1px 7px; border-radius: 20px; background: var(--app-primary); color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; }
-/* With the labels hidden, a dot on the icon stands in for the count. */
-.navDot { position: absolute; top: -2px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--app-primary); box-shadow: 0 0 0 2px var(--app-sidebar); opacity: 0; transition: opacity 0.2s ease; }
-.rail .panel:not([data-open]) .navDot { opacity: 1; }
 
 /* ---------- Footer ---------- */
 .footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
-.swapRow { position: relative; }
-.full, .mini { transition: opacity 180ms ease, visibility 0s; }
-.swapRow .mini { position: absolute; top: 50%; left: 0; width: 40px; height: 36px; border-radius: 10px; translate: 0 -50%; }
-/* Hide the idle half of each row with visibility too, so it leaves the tab order. */
-.rail .panel:not([data-open]) .full,
-.rail .panel[data-open] .mini {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 120ms ease, visibility 0s 120ms;
-}
-
 .userCard {
   display: flex;
   align-items: center;
@@ -109,9 +80,7 @@
   border: 1px solid var(--app-border);
   border-radius: 14px;
   background: var(--app-surface);
-  transition: width 280ms var(--ease), border-color 0.2s ease, background 0.2s ease;
 }
-.rail .panel:not([data-open]) .userCard { width: 40px; border-color: transparent; background: transparent; }
 .userText { display: flex; flex-direction: column; min-width: 0; }
 .userName, .userEmail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .userName { font-size: 12.5px; font-weight: 700; }
@@ -171,13 +140,11 @@
   width: var(--rail-open);
   max-width: 88vw;
   border-right: 1px solid var(--app-border);
-  box-shadow: 24px 0 60px -30px rgba(0, 0, 0, 0.5);
   transform: translateX(-100%);
   transition: transform 320ms var(--ease);
 }
-.drawer[data-open] { transform: none; }
+.drawer[data-open] { transform: none; box-shadow: 24px 0 60px -30px rgba(0, 0, 0, 0.5); }
 .drawer .panel { overflow-y: auto; }
-.drawer .panel > * { width: auto; }
 .drawerClose { position: absolute; top: 20px; right: 14px; z-index: 1; }
 
 @media (max-width: 980px) {
@@ -192,5 +159,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rail .panel, .reveal, .navItem, .userCard, .drawer, .backdrop { transition: none; }
+  .navItem, .drawer, .backdrop { transition: none; }
 }
