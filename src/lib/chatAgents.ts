@@ -31,6 +31,14 @@ export type ChatToolsSection = {
   tool_ids?: string[];
 };
 
+// What the running server reports about serving the agent. Never saved: it is
+// read-only and absent from older servers.
+export type ChatRuntimeSection = {
+  provider_configured: boolean;
+  last_error?: string;
+  last_error_at?: string;
+};
+
 // One persisted chat agent, as ChatAgentResource in the OpenAPI document.
 export type ApiChatAgent = {
   id: string;
@@ -41,6 +49,7 @@ export type ApiChatAgent = {
   prompt?: ChatPromptSection;
   knowledge_base?: ChatKnowledgeBaseSection;
   tools?: ChatToolsSection;
+  runtime?: ChatRuntimeSection;
 };
 
 export type CreateChatAgentPayload = {
@@ -107,6 +116,10 @@ async function request<T>(
 
 export function listDashboardChatAgents(getToken: AuthTokenGetter): Promise<ApiChatAgent[]> {
   return request<ApiChatAgent[]>("/v1/dashboard/chat-agents?limit=100", undefined, getToken);
+}
+
+export function getDashboardChatAgent(id: string, getToken: AuthTokenGetter): Promise<ApiChatAgent> {
+  return request<ApiChatAgent>(`/v1/dashboard/chat-agents/${encodeURIComponent(id)}`, undefined, getToken);
 }
 
 export function createDashboardChatAgent(

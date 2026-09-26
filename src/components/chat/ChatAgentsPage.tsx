@@ -22,6 +22,7 @@ import {
   chatAgentDefaults,
   createDashboardChatAgent,
   deleteDashboardChatAgent,
+  getDashboardChatAgent,
   listDashboardChatAgents,
   updateDashboardChatAgent,
   type ApiChatAgent,
@@ -99,13 +100,10 @@ const providerModels: Record<ChatModelProvider, string[]> = {
     "claude-haiku-4-5-20251001",
     "claude-sonnet-4-6",
     "claude-sonnet-4-5-20250929",
-    "claude-sonnet-4-20250514",
     "claude-opus-4-8",
     "claude-opus-4-7",
     "claude-opus-4-6",
     "claude-opus-4-5-20251101",
-    "claude-opus-4-1",
-    "claude-opus-4-20250514",
   ],
 };
 
@@ -641,6 +639,12 @@ const css = `
   .chat-confirm-actions { flex-direction: column-reverse; }
   .chat-confirm-actions .chat-btn { width: 100%; }
 }
+/* Why a live agent is not answering, as the running server reports it. */
+.chat-runtime-alert { align-items: flex-start; background: var(--app-amber-soft); border-color: var(--app-amber-border); display: flex; gap: 12px; padding: 12px 14px; }
+.chat-runtime-alert-icon { align-items: center; background: var(--app-amber); border-radius: 999px; color: #fff; display: inline-flex; flex: none; font-size: 12px; font-weight: 900; height: 20px; justify-content: center; margin-top: 1px; width: 20px; }
+.chat-runtime-alert-title { color: var(--app-amber-text); font-size: 13px; font-weight: 800; margin: 0; }
+.chat-runtime-alert-time { color: var(--subtle); font-weight: 600; }
+.chat-runtime-alert-copy { color: var(--text); font-size: 12.5px; line-height: 1.5; margin: 4px 0 0; overflow-wrap: anywhere; }
 .chat-btn-sm { font-size: 12px; min-height: 32px; padding: 0 10px; }
 .chat-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
 .chat-section:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
@@ -1203,6 +1207,30 @@ export default function ChatAgentsPage() {
     () => (selectedId ? chatAgents.find((agent) => agent.id === selectedId) ?? null : null),
     [chatAgents, selectedId]
   );
+
+  // A live agent's runtime section changes on the server as messages arrive, so
+  // it is re-read while the agent is open. Only that section is taken, never the
+  // settings, so an edit still waiting to save is not overwritten.
+  const selectedLiveId = selected?.agent.status === "active" ? selected.id : "";
+  useEffect(() => {
+    if (!selectedLiveId) return;
+    let cancelled = false;
+    const timer = setInterval(async () => {
+      try {
+        const fresh = await getDashboardChatAgent(selectedLiveId, getToken);
+        if (cancelled) return;
+        setChatAgents((current) =>
+          current.map((item) => (item.id === fresh.id ? { ...item, runtime: fresh.runtime } : item))
+        );
+      } catch {
+        // A missed refresh is retried on the next tick.
+      }
+    }, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [getToken, selectedLiveId]);
 
   const queueSave = useCallback(
     (agent: ApiChatAgent, delay = 500) => {
@@ -1984,6 +2012,26 @@ function Editor({
           </button>
         </div>
       </div>
+
+      {agent.runtime?.last_error ? (
+        <div className="chat-card chat-runtime-alert" role="alert">
+          <span className="chat-runtime-alert-icon">!</span>
+          <div style={{ minWidth: 0 }}>
+            <p className="chat-runtime-alert-title">
+              {agent.runtime.provider_configured
+                ? "This agent's last WhatsApp reply failed"
+                : "This agent cannot reply on WhatsApp"}
+              {agent.runtime.last_error_at ? (
+                <span className="chat-runtime-alert-time">
+                  {" "}
+                  · {new Date(agent.runtime.last_error_at).toLocaleString()}
+                </span>
+              ) : null}
+            </p>
+            <p className="chat-runtime-alert-copy">{agent.runtime.last_error}</p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="chat-tabs" role="tablist">
         {editorTabs.map((entry) => (
