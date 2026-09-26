@@ -92,9 +92,10 @@ const providerModels: Record<ChatModelProvider, string[]> = {
     "o4-mini",
   ],
   anthropic: [
-    "claude-fable-5",
-    "claude-opus-5",
     "claude-sonnet-5",
+    "claude-opus-5",
+    "claude-fable-5-1",
+    "claude-fable-5",
     "claude-haiku-4-5-20251001",
     "claude-sonnet-4-6",
     "claude-sonnet-4-5-20250929",
@@ -522,7 +523,7 @@ const css = `
   transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
   width: 100%;
 }
-.chat-list { display: flex; flex-direction: column; gap: 10px; }
+.chat-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
 .chat-list-row {
   align-items: center;
   background: var(--surface);
@@ -531,10 +532,11 @@ const css = `
   color: var(--text);
   cursor: pointer;
   display: grid;
-  gap: 16px;
-  grid-template-areas: "avatar identity model resources status chevron";
-  grid-template-columns: 36px minmax(180px, 1.2fr) minmax(160px, .9fr) minmax(140px, .7fr) auto 18px;
-  padding: 13px 16px;
+  align-content: start;
+  gap: 12px;
+  grid-template-areas: "avatar identity status" "model model model" "resources resources chevron";
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  padding: 16px;
   text-align: left;
   transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
   width: 100%;
@@ -577,11 +579,11 @@ const css = `
 .chat-list-identity { display: grid; gap: 3px; grid-area: identity; min-width: 0; }
 .chat-list-name { font-size: 13.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-list-phone { color: var(--subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-list-model { color: var(--text); display: grid; font-size: 11.5px; font-weight: 700; gap: 2px; grid-area: model; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-list-model { color: var(--text); display: grid; font-size: 11.5px; font-weight: 700; gap: 2px; grid-area: model; border-top: 1px solid var(--border); padding-top: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-list-meta-label { color: var(--faint); font-size: 9.5px; font-weight: 850; letter-spacing: .6px; text-transform: uppercase; }
 .chat-list-resources { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 11px; gap: 9px; grid-area: resources; }
 .chat-list-resources > span { align-items: center; display: inline-flex; gap: 4px; white-space: nowrap; }
-.chat-list-chevron { color: var(--faint); display: inline-flex; grid-area: chevron; transition: color .18s ease, transform .18s ease; }
+.chat-list-chevron { color: var(--faint); display: inline-flex; grid-area: chevron; justify-self: end; transition: color .18s ease, transform .18s ease; }
 .chat-list-row:hover .chat-list-chevron { color: var(--primary-light); transform: translateX(2px); }
 .chat-empty-list { color: var(--subtle); font-size: 12.5px; padding: 18px 4px; text-align: center; }
 .chat-pill {
@@ -619,6 +621,26 @@ const css = `
 .chat-btn-secondary:hover { background: var(--app-panel-hover); }
 .chat-btn-danger { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
 .chat-btn:disabled { cursor: not-allowed; filter: grayscale(.35); opacity: .45; }
+
+/* Delete confirmation, above the expanded agent card. */
+.chat-confirm-overlay { align-items: center; animation: chat-confirm-fade .16s ease; backdrop-filter: blur(3px); background: var(--app-overlay); display: flex; inset: 0; justify-content: center; padding: 24px; position: fixed; z-index: 120; }
+.chat-confirm { animation: chat-confirm-in .18s ease; background: var(--app-surface); border: 1px solid var(--app-line); border-radius: 18px; box-shadow: 0 30px 80px var(--app-shadow-color-strong); max-width: 420px; padding: 22px; width: 100%; }
+.chat-confirm-icon { align-items: center; background: var(--app-rose-soft); border: 1px solid var(--app-rose-border); border-radius: 12px; color: var(--app-rose); display: inline-flex; height: 42px; justify-content: center; margin-bottom: 14px; width: 42px; }
+.chat-confirm-title { color: var(--app-text-strong); font-size: 17px; font-weight: 850; letter-spacing: -.2px; margin: 0; }
+.chat-confirm-copy { color: var(--app-muted); font-size: 13px; line-height: 1.55; margin: 8px 0 0; }
+.chat-confirm-copy strong { color: var(--app-text-strong); font-weight: 800; }
+.chat-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.chat-confirm-danger { background: var(--app-rose); border-color: transparent; color: #fff; }
+.chat-confirm-danger:hover { filter: brightness(1.08); }
+@keyframes chat-confirm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes chat-confirm-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .chat-confirm-overlay, .chat-confirm { animation: none; } }
+@media (max-width: 760px) {
+  .chat-confirm-overlay { align-items: flex-end; padding: 0; }
+  .chat-confirm { border-radius: 18px 18px 0 0; max-width: none; padding: 20px 18px calc(18px + env(safe-area-inset-bottom)); }
+  .chat-confirm-actions { flex-direction: column-reverse; }
+  .chat-confirm-actions .chat-btn { width: 100%; }
+}
 .chat-btn-sm { font-size: 12px; min-height: 32px; padding: 0 10px; }
 .chat-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
 .chat-section:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
@@ -935,7 +957,6 @@ const css = `
 }
 /* Laptops: fold the resource counts under the model so nothing truncates. */
 @media (max-width: 1280px) {
-  .chat-list-row { grid-template-areas: "avatar identity model status chevron" "avatar resources resources status chevron"; grid-template-columns: 36px minmax(160px, 1fr) minmax(130px, .8fr) auto 18px; gap: 8px 14px; }
   .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
 }
 /* Small laptops / landscape tablets: a slimmer sidebar keeps the list usable. */
@@ -959,9 +980,6 @@ const css = `
   .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr); overflow: auto; }
   .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
   .chat-agent-expanded-grid > .chat-config-panel { overflow: visible; }
-  .chat-list-row { grid-template-areas: "avatar identity status chevron" "avatar model resources resources"; grid-template-columns: 36px minmax(0, 1fr) auto 18px; gap: 8px 12px; }
-  .chat-list-model { align-items: baseline; display: flex; gap: 6px; }
-  .chat-list-resources { justify-content: flex-end; }
 }
 /* Phones: one column everywhere, the agent editor goes full screen, and
    touch targets grow a little. */
@@ -978,8 +996,6 @@ const css = `
   .chat-modal-footer { flex-direction: column-reverse; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
   .chat-modal-footer .chat-btn { width: 100%; }
   .chat-input, .chat-select { font-size: 16px; } /* stops iOS zooming on focus */
-  .chat-list-row { grid-template-areas: "avatar identity status chevron" "avatar model model model" "avatar resources resources resources"; padding: 12px; }
-  .chat-list-resources { justify-content: flex-start; }
   .expandable-card-stage { align-items: stretch; padding: 0; }
   .chat-agent-expandable { border: 0; border-radius: 0; height: 100dvh; max-width: none; }
   .chat-agent-expanded-grid { gap: 12px; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
@@ -1002,8 +1018,6 @@ const css = `
 @media (max-width: 420px) {
   .chat-list-head .chat-btn-label { display: none; }
   .chat-list-head .chat-btn { min-height: 36px; padding: 0 11px; }
-  .chat-list-row { gap: 6px 10px; grid-template-columns: 32px minmax(0, 1fr) auto; grid-template-areas: "avatar identity status" "avatar model model" "avatar resources resources"; padding: 11px; }
-  .chat-list-chevron { display: none; }
   .chat-avatar { height: 30px; width: 30px; }
   .chat-accordion-button { gap: 8px; grid-template-columns: 28px minmax(0, 1fr) minmax(0, auto) 18px; padding: 11px 10px; }
 }
@@ -1106,6 +1120,9 @@ export default function ChatAgentsPage() {
   const [createForm, setCreateForm] = useState<CreateForm | null>(null);
   const [createError, setCreateError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  // The delete button only asks; the agent goes once the modal is confirmed.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   // The QR login the editor is showing. One session serves whichever agent with
   // no number is selected — the scan lands on the agent being looked at — so it
   // is the phone-number row alone, with no agent bound to it.
@@ -1431,6 +1448,7 @@ export default function ChatAgentsPage() {
   const deleteSelected = useCallback(async () => {
     if (!selected) return;
     const name = selected.agent.name;
+    setIsDeleting(true);
     try {
       const timer = saveTimers.current.get(selected.id);
       if (timer) clearTimeout(timer);
@@ -1444,8 +1462,25 @@ export default function ChatAgentsPage() {
         kind: "error",
         text: error instanceof Error ? error.message : "Could not delete chat agent",
       });
+    } finally {
+      setIsDeleting(false);
+      setConfirmingDelete(false);
     }
   }, [getToken, selected]);
+
+  // Escape dismisses the delete confirmation. It listens in the capture phase
+  // and stops the key there, so the expanded agent card behind does not also
+  // take it as its cue to close.
+  useEffect(() => {
+    if (!confirmingDelete) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.stopImmediatePropagation();
+      if (!isDeleting) setConfirmingDelete(false);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [confirmingDelete, isDeleting]);
 
   return (
     <div className="chat-shell">
@@ -1591,7 +1626,7 @@ export default function ChatAgentsPage() {
                         numberLogin && numberLogin.status !== "connected" ? numberLogin : null
                       }
                       loginError={numberLoginError}
-                      onDelete={deleteSelected}
+                      onDelete={() => setConfirmingDelete(true)}
                       onPatch={patchSelected}
                       onRefreshNumbers={refreshPhoneNumbers}
                       onStartLogin={startNumberLogin}
@@ -1610,6 +1645,56 @@ export default function ChatAgentsPage() {
           </section>
         </div>
       </main>
+
+      {confirmingDelete && selected ? (
+        <div
+          className="chat-confirm-overlay"
+          // Outside-click handlers on the expanded card skip anything marked
+          // with this, so a click here never closes it.
+          data-expandable-card-ignore
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isDeleting) setConfirmingDelete(false);
+          }}
+        >
+          <div
+            aria-describedby="chat-delete-copy"
+            aria-labelledby="chat-delete-title"
+            aria-modal="true"
+            className="chat-confirm"
+            role="alertdialog"
+          >
+            <div className="chat-confirm-icon">
+              <Icon name="trash" size={18} sw={2.2} />
+            </div>
+            <h2 className="chat-confirm-title" id="chat-delete-title">
+              Delete chat agent
+            </h2>
+            <p className="chat-confirm-copy" id="chat-delete-copy">
+              <strong>{selected.agent.name}</strong> will be deleted and will stop replying on
+              WhatsApp. This cannot be undone.
+            </p>
+            <div className="chat-confirm-actions">
+              <button
+                autoFocus
+                className="chat-btn chat-btn-secondary"
+                disabled={isDeleting}
+                onClick={() => setConfirmingDelete(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="chat-btn chat-confirm-danger"
+                disabled={isDeleting}
+                onClick={() => void deleteSelected()}
+                type="button"
+              >
+                {isDeleting ? "Deleting…" : "Delete agent"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {createForm ? (
         <CreateChatAgentModal

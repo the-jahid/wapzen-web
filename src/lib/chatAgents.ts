@@ -66,7 +66,7 @@ export type UpdateChatAgentPayload = {
 // dashboard form starts on the same values the API would apply.
 export const chatAgentDefaults = {
   status: "inactive" as ChatAgentStatus,
-  model: { provider: "openai" as ChatModelProvider, name: "gpt-4.1-mini", temperature: 0.3 },
+  model: { provider: "anthropic" as ChatModelProvider, name: "claude-sonnet-5", temperature: 0.3 },
 };
 
 type Envelope<T> = { success: boolean; message: string; data: T };
