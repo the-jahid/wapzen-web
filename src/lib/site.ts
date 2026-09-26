@@ -1,8 +1,9 @@
 export const siteConfig = {
   name: "Wapzen",
-  // Set NEXT_PUBLIC_SITE_URL in production so canonical/OG/sitemap URLs
-  // point at the real domain.
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://whatscallagent.com",
+  // Canonical, OG, sitemap and robots URLs are all built from this, so it
+  // must be the production domain. NEXT_PUBLIC_SITE_URL overrides it (e.g.
+  // for a staging deploy).
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://wapzen.io",
   // Title and description lead with the highest-volume searches: "WhatsApp AI
   // chatbot" and "WhatsApp AI voice call / call agent". Keep the title under
   // ~60 characters and the description under ~155 so Google shows them whole.
