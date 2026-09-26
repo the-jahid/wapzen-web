@@ -1,19 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
-  navItemsForMode,
   useWorkspaceMode,
-  WorkspaceModeToggle,
 } from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   createTool as apiCreateTool,
   deleteTool as apiDeleteTool,
@@ -567,46 +561,6 @@ const css = `
 .tools-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
 .tools-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
 .tools-shell ::-webkit-scrollbar-track { background: transparent; }
-.tools-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 22px 16px;
-  width: 248px;
-}
-.tools-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.tools-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.tools-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.tools-nav { display: flex; flex-direction: column; gap: 3px; }
-.tools-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.tools-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.tools-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.tools-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.tools-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
-.tools-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.tools-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tools-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tools-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
 .tools-demo-pill {
   background: var(--app-amber-soft);
@@ -1080,21 +1034,6 @@ const css = `
 .tools-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .tools-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 /* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
-.tools-mobilebar { display: none; }
-.tools-sidebar-backdrop { display: none; }
-.tools-mobilebar-menu {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--subtle);
-  cursor: pointer;
-  display: inline-flex;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
-}
-.tools-mobilebar-menu:hover { background: var(--app-hover); color: var(--text); }
 /* Wide screens: a little more room around the capped content. */
 @media (min-width: 1680px) {
   .tools-content { padding: 28px 40px 36px; }
@@ -1107,7 +1046,6 @@ const css = `
 @media (max-width: 1100px) {
   .tools-param-row { grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr); }
   .tools-param-row .tools-required { grid-column: 1 / -1; }
-  .tools-sidebar { padding: 18px 12px; width: 216px; }
   .tools-content { padding: 20px 20px 28px; }
   .expandable-card-stage { padding: 16px; }
   .tools-expandable-card { max-height: min(820px, calc(100dvh - 32px)); }
@@ -1116,52 +1054,9 @@ const css = `
    and the page scrolls as a whole. */
 @media (max-width: 900px) {
   .tools-shell { display: block; height: auto; max-height: none; min-height: 100dvh; max-width: 100%; overflow: visible; width: 100%; }
-  .tools-mobilebar {
-    align-items: center;
-    background: var(--sidebar);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 12px;
-    height: 56px;
-    justify-content: space-between;
-    padding: 0 16px;
-    position: sticky;
-    top: 0;
-    z-index: 60;
-  }
-  .tools-mobilebar-logo { padding: 0; }
-  .tools-mobilebar-logo .tools-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
-  .tools-sidebar-backdrop {
-    background: var(--app-overlay);
-    display: block;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: fixed;
-    transition: opacity .2s ease;
-    z-index: 70;
-  }
-  .tools-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
-  .tools-sidebar {
-    box-shadow: 0 24px 70px var(--app-shadow-color);
-    height: 100dvh;
-    left: 0;
-    max-width: 86vw;
-    position: fixed;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform .24s ease, visibility .24s;
-    visibility: hidden;
-    width: 280px;
-    z-index: 75;
-  }
-  .tools-sidebar.is-open { transform: none; visibility: visible; }
   .tools-main { height: auto; overflow: visible; }
   .tools-content { overflow: visible; padding: 16px; }
   .tools-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tools-sidebar, .tools-sidebar-backdrop { transition: none; }
 }
 /* Phones: search on its own line, single-column forms, full-screen detail
    card and bottom-sheet dialogs. */
@@ -1403,7 +1298,7 @@ export default function ToolsPage() {
   return (
     <div className="tools-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar activeLabel="Tools" toolCount={tools.length} />
+      <DashboardSidebar activeLabel="Tools" badges={{ Tools: tools.length }} stackBelow={900} />
 
       <main className="tools-main">
         <div className="tools-content">
@@ -2253,106 +2148,5 @@ function ToolDetail({
         </section>
       ) : null}
     </div>
-  );
-}
-
-function Sidebar({ activeLabel, toolCount }: { activeLabel: string; toolCount: number }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
-  // menu button; on wider screens the class is inert and it is always shown.
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  return (
-    <>
-    <header className="tools-mobilebar">
-      <Link aria-label="Wapzen home" className="tools-logo tools-mobilebar-logo" href="/">
-        <div className="tools-logo-mark">
-          <BrandMark />
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-      </Link>
-      <button
-        aria-controls="tools-sidebar"
-        aria-expanded={isOpen}
-        aria-label={isOpen ? "Close menu" : "Open menu"}
-        className="tools-mobilebar-menu"
-        onClick={() => setIsOpen((open) => !open)}
-        type="button"
-      >
-        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
-      </button>
-    </header>
-    <div
-      aria-hidden="true"
-      className={`tools-sidebar-backdrop${isOpen ? " is-open" : ""}`}
-      onClick={() => setIsOpen(false)}
-    />
-    <aside className={`tools-sidebar${isOpen ? " is-open" : ""}`} id="tools-sidebar">
-      <Link aria-label="Wapzen home" className="tools-logo" href="/">
-        <div className="tools-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
-            AI Voice Agents
-          </div>
-        </div>
-      </Link>
-      <div className="tools-nav-kicker">Menu</div>
-      <nav className="tools-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const badge = item.label === "Tools" ? String(toolCount) : item.badge;
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {badge ? <span className="tools-nav-badge">{badge}</span> : null}
-            </>
-          );
-          const className = `tools-nav-item${item.label === activeLabel ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
-              {content}
-            </Link>
-          ) : (
-            <a
-              className={className}
-              href="#"
-              key={item.label}
-              onClick={(event) => event.preventDefault()}
-            >
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="tools-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="tools-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="tools-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="tools-user-email">{user?.primaryEmailAddress?.emailAddress ?? ""}</div>
-          </span>
-        </div>
-      </div>
-    </aside>
-    </>
   );
 }

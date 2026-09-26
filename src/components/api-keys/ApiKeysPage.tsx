@@ -2,18 +2,10 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
 import { motion } from "motion/react";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import {
-  navItemsForMode,
-  useWorkspaceMode,
-  WorkspaceModeToggle,
-} from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   createApiKey as apiCreateApiKey,
   deleteApiKey as apiDeleteApiKey,
@@ -273,48 +265,7 @@ const css = `
 }
 .api-keys-shell * { box-sizing: border-box; }
 .api-keys-shell button, .api-keys-shell input { font: inherit; }
-.api-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  min-height: 100vh;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-  width: 248px;
-}
-.api-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.api-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.api-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.api-nav { display: flex; flex-direction: column; gap: 3px; }
-.api-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.api-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.api-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.api-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.api-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; }
 .api-link-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; }
-.api-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.api-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.api-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .api-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .api-topbar {
   background: var(--app-topbar);
@@ -652,10 +603,6 @@ const css = `
 .api-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 @media (max-width: 980px) {
   .api-keys-shell { display: block; }
-  .api-sidebar { min-height: auto; position: static; width: 100%; }
-  .api-sidebar-footer { margin-top: 18px; }
-  .api-user-card { display: none; }
-  .api-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .api-topbar { padding: 18px 20px; }
   .api-content, .api-content.api-browse { padding: 20px; }
   .api-header { align-items: stretch; flex-direction: column; }
@@ -664,7 +611,6 @@ const css = `
   .api-row-last-used, .api-row-created { display: none; }
 }
 @media (max-width: 640px) {
-  .api-nav { grid-template-columns: 1fr 1fr; }
   .api-topbar, .api-content, .api-content.api-browse { padding: 16px 14px; }
   .api-create-form, .api-secret-row { grid-template-columns: 1fr; }
   .api-actions { justify-content: flex-start; }
@@ -896,7 +842,7 @@ export default function ApiKeysPage() {
   return (
     <div className="api-keys-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar activeLabel="API Keys" apiKeyCount={apiKeys.length} />
+      <DashboardSidebar activeLabel="API Keys" badges={{ "API Keys": apiKeys.length }} stackBelow={980} />
 
       <main className="api-main">
         <header className="api-topbar">
@@ -1175,74 +1121,5 @@ export default function ApiKeysPage() {
         </div>
       ) : null}
     </div>
-  );
-}
-
-function Sidebar({ activeLabel, apiKeyCount }: { activeLabel: string; apiKeyCount: number }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-
-  return (
-    <aside className="api-sidebar">
-      <Link aria-label="Wapzen home" className="api-logo" href="/">
-        <div className="api-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
-            AI Voice Agents
-          </div>
-        </div>
-      </Link>
-      <div className="api-nav-kicker">Menu</div>
-      <nav className="api-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {item.badge || item.label === "API Keys" ? (
-                <span className="api-nav-badge">
-                  {item.label === "API Keys" ? apiKeyCount : item.badge}
-                </span>
-              ) : null}
-            </>
-          );
-          const className = `api-nav-item${item.label === activeLabel ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
-              {content}
-            </Link>
-          ) : (
-            <a
-              className={className}
-              href="#"
-              key={item.label}
-              onClick={(event) => event.preventDefault()}
-            >
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="api-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="api-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="api-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="api-user-email">
-              {user?.primaryEmailAddress?.emailAddress ?? ""}
-            </div>
-          </span>
-        </div>
-      </div>
-    </aside>
   );
 }

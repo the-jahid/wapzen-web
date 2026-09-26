@@ -1,19 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
 import { motion } from "motion/react";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import {
-  navItemsForMode,
-  useWorkspaceMode,
-  WorkspaceModeToggle,
-} from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   callStatuses,
   deleteCall as apiDeleteCall,
@@ -327,48 +318,6 @@ const css = `
 .calls-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
 .calls-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
 .calls-shell ::-webkit-scrollbar-track { background: transparent; }
-.calls-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-  width: 248px;
-}
-.calls-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.calls-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.calls-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.calls-nav { display: flex; flex-direction: column; gap: 3px; }
-.calls-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.calls-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.calls-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.calls-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.calls-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
-.calls-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.calls-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calls-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .calls-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
 .calls-topbar {
   align-items: center;
@@ -769,10 +718,6 @@ const css = `
   .calls-shell { display: block; height: auto; max-height: none; overflow: visible; }
   .calls-main { height: auto; overflow: visible; }
   .calls-content { overflow: visible; padding: 20px; }
-  .calls-sidebar { height: auto; overflow: visible; position: static; width: 100%; }
-  .calls-sidebar-footer { margin-top: 18px; }
-  .calls-user-card { display: none; }
-  .calls-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .calls-topbar { padding: 18px 20px; }
   .calls-detail-topbar { align-items: flex-start; flex-direction: column; }
   .calls-top-actions { justify-content: flex-start; }
@@ -781,7 +726,6 @@ const css = `
   .calls-row-created { display: none; }
 }
 @media (max-width: 640px) {
-  .calls-nav { grid-template-columns: 1fr 1fr; }
   .calls-topbar, .calls-content { padding: 16px 14px; }
   .calls-meta-grid { grid-template-columns: 1fr; }
   .calls-toolbar-search { max-width: none; min-width: 100%; }
@@ -1051,7 +995,7 @@ export default function CallsPage() {
   return (
     <div className="calls-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar activeLabel="Calls" callCount={calls.length} />
+      <DashboardSidebar activeLabel="Calls" badges={{ Calls: calls.length }} stackBelow={980} />
 
       <main className="calls-main">
         <header className="calls-topbar">
@@ -1113,63 +1057,6 @@ export default function CallsPage() {
         </div>
       ) : null}
     </div>
-  );
-}
-
-function Sidebar({ activeLabel, callCount }: { activeLabel: string; callCount: number }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-
-  return (
-    <aside className="calls-sidebar">
-      <Link aria-label="Wapzen home" className="calls-logo" href="/">
-        <div className="calls-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>AI Voice Agents</div>
-        </div>
-      </Link>
-      <div className="calls-nav-kicker">Menu</div>
-      <nav className="calls-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const badge = item.label === "Calls" ? (callCount > 0 ? String(callCount) : undefined) : item.badge;
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {badge ? <span className="calls-nav-badge">{badge}</span> : null}
-            </>
-          );
-          const className = `calls-nav-item${item.label === activeLabel ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
-              {content}
-            </Link>
-          ) : (
-            <a className={className} href="#" key={item.label} onClick={(event) => event.preventDefault()}>
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="calls-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="calls-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="calls-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="calls-user-email">{user?.primaryEmailAddress?.emailAddress ?? ""}</div>
-          </span>
-        </div>
-      </div>
-    </aside>
   );
 }
 

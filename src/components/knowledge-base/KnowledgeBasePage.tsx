@@ -1,19 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
-  navItemsForMode,
   useWorkspaceMode,
-  WorkspaceModeToggle,
 } from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   knowledgeBaseChunkBounds as chunkBounds,
   knowledgeBaseNameLimit as nameLimit,
@@ -363,47 +357,6 @@ const css = `
 }
 .kb-shell * { box-sizing: border-box; }
 .kb-shell button, .kb-shell input, .kb-shell textarea, .kb-shell select { font: inherit; }
-.kb-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  min-height: 100vh;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-  width: 248px;
-}
-.kb-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.kb-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.kb-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.kb-nav { display: flex; flex-direction: column; gap: 3px; }
-.kb-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.kb-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.kb-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.kb-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.kb-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; }
-.kb-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.kb-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kb-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kb-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .kb-content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 32px; }
 .kb-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
@@ -916,21 +869,6 @@ const css = `
 .kb-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-green-text); }
 .kb-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 /* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
-.kb-mobilebar { display: none; }
-.kb-sidebar-backdrop { display: none; }
-.kb-mobilebar-menu {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--subtle);
-  cursor: pointer;
-  display: inline-flex;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
-}
-.kb-mobilebar-menu:hover { background: var(--app-hover); color: var(--text); }
 /* Wide screens: a little more room around the capped content. */
 @media (min-width: 1680px) {
   .kb-content { padding: 28px 40px 36px; }
@@ -942,7 +880,6 @@ const css = `
   .kb-row-time { display: none; }
 }
 @media (max-width: 1100px) {
-  .kb-sidebar { padding: 18px 12px; width: 216px; }
   .kb-content { padding: 20px 20px 28px; }
   .expandable-card-stage { padding: 16px; }
   .kb-expandable-card { max-height: min(820px, calc(100dvh - 32px)); }
@@ -950,54 +887,8 @@ const css = `
 /* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar. */
 @media (max-width: 900px) {
   .kb-shell { display: block; min-height: 100dvh; max-width: 100%; width: 100%; }
-  .kb-mobilebar {
-    align-items: center;
-    background: var(--sidebar);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 12px;
-    height: 56px;
-    justify-content: space-between;
-    padding: 0 16px;
-    position: sticky;
-    top: 0;
-    z-index: 60;
-  }
-  .kb-mobilebar-logo { padding: 0; }
-  .kb-mobilebar-logo .kb-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
-  .kb-sidebar-backdrop {
-    background: var(--app-overlay);
-    display: block;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: fixed;
-    transition: opacity .2s ease;
-    z-index: 70;
-  }
-  .kb-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
-  .kb-sidebar {
-    box-shadow: 0 24px 70px var(--app-shadow-color);
-    height: 100dvh;
-    left: 0;
-    max-width: 86vw;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 22px 16px;
-    position: fixed;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform .24s ease, visibility .24s;
-    visibility: hidden;
-    width: 280px;
-    z-index: 75;
-  }
-  .kb-sidebar.is-open { transform: none; visibility: visible; }
   .kb-content { padding: 16px; }
   .kb-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kb-sidebar, .kb-sidebar-backdrop { transition: none; }
 }
 /* Phones: search on its own line, one column, full-screen detail card and
    bottom-sheet dialogs. */
@@ -1319,7 +1210,7 @@ export default function KnowledgeBasePage() {
   return (
     <div className="kb-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar activeLabel="Knowledge Base" count={bases.length} />
+      <DashboardSidebar activeLabel="Knowledge Base" badges={{ "Knowledge Base": bases.length }} stackBelow={900} />
 
       <main className="kb-main">
         <div className="kb-content">
@@ -2648,109 +2539,5 @@ function StatusPill({ status }: { status: KnowledgeBaseStatus }) {
       <span className="kb-dot" />
       {statusLabels[status]}
     </span>
-  );
-}
-
-function Sidebar({ activeLabel, count }: { activeLabel: string; count: number }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
-  // menu button; on wider screens the class is inert and it is always shown.
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  return (
-    <>
-    <header className="kb-mobilebar">
-      <Link aria-label="Wapzen home" className="kb-logo kb-mobilebar-logo" href="/">
-        <div className="kb-logo-mark">
-          <BrandMark />
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-      </Link>
-      <button
-        aria-controls="kb-sidebar"
-        aria-expanded={isOpen}
-        aria-label={isOpen ? "Close menu" : "Open menu"}
-        className="kb-mobilebar-menu"
-        onClick={() => setIsOpen((open) => !open)}
-        type="button"
-      >
-        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
-      </button>
-    </header>
-    <div
-      aria-hidden="true"
-      className={`kb-sidebar-backdrop${isOpen ? " is-open" : ""}`}
-      onClick={() => setIsOpen(false)}
-    />
-    <aside className={`kb-sidebar${isOpen ? " is-open" : ""}`} id="kb-sidebar">
-      <Link aria-label="Wapzen home" className="kb-logo" href="/">
-        <div className="kb-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
-            AI Voice Agents
-          </div>
-        </div>
-      </Link>
-      <div className="kb-nav-kicker">Menu</div>
-      <nav className="kb-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {item.badge || item.label === "Knowledge Base" ? (
-                <span className="kb-nav-badge">
-                  {item.label === "Knowledge Base" ? count : item.badge}
-                </span>
-              ) : null}
-            </>
-          );
-          const className = `kb-nav-item${item.label === activeLabel ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
-              {content}
-            </Link>
-          ) : (
-            <a
-              className={className}
-              href="#"
-              key={item.label}
-              onClick={(event) => event.preventDefault()}
-            >
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="kb-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="kb-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="kb-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="kb-user-email">{user?.primaryEmailAddress?.emailAddress ?? ""}</div>
-          </span>
-        </div>
-      </div>
-    </aside>
-    </>
   );
 }

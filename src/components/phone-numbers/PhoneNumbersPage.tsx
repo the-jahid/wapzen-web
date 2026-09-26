@@ -4,19 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
-  navItemsForMode,
   type WorkspaceMode,
   useWorkspaceMode,
-  WorkspaceModeToggle,
 } from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   listDashboardAgents as apiListAgents,
   updateDashboardAgent as apiUpdateAgent,
@@ -363,48 +358,7 @@ const css = `
 .phone-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
 .phone-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
 .phone-shell ::-webkit-scrollbar-track { background: transparent; }
-.phone-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  min-height: 100vh;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-  width: 248px;
-}
-.phone-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.phone-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.phone-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.phone-nav { display: flex; flex-direction: column; gap: 3px; }
-.phone-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.phone-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.phone-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.phone-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.phone-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; }
 .phone-link-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; }
-.phone-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.phone-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.phone-user-email { color: var(--subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .phone-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .phone-content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 32px; }
 .phone-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
@@ -1109,21 +1063,6 @@ const css = `
 }
 .phone-modal-close:hover { color: var(--app-text-strong); }
 /* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
-.phone-mobilebar { display: none; }
-.phone-sidebar-backdrop { display: none; }
-.phone-mobilebar-menu {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--subtle);
-  cursor: pointer;
-  display: inline-flex;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
-}
-.phone-mobilebar-menu:hover { background: var(--app-hover); color: var(--text); }
 /* Wide screens: a little more room around the capped content. */
 @media (min-width: 1680px) {
   .phone-content { padding: 28px 40px 36px; }
@@ -1138,7 +1077,6 @@ const css = `
   .phone-row-time { display: none; }
 }
 @media (max-width: 1100px) {
-  .phone-sidebar { padding: 18px 12px; width: 216px; }
   .phone-content { padding: 20px 20px 28px; }
   .phone-expandable-card { max-height: min(760px, calc(100dvh - 32px)); }
   .expandable-card-stage { padding: 16px; }
@@ -1146,56 +1084,10 @@ const css = `
 /* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar. */
 @media (max-width: 900px) {
   .phone-shell { display: block; min-height: 100dvh; max-width: 100%; width: 100%; }
-  .phone-mobilebar {
-    align-items: center;
-    background: var(--sidebar);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 12px;
-    height: 56px;
-    justify-content: space-between;
-    padding: 0 16px;
-    position: sticky;
-    top: 0;
-    z-index: 55;
-  }
-  .phone-mobilebar-logo { padding: 0; }
-  .phone-mobilebar-logo .phone-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
-  .phone-sidebar-backdrop {
-    background: var(--app-overlay);
-    display: block;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: fixed;
-    transition: opacity .2s ease;
-    z-index: 65;
-  }
-  .phone-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
-  .phone-sidebar {
-    box-shadow: 0 24px 70px var(--app-shadow-color);
-    height: 100dvh;
-    left: 0;
-    max-width: 86vw;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 22px 16px;
-    position: fixed;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform .24s ease, visibility .24s;
-    visibility: hidden;
-    width: 280px;
-    z-index: 68;
-  }
-  .phone-sidebar.is-open { transform: none; visibility: visible; }
   .phone-content { padding: 16px; }
   .phone-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
   .phone-detail-topbar { align-items: flex-start; flex-direction: column; }
   .phone-top-actions { justify-content: flex-start; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .phone-sidebar, .phone-sidebar-backdrop { transition: none; }
 }
 @media (max-width: 780px) {
   .phone-settings-grid { grid-template-columns: 1fr; }
@@ -1382,7 +1274,6 @@ export default function PhoneNumbersPage() {
     () => mode === "chat" ? chatAgents.map(normalizeChatAgent) : voiceAgents.map(normalizeVoiceAgent),
     [chatAgents, mode, voiceAgents]
   );
-  const totalCount = phoneNumbers.length;
   const filteredPhoneNumbers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return phoneNumbers;
@@ -1727,7 +1618,7 @@ export default function PhoneNumbersPage() {
   return (
     <div className="phone-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar activeLabel="Phone Numbers" phoneCount={totalCount} />
+      <DashboardSidebar activeLabel="Phone Numbers" stackBelow={900} />
 
       <main className="phone-main">
         <div className="phone-content">
@@ -1789,111 +1680,6 @@ export default function PhoneNumbersPage() {
         </div>
       ) : null}
     </div>
-  );
-}
-
-function Sidebar({
-  activeLabel,
-  phoneCount,
-}: {
-  activeLabel: string;
-  phoneCount: number;
-}) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
-  // menu button; on wider screens the class is inert and it is always shown.
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  return (
-    <>
-    <header className="phone-mobilebar">
-      <Link aria-label="Wapzen home" className="phone-logo phone-mobilebar-logo" href="/">
-        <div className="phone-logo-mark">
-          <BrandMark />
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-      </Link>
-      <button
-        aria-controls="phone-sidebar"
-        aria-expanded={isOpen}
-        aria-label={isOpen ? "Close menu" : "Open menu"}
-        className="phone-mobilebar-menu"
-        onClick={() => setIsOpen((open) => !open)}
-        type="button"
-      >
-        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
-      </button>
-    </header>
-    <div
-      aria-hidden="true"
-      className={`phone-sidebar-backdrop${isOpen ? " is-open" : ""}`}
-      onClick={() => setIsOpen(false)}
-    />
-    <aside className={`phone-sidebar${isOpen ? " is-open" : ""}`} id="phone-sidebar">
-      <Link aria-label="Wapzen home" className="phone-logo" href="/">
-        <div className="phone-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
-            AI Voice Agents
-          </div>
-        </div>
-      </Link>
-      <div className="phone-nav-kicker">Menu</div>
-      <nav className="phone-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {item.badge || item.label === "Phone Numbers" ? (
-                <span className="phone-nav-badge">
-                  {item.label === "Phone Numbers" ? phoneCount : item.badge}
-                </span>
-              ) : null}
-            </>
-          );
-          const className = `phone-nav-item${item.label === activeLabel ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
-              {content}
-            </Link>
-          ) : (
-            <a className={className} href="#" key={item.label} onClick={(event) => event.preventDefault()}>
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="phone-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="phone-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="phone-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="phone-user-email">{user?.primaryEmailAddress?.emailAddress ?? ""}</div>
-          </span>
-        </div>
-      </div>
-    </aside>
-    </>
   );
 }
 

@@ -2,20 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
 import Image from "next/image";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import {
-  navItemsForMode,
-  useWorkspaceMode,
-  WorkspaceModeToggle,
-} from "@/components/nav/workspaceMode";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
 import {
   getPhoneNumber as apiGetPhoneNumber,
@@ -328,47 +320,6 @@ const css = `
 .chat-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
 .chat-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
 .chat-shell ::-webkit-scrollbar-track { background: transparent; }
-.chat-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-  width: 248px;
-}
-.chat-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.chat-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.chat-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.chat-nav { display: flex; flex-direction: column; gap: 3px; }
-.chat-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.chat-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.chat-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.chat-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.chat-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; }
-.chat-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.chat-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-user-email { color: var(--subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-main { display: flex; flex: 1; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
 .chat-content { padding: 20px 32px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .chat-workspace {
@@ -977,8 +928,6 @@ const css = `
 .chat-number-empty { color: var(--subtle); font-size: 12px; line-height: 1.55; }
 .chat-number-empty a { color: var(--primary-light); font-weight: 700; }
 /* The top bar and drawer backdrop only exist below the tablet breakpoint. */
-.chat-topbar { display: none; }
-.chat-sidebar-backdrop { display: none; }
 /* Large desktops: the list is capped at 1320px, so give the wide screen a
    little more breathing room rather than stretching the rows. */
 @media (min-width: 1680px) {
@@ -991,7 +940,6 @@ const css = `
 }
 /* Small laptops / landscape tablets: a slimmer sidebar keeps the list usable. */
 @media (max-width: 1100px) {
-  .chat-sidebar { padding: 18px 12px; width: 216px; }
   .chat-content { padding: 18px 20px; }
   .chat-agent-expandable { height: min(820px, calc(100dvh - 32px)); }
   .expandable-card-stage { padding: 16px; }
@@ -1000,49 +948,6 @@ const css = `
    and the page scrolls as a whole instead of each pane on its own. */
 @media (max-width: 900px) {
   .chat-shell { display: block; height: auto; max-height: none; min-height: 100dvh; overflow: visible; width: 100%; max-width: 100%; }
-  .chat-topbar {
-    align-items: center;
-    background: var(--sidebar);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 12px;
-    height: 56px;
-    justify-content: space-between;
-    padding: 0 16px;
-    position: sticky;
-    top: 0;
-    z-index: 60;
-  }
-  .chat-topbar-logo { padding: 0; }
-  .chat-topbar-logo .chat-logo-mark { border-radius: 9px; height: 30px; width: 30px; }
-  .chat-topbar-menu { height: 38px; width: 38px; }
-  .chat-sidebar-backdrop {
-    background: var(--app-overlay);
-    display: block;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: fixed;
-    transition: opacity .2s ease;
-    z-index: 70;
-  }
-  .chat-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
-  .chat-sidebar {
-    box-shadow: 0 24px 70px var(--app-shadow-color);
-    height: 100dvh;
-    left: 0;
-    max-width: 86vw;
-    overflow-y: auto;
-    padding: 22px 16px;
-    position: fixed;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform .24s ease, visibility .24s;
-    visibility: hidden;
-    width: 280px;
-    z-index: 75;
-  }
-  .chat-sidebar.is-open { transform: none; visibility: visible; }
   .chat-main { height: auto; overflow: visible; }
   .chat-content { padding: 16px; }
   .chat-workspace { grid-template-columns: 1fr; }
@@ -1057,9 +962,6 @@ const css = `
   .chat-list-row { grid-template-areas: "avatar identity status chevron" "avatar model resources resources"; grid-template-columns: 36px minmax(0, 1fr) auto 18px; gap: 8px 12px; }
   .chat-list-model { align-items: baseline; display: flex; gap: 6px; }
   .chat-list-resources { justify-content: flex-end; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .chat-sidebar, .chat-sidebar-backdrop { transition: none; }
 }
 /* Phones: one column everywhere, the agent editor goes full screen, and
    touch targets grow a little. */
@@ -1139,8 +1041,8 @@ function upsertPhoneNumber(current: ApiPhoneNumber[], updated: ApiPhoneNumber): 
   return current.map((pn) => (pn.id === updated.id ? updated : pn));
 }
 
-// The create modal collects the same fields the configuration panel edits, so a
-// new agent arrives configured instead of being created blank and then fixed up.
+// The create modal only asks for a name and a number; the rest of the form keeps
+// the defaults a new agent is created with, and is edited in the editor afterwards.
 type CreateForm = {
   name: string;
   phone_number_id: string;
@@ -1548,7 +1450,7 @@ export default function ChatAgentsPage() {
   return (
     <div className="chat-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar activeLabel="Chat Agents" />
+      <DashboardSidebar activeLabel="Chat Agents" stackBelow={900} />
 
       <main className="chat-main">
         <div className="chat-content">
@@ -1794,7 +1696,8 @@ function CreateChatAgentModal({
               Create chat agent
             </h2>
             <div className="chat-modal-subtitle">
-              Name it, choose which number it answers on, and set how it replies.
+              Name it and choose which number it answers on. The model, prompt, knowledge bases
+              and tools are set in the editor once it exists.
             </div>
           </div>
           <button
@@ -1842,62 +1745,6 @@ function CreateChatAgentModal({
                 </span>
               ) : null}
             </label>
-          </div>
-
-          <div className="chat-modal-section">
-            <h3 className="chat-modal-section-title">Model</h3>
-            <div className="chat-modal-grid">
-              <div className="chat-field">
-                <span className="chat-control-label">Provider</span>
-                <ProviderPicker
-                  onChange={(provider) => {
-                    patch({ provider, model: providerModels[provider][0] });
-                  }}
-                  value={form.provider}
-                />
-              </div>
-              <div className="chat-field">
-                <span className="chat-control-label">Model</span>
-                <ModelPicker
-                  onChange={(model) => patch({ model })}
-                  provider={form.provider}
-                  value={form.model}
-                />
-              </div>
-            </div>
-            <label className="chat-field">
-              <span className="chat-range-head">
-                <span className="chat-control-label" style={{ marginBottom: 0 }}>
-                  Temperature
-                </span>
-                <span className="chat-range-value">{form.temperature.toFixed(1)}</span>
-              </span>
-              <input
-                className="chat-range"
-                max={1}
-                min={0.1}
-                onChange={(event) => patch({ temperature: Number(event.target.value) })}
-                step={0.1}
-                type="range"
-                value={form.temperature}
-              />
-              <span className="chat-field-hint">
-                Lower keeps replies predictable; higher lets the agent vary its wording.
-              </span>
-            </label>
-          </div>
-
-          <div className="chat-modal-section">
-            <h3 className="chat-modal-section-title">System prompt</h3>
-            <textarea
-              className="chat-textarea"
-              onChange={(event) => patch({ system_prompt: event.target.value })}
-              value={form.system_prompt}
-            />
-            <span className="chat-field-hint">
-              Knowledge bases and tools are attached from the configuration panel once the agent
-              exists.
-            </span>
           </div>
         </div>
 
@@ -2804,105 +2651,5 @@ function StatusPill({ status }: { status: "active" | "inactive" }) {
       <span className="chat-dot" />
       {status === "active" ? "Live" : "Paused"}
     </span>
-  );
-}
-
-function Sidebar({ activeLabel }: { activeLabel: string }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-  // Below the tablet breakpoint the sidebar is a drawer behind the top bar's
-  // menu button; on wider screens the class is inert and it is always shown.
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  return (
-    <>
-    <header className="chat-topbar">
-      <Link aria-label="Wapzen home" className="chat-logo chat-topbar-logo" href="/">
-        <div className="chat-logo-mark">
-          <BrandMark />
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-      </Link>
-      <button
-        aria-controls="chat-sidebar"
-        aria-expanded={isOpen}
-        aria-label={isOpen ? "Close menu" : "Open menu"}
-        className="chat-icon-btn chat-topbar-menu"
-        onClick={() => setIsOpen((open) => !open)}
-        type="button"
-      >
-        <Icon name={isOpen ? "x" : "menu"} size={18} sw={2.2} />
-      </button>
-    </header>
-    <div
-      aria-hidden="true"
-      className={`chat-sidebar-backdrop${isOpen ? " is-open" : ""}`}
-      onClick={() => setIsOpen(false)}
-    />
-    <aside className={`chat-sidebar${isOpen ? " is-open" : ""}`} id="chat-sidebar">
-      <Link aria-label="Wapzen home" className="chat-logo" href="/">
-        <div className="chat-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
-            AI Voice Agents
-          </div>
-        </div>
-      </Link>
-      <div className="chat-nav-kicker">Menu</div>
-      <nav className="chat-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {item.badge ? <span className="chat-nav-badge">{item.badge}</span> : null}
-            </>
-          );
-          const className = `chat-nav-item${item.label === activeLabel ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
-              {content}
-            </Link>
-          ) : (
-            <a
-              className={className}
-              href="#"
-              key={item.label}
-              onClick={(event) => event.preventDefault()}
-            >
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="chat-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="chat-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="chat-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="chat-user-email">{user?.primaryEmailAddress?.emailAddress ?? ""}</div>
-          </span>
-        </div>
-      </div>
-    </aside>
-    </>
   );
 }

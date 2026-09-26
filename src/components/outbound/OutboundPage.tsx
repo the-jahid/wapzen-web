@@ -1,19 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
 import { motion } from "motion/react";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import {
-  navItemsForMode,
-  useWorkspaceMode,
-  WorkspaceModeToggle,
-} from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   createOutboundCampaign as apiCreateCampaign,
   deleteOutboundCampaign as apiDeleteCampaign,
@@ -108,23 +99,6 @@ function allowedStatuses(status: OutboundCampaignStatus): OutboundCampaignStatus
     case "completed": return ["completed"];
     case "failed": return ["failed"];
   }
-}
-
-function Sidebar({ campaignCount }: { campaignCount: number }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-  const displayName = user?.fullName || user?.firstName || "Account";
-  const email = user?.primaryEmailAddress?.emailAddress || "";
-  return <aside className="ob-sidebar">
-    <Link aria-label="Wapzen home" className="ob-logo" href="/"><span className="ob-logo-mark"><BrandMark /></span><div><div className="ob-logo-name">Wapzen</div><div className="ob-logo-sub">AI Voice Agents</div></div></Link>
-    <div className="ob-nav-kicker">Menu</div>
-    <nav className="ob-nav">{navItemsForMode(mode).map((item) => {
-      const content = <><Icon name={item.icon} size={18} /><span>{item.label}</span>{item.label === "Outbound" && campaignCount > 0 ? <span className="ob-nav-badge">{campaignCount}</span> : item.badge ? <span className="ob-nav-badge">{item.badge}</span> : null}</>;
-      return item.href ? <Link className={`ob-nav-item${item.label === "Outbound" ? " is-active" : ""}`} href={item.href} key={item.label}>{content}</Link> : <span className="ob-nav-item" key={item.label}>{content}</span>;
-    })}</nav>
-    <div className="ob-sidebar-footer"><WorkspaceModeToggle /><ThemeToggle /><div className="ob-user-card"><UserButton appearance={clerkAppearance(resolvedTheme)} /><div className="ob-user-copy"><div className="ob-user-name">{displayName}</div><div className="ob-user-email">{email}</div></div></div></div>
-  </aside>;
 }
 
 export default function OutboundPage() {
@@ -247,7 +221,7 @@ export default function OutboundPage() {
 
   return <div className="ob-shell">
     <style dangerouslySetInnerHTML={{ __html: css }} />
-    <Sidebar campaignCount={campaigns.length} />
+    <DashboardSidebar activeLabel="Outbound" badges={{ Outbound: campaigns.length }} stackBelow={980} />
     <main className="ob-main">
       <header className="ob-topbar">
         <div className="ob-topbar-heading">
@@ -448,50 +422,6 @@ const css = `
 .ob-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
 .ob-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
 .ob-shell ::-webkit-scrollbar-track { background: transparent; }
-.ob-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex: 0 0 248px;
-  flex-direction: column;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-}
-.ob-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.ob-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.ob-logo-name { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
-.ob-logo-sub { color: var(--subtle); font-size: 11px; font-weight: 500; margin-top: -1px; }
-.ob-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.ob-nav { display: flex; flex-direction: column; gap: 3px; }
-.ob-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.ob-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.ob-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.ob-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.ob-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
-.ob-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.ob-user-copy { min-width: 0; }
-.ob-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ob-user-email { color: var(--subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ob-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
 .ob-topbar {
   align-items: center;
@@ -853,17 +783,12 @@ const css = `
   .ob-shell { display: block; height: auto; max-height: none; overflow: visible; }
   .ob-main { height: auto; overflow: visible; }
   .ob-content { overflow: visible; padding: 20px; }
-  .ob-sidebar { height: auto; overflow: visible; position: static; width: 100%; }
-  .ob-sidebar-footer { margin-top: 18px; }
-  .ob-user-card { display: none; }
-  .ob-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ob-topbar { padding: 18px 20px; }
   .ob-detail-head { align-items: flex-start; flex-direction: column; }
   .ob-row { grid-template-columns: 38px minmax(150px, 1fr) minmax(150px, .9fr) auto 18px; }
   .ob-row-leads { display: none; }
 }
 @media (max-width: 640px) {
-  .ob-nav { grid-template-columns: 1fr 1fr; }
   .ob-topbar, .ob-content { padding: 16px 14px; }
   .ob-stat-grid, .ob-detail-grid { grid-template-columns: 1fr; }
   .ob-toolbar-search { max-width: none; min-width: 100%; }

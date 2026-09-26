@@ -2,16 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import {
-  navItemsForMode,
-  useWorkspaceMode,
-  WorkspaceModeToggle,
-} from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import { listDashboardAgents as apiListAgents, type ApiAgentResource } from "@/lib/agents";
 import { listPhoneNumbers as apiListPhoneNumbers, type ApiPhoneNumber } from "@/lib/phoneNumbers";
 import {
@@ -261,47 +253,6 @@ const css = `
 .demo-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
 .demo-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
 .demo-shell ::-webkit-scrollbar-track { background: transparent; }
-.demo-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-  width: 248px;
-}
-.demo-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.demo-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.demo-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.demo-nav { display: flex; flex-direction: column; gap: 3px; }
-.demo-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.demo-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.demo-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.demo-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.demo-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; }
-.demo-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.demo-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.demo-user-email { color: var(--subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .demo-main { display: flex; flex: 1; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
 .demo-content { padding: 20px 32px; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .demo-header { align-items: flex-start; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; margin-bottom: 18px; }
@@ -580,13 +531,8 @@ const css = `
   .demo-main { height: auto; overflow: visible; }
   .demo-content { overflow: visible; padding: 20px; }
   .demo-workspace { grid-template-columns: 1fr; }
-  .demo-sidebar { height: auto; position: static; width: 100%; }
-  .demo-sidebar-footer { margin-top: 18px; }
-  .demo-user-card { display: none; }
-  .demo-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
-  .demo-nav { grid-template-columns: 1fr 1fr; }
   .demo-content { padding: 14px; }
   .demo-meta-grid { grid-template-columns: 1fr; }
 }
@@ -947,7 +893,7 @@ export default function DemoCallPage() {
   return (
     <div className="demo-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar activeLabel="Voice" />
+      <DashboardSidebar activeLabel="Voice" stackBelow={900} />
 
       <main className="demo-main">
         <div className="demo-content">
@@ -1195,62 +1141,6 @@ export default function DemoCallPage() {
   );
 }
 
-
-function Sidebar({ activeLabel }: { activeLabel: string }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-
-  return (
-    <aside className="demo-sidebar">
-      <Link aria-label="Wapzen home" className="demo-logo" href="/">
-        <div className="demo-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>AI Voice Agents</div>
-        </div>
-      </Link>
-      <div className="demo-nav-kicker">Menu</div>
-      <nav className="demo-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {item.badge ? <span className="demo-nav-badge">{item.badge}</span> : null}
-            </>
-          );
-          const className = `demo-nav-item${item.label === activeLabel ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
-              {content}
-            </Link>
-          ) : (
-            <a className={className} href="#" key={item.label} onClick={(event) => event.preventDefault()}>
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="demo-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="demo-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="demo-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="demo-user-email">{user?.primaryEmailAddress?.emailAddress ?? ""}</div>
-          </span>
-        </div>
-      </div>
-    </aside>
-  );
-}
 
 function Check({ ok, text, note }: { ok: boolean; text: string; note?: ReactNode }) {
   return (

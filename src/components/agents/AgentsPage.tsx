@@ -3,19 +3,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import {
-  navItemsForMode,
-  useWorkspaceMode,
-  WorkspaceModeToggle,
-} from "@/components/nav/workspaceMode";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { clerkAppearance } from "@/components/theme/clerkAppearance";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   createDashboardAgent as apiCreateAgent,
   deleteDashboardAgent as apiDeleteAgent,
@@ -1360,62 +1352,8 @@ const css = `
 .agents-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
 .agents-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
 .agents-shell ::-webkit-scrollbar-track { background: transparent; }
-.agents-sidebar {
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  padding: 22px 16px;
-  position: sticky;
-  top: 0;
-  width: 248px;
-}
-.agents-logo { align-items: center; color: inherit; display: flex; gap: 11px; padding: 4px 8px 26px; text-decoration: none; }
-.agents-logo-mark {
-  align-items: center;
-  display: flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-.agents-nav-kicker { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; padding: 4px 10px 8px; text-transform: uppercase; }
-.agents-nav { display: flex; flex-direction: column; gap: 3px; }
-.agents-nav-item {
-  align-items: center;
-  border-radius: 10px;
-  color: var(--app-nav);
-  display: flex;
-  font-size: 13.5px;
-  font-weight: 600;
-  gap: 11px;
-  padding: 9px 10px;
-  text-decoration: none;
-  transition: background .18s ease, color .18s ease;
-}
-.agents-nav-item:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.agents-nav-item.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
-.agents-nav-badge { background: var(--primary); border-radius: 20px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; margin-left: auto; padding: 1px 7px; }
-.agents-sidebar-footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; }
 .agents-link-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; }
-.agents-user-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 10px; padding: 10px 13px; }
-.agents-user-name { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.agents-user-email { color: var(--app-subtle); font-size: 11.5px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .agents-main { display: flex; flex: 1; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
-.agents-topbar {
-  align-items: center;
-  background: var(--app-topbar);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex: 0 0 auto;
-  gap: 16px;
-  padding: 20px 32px;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
 .agents-title-wrap { flex: 1; min-width: 0; }
 .agents-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
 .agents-subtitle { color: var(--subtle); font-size: 12.5px; margin-top: 3px; }
@@ -2710,11 +2648,6 @@ const css = `
   .agents-content { overflow: visible; }
   .agents-workspace { height: auto; }
   .agents-editor, .agents-panel-pad { overflow: visible; }
-  .agents-sidebar { height: auto; position: static; width: 100%; }
-  .agents-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .agents-sidebar-footer { margin-top: 18px; }
-  .agents-user-card { display: none; }
-  .agents-topbar { align-items: flex-start; flex-direction: column; padding: 18px 20px; position: static; }
   .agents-content { padding: 20px; }
   .agents-workspace, .modal-grid, .two-col { grid-template-columns: 1fr; }
   .number-setup-grid { grid-template-columns: 1fr; }
@@ -2738,7 +2671,6 @@ const css = `
   .voice-agent-expandable { border-radius: 16px; height: calc(100vh - 20px); }
 }
 @media (max-width: 560px) {
-  .agents-nav { grid-template-columns: 1fr 1fr; }
   .agents-content, .modal-backdrop { padding: 14px; }
   .agent-key-form { grid-template-columns: 1fr; }
   .agent-row { gap: 10px; grid-template-columns: 36px minmax(0, 1fr) auto; padding: 11px; }
@@ -4277,7 +4209,7 @@ export default function AgentsPage() {
   return (
     <div className="agents-shell">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Sidebar agentCount={agents.length} />
+      <DashboardSidebar activeLabel="Agents" stackBelow={980} />
 
       <main className="agents-main">
         <div className="agents-content">
@@ -4579,74 +4511,6 @@ export default function AgentsPage() {
         />
       ) : null}
     </div>
-  );
-}
-
-function Sidebar({ agentCount }: { agentCount: number }) {
-  const { user } = useUser();
-  const { resolvedTheme } = useTheme();
-  const { mode } = useWorkspaceMode();
-  return (
-    <aside className="agents-sidebar">
-      <Link aria-label="Wapzen home" className="agents-logo" href="/">
-        <div className="agents-logo-mark">
-          <BrandMark />
-        </div>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-.3px" }}>Wapzen</div>
-          <div style={{ color: "var(--app-subtle)", fontSize: 11, fontWeight: 500, marginTop: -1 }}>
-            AI Voice Agents
-          </div>
-        </div>
-      </Link>
-      <div className="agents-nav-kicker">Menu</div>
-      <nav className="agents-nav" aria-label="Dashboard navigation">
-        {navItemsForMode(mode).map((item) => {
-          const content = (
-            <>
-              <span style={{ display: "flex", justifyContent: "center", width: 18 }}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>{item.label}</span>
-              {item.badge ? (
-                <span className="agents-nav-badge">
-                  {item.label === "Agents" ? agentCount : item.badge}
-                </span>
-              ) : null}
-            </>
-          );
-          const className = `agents-nav-item${item.label === "Agents" ? " is-active" : ""}`;
-
-          return item.href ? (
-            <Link className={className} href={item.href} key={item.label}>
-              {content}
-            </Link>
-          ) : (
-            <a
-              className={className}
-              href="#"
-              key={item.label}
-              onClick={(event) => event.preventDefault()}
-            >
-              {content}
-            </a>
-          );
-        })}
-      </nav>
-      <div className="agents-sidebar-footer">
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <div className="agents-user-card">
-          <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span style={{ minWidth: 0 }}>
-            <div className="agents-user-name">{user?.fullName || user?.username || "Account"}</div>
-            <div className="agents-user-email">
-              {user?.primaryEmailAddress?.emailAddress ?? ""}
-            </div>
-          </span>
-        </div>
-      </div>
-    </aside>
   );
 }
 
