@@ -58,6 +58,14 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  // Search Console / Bing Webmaster ownership tokens (the `content` value of
+  // their HTML-tag verification method). Unset = no tag is rendered.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
+  },
 };
 
 export const viewport = {

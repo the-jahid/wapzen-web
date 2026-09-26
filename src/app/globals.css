@@ -124,9 +124,9 @@
   --background: var(--app-bg);
   --foreground: var(--app-text);
   --ink: #050505;
-  --brand: #4f46e5;
-  --brand-bright: #6366f1;
-  --brand-light: #4338ca;
+  --brand: #0f8f68;
+  --brand-bright: #15ae7f;
+  --brand-light: #0b7a58;
   --live: #059669;
 
   /* Landing page surfaces (page.tsx uses these through Tailwind vars) */
@@ -146,11 +146,11 @@
   --site-invert-text: #ffffff;
   --site-grid: rgba(15, 20, 35, 0.05);
   --site-console-shadow: rgba(15, 23, 42, 0.28);
-  --site-shimmer-1: #312e81;
-  --site-shimmer-2: #6366f1;
+  --site-shimmer-1: #064e3b;
+  --site-shimmer-2: #15ae7f;
   --hero-bg: #f7f7f8;
   --hero-grid-line: rgba(15, 20, 35, 0.075);
-  --hero-glow: rgba(99, 102, 241, 0.13);
+  --hero-glow: rgba(15, 20, 35, 0.06);
   --hero-frame: rgba(255, 255, 255, 0.62);
   --hero-frame-shadow: rgba(15, 23, 42, 0.24);
   --hero-button-shadow: rgba(15, 23, 42, 0.35);
@@ -284,7 +284,7 @@
     --app-toast-error-text: #fecdd3;
 
     --ink: #050505;
-    --brand-light: #818cf8;
+    --brand-light: #2cc493;
     --live: #34d399;
 
     --site-bg: #0a0a0c;
@@ -303,8 +303,8 @@
     --site-invert-text: #050505;
     --site-grid: rgba(255, 255, 255, 0.045);
     --site-console-shadow: rgba(0, 0, 0, 0.9);
-    --site-shimmer-1: #e0e7ff;
-    --site-shimmer-2: #818cf8;
+    --site-shimmer-1: #d1fae5;
+    --site-shimmer-2: #2cc493;
     --hero-bg: #151515;
     --hero-grid-line: rgba(255, 255, 255, 0.055);
     --hero-glow: rgba(255, 255, 255, 0.055);
@@ -411,7 +411,7 @@
   --app-toast-error-text: #fecdd3;
 
   --ink: #050505;
-  --brand-light: #818cf8;
+  --brand-light: #2cc493;
   --live: #34d399;
 
   --site-bg: #0a0a0c;
@@ -430,8 +430,8 @@
   --site-invert-text: #050505;
   --site-grid: rgba(255, 255, 255, 0.045);
   --site-console-shadow: rgba(0, 0, 0, 0.9);
-  --site-shimmer-1: #e0e7ff;
-  --site-shimmer-2: #818cf8;
+  --site-shimmer-1: #d1fae5;
+  --site-shimmer-2: #2cc493;
   --hero-bg: #151515;
   --hero-grid-line: rgba(255, 255, 255, 0.055);
   --hero-glow: rgba(255, 255, 255, 0.055);

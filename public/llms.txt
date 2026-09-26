@@ -1,22 +1,32 @@
 # Wapzen
 
-> Wapzen is a builder for WhatsApp AI chat agents and voice agents. Connect a WhatsApp number by QR code, configure agents for incoming messages and inbound or outbound calls, and review activity in a dashboard.
+> Wapzen is a no-code builder for WhatsApp AI chatbots and WhatsApp AI voice call agents. Connect an existing WhatsApp or WhatsApp Business number by QR code (no WhatsApp Business API needed), then let AI agents auto-reply to messages, answer inbound WhatsApp calls, and make outbound AI calls 24/7.
 
 ## What it does
 
-- WhatsApp AI chat agents: configure an OpenAI or Anthropic model, system prompt, knowledge bases, and tools to reply to incoming text messages.
-- WhatsApp AI voice agents: configure inbound, outbound, or both call directions with a voice provider, transcriber, prompt, knowledge bases, and tools.
-- Outbound campaigns: organize leads, assign a voice agent, place calls, and review campaign activity and analytics.
-- Knowledge bases and tools: add text or file sources and attach API request tools to agents.
-- Conversation review: view WhatsApp chat threads, call history, and call transcripts.
+- WhatsApp AI chatbot: an AI chat agent that auto-replies to incoming WhatsApp text messages, using an OpenAI or Anthropic model, your system prompt, knowledge bases, and API tools.
+- WhatsApp AI voice agent: an AI calling agent that answers inbound WhatsApp voice calls and places outbound calls in real time, with a configurable voice, language, transcriber, prompt, knowledge bases, and tools.
+- AI outbound calling campaigns: add leads to a campaign, assign a voice agent, and each lead is called on WhatsApp; review campaign activity and analytics.
+- Knowledge bases: train agents on text, PDF, and Word documents; agents search them during chats and calls.
+- API request tools: let agents take actions in your own systems, such as checking an order or booking an appointment.
+- Conversation review: WhatsApp chat history, call history, and call transcripts in one dashboard.
+
+## Use cases
+
+- AI customer service on WhatsApp
+- WhatsApp AI receptionist for incoming calls
+- Appointment booking over chat or voice
+- AI sales agent for replying to and qualifying leads
+- Outbound follow-up and reminder calls
+- Industries: real estate, clinics, e-commerce, education, restaurants, travel, local services
 
 ## Setup
 
 1. Connect a WhatsApp number from the dashboard by scanning a QR code.
-2. Create a chat agent or voice agent and set its prompt and model options.
+2. Create a chat agent (WhatsApp AI chatbot) or voice agent (WhatsApp AI voice call agent) and set its prompt and model options.
 3. Attach relevant knowledge bases and tools.
 4. Review conversations, calls, and outbound campaigns in the dashboard.
 
 ## Page
 
-- [Home](/): product overview, agent types, features, setup workflow, and FAQ.
+- [Home](/): WhatsApp AI chatbot and voice call agent overview, features, use cases, setup workflow, and FAQ.

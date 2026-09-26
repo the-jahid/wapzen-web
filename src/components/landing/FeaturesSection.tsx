@@ -13,7 +13,10 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import type { CSSProperties } from "react";
 import styles from "./FeaturesSection.module.css";
+import { RevealSection } from "./RevealSection";
+import { WobbleCard } from "./WobbleCard";
 
 const features = [
   {
@@ -64,9 +67,12 @@ function ChatPreview() {
       </div>
       <div className={styles.messages}>
         <div className={styles.customerMessage}>Hi! What services do you offer?</div>
-        <div className={styles.agentMessage}>
-          Happy to help. What are you looking for?
-          <CheckCheck size={14} />
+        <div className={styles.agentSlot}>
+          <span className={styles.typing}><span /><span /><span /></span>
+          <div className={styles.agentMessage}>
+            Happy to help. What are you looking for?
+            <CheckCheck size={14} />
+          </div>
         </div>
         <span className={styles.replyNote}><Sparkles size={12} /> Your knowledge, in every reply</span>
       </div>
@@ -82,7 +88,7 @@ function VoicePreview() {
       <div className={styles.voiceOrb}><AudioLines size={30} strokeWidth={1.5} /></div>
       <div className={styles.waveform}>
         {waveform.map((height, index) => (
-          <span key={index} style={{ height }} />
+          <span key={index} style={{ height, "--bar": index } as CSSProperties} />
         ))}
       </div>
       <div className={styles.callDirections}>
@@ -136,20 +142,29 @@ function KnowledgePreview() {
 
 export function FeaturesSection() {
   return (
-    <section
+    <RevealSection
       aria-labelledby="capabilities-heading"
       className="mx-auto max-w-7xl scroll-mt-24 px-5 py-20 sm:px-8 sm:py-28 lg:px-10"
       id="capabilities"
     >
       <div className={styles.heading}>
         <div>
-          <p className={styles.eyebrow}><span /> WhatsApp AI agent builder</p>
-          <h2 id="capabilities-heading" className={styles.title}>
+          <p className={`${styles.eyebrow} ${styles.reveal}`} data-reveal><span /> WhatsApp AI agent builder</p>
+          <h2
+            id="capabilities-heading"
+            className={`${styles.title} ${styles.reveal}`}
+            data-reveal
+            style={{ "--delay": "90ms" } as CSSProperties}
+          >
             Create AI agents for<br className="hidden sm:block" />{" "}
             <span>WhatsApp messages and calls</span>
           </h2>
         </div>
-        <p className={styles.intro}>
+        <p
+          className={`${styles.intro} ${styles.reveal}`}
+          data-reveal
+          style={{ "--delay": "180ms" } as CSSProperties}
+        >
           Configure chat and voice agents around the way your business
           communicates. Add knowledge and actions as your workflow grows.
         </p>
@@ -157,7 +172,14 @@ export function FeaturesSection() {
 
       <div className={styles.grid}>
         {features.map(({ key, icon: Icon, label, title, body, tags, preview: Preview }, index) => (
-          <article className={`${styles.card} ${styles[key]}`} key={key}>
+          <WobbleCard
+            className={`${styles.card} ${styles[key]} ${styles.reveal}`}
+            data-reveal
+            innerClassName={styles.cardInner}
+            key={key}
+            // Cards sit two to a row, so only the right-hand one is staggered.
+            style={{ "--delay": `${(index % 2) * 120}ms` } as CSSProperties}
+          >
             <div className={styles.cardHeader}>
               <span className={styles.icon}><Icon size={18} strokeWidth={1.7} /></span>
               <span>{label}</span>
@@ -172,10 +194,10 @@ export function FeaturesSection() {
             <ul className={styles.tags} aria-label={`${title} features`}>
               {tags.map((tag) => <li key={tag}><Check size={12} aria-hidden="true" />{tag}</li>)}
             </ul>
-          </article>
+          </WobbleCard>
         ))}
       </div>
-      <p className={styles.footnote}><Users size={14} aria-hidden="true" /> One connected number. Chat, voice, and the context behind both.</p>
-    </section>
+      <p className={`${styles.footnote} ${styles.reveal}`} data-reveal><Users size={14} aria-hidden="true" /> One connected number. Chat, voice, and the context behind both.</p>
+    </RevealSection>
   );
 }

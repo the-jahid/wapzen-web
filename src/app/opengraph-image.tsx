@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 import { siteConfig } from "@/lib/site";
 
 export const alt =
-  "Wapzen — build WhatsApp AI chat agents and voice agents for messages and calls";
+  "Wapzen — WhatsApp AI chatbot and AI voice call agent for business";
 
 export const size = {
   width: 1200,
@@ -50,7 +50,7 @@ export default async function Image() {
               maxWidth: 950,
             }}
           >
-            Build WhatsApp AI chat and voice agents
+            WhatsApp AI chatbot & voice call agent
           </div>
           <div
             style={{
@@ -60,13 +60,13 @@ export default async function Image() {
               maxWidth: 900,
             }}
           >
-            Reply to messages, handle inbound and outbound calls, and review
-            conversations in one dashboard.
+            Auto-reply to WhatsApp messages and answer or make WhatsApp calls
+            24/7. No code, no Business API.
           </div>
         </div>
 
         <div style={{ display: "flex", gap: 16 }}>
-          {["AI chat", "AI voice", "Outbound campaigns"].map((tag) => (
+          {["AI chatbot", "AI voice calls", "Outbound campaigns"].map((tag) => (
             <div
               key={tag}
               style={{
