@@ -1,10 +1,8 @@
 import type { CSSProperties } from "react";
 import Image from "next/image";
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { ArrowDown, ArrowUpRight, ArrowRight, AudioLines, BookOpen, Building2, CalendarCheck, Check, CheckCheck, Command, FileText, Headphones, MessageCircle, Phone, PhoneIncoming, PhoneOutgoing, Plus, QrCode, Radio, SlidersHorizontal, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
-import { ThemeToggleButton } from "@/components/theme/ThemeToggle";
-import { ResizableNavbar } from "./ResizableNavbar";
+import { GetStarted, SiteFooter, SiteHeader } from "./SiteChrome";
 import { HeroNetwork, LandingMotion, PeopleStage } from "./LandingMotion";
 import styles from "./CoreLanding.module.css";
 
@@ -14,18 +12,6 @@ const links = [
   { href: "#agent-types", label: "Chat + voice" },
   { href: "#faq", label: "FAQ" },
 ];
-
-function Brand() {
-  return <a href="#top" className={styles.brand} aria-label="Wapzen home"><span><BrandMark priority /></span>wapzen<span className={styles.brandDot}>.</span></a>;
-}
-
-function GetStarted({ label = "Create your agent", dark = false }: { label?: string; dark?: boolean }) {
-  const className = `${styles.button} ${dark ? styles.darkButton : styles.greenButton}`;
-  return <>
-    <Show when="signed-out"><SignUpButton mode="modal" forceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard"><button type="button" className={className}>{label}<ArrowUpRight size={17} /></button></SignUpButton></Show>
-    <Show when="signed-in"><a href="/dashboard" className={className}>Open dashboard<ArrowUpRight size={17} /></a></Show>
-  </>;
-}
 
 function Label({ children }: { children: React.ReactNode }) {
   return <p className={styles.label}><span />{children}</p>;
@@ -94,20 +80,20 @@ const steps = [
   { icon: AudioLines, title: "Let the conversation flow.", body: "Your AI agent answers WhatsApp messages and calls 24/7, or runs an outbound calling campaign. Review every conversation in your dashboard.", tag: "03 / GO LIVE", detail: "Chat + voice agent", status: "Active", visual: "live" },
 ];
 
-// Each card answers a long-tail search ("whatsapp ai customer service", "whatsapp ai receptionist", "whatsapp ai sales agent", "ai calling agent for real estate").
+// Describe supported business workflows; integrations require configured API tools.
 const useCases = [
   { icon: Headphones, title: "AI customer service on WhatsApp", body: "Answer questions about orders, prices, delivery, and returns instantly, day or night, straight from your knowledge base." },
-  { icon: PhoneIncoming, title: "WhatsApp AI receptionist", body: "Pick up every WhatsApp call, share your hours and services, and collect caller details so no customer goes unanswered." },
+  { icon: PhoneIncoming, title: "WhatsApp AI receptionist", body: "Answer incoming WhatsApp calls, share your hours and services, and collect caller details for your team to review." },
   { icon: CalendarCheck, title: "Appointment booking", body: "Let customers book, confirm, or reschedule over chat or a call, connected to your own booking system with API tools." },
-  { icon: TrendingUp, title: "AI sales agent for leads", body: "Reply to new leads in seconds, answer product questions, and send qualified contacts to your CRM." },
+  { icon: TrendingUp, title: "AI sales agent for leads", body: "Answer product questions and qualify new leads on WhatsApp. Connect an API tool to send contact details to your CRM." },
   { icon: PhoneOutgoing, title: "AI outbound calling", body: "Call new leads, send reminders, and follow up with customers through WhatsApp AI calling campaigns." },
-  { icon: Building2, title: "Built for every industry", body: "Real estate, clinics, e-commerce, education, restaurants, travel, and local services all use WhatsApp AI agents to reply faster." },
+  { icon: Building2, title: "Built for every industry", body: "Configure answers for your industry, from property enquiries and course information to restaurant hours and delivery questions." },
 ];
 
 export function CoreLanding({ faqs }: { faqs: Array<{ q: string; a: string }> }) {
   return <LandingMotion>
     <a href="#main" className={styles.skip}>Skip to content</a>
-    <ResizableNavbar brand={<Brand />} links={links} actions={<><ThemeToggleButton /><Show when="signed-out"><SignInButton mode="modal" forceRedirectUrl="/dashboard" signUpForceRedirectUrl="/dashboard"><button className={styles.login} type="button">Log in<ArrowUpRight size={14} /></button></SignInButton></Show><Show when="signed-in"><a href="/dashboard" className={styles.login}>Dashboard</a><UserButton /></Show></>} />
+    <SiteHeader links={links} />
     <main id="main">
       <section className={styles.hero} id="top" aria-labelledby="hero-title">
         <HeroNetwork>
@@ -122,9 +108,9 @@ export function CoreLanding({ faqs }: { faqs: Array<{ q: string; a: string }> })
           <span className={styles.networkNote}><span /> One connected workspace</span>
         </HeroNetwork>
         <div className={styles.heroCopy}>
-          {/* The kicker carries the search phrase inside the h1; the display line below stays the brand voice. */}
-          <h1 id="hero-title"><span className={`${styles.label} ${styles.heroKicker}`}><span />WhatsApp AI chatbot &amp; voice call agent</span>Every conversation.<br /><span>A little more human.</span></h1>
-          <p>An AI chatbot that replies to your WhatsApp messages and an AI voice agent that answers WhatsApp calls, 24/7.<br className={styles.desktopBreak} /> Trained on your business. No code. No WhatsApp Business API.</p>
+          <Label>No-code WhatsApp automation for business</Label>
+          <h1 id="hero-title">WhatsApp AI chatbot.<br /><span>Voice agents, too.</span></h1>
+          <p>Automate customer support with an AI chatbot that knows your business.<br className={styles.desktopBreak} /> Answer WhatsApp calls and follow up with leads using AI voice agents. Connect by QR code.</p>
           <div className={styles.heroActions}><GetStarted /><a className={styles.textLink} href="#workflow">See how it works<ArrowRight size={16} /></a></div>
           <p className={styles.heroNote}><Check size={13} /> Your WhatsApp number<Check size={13} /> Your knowledge<Check size={13} /> Your voice</p>
         </div>
@@ -136,37 +122,37 @@ export function CoreLanding({ faqs }: { faqs: Array<{ q: string; a: string }> })
       <section className={`${styles.section} ${styles.features}`} aria-labelledby="features-title">
         <PeopleStage anchorId="capabilities">
           <PeopleCards />
-          <div className={styles.peopleCopy}><span className={styles.peopleMark}><BrandMark /></span><h2 id="features-title">More connection.<br /><span>Less busywork.</span></h2><p>Automate WhatsApp customer service, sales, and bookings.<br className={styles.desktopBreak} /> AI chat and voice agents, in one simple workspace.</p><GetStarted /></div>
+          <div className={styles.peopleCopy}><span className={styles.peopleMark}><BrandMark /></span><h2 id="features-title">WhatsApp automation.<br /><span>Built around you.</span></h2><p>Automate WhatsApp customer service, sales, and bookings.<br className={styles.desktopBreak} /> AI chat and voice agents, in one simple workspace.</p><GetStarted /></div>
         </PeopleStage>
         <div className={styles.bento}>
           <article className={styles.featureCard} data-enter><div className={styles.cardVisual}><ChatPreview /></div><div className={styles.cardCopy}><span className={styles.cardIndex}>01 / AI CHATBOT</span><h3>A WhatsApp AI chatbot.<br />Without the wait.</h3><p>Auto-reply to incoming WhatsApp messages, day and night, with an AI chatbot that knows your business.</p><a href="#agent-types" className={styles.cardLink} aria-label="Explore chat agents"><ArrowUpRight size={19} /></a></div></article>
           <article className={styles.featureCard} data-enter style={{ "--delay": "90ms" } as CSSProperties}><div className={styles.cardVisual}><VoicePreview /></div><div className={styles.cardCopy}><span className={styles.cardIndex}>02 / AI VOICE CALLS</span><h3>WhatsApp AI voice agent.<br />Now out loud.</h3><p>An AI voice agent that answers inbound WhatsApp calls and makes outbound calls in a natural voice.</p><a href="#agent-types" className={styles.cardLink} aria-label="Explore voice agents"><ArrowUpRight size={19} /></a></div></article>
-          <article className={styles.featureCard} data-enter style={{ "--delay": "180ms" } as CSSProperties}><div className={styles.cardVisual}><KnowledgePreview /></div><div className={styles.cardCopy}><span className={styles.cardIndex}>03 / KNOWLEDGE BASE</span><h3>Your expertise.<br />In every answer.</h3><p>Train your AI agent on your documents, FAQs, and prices, then connect API tools for bookings and orders.</p><a href="#workflow" className={styles.cardLink} aria-label="Learn how to configure agent knowledge"><ArrowUpRight size={19} /></a></div></article>
-          <article className={`${styles.featureCard} ${styles.campaignCard}`} data-enter><div className={styles.cardCopy}><span className={styles.cardIndex}>04 / AI OUTBOUND CALLING</span><h3>Make the first move.</h3><p>Add your leads, assign an AI voice agent, and it calls each one on WhatsApp. Follow every result in campaign analytics.</p><a href="#workflow" className={styles.textLink}>Explore the workflow<ArrowUpRight size={16} /></a></div><div className={styles.campaignPreview}><div className={styles.previewTop}><Radio size={17} /><strong>Outbound campaign</strong><span>Example</span></div>{[["AL", "Alex Lee", "Completed"], ["JM", "Jamie Morgan", "Calling"], ["SK", "Sam Kim", "Queued"]].map(([initials, name, status]) => <div key={name} className={styles.leadRow}><span>{initials}</span><strong>{name}</strong><small>{status === "Completed" ? <Check size={11} /> : <span className={styles.statusDot} />}{status}</small></div>)}</div></article>
+          <article className={styles.featureCard} data-enter style={{ "--delay": "180ms" } as CSSProperties}><div className={styles.cardVisual}><KnowledgePreview /></div><div className={styles.cardCopy}><span className={styles.cardIndex}>03 / KNOWLEDGE BASE</span><h3>Your knowledge base.<br />In every answer.</h3><p>Train your AI agent on your documents, FAQs, and prices, then connect API tools for bookings and orders.</p><a href="#workflow" className={styles.cardLink} aria-label="Learn how to configure agent knowledge"><ArrowUpRight size={19} /></a></div></article>
+          <article className={`${styles.featureCard} ${styles.campaignCard}`} data-enter><div className={styles.cardCopy}><span className={styles.cardIndex}>04 / AI OUTBOUND CALLING</span><h3>Outbound WhatsApp AI calls.</h3><p>Add your leads, assign an AI voice agent, and it calls each one on WhatsApp. Follow every result in campaign analytics.</p><a href="#workflow" className={styles.textLink}>Explore the workflow<ArrowUpRight size={16} /></a></div><div className={styles.campaignPreview}><div className={styles.previewTop}><Radio size={17} /><strong>Outbound campaign</strong><span>Example</span></div>{[["AL", "Alex Lee", "Completed"], ["JM", "Jamie Morgan", "Calling"], ["SK", "Sam Kim", "Queued"]].map(([initials, name, status]) => <div key={name} className={styles.leadRow}><span>{initials}</span><strong>{name}</strong><small>{status === "Completed" ? <Check size={11} /> : <span className={styles.statusDot} />}{status}</small></div>)}</div></article>
           <article className={`${styles.featureCard} ${styles.historyCard}`} id="conversation-history" data-enter><div className={styles.historyVisual}><div><MessageCircle size={18} /><span>Chat conversations</span><Check size={14} /></div><div><Phone size={18} /><span>Call transcripts</span><Check size={14} /></div><div><Radio size={18} /><span>Campaign activity</span><Check size={14} /></div></div><div className={styles.cardCopy}><span className={styles.cardIndex}>05 / VISIBILITY</span><h3>Never lose the thread.</h3><p>Review WhatsApp chat history and AI call transcripts. Give your team the context to follow up.</p></div></article>
         </div>
         <p className={styles.previewDisclaimer}>Illustrative previews. Configure your agents and review real activity in the dashboard.</p>
       </section>
 
       <section className={styles.workflow} id="workflow" aria-labelledby="workflow-title"><div className={styles.workflowInner}>
-        <div className={styles.workflowIntro}><Label>Simple from the start</Label><h2 id="workflow-title">A few steps.<br />A whole new<br /><span>way to connect.</span></h2><p>Create your WhatsApp AI agent in three steps, with no coding. You&apos;re in control at every step.</p><GetStarted /><div className={styles.workflowFoot}><Command size={17} /><span>One dashboard. Everything together.</span></div></div>
+        <div className={styles.workflowIntro}><Label>Simple from the start</Label><h2 id="workflow-title">Build your<br />WhatsApp chatbot.<br /><span>No code needed.</span></h2><p>Create your WhatsApp AI agent in three steps, with no coding. You&apos;re in control at every step.</p><GetStarted /><div className={styles.workflowFoot}><Command size={17} /><span>One dashboard. Everything together.</span></div></div>
         <div className={styles.stepStack}>{steps.map((step, i) => <article key={step.tag} className={styles.stepCard} style={{ "--step": i } as CSSProperties} data-enter><div className={styles.stepTop}><span>{step.tag}</span><step.icon size={22} /></div><div className={styles.stepVisual}>{step.visual === "connect" ? <div className={styles.connectVisual}><MessageCircle size={34} /><span /><div><BrandMark /></div></div> : step.visual === "configure" ? <div className={styles.configureVisual}><span><FileText size={16} /> Business guide <Check size={14} /></span><span><SlidersHorizontal size={16} /> Your instructions <Check size={14} /></span><span><Zap size={16} /> Connected tools <Check size={14} /></span></div> : <Waveform />}</div><div className={styles.stepStatus}><span>{step.detail}</span><span><i />{step.status}</span></div><h3>{step.title}</h3><p>{step.body}</p></article>)}</div>
       </div></section>
 
-      <section className={`${styles.section} ${styles.agents}`} id="agent-types" aria-labelledby="agents-title"><div className={styles.sectionHeading} data-enter><Label>Better together</Label><h2 id="agents-title">AI chatbot. AI voice calls.<br /><span>More ways to be there.</span></h2><p>Start with a WhatsApp AI chatbot. Start with an AI voice agent.<br className={styles.desktopBreak} /> Build the experience your customers need.</p></div><div className={styles.agentGrid}>
-        <article className={styles.agentCard} data-enter><span className={styles.agentIcon}><MessageCircle size={28} /></span><span className={styles.cardIndex}>WHATSAPP AI CHATBOT</span><h3>For every<br />“quick question.”</h3><p>An AI chatbot for WhatsApp that auto-replies to customers with answers shaped by your prompts, knowledge, and tools.</p><ul><li><Check size={15} /> AI auto-reply to incoming WhatsApp messages</li><li><Check size={15} /> OpenAI and Anthropic models</li><li><Check size={15} /> Knowledge base and API tools</li><li><Check size={15} /> Saved conversation history</li></ul><GetStarted label="Build a chat agent" dark /></article>
-        <article className={`${styles.agentCard} ${styles.voiceAgentCard}`} data-enter style={{ "--delay": "120ms" } as CSSProperties}><span className={styles.agentIcon}><AudioLines size={28} /></span><span className={styles.cardIndex}>WHATSAPP AI VOICE AGENT</span><h3>For moments<br />better spoken.</h3><p>An AI calling agent for inbound WhatsApp calls and outbound campaigns, configured to sound and respond your way.</p><ul><li><Check size={15} /> Answers and makes WhatsApp voice calls</li><li><Check size={15} /> Natural voices in dozens of languages</li><li><Check size={15} /> Real-time answers from your knowledge base</li><li><Check size={15} /> Call history and transcripts</li></ul><GetStarted label="Build a voice agent" /></article>
+      <section className={`${styles.section} ${styles.agents}`} id="agent-types" aria-labelledby="agents-title"><div className={styles.sectionHeading} data-enter><Label>Better together</Label><h2 id="agents-title">WhatsApp chat and voice.<br /><span>Choose your AI agent.</span></h2><p>Start with a WhatsApp AI chatbot. Start with an AI voice agent.<br className={styles.desktopBreak} /> Build the experience your customers need.</p></div><div className={styles.agentGrid}>
+        <article className={styles.agentCard} id="chat-agent" data-enter><span className={styles.agentIcon}><MessageCircle size={28} /></span><span className={styles.cardIndex}>WHATSAPP AI CHATBOT</span><h3>For every<br />“quick question.”</h3><p>An AI chatbot for WhatsApp that auto-replies to customers with answers shaped by your prompts, knowledge, and tools.</p><ul><li><Check size={15} /> AI auto-reply to incoming WhatsApp messages</li><li><Check size={15} /> OpenAI and Anthropic models</li><li><Check size={15} /> Knowledge base and API tools</li><li><Check size={15} /> Saved conversation history</li></ul><GetStarted label="Build a chat agent" dark /></article>
+        <article className={`${styles.agentCard} ${styles.voiceAgentCard}`} id="voice-agent" data-enter style={{ "--delay": "120ms" } as CSSProperties}><span className={styles.agentIcon}><AudioLines size={28} /></span><span className={styles.cardIndex}>WHATSAPP AI VOICE AGENT</span><h3>For moments<br />better spoken.</h3><p>An AI calling agent for inbound WhatsApp calls and outbound campaigns, configured to sound and respond your way.</p><ul><li><Check size={15} /> Answers and makes WhatsApp voice calls</li><li><Check size={15} /> Natural voices in dozens of languages</li><li><Check size={15} /> Real-time answers from your knowledge base</li><li><Check size={15} /> Call history and transcripts</li></ul><GetStarted label="Build a voice agent" /></article>
       </div></section>
 
       <section className={`${styles.section} ${styles.useCases}`} id="use-cases" aria-labelledby="use-cases-title"><div className={styles.sectionHeading} data-enter><Label>Use cases</Label><h2 id="use-cases-title">One WhatsApp AI agent.<br /><span>Every part of your business.</span></h2><p>From customer service to sales calls, put AI to work on WhatsApp.</p></div><div className={styles.useCaseGrid}>
         {useCases.map((useCase, i) => <article key={useCase.title} className={styles.useCaseCard} data-enter style={{ "--delay": `${(i % 3) * 90}ms` } as CSSProperties}><span className={styles.useCaseIcon}><useCase.icon size={21} strokeWidth={1.7} /></span><h3>{useCase.title}</h3><p>{useCase.body}</p></article>)}
       </div></section>
 
-      <section className={`${styles.section} ${styles.faq}`} id="faq" aria-labelledby="faq-title"><div data-enter><Label>A little more clarity</Label><h2 id="faq-title">Good questions.<br /><span>Clear answers.</span></h2><p>Everything you need to know about<br />WhatsApp AI chatbots and AI voice calls.</p><a href="https://wa.me/8801701750469" target="_blank" rel="noopener noreferrer" className={styles.textLink}>Let&apos;s talk on WhatsApp<ArrowUpRight size={16} /></a></div><div className={styles.faqList} data-enter>{faqs.map((faq, i) => <details key={faq.q} className={styles.faqItem}><summary><span className={styles.faqNumber}>{String(i + 1).padStart(2, "0")}</span>{faq.q}<Plus size={18} /></summary><p>{faq.a}</p></details>)}</div></section>
+      <section className={`${styles.section} ${styles.faq}`} id="faq" aria-labelledby="faq-title"><div data-enter><Label>A little more clarity</Label><h2 id="faq-title">WhatsApp AI agents.<br /><span>Your questions, answered.</span></h2><p>Everything you need to know about<br />WhatsApp AI chatbots and AI voice calls.</p><a href="https://wa.me/8801701750469" target="_blank" rel="noopener noreferrer" className={styles.textLink}>Let&apos;s talk on WhatsApp<ArrowUpRight size={16} /></a></div><div className={styles.faqList} data-enter>{faqs.map((faq, i) => <details key={faq.q} className={styles.faqItem}><summary><span className={styles.faqNumber}>{String(i + 1).padStart(2, "0")}</span>{faq.q}<Plus size={18} /></summary><p>{faq.a}</p></details>)}</div></section>
 
       <section className={styles.cta} id="get-started" aria-labelledby="cta-title" data-enter><div className={styles.ctaDecoration} aria-hidden="true"><MessageCircle /><AudioLines /><Sparkles /></div><Label>Your next conversation starts here</Label><h2 id="cta-title">A little AI.<br />A lot more possibility.</h2><p>Give your WhatsApp an AI chatbot and voice agent of its own.</p><GetStarted label="Let’s get started" dark /><span className={styles.ctaNote}>Chat. Voice. And whatever comes next.</span></section>
     </main>
-    <footer className={styles.footer}><div className={styles.footerTop}><div><Brand /><p>WhatsApp AI chatbots and voice call agents.<br />Powered by your business.</p></div><nav aria-label="Product"><span>PRODUCT</span><a href="#capabilities">Features</a><a href="#agent-types">WhatsApp AI chatbot + voice agent</a><a href="#use-cases">Use cases</a><a href="#workflow">How it works</a></nav><nav aria-label="Resources"><span>EXPLORE</span><a href="#faq">Frequently asked questions</a><a href="#conversation-history">Conversation history</a><a href="#get-started">Get started</a></nav><div className={styles.footerContact}><span>LET&apos;S CONNECT</span><a href="https://wa.me/8801701750469" target="_blank" rel="noopener noreferrer">Say hello<ArrowUpRight size={19} /></a><small>+880 1701 750469</small></div></div><div className={styles.footerBottom}><span>© {new Date().getFullYear()} Wapzen. All rights reserved.</span><span><span className={styles.statusDot} /> Built for better conversations</span><a href="#top">Back to top ↑</a></div></footer>
+    <SiteFooter />
     <a className={styles.contactBubble} href="https://wa.me/8801701750469" target="_blank" rel="noopener noreferrer" aria-label="Chat with Wapzen on WhatsApp"><MessageCircle size={23} /></a>
   </LandingMotion>;
 }
