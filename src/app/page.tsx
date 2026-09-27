@@ -4,14 +4,20 @@ import { CoreLanding } from "@/components/landing/CoreLanding";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
-// Questions mirror what people type into Google ("what is a whatsapp ai
-// chatbot", "how to create whatsapp ai chatbot", "whatsapp chatbot without
-// api", "can ai answer whatsapp calls"...). They render on the page and in the
-// FAQPage JSON-LD below, so both always say the same thing.
+// Visible answers and FAQ structured data share one source. Search-intent
+// research is documented in docs/seo-research.md; no FAQ rich result is promised.
 const faqs: Array<{ q: string; a: string }> = [
   {
     q: "What is a WhatsApp AI chatbot?",
-    a: "A WhatsApp AI chatbot is software that reads incoming WhatsApp messages and replies automatically using an AI model. A Wapzen chatbot answers from your own instructions and knowledge base, so customers get accurate, on-brand replies 24/7 instead of waiting for your team.",
+    a: "A WhatsApp AI chatbot replies automatically to incoming customer messages using an AI model. Wapzen uses your instructions, business documents, and FAQs to help answer support questions and respond to leads on WhatsApp, even outside office hours.",
+  },
+  {
+    q: "How does WhatsApp AI auto-reply differ from a greeting or away message?",
+    a: "A greeting or away message sends a preset response. Wapzen's WhatsApp AI auto-reply uses the customer's question, your instructions, and your knowledge base to generate a relevant answer. With API request tools configured, it can also look up information in your own systems.",
+  },
+  {
+    q: "Can I automate appointment booking and customer support on WhatsApp?",
+    a: "Yes. Add your services, opening hours, and support FAQs to a knowledge base for chat and voice agents. To check live availability, book an appointment, or look up an order, configure an API request tool connected to your booking or order system. These actions require that integration to be set up.",
   },
   {
     q: "How do I create a WhatsApp AI chatbot for my business?",
@@ -31,7 +37,7 @@ const faqs: Array<{ q: string; a: string }> = [
   },
   {
     q: "What can I use a WhatsApp AI agent for?",
-    a: "Common uses are AI customer service, an AI receptionist that answers every call, appointment booking, replying to new sales leads, order and delivery questions, and follow-up calls. Businesses in real estate, clinics, e-commerce, education, restaurants, and local services use it to reply faster.",
+    a: "Use a WhatsApp AI agent for customer support, receptionist calls, sales questions, and outbound follow-ups. Appointment booking and live order lookups work through API tools you connect. These workflows can help real estate teams, clinics, e-commerce stores, education providers, and local services respond to enquiries.",
   },
   {
     q: "Which languages does the AI chatbot and voice agent support?",
@@ -90,6 +96,8 @@ const jsonLd = {
       inLanguage: "en",
       isPartOf: { "@id": `${siteConfig.url}/#website` },
       about: { "@id": `${siteConfig.url}/#software` },
+      mainEntity: { "@id": `${siteConfig.url}/#software` },
+      hasPart: { "@id": `${siteConfig.url}/#faq` },
     },
     {
       "@type": "SoftwareApplication",
@@ -101,6 +109,7 @@ const jsonLd = {
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "WhatsApp AI chatbot and AI voice call agent",
       operatingSystem: "Web",
+      publisher: { "@id": `${siteConfig.url}/#organization` },
       keywords: siteConfig.keywords.join(", "),
       featureList: [
         "WhatsApp AI chatbot that auto-replies to incoming messages",
@@ -110,13 +119,14 @@ const jsonLd = {
         "API request tools for bookings, orders, and CRM actions",
         "OpenAI and Anthropic models",
         "Multilingual voice agents",
-        "Connect any WhatsApp number by QR code, no Business API",
+        "Connect your WhatsApp number by QR code, no Business API setup",
         "Chat history, call transcripts, and campaign analytics",
       ],
     },
     {
       "@type": "FAQPage",
       "@id": `${siteConfig.url}/#faq`,
+      isPartOf: { "@id": `${siteConfig.url}/#webpage` },
       mainEntity: faqs.map((faq) => ({
         "@type": "Question",
         name: faq.q,
