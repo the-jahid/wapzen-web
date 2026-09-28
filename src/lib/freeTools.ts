@@ -1,8 +1,14 @@
-import { Earth, Link2, QrCode } from "lucide-react";
+import { Earth, Link2, QrCode, Send } from "lucide-react";
 
 // Public free tools under /tools. Feeds the /tools index, the site footer and
 // the sitemap, so a new tool only needs its page plus an entry here.
 export const freeTools = [
+  {
+    href: "/tools/send-whatsapp-without-saving-number",
+    name: "Send WhatsApp Without Saving Number",
+    description: "Message any WhatsApp number without adding it to your contacts. Open the chat on your phone, WhatsApp Desktop or WhatsApp Web.",
+    icon: Send,
+  },
   {
     href: "/tools/whatsapp-link-generator",
     name: "WhatsApp Chat Link Generator",
