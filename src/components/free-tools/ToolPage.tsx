@@ -91,7 +91,7 @@ export function ToolPage(props: ToolPageProps) {
     <section className={styles.cta} aria-labelledby="cta-title">
       <div className={styles.ctaInner}>
         <div><h2 id="cta-title">{cta.heading}</h2><p>{cta.body}</p></div>
-        <div><GetStarted label="Try Wapzen" /></div>
+        <div><GetStarted label="Try Wapzen free" /></div>
       </div>
     </section>
   </>;

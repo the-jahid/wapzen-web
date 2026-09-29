@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import { Briefcase, Home, Package, ShieldCheck, ShoppingBag, UserRoundX } from "lucide-react";
 import { ToolPage } from "@/components/free-tools/ToolPage";
 import { SendWithoutSaving } from "@/components/free-tools/SendWithoutSaving";
@@ -8,13 +9,7 @@ const path = "/tools/send-whatsapp-without-saving-number";
 const title = "Send WhatsApp Message Without Saving Number";
 const description = "Message any WhatsApp number without adding it to your contacts. Enter the number, add a message and open the chat on your phone or WhatsApp Web. Free, no sign-up.";
 
-export const metadata: Metadata = {
-  title,
-  description,
-  alternates: { canonical: path },
-  openGraph: { title, description, url: path },
-  twitter: { title, description },
-};
+export const metadata: Metadata = pageMetadata({ title, description, path: path });
 
 const steps = [
   { title: "Enter the number", body: "Pick the country and type the number the way you'd dial it locally, or paste a full number starting with +. The tool fixes the format for you." },

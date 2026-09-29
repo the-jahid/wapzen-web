@@ -4,8 +4,8 @@ import { useRef, useState, type ReactNode } from "react";
 import { Check, Copy } from "lucide-react";
 import styles from "./FreeTools.module.css";
 
-/** Copies `value`, flipping to a check mark for two seconds. `label` is the accessible name. */
-export function CopyButton({ value, label, children, className = "" }: { value: string; label: string; children?: ReactNode; className?: string }) {
+/** Copies `value`, flipping to a check mark for two seconds. `label` is the accessible name; `copiedText` translates "Copied". */
+export function CopyButton({ value, label, children, className = "", copiedText }: { value: string; label: string; children?: ReactNode; className?: string; copiedText?: string }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
@@ -22,7 +22,7 @@ export function CopyButton({ value, label, children, className = "" }: { value: 
     timer.current = window.setTimeout(() => setCopied(false), 2000);
   }
 
-  return <button type="button" className={`${styles.copyButton} ${className}`} onClick={copy} aria-label={copied ? `Copied ${value}` : label} title={label}>
-    {copied ? <Check size={14} /> : <Copy size={14} />}{children && <span>{copied ? "Copied" : children}</span>}
+  return <button type="button" className={`${styles.copyButton} ${className}`} onClick={copy} aria-label={copied ? copiedText ?? `Copied ${value}` : label} title={label}>
+    {copied ? <Check size={14} /> : <Copy size={14} />}{children && <span>{copied ? copiedText ?? "Copied" : children}</span>}
   </button>;
 }

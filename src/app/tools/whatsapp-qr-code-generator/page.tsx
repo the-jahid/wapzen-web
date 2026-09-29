@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import { CreditCard, Package, Presentation, Receipt, Store, UtensilsCrossed } from "lucide-react";
 import { ToolPage } from "@/components/free-tools/ToolPage";
 import { WhatsAppQrGenerator } from "@/components/free-tools/WhatsAppQrGenerator";
@@ -7,13 +8,7 @@ const path = "/tools/whatsapp-qr-code-generator";
 const title = "Free WhatsApp QR Code Generator with Logo";
 const description = "Create a free WhatsApp QR code that opens a chat with your number. Add a pre-filled message, your logo, colours and a caption, then download a PNG or SVG.";
 
-export const metadata: Metadata = {
-  title,
-  description,
-  alternates: { canonical: path },
-  openGraph: { title, description, url: path },
-  twitter: { title, description },
-};
+export const metadata: Metadata = pageMetadata({ title, description, path: path });
 
 const steps = [
   { title: "Enter your number", body: "Type your WhatsApp number with its country code, and optionally a message customers see ready to send, like “Hi, I'd like to order.”" },

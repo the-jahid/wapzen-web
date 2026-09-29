@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import { AtSign, Globe, Headphones, Mail, Megaphone, Printer } from "lucide-react";
 import { ToolPage } from "@/components/free-tools/ToolPage";
 import { WhatsAppLinkGenerator } from "@/components/free-tools/WhatsAppLinkGenerator";
@@ -7,13 +8,7 @@ const path = "/tools/whatsapp-link-generator";
 const title = "Free WhatsApp Link Generator with QR Code";
 const description = "Create a free WhatsApp click-to-chat link (wa.me) with a pre-filled message in seconds. Copy the link or download a QR code. No sign-up needed.";
 
-export const metadata: Metadata = {
-  title,
-  description,
-  alternates: { canonical: path },
-  openGraph: { title, description, url: path },
-  twitter: { title, description },
-};
+export const metadata: Metadata = pageMetadata({ title, description, path: path });
 
 const steps = [
   { title: "Enter your number", body: "Type your WhatsApp number with its country code, for example +44 7700 900123. Spaces, dashes and the + sign are fine." },

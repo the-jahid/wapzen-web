@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import { Earth, Eraser, Flag, Plus, Smartphone, Users } from "lucide-react";
 import { ToolPage } from "@/components/free-tools/ToolPage";
 import { CountryCodeFinder } from "@/components/free-tools/CountryCodeFinder";
@@ -8,13 +9,7 @@ const path = "/tools/whatsapp-country-code-finder";
 const title = "WhatsApp Country Code Finder & Number Formatter";
 const description = "Find the WhatsApp country code for any country and convert a local phone number to the international format WhatsApp needs. Free, with a full country code list.";
 
-export const metadata: Metadata = {
-  title,
-  description,
-  alternates: { canonical: path },
-  openGraph: { title, description, url: path },
-  twitter: { title, description },
-};
+export const metadata: Metadata = pageMetadata({ title, description, path: path });
 
 const steps = [
   { title: "Choose the country", body: "Pick the country from the list or search the table below by name or code. Its country code, like +44 or +880, appears straight away." },

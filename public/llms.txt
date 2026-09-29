@@ -1,15 +1,23 @@
 # Wapzen
 
-> Wapzen is a no-code builder for WhatsApp AI chatbots and WhatsApp AI voice call agents. Connect an existing WhatsApp or WhatsApp Business number by QR code (no WhatsApp Business API needed), then let AI agents auto-reply to messages, answer inbound WhatsApp calls, and make outbound AI calls 24/7.
+> Wapzen is a free, no-code builder for WhatsApp AI chatbots and WhatsApp AI calling agents. Connect an existing personal WhatsApp or WhatsApp Business number by QR code (no WhatsApp Business API needed), then let AI agents auto-reply to messages, auto-answer inbound WhatsApp calls, and make outbound AI calls 24/7.
 
 ## What it does
 
-- WhatsApp AI chatbot: an AI chat agent that auto-replies to incoming WhatsApp text messages, using an OpenAI or Anthropic model, your system prompt, knowledge bases, and API tools.
-- WhatsApp AI voice agent: an AI calling agent that answers inbound WhatsApp voice calls and places outbound calls in real time, with a configurable voice, language, transcriber, prompt, knowledge bases, and tools.
+- WhatsApp AI chatbot: an AI chat agent that auto-replies to incoming WhatsApp text messages, using an OpenAI GPT or Anthropic Claude model, your system prompt, knowledge bases, and API tools. Works on personal WhatsApp numbers, which have no built-in auto-reply, as well as WhatsApp Business numbers.
+- WhatsApp AI voice agent: an AI calling agent that automatically answers inbound WhatsApp voice calls and places outbound calls in real time, with a configurable voice, language, transcriber, prompt, knowledge bases, and tools.
 - AI outbound calling campaigns: add leads to a campaign, assign a voice agent, and each lead is called on WhatsApp; review campaign activity and analytics.
 - Knowledge bases: train agents on text, PDF, and Word documents; agents search them during chats and calls.
 - API request tools: let agents take actions in your own systems, such as checking an order or booking an appointment.
 - Conversation review: WhatsApp chat history, call history, and call transcripts in one dashboard.
+
+## Pricing
+
+- Wapzen is currently free to use, with every feature included: $0 per month, no credit card.
+- AI models (OpenAI GPT, Anthropic Claude), speech, and voices are included; no customer API keys are needed.
+- No WhatsApp Business API, so no Meta per-message fees. Calls run over WhatsApp, with no per-minute charges.
+- AI calls are WhatsApp voice calls only; Wapzen does not dial regular phone numbers.
+- Details: [Pricing](/pricing)
 
 ## Use cases
 
@@ -18,15 +26,50 @@
 - Appointment booking over chat or voice
 - AI sales agent for replying to and qualifying leads
 - Outbound follow-up and reminder calls
-- Industries: real estate, clinics, e-commerce, education, restaurants, travel, local services
+- AI auto-reply on a personal or business WhatsApp number
+
+## Industries
+
+- Real estate: answer property enquiries, call new leads back, qualify buyers and renters.
+- Clinics and dental practices: share hours, services, and prices; answer patient calls; take appointment requests.
+- E-commerce stores: answer product, delivery, and return questions; check order status through a connected API tool.
+- Restaurants: menu, opening hours, and reservation questions by chat or call.
+- Education: course, fee, and admission questions; call back prospective students and parents.
+- Travel and local services: package, pricing, and availability questions in the customer's language.
 
 ## Setup
 
 1. Connect a WhatsApp number from the dashboard by scanning a QR code.
-2. Create a chat agent (WhatsApp AI chatbot) or voice agent (WhatsApp AI voice call agent) and set its prompt and model options.
+2. Create a chat agent (WhatsApp AI chatbot) or voice agent (WhatsApp AI calling agent) and set its prompt and model options.
 3. Attach relevant knowledge bases and tools.
 4. Review conversations, calls, and outbound campaigns in the dashboard.
 
-## Page
+## Pages
 
-- [Home](/): WhatsApp AI chatbot and voice call agent overview, features, use cases, setup workflow, and FAQ.
+- [Home](/): WhatsApp AI chatbot and AI calling agent overview, features, use cases, industries, setup workflow, and FAQ.
+- [Pricing](/pricing): the free plan, what a WhatsApp chatbot or AI calling agent usually costs, and a comparison.
+- [Free WhatsApp chatbot builder](/free-whatsapp-chatbot): how to make a WhatsApp AI chatbot for free in five steps, and free options compared.
+- [Free AI calling agent](/free-ai-calling-agent): how to make a free AI voice agent for WhatsApp calls, and how it differs from a phone-line AI agent.
+- [WhatsApp auto reply](/whatsapp-auto-reply): how to set auto reply in WhatsApp Business, auto reply on personal accounts, 10 copy-and-paste message samples, and AI auto reply.
+- [AI receptionist](/ai-receptionist): a free AI receptionist for small businesses that auto-answers WhatsApp calls and messages 24/7.
+- [WhatsApp AI customer service](/whatsapp-ai-customer-service): automating WhatsApp support on chat and voice calls with a knowledge base and API tools.
+- [AI calling agent for real estate](/ai-calling-agent-for-real-estate): answering property enquiries, calling leads back, qualifying buyers; includes a copyable agent script.
+- [AI calling agent in India](/ai-calling-agent-india): free WhatsApp AI calling for Indian businesses in Hindi and 9 other Indian languages; COD confirmation and other uses.
+- [WhatsApp Business API alternative](/whatsapp-business-api-alternative): what the Business API involves and costs, and running an AI chatbot without it.
+- [AI answering service (USA)](/ai-answering-service): a free AI answering service for US small businesses on WhatsApp calls and messages, in English or Spanish.
+- [WhatsApp for business in the USA](/whatsapp-for-business-usa): why US businesses add WhatsApp and how to set up an AI chatbot and voice agent for it.
+- [Free WhatsApp tools](/tools): free browser tools, no sign-up.
+- [Send WhatsApp Without Saving Number](/tools/send-whatsapp-without-saving-number)
+- [WhatsApp Chat Link Generator](/tools/whatsapp-link-generator)
+- [WhatsApp QR Code Generator](/tools/whatsapp-qr-code-generator)
+- [WhatsApp Country Code Finder](/tools/whatsapp-country-code-finder)
+
+## Other languages
+
+Translated pages (each is the local version of the English page in brackets):
+
+- Português (Brasil): [Chatbot WhatsApp com IA](/pt-br/chatbot-whatsapp-com-ia) (/free-whatsapp-chatbot), [Ligação com IA](/pt-br/ligacao-com-ia) (/free-ai-calling-agent), [Resposta automática no WhatsApp](/pt-br/resposta-automatica-whatsapp) (/whatsapp-auto-reply)
+- Español: [Chatbot de WhatsApp gratis](/es/chatbot-whatsapp-gratis) (/free-whatsapp-chatbot), [Llamadas con IA](/es/llamadas-con-ia) (/free-ai-calling-agent), [Respuesta automática en WhatsApp](/es/respuesta-automatica-whatsapp) (/whatsapp-auto-reply)
+- Italiano: [Chatbot WhatsApp gratis](/it/chatbot-whatsapp-gratis) (/free-whatsapp-chatbot), [Centralino AI](/it/centralino-ai) (/free-ai-calling-agent), [Risposta automatica WhatsApp](/it/risposta-automatica-whatsapp) (/whatsapp-auto-reply)
+
+The Wapzen dashboard itself is in English.
