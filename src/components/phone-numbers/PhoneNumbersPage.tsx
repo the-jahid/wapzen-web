@@ -1616,7 +1616,7 @@ export default function PhoneNumbersPage() {
   }
 
   return (
-    <div className="phone-shell">
+    <div className={`phone-shell${mode === "chat" ? " app-accent-green" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Phone Numbers" stackBelow={900} />
 
@@ -2320,6 +2320,7 @@ function AgentSelect({
   value: string;
   variant?: "full" | "chip";
 }) {
+  const { mode } = useWorkspaceMode();
   const [open, setOpen] = useState(false);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -2444,7 +2445,8 @@ function AgentSelect({
       {isOpen && popoverStyle
         ? createPortal(
             <div
-              className="phone-agent-popover"
+              // Portalled outside .phone-shell, so it carries the accent itself.
+              className={`phone-agent-popover${mode === "chat" ? " app-accent-green" : ""}`}
               data-expandable-card-ignore
               ref={popoverRef}
               role="listbox"

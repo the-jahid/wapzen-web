@@ -1296,7 +1296,7 @@ export default function ToolsPage() {
   }
 
   return (
-    <div className="tools-shell">
+    <div className={`tools-shell${mode === "chat" ? " app-accent-green" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Tools" badges={{ Tools: tools.length }} stackBelow={900} />
 

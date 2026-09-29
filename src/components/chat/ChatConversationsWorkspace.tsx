@@ -42,7 +42,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
 const timeFormatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" });
 
-const avatarColors = ["#6d5efc", "#2f9e6b", "#c2762b", "#b4497a", "#2f7fb8", "#7a5cc4"];
+const avatarColors = ["#52525b", "#3f3f46", "#63636b", "#4a4a52", "#5a5a63", "#44444c"];
 
 // One workspace serves both readers of a thread: the chat-agent editor, which
 // passes an agentId and shows only that agent's inbox, and the Conversations
@@ -798,6 +798,7 @@ const workspaceCSS = `
 .cv-bubble{background:var(--app-elevated);border:1px solid var(--app-line);border-radius:18px;min-width:0;padding:9px 14px;position:relative}
 .cv-bubble p{font-size:12.5px;line-height:1.6;margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
 .cv-bubble-user p{color:var(--app-text-soft)}
+.cv-bubble-assistant{background:var(--app-primary-soft);border-color:var(--app-primary-border)}
 .cv-bubble-assistant p{color:var(--app-text)}
 /* The screenshot look keeps the bubbles clean, so the time only fades in when
    the message is pointed at. */

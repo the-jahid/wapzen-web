@@ -769,7 +769,8 @@ const css = `
   text-align: left;
   width: 100%;
 }
-.chat-accordion-icon { align-items: center; background: var(--app-hover-2); border: 1px solid var(--app-border); border-radius: 9px; color: var(--primary-light); display: inline-flex; height: 30px; justify-content: center; width: 30px; }
+.chat-accordion-icon { align-items: center; background: var(--app-hover-2); border: 1px solid var(--app-border); border-radius: 9px; color: var(--muted); display: inline-flex; height: 30px; justify-content: center; transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease; width: 30px; }
+.chat-accordion-item.is-open .chat-accordion-icon { background: var(--primary-soft); border-color: var(--app-primary-border); color: var(--primary-light); }
 .chat-accordion-title { font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-accordion-meta { color: var(--subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-accordion-chevron { color: var(--subtle); display: inline-flex; transition: transform .18s ease; }
@@ -1027,7 +1028,7 @@ const css = `
 }
 `;
 
-const avatarColors = ["#6d5efc", "#2f9e6b", "#c2762b", "#b4497a", "#2f7fb8", "#7a5cc4"];
+const avatarColors = ["#52525b", "#3f3f46", "#63636b", "#4a4a52", "#5a5a63", "#44444c"];
 
 function avatarColor(id: string): string {
   let total = 0;
@@ -1511,7 +1512,7 @@ export default function ChatAgentsPage() {
   }, [confirmingDelete, isDeleting]);
 
   return (
-    <div className="chat-shell">
+    <div className="chat-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Chat Agents" stackBelow={900} />
 

@@ -442,6 +442,25 @@
   --hero-beam-warm: #fb923c;
 }
 
+/*
+ * WhatsApp-green accent for the chat workspace (Chat Agents, Conversations).
+ * Surfaces stay neutral grey; every token the shared app styles make indigo is
+ * re-pointed at green for whatever sits inside the element carrying the class.
+ * The button fill is dark enough for white label text (5.3:1) in both themes.
+ */
+.app-accent-green {
+  --app-primary: #0b7a58;
+  --app-primary-2: #0f8f68;
+  --app-primary-light: var(--app-green);
+  --app-primary-soft: var(--app-green-soft);
+  --app-primary-soft-2: var(--app-green-soft-2);
+  --app-primary-ring: var(--app-green-soft-2);
+  --app-primary-ring-strong: var(--app-green);
+  --app-primary-border: var(--app-green-border);
+  --app-primary-text: var(--app-green-text);
+  --app-primary-glow: rgba(15, 143, 104, 0.28);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -582,9 +601,9 @@ textarea {
 :root[data-theme-choice="dark"] .theme-toggle-option[data-theme-value="dark"],
 :root[data-theme-choice="system"] .theme-toggle-option[data-theme-value="system"],
 :root:not([data-theme-choice]) .theme-toggle-option[data-theme-value="system"] {
-  background: var(--app-primary-soft);
-  box-shadow: inset 0 0 0 1px var(--app-primary-ring);
-  color: var(--app-primary-light);
+  background: var(--app-hover-3);
+  box-shadow: inset 0 0 0 1px var(--app-border-strong);
+  color: var(--app-text-strong);
 }
 
 .theme-toggle-button {

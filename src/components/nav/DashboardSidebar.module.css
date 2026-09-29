@@ -63,7 +63,7 @@
   transition: background 0.18s ease, color 0.18s ease;
 }
 .navItem:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.navItem[data-active] { background: var(--app-primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); font-weight: 700; }
+.navItem[data-active] { background: var(--app-hover-3); box-shadow: inset 0 0 0 1px var(--app-border-strong); color: var(--app-text-strong); font-weight: 700; }
 .navIcon { position: relative; display: flex; flex-shrink: 0; justify-content: center; width: 18px; }
 .navLabel { min-width: 0; }
 .badge { margin-left: auto; padding: 1px 7px; border-radius: 20px; background: var(--app-primary); color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; }

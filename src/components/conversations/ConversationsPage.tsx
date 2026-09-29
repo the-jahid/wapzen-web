@@ -39,7 +39,7 @@ export default function ConversationsPage() {
   }, [getToken]);
 
   return (
-    <div className="conv-shell">
+    <div className="conv-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Conversations" stackBelow={900} />
 

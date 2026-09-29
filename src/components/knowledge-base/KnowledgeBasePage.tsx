@@ -1208,7 +1208,7 @@ export default function KnowledgeBasePage() {
   }
 
   return (
-    <div className="kb-shell">
+    <div className={`kb-shell${mode === "chat" ? " app-accent-green" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Knowledge Base" badges={{ "Knowledge Base": bases.length }} stackBelow={900} />
 

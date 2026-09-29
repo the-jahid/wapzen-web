@@ -244,9 +244,9 @@ const css = `
 .mode-toggle-option:hover { background: var(--app-hover); color: var(--app-text); }
 .mode-toggle-option:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 1px; }
 .mode-toggle-option.is-active {
-  background: var(--app-primary-soft);
-  box-shadow: inset 0 0 0 1px var(--app-primary-ring);
-  color: var(--app-primary-light);
+  background: var(--app-hover-3);
+  box-shadow: inset 0 0 0 1px var(--app-border-strong);
+  color: var(--app-text-strong);
 }
 `;
 
