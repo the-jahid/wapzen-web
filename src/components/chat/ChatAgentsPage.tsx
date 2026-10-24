@@ -1239,16 +1239,23 @@ export default function ChatAgentsPage() {
       const timer = setTimeout(async () => {
         saveTimers.current.delete(agent.id);
         try {
-          const saved = await updateDashboardChatAgent(
-            agent.id,
-            toChatAgentPayload(agent),
-            getToken
-          );
+          const payload = toChatAgentPayload(agent);
+          console.log("[wa-login] saving chat agent", {
+            agentId: agent.id,
+            phoneNumberId: agent.agent.phone_number_id ?? null,
+            payload,
+          });
+          const saved = await updateDashboardChatAgent(agent.id, payload, getToken);
+          console.log("[wa-login] chat agent saved", {
+            agentId: saved.id,
+            phoneNumberId: saved.agent.phone_number_id ?? null,
+          });
           if ((editRevisions.current.get(agent.id) ?? 0) !== revision) return;
           setChatAgents((current) =>
             current.map((item) => (item.id === saved.id ? saved : item))
           );
         } catch (error) {
+          console.error("[wa-login] chat agent save failed", { agentId: agent.id, error });
           setNotice({
             kind: "error",
             text: error instanceof Error ? error.message : "Could not save chat agent",
@@ -1282,7 +1289,16 @@ export default function ChatAgentsPage() {
   const assignNumber = useCallback(
     (agentId: string, phoneNumberId: string) => {
       const target = chatAgentsRef.current.find((agent) => agent.id === agentId);
-      if (!target || target.agent.phone_number_id) return;
+      console.log("[wa-login] assignNumber", {
+        agentId,
+        phoneNumberId,
+        found: Boolean(target),
+        existingPhoneNumberId: target?.agent.phone_number_id ?? null,
+      });
+      if (!target || target.agent.phone_number_id) {
+        console.warn("[wa-login] assignNumber skipped: agent missing or already has a number");
+        return;
+      }
       const updated = {
         ...target,
         agent: { ...target.agent, phone_number_id: phoneNumberId },
@@ -1309,13 +1325,21 @@ export default function ChatAgentsPage() {
     const poll = async () => {
       try {
         const updated = await apiGetPhoneNumber(numberLoginId, getToken);
+        console.log("[wa-login] poll", {
+          id: updated.id,
+          status: updated.status,
+          phoneNumber: updated.phone_number ?? null,
+          cancelled,
+        });
         if (cancelled) return;
         setNumberLoginError("");
         setNumberLogin((current) => (current && current.id === updated.id ? updated : current));
         setPhoneNumbers((current) => upsertPhoneNumber(current, updated));
         if (updated.status === "connected") {
           const target = scanTargetRef.current;
+          console.log("[wa-login] connected", { phoneNumberId: updated.id, scanTarget: target || null });
           if (target) assignNumber(target, updated.id);
+          else console.warn("[wa-login] connected but no scan target agent; number not assigned");
           setNotice({
             kind: "success",
             text: target
@@ -1326,6 +1350,7 @@ export default function ChatAgentsPage() {
           setNumberLoginError(`WhatsApp login ${phoneStatusLabels[updated.status].toLowerCase()}.`);
         }
       } catch (error) {
+        console.error("[wa-login] poll failed", { id: numberLoginId, error });
         if (cancelled) return;
         setNumberLoginError(
           error instanceof Error ? error.message : "Failed to check the WhatsApp login status"
@@ -1359,11 +1384,14 @@ export default function ChatAgentsPage() {
     setIsStartingLogin(true);
     setNumberLoginError("");
     try {
+      console.log("[wa-login] starting login", { agentId: selected.id, restartId: spentId });
       const started = spentId
         ? await apiRestartPhoneNumberLogin(spentId, getToken)
         : await apiStartPhoneNumberLogin({}, getToken);
+      console.log("[wa-login] login started", { id: started.id, status: started.status });
       setNumberLogin(started);
     } catch (error) {
+      console.error("[wa-login] start login failed", error);
       setNumberLoginError(
         error instanceof Error ? error.message : "Failed to start the WhatsApp login"
       );
