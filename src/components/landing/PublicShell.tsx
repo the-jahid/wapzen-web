@@ -15,6 +15,7 @@ export function PublicShell({ children, locale = "en" }: { children: ReactNode; 
     { href: "/#capabilities", label: ui.nav.features },
     { href: "/pricing", label: ui.nav.pricing },
     { href: "/tools", label: ui.nav.tools },
+    ...(ui.nav.blog ? [{ href: "/blog", label: ui.nav.blog }] : []),
     { href: ui.nav.faqHref, label: ui.nav.faq },
   ];
   return <div lang={htmlLang} style={{ display: "contents" }}>

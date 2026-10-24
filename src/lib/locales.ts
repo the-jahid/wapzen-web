@@ -6,7 +6,8 @@
 export type Locale = "en" | "pt-BR" | "es" | "it";
 
 type Ui = {
-  nav: { features: string; pricing: string; tools: string; faq: string; faqHref: string };
+  /** `blog` is set only where the blog has posts in that language (English). */
+  nav: { features: string; pricing: string; tools: string; faq: string; faqHref: string; blog?: string };
   login: string;
   dashboard: string;
   home: string;
@@ -29,6 +30,7 @@ type Ui = {
     industries: string;
     howItWorks: string;
     faq: string;
+    blog?: string;
     freeTools: string;
     allTools: string;
     solutions: string;
@@ -47,7 +49,7 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
     ogLocale: "en_US",
     label: "English",
     ui: {
-      nav: { features: "Features", pricing: "Pricing", tools: "Free tools", faq: "FAQ", faqHref: "/#faq" },
+      nav: { features: "Features", pricing: "Pricing", tools: "Free tools", faq: "FAQ", faqHref: "/#faq", blog: "Blog" },
       login: "Log in",
       dashboard: "Dashboard",
       home: "Home",
@@ -70,6 +72,7 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
         industries: "Industries",
         howItWorks: "How it works",
         faq: "FAQ",
+        blog: "Blog",
         freeTools: "FREE TOOLS",
         allTools: "All free tools",
         solutions: "SOLUTIONS",

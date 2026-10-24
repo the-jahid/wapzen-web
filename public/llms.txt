@@ -73,3 +73,10 @@ Translated pages (each is the local version of the English page in brackets):
 - Italiano: [Chatbot WhatsApp gratis](/it/chatbot-whatsapp-gratis) (/free-whatsapp-chatbot), [Centralino AI](/it/centralino-ai) (/free-ai-calling-agent), [Risposta automatica WhatsApp](/it/risposta-automatica-whatsapp) (/whatsapp-auto-reply)
 
 The Wapzen dashboard itself is in English.
+
+## Blog
+
+- [Blog](/blog): comparisons of WhatsApp chatbot and AI calling tools.
+- [Wapzen vs WATI](/blog/wapzen-vs-wati): pricing, AI chatbot, WhatsApp AI calls, setup, and when each fits; WATI suits broadcasts and team inboxes on the official Business API.
+- [7 best WATI alternatives](/blog/wati-alternatives): Wapzen, AiSensy, Interakt, respond.io, Gallabox, Periskope, and Twilio compared on price, Business API, AI agents, and calling.
+- [WATI vs AiSensy vs Interakt](/blog/wati-vs-aisensy-vs-interakt): the three Business API platforms compared on pricing, chatbots, AI, calling, and broadcasts, with Wapzen as the free AI option.

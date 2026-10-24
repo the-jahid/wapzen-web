@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site";
+import { blogPosts } from "@/lib/blogPosts";
 import { freeTools } from "@/lib/freeTools";
 import { hreflangLinks, marketingPages } from "@/lib/marketingPages";
 
@@ -17,5 +18,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
     { url: `${siteConfig.url}/tools` },
     ...freeTools.map((tool) => ({ url: `${siteConfig.url}${tool.href}` })),
+    // Posts carry a real revision date, so they can state lastModified.
+    { url: `${siteConfig.url}/blog`, lastModified: blogPosts[0]?.updated },
+    ...blogPosts.map((post) => ({ url: `${siteConfig.url}${post.href}`, lastModified: post.updated })),
   ];
 }

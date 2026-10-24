@@ -15,12 +15,16 @@ const socialImage = {
 };
 
 // Pages with translations also get hreflang alternates (lib/marketingPages.ts).
-export function pageMetadata({ title, description, path, locale = "en" }: { title: string; description: string; path: string; locale?: Locale }): Metadata {
+// Blog posts pass `article` to be shared as articles with their dates.
+type ArticleDates = { publishedTime: string; modifiedTime: string };
+
+export function pageMetadata({ title, description, path, locale = "en", article }: { title: string; description: string; path: string; locale?: Locale; article?: ArticleDates }): Metadata {
+  const shared = { siteName: siteConfig.name, locale: locales[locale].ogLocale, title, description, url: path, images: [socialImage] };
   return {
     title,
     description,
     alternates: { canonical: path, languages: hreflangLinks(path) },
-    openGraph: { type: "website", siteName: siteConfig.name, locale: locales[locale].ogLocale, title, description, url: path, images: [socialImage] },
+    openGraph: article ? { ...shared, type: "article", ...article, authors: [`${siteConfig.name} team`] } : { ...shared, type: "website" },
     twitter: { card: "summary_large_image", title, description, images: [socialImage] },
   };
 }
