@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useCachedState } from "@/lib/pageCache";
 import { useAuth } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import ChatConversationsWorkspace, {
@@ -15,7 +16,7 @@ import { listDashboardChatAgents } from "@/lib/chatAgents";
 
 export default function ConversationsPage() {
   const { getToken } = useAuth();
-  const [agents, setAgents] = useState<ConversationAgentOption[]>([]);
+  const [agents, setAgents] = useCachedState<ConversationAgentOption[]>("conversations:agent-options", []);
   const [agentsError, setAgentsError] = useState("");
 
   // The agent list only labels and filters the threads, so failing to load it
@@ -36,7 +37,7 @@ export default function ConversationsPage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken]);
+  }, [getToken, setAgents]);
 
   return (
     <div className="conv-shell app-accent-green">

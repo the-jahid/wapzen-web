@@ -24,7 +24,15 @@ export function serverURL(path: string): string {
   return `${base}${suffix}`;
 }
 
-async function resolveAuthToken(authTokenGetter: AuthTokenGetter | null = getAuthToken): Promise<string | null> {
+// Clerk caches the session token and refreshes it before it expires, so the
+// cached one is what a request normally sends. Skipping the cache costs a round
+// trip to Clerk per request, and Clerk answers those one at a time: a page that
+// loads four lists sat behind four sequential token fetches. skipCache is kept
+// for the retry after the server has rejected a cached token.
+async function resolveAuthToken(
+  authTokenGetter: AuthTokenGetter | null = getAuthToken,
+  skipCache = false
+): Promise<string | null> {
   if (!authTokenGetter) return null;
 
   for (const delayMs of authTokenRetryDelaysMs) {
@@ -32,7 +40,7 @@ async function resolveAuthToken(authTokenGetter: AuthTokenGetter | null = getAut
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
 
-    const token = await authTokenGetter({ skipCache: true });
+    const token = await authTokenGetter(skipCache ? { skipCache: true } : undefined);
     if (token) return token;
   }
 
@@ -44,13 +52,22 @@ export async function serverFetch(
   init?: RequestInit,
   authTokenGetter?: AuthTokenGetter
 ): Promise<Response> {
-  const token = await resolveAuthToken(authTokenGetter ?? getAuthToken);
+  const getter = authTokenGetter ?? getAuthToken;
+  const token = await resolveAuthToken(getter);
 
   if (shouldLogAuthToken) {
     console.log("[Clerk token]", token);
   }
 
-  return serverFetchWithBearerToken(path, token, init);
+  const response = await serverFetchWithBearerToken(path, token, init);
+  if (response.status !== 401 || !token) return response;
+
+  // A cached token can go stale between Clerk's refreshes (a sleeping laptop,
+  // a clock skew); mint a fresh one and send the request once more. Request
+  // bodies here are strings or FormData, so they can be sent again.
+  const freshToken = await resolveAuthToken(getter, true);
+  if (!freshToken || freshToken === token) return response;
+  return serverFetchWithBearerToken(path, freshToken, init);
 }
 
 export function serverFetchWithBearerToken(

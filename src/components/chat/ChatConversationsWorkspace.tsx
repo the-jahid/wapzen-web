@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useCachedState } from "@/lib/pageCache";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import {
@@ -55,15 +56,23 @@ export default function ChatConversationsWorkspace({
   agents?: ConversationAgentOption[];
 }) {
   const { getToken } = useAuth();
-  const [conversations, setConversations] = useState<ApiChatConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [agentFilter, setAgentFilter] = useState("");
+  // Cached per inbox (and per agent filter), so reopening one shows its threads
+  // at once while the refetch runs.
+  const [conversations, setConversations, hasCachedList] = useCachedState<ApiChatConversation[]>(
+    agentId ? `chat-conversations:agent:${agentId}` : `chat-conversations:all:${agentFilter}`,
+    []
+  );
   const [selectedId, setSelectedId] = useState("");
-  const [thread, setThread] = useState<ApiChatConversation | null>(null);
+  const [thread, setThread] = useCachedState<ApiChatConversation | null>(
+    `chat-conversation:${selectedId}`,
+    null
+  );
   const [threadError, setThreadError] = useState("");
   const [threadLoading, setThreadLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -100,7 +109,7 @@ export default function ChatConversationsWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [agentFilter, agentId, getToken, reloadKey]);
+  }, [agentFilter, agentId, getToken, reloadKey, setConversations]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setReloadKey((key) => key + 1), refreshMs);
@@ -131,7 +140,7 @@ export default function ChatConversationsWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [getToken, selectedId, reloadKey]);
+  }, [getToken, reloadKey, selectedId, setThread]);
 
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -175,7 +184,7 @@ export default function ChatConversationsWorkspace({
     } finally {
       setBusy(false);
     }
-  }, [getToken, summary]);
+  }, [getToken, setConversations, setThread, summary]);
 
   // Sending writes on the thread as the agent, which is what the contact sees:
   // the message is appended to the open transcript and to the row's summary, so
@@ -216,7 +225,7 @@ export default function ChatConversationsWorkspace({
     } finally {
       setSending(false);
     }
-  }, [draft, getToken, sending, summary]);
+  }, [draft, getToken, sending, setConversations, setThread, summary]);
 
   const removeThread = useCallback(async () => {
     if (!summary) return;
@@ -234,7 +243,7 @@ export default function ChatConversationsWorkspace({
       setBusy(false);
       setConfirmingDelete(false);
     }
-  }, [getToken, summary]);
+  }, [getToken, setConversations, setThread, summary]);
 
   // Escape cancels the dialog. It listens in the capture phase and stops there,
   // so the thread card (and the agent editor around it, on the chat-agent page)
@@ -313,14 +322,14 @@ export default function ChatConversationsWorkspace({
 
       {error ? <div className="cv-error">{error}</div> : null}
 
-      {loading && conversations.length === 0 ? (
+      {loading && !hasCachedList && conversations.length === 0 ? (
         <div className="cv-empty">
           <span className="cv-spinner" />
           Loading conversations…
         </div>
       ) : null}
 
-      {!loading && conversations.length === 0 && !error ? (
+      {(!loading || hasCachedList) && conversations.length === 0 && !error ? (
         <div className="cv-empty">
           <span className="cv-empty-icon">
             <ChatIcon />

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import Link from "next/link";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { useCachedState } from "@/lib/pageCache";
 import { listDashboardAgents as apiListAgents, type ApiAgentResource } from "@/lib/agents";
 import { listPhoneNumbers as apiListPhoneNumbers, type ApiPhoneNumber } from "@/lib/phoneNumbers";
 import {
@@ -688,8 +689,8 @@ export default function DemoCallPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
-  const [agents, setAgents] = useState<ApiAgentResource[]>([]);
-  const [phoneNumbers, setPhoneNumbers] = useState<ApiPhoneNumber[]>([]);
+  const [agents, setAgents, hasCachedAgents] = useCachedState<ApiAgentResource[]>("voice-agents", []);
+  const [phoneNumbers, setPhoneNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -720,7 +721,9 @@ export default function DemoCallPage() {
       : !isUserSignedIn || !isAuthSignedIn || !user
         ? "Sign in to place a demo call."
         : null;
-  const effectiveLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  // Agents cached from an earlier visit stay on screen while they refetch.
+  const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  const effectiveLoadState = pendingLoadState === "loading" && hasCachedAgents ? "ready" : pendingLoadState;
   const effectiveLoadError = authError ?? loadError;
 
   useEffect(() => {
@@ -750,7 +753,7 @@ export default function DemoCallPage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isAuthenticated, isUserLoaded, isAuthLoaded, reloadKey]);
+  }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, reloadKey, setAgents, setPhoneNumbers]);
 
   const dialableAgents = useMemo(() => agents.filter(canDialOut), [agents]);
 

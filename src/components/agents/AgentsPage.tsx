@@ -19,6 +19,7 @@ import {
 } from "@/lib/agents";
 import { type AuthTokenGetter } from "@/lib/api";
 import { listApiKeys as apiListApiKeys } from "@/lib/apiKeys";
+import { useCachedState } from "@/lib/pageCache";
 import {
   addKnowledgeBaseFileSources as apiAddKnowledgeBaseFileSources,
   addKnowledgeBaseSources as apiAddKnowledgeBaseSources,
@@ -3743,12 +3744,12 @@ function VoiceResultCard({
 export default function AgentsPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents, hasCachedAgents] = useCachedState<Agent[]>("agents-page:agents", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [phoneNumbers, setPhoneNumbers] = useState<ApiPhoneNumber[]>([]);
+  const [phoneNumbers, setPhoneNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
   const [query, setQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<CreateForm>(defaultCreateForm);
@@ -3763,7 +3764,7 @@ export default function AgentsPage() {
   // the agents (the attachments themselves ride on the agent resource) and a
   // failure here only costs the names, not the agents, so it falls back to an
   // empty catalogue the same way the phone numbers do.
-  const [knowledgeBases, setKnowledgeBases] = useState<ApiKnowledgeBase[]>([]);
+  const [knowledgeBases, setKnowledgeBases] = useCachedState<ApiKnowledgeBase[]>("knowledge-bases", []);
   // A WhatsApp QR login started from the agent editor. It is tracked per agent
   // so switching agents mid-scan never assigns the number to the wrong one.
   const [numberLogin, setNumberLogin] = useState<{ agentId: string; phone: ApiPhoneNumber } | null>(null);
@@ -3793,7 +3794,17 @@ export default function AgentsPage() {
       setLoadState("loading");
       setLoadError("");
       try {
-        const keys = await apiListApiKeys(getToken);
+        // Everything is requested at once: waiting on the key check before
+        // asking for agents cost a full extra round trip on every visit.
+        const [keys, resources, numbers, bases] = await Promise.all([
+          apiListApiKeys(getToken),
+          apiListAgents(getToken),
+          // Phone numbers feed the assignment dropdown; a failure here should not
+          // block agents from loading, so fall back to an empty list.
+          apiListPhoneNumbers(getToken).catch(() => [] as ApiPhoneNumber[]),
+          // Knowledge bases feed the attach list, for the same reason.
+          apiListKnowledgeBases(getToken).catch(() => [] as ApiKnowledgeBase[]),
+        ]);
         if (cancelled) return;
 
         const selectedKey = keys.find((key) => key.isDefault) ?? keys[0] ?? null;
@@ -3805,15 +3816,6 @@ export default function AgentsPage() {
           return;
         }
 
-        const [resources, numbers, bases] = await Promise.all([
-          apiListAgents(getToken),
-          // Phone numbers feed the assignment dropdown; a failure here should not
-          // block agents from loading, so fall back to an empty list.
-          apiListPhoneNumbers(getToken).catch(() => [] as ApiPhoneNumber[]),
-          // Knowledge bases feed the attach list, for the same reason.
-          apiListKnowledgeBases(getToken).catch(() => [] as ApiKnowledgeBase[]),
-        ]);
-        if (cancelled) return;
         setPhoneNumbers(numbers);
         setKnowledgeBases(bases);
         const loaded = resources.map(agentFromApi);
@@ -3834,16 +3836,11 @@ export default function AgentsPage() {
     return () => {
       cancelled = true;
     };
-  }, [
-    authError,
-    getToken,
-    isAuthenticated,
-    isUserLoaded,
-    isAuthLoaded,
-    reloadKey,
-  ]);
+  }, [authError, getToken, isAuthenticated, isAuthLoaded, isUserLoaded, reloadKey, setAgents, setKnowledgeBases, setPhoneNumbers]);
 
-  const effectiveLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  // Agents cached from an earlier visit stay on screen while they refetch.
+  const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  const effectiveLoadState = pendingLoadState === "loading" && hasCachedAgents ? "ready" : pendingLoadState;
   const effectiveLoadError = authError ?? loadError;
 
   useEffect(() => {
@@ -4005,7 +4002,7 @@ export default function AgentsPage() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [getToken, numberLoginAgentId, numberLoginId, numberLoginStatus]);
+  }, [getToken, numberLoginAgentId, numberLoginId, numberLoginStatus, setAgents, setPhoneNumbers]);
 
   // Starts a fresh WhatsApp login for the selected agent, or reissues a QR code
   // for the session it already has.

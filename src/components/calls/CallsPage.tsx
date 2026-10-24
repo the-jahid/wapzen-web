@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { useCachedState } from "@/lib/pageCache";
 import {
   callStatuses,
   deleteCall as apiDeleteCall,
@@ -808,7 +809,7 @@ export default function CallsPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
-  const [calls, setCalls] = useState<ApiCall[]>([]);
+  const [calls, setCalls, hasCachedCalls] = useCachedState<ApiCall[]>("calls-page:calls", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
@@ -833,7 +834,9 @@ export default function CallsPage() {
       : !isUserSignedIn || !isAuthSignedIn || !user
         ? "Sign in to view calls."
         : null;
-  const effectiveLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  // Calls cached from an earlier visit stay on screen while they refetch.
+  const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  const effectiveLoadState = pendingLoadState === "loading" && hasCachedCalls ? "ready" : pendingLoadState;
   const effectiveLoadError = authError ?? loadError;
 
   const filteredCalls = useMemo(() => {
@@ -880,7 +883,7 @@ export default function CallsPage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isAuthenticated, isUserLoaded, isAuthLoaded, reloadKey]);
+  }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, reloadKey, setCalls]);
 
   // Load the full call (including transcript) whenever the selection changes.
   // State updates live inside the async body so nothing runs synchronously in

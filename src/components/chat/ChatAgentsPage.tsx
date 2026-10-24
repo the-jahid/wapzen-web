@@ -19,6 +19,7 @@ import {
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
 import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
+import { useCachedState } from "@/lib/pageCache";
 import {
   chatAgentDefaults,
   createDashboardChatAgent,
@@ -1111,15 +1112,18 @@ export default function ChatAgentsPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
-  const [chatAgents, setChatAgents] = useState<ApiChatAgent[]>([]);
+  const [chatAgents, setChatAgents, hasCachedAgents] = useCachedState<ApiChatAgent[]>("chat-agents", []);
   // True until the first agent fetch settles, so an empty list is only called
   // empty once the server has actually said so.
   const [isLoading, setIsLoading] = useState(true);
+  // A list cached from an earlier visit is shown at once while it refetches;
+  // only a first-ever load waits behind the skeleton.
+  const showSkeleton = isLoading && !hasCachedAgents;
   const [selectedId, setSelectedId] = useState<string>("");
   const [query, setQuery] = useState("");
-  const [knowledgeBases, setKnowledgeBases] = useState<ApiKnowledgeBase[]>([]);
-  const [tools, setTools] = useState<ApiTool[]>([]);
-  const [phoneNumbers, setPhoneNumbers] = useState<ApiPhoneNumber[]>([]);
+  const [knowledgeBases, setKnowledgeBases] = useCachedState<ApiKnowledgeBase[]>("knowledge-bases", []);
+  const [tools, setTools] = useCachedState<ApiTool[]>("tools", []);
+  const [phoneNumbers, setPhoneNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
   const [notice, setNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [createForm, setCreateForm] = useState<CreateForm | null>(null);
   const [createError, setCreateError] = useState("");
@@ -1162,34 +1166,35 @@ export default function ChatAgentsPage() {
 
     let cancelled = false;
     const pendingSaves = saveTimers.current;
-    (async () => {
-      const [agentResult, kbResult, toolResult, numberResult] = await Promise.allSettled([
-        listDashboardChatAgents(getToken),
-        apiListKnowledgeBases(getToken),
-        apiListTools(getToken),
-        apiListPhoneNumbers(getToken),
-      ]);
-      if (cancelled) return;
-      setIsLoading(false);
-      if (agentResult.status === "fulfilled") {
-        setChatAgents(agentResult.value);
-      } else {
-        setNotice({
-          kind: "error",
-          text: agentResult.reason?.message || "Could not load chat agents",
-        });
-      }
-      if (kbResult.status === "fulfilled") setKnowledgeBases(kbResult.value);
-      if (toolResult.status === "fulfilled") setTools(toolResult.value);
-      if (numberResult.status === "fulfilled") setPhoneNumbers(numberResult.value);
-    })();
+    // Each list lands on its own, so the agent list is not held back by the
+    // slowest of the lookups the editor needs.
+    listDashboardChatAgents(getToken)
+      .then((agents) => {
+        if (!cancelled) setChatAgents(agents);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setNotice({ kind: "error", text: error?.message || "Could not load chat agents" });
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    apiListKnowledgeBases(getToken)
+      .then((kbs) => !cancelled && setKnowledgeBases(kbs))
+      .catch(() => undefined);
+    apiListTools(getToken)
+      .then((list) => !cancelled && setTools(list))
+      .catch(() => undefined);
+    apiListPhoneNumbers(getToken)
+      .then((numbers) => !cancelled && setPhoneNumbers(numbers))
+      .catch(() => undefined);
 
     return () => {
       cancelled = true;
       for (const timer of pendingSaves.values()) clearTimeout(timer);
       pendingSaves.clear();
     };
-  }, [getToken, isAuthenticated]);
+  }, [getToken, isAuthenticated, setChatAgents, setKnowledgeBases, setPhoneNumbers, setTools]);
 
   useEffect(() => {
     if (!notice) return;
@@ -1230,7 +1235,7 @@ export default function ChatAgentsPage() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [getToken, selectedLiveId]);
+  }, [getToken, selectedLiveId, setChatAgents]);
 
   const queueSave = useCallback(
     (agent: ApiChatAgent, delay = 500) => {
@@ -1265,7 +1270,7 @@ export default function ChatAgentsPage() {
       }, delay);
       saveTimers.current.set(agent.id, timer);
     },
-    [getToken]
+    [getToken, setChatAgents]
   );
 
   // Edits update the workspace immediately and are persisted after a short
@@ -1280,7 +1285,7 @@ export default function ChatAgentsPage() {
       );
       queueSave(updated, updated.agent.status !== selected.agent.status ? 0 : 500);
     },
-    [queueSave, selected]
+    [queueSave, selected, setChatAgents]
   );
 
   // assignNumber hands a number to one agent by id, which is not always the
@@ -1309,7 +1314,7 @@ export default function ChatAgentsPage() {
       setChatAgents((current) => current.map((agent) => (agent.id === agentId ? updated : agent)));
       queueSave(updated, 0);
     },
-    [queueSave]
+    [queueSave, setChatAgents]
   );
 
   const numberLoginId = numberLogin?.id;
@@ -1381,7 +1386,7 @@ export default function ChatAgentsPage() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [assignNumber, getToken, numberLoginId, numberLoginStatus]);
+  }, [assignNumber, getToken, numberLoginId, numberLoginStatus, setPhoneNumbers]);
 
   useEffect(() => {
     scanTargetRef.current = selected && !selected.agent.phone_number_id ? selected.id : "";
@@ -1481,7 +1486,7 @@ export default function ChatAgentsPage() {
     } finally {
       setIsRefreshingNumbers(false);
     }
-  }, [getToken, isAuthenticated, isRefreshingNumbers]);
+  }, [getToken, isAuthenticated, isRefreshingNumbers, setPhoneNumbers]);
 
   const openCreateModal = useCallback(() => {
     setCreateError("");
@@ -1512,7 +1517,7 @@ export default function ChatAgentsPage() {
     } finally {
       setIsCreating(false);
     }
-  }, [createForm, getToken, isCreating]);
+  }, [createForm, getToken, isCreating, setChatAgents]);
 
   const deleteSelected = useCallback(async () => {
     if (!selected) return;
@@ -1535,7 +1540,7 @@ export default function ChatAgentsPage() {
       setIsDeleting(false);
       setConfirmingDelete(false);
     }
-  }, [getToken, selected]);
+  }, [getToken, selected, setChatAgents]);
 
   // Escape dismisses the delete confirmation. It listens in the capture phase
   // and stops the key there, so the expanded agent card behind does not also
@@ -1569,7 +1574,7 @@ export default function ChatAgentsPage() {
                     Chat agents
                   </h2>
                   <div className="chat-panel-copy">
-                    {isLoading ? "Loading chat agents..." : `${chatAgents.length} chat agents`}
+                    {showSkeleton ? "Loading chat agents..." : `${chatAgents.length} chat agents`}
                   </div>
                 </div>
                 <button
@@ -1594,7 +1599,7 @@ export default function ChatAgentsPage() {
                     value={query}
                   />
                 </div>
-                {isLoading ? (
+                {showSkeleton ? (
                   <div aria-busy="true" aria-label="Loading chat agents" className="chat-list">
                     {[0, 1, 2].map((row) => (
                       <div aria-hidden="true" className="chat-list-row chat-list-skeleton" key={row}>

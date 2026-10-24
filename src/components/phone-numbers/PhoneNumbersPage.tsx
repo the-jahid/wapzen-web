@@ -12,6 +12,7 @@ import {
   useWorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { useCachedState } from "@/lib/pageCache";
 import {
   listDashboardAgents as apiListAgents,
   updateDashboardAgent as apiUpdateAgent,
@@ -1240,9 +1241,9 @@ export default function PhoneNumbersPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
   const { mode } = useWorkspaceMode();
-  const [phoneNumbers, setPhoneNumbers] = useState<ApiPhoneNumber[]>([]);
-  const [voiceAgents, setVoiceAgents] = useState<ApiAgentResource[]>([]);
-  const [chatAgents, setChatAgents] = useState<ApiChatAgent[]>([]);
+  const [phoneNumbers, setPhoneNumbers, hasCachedNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
+  const [voiceAgents, setVoiceAgents] = useCachedState<ApiAgentResource[]>("voice-agents", []);
+  const [chatAgents, setChatAgents] = useCachedState<ApiChatAgent[]>("chat-agents", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
@@ -1268,7 +1269,10 @@ export default function PhoneNumbersPage() {
       : !isUserSignedIn || !isAuthSignedIn || !user
         ? "Sign in to manage phone numbers."
         : null;
-  const effectiveLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  // Numbers cached from an earlier visit stay on screen while they refetch
+  // (and while Clerk is still loading after a reload) instead of a skeleton.
+  const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  const effectiveLoadState = pendingLoadState === "loading" && hasCachedNumbers ? "ready" : pendingLoadState;
   const effectiveLoadError = authError ?? loadError;
   const agents = useMemo(
     () => mode === "chat" ? chatAgents.map(normalizeChatAgent) : voiceAgents.map(normalizeVoiceAgent),
@@ -1336,7 +1340,7 @@ export default function PhoneNumbersPage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isAuthenticated, isUserLoaded, isAuthLoaded, mode, reloadKey]);
+  }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, mode, reloadKey, setChatAgents, setPhoneNumbers, setVoiceAgents]);
 
   useEffect(() => {
     if (!notice) return;
@@ -1379,7 +1383,7 @@ export default function PhoneNumbersPage() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeLoginID, activeLoginStatus, getToken]);
+  }, [activeLoginID, activeLoginStatus, getToken, setPhoneNumbers]);
 
   useEffect(() => {
     if (!selectedPendingLoginID || selectedPendingLoginID === activeLoginID) return;
@@ -1415,7 +1419,7 @@ export default function PhoneNumbersPage() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeLoginID, getToken, selectedPendingLoginID]);
+  }, [activeLoginID, getToken, selectedPendingLoginID, setPhoneNumbers]);
 
   async function startLogin() {
     if (isStarting || !isAuthenticated) return;

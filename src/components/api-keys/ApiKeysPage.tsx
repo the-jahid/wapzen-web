@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { useCachedState } from "@/lib/pageCache";
 import {
   createApiKey as apiCreateApiKey,
   deleteApiKey as apiDeleteApiKey,
@@ -650,7 +651,7 @@ function upsertKey(current: ApiKey[], key: ApiKey): ApiKey[] {
 export default function ApiKeysPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [apiKeys, setApiKeys, hasCachedKeys] = useCachedState<ApiKey[]>("api-keys-page:keys", []);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -688,7 +689,7 @@ export default function ApiKeysPage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isUserLoaded, isAuthLoaded, isUserSignedIn, isAuthSignedIn, user, reloadKey]);
+  }, [getToken, isAuthLoaded, isAuthSignedIn, isUserLoaded, isUserSignedIn, reloadKey, setApiKeys, user]);
 
   useEffect(() => {
     if (!notice) return;
@@ -716,7 +717,8 @@ export default function ApiKeysPage() {
       : !isUserSignedIn || !isAuthSignedIn || !user
         ? "Sign in to manage API keys."
         : null;
-  const effectiveLoadState = authError ? "error" : loadState;
+  // Keys cached from an earlier visit stay on screen while they refetch.
+  const effectiveLoadState = authError ? "error" : loadState === "loading" && hasCachedKeys ? "ready" : loadState;
   const effectiveLoadError = authError ?? loadError;
 
   const selectedKey = selectedId

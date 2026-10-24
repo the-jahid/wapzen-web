@@ -33,6 +33,7 @@ import {
   type UpdateKnowledgeBasePayload,
 } from "@/lib/knowledgeBases";
 import type { AuthTokenGetter } from "@/lib/api";
+import { useCachedState } from "@/lib/pageCache";
 
 // Every knowledge base shown here comes from the server: the list is loaded
 // from GET /v1/dashboard/knowledge-base, the New modal creates through POST, the
@@ -957,7 +958,7 @@ function sourceDetail(source: KnowledgeBaseSource) {
 export default function KnowledgeBasePage() {
   const { getToken, isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const { mode } = useWorkspaceMode();
-  const [bases, setBases] = useState<KnowledgeBase[]>([]);
+  const [bases, setBases, hasCachedBases] = useCachedState<KnowledgeBase[]>("knowledge-base-page:bases", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
@@ -991,7 +992,9 @@ export default function KnowledgeBasePage() {
   // Being signed out is reported through the same load state as a failed
   // request, so the page has one place that explains why the list is empty.
   const authError = !isAuthLoaded ? null : !isSignedIn ? "Sign in to manage knowledge bases." : null;
-  const effectiveLoadState = !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  // Bases cached from an earlier visit stay on screen while they refetch.
+  const pendingLoadState = !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  const effectiveLoadState = pendingLoadState === "loading" && hasCachedBases ? "ready" : pendingLoadState;
   const effectiveLoadError = authError ?? loadError;
   const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
 
@@ -1038,7 +1041,7 @@ export default function KnowledgeBasePage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isAuthLoaded, isSignedIn, reloadKey]);
+  }, [getToken, isAuthLoaded, isSignedIn, reloadKey, setBases]);
 
   useEffect(() => {
     if (!notice) return;

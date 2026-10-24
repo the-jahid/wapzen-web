@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { useCachedState } from "@/lib/pageCache";
 import {
   createOutboundCampaign as apiCreateCampaign,
   deleteOutboundCampaign as apiDeleteCampaign,
@@ -104,7 +105,7 @@ function allowedStatuses(status: OutboundCampaignStatus): OutboundCampaignStatus
 export default function OutboundPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
-  const [campaigns, setCampaigns] = useState<OutboundCampaign[]>([]);
+  const [campaigns, setCampaigns, hasCachedCampaigns] = useCachedState<OutboundCampaign[]>("outbound-page:campaigns", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<OutboundCampaign | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
@@ -117,7 +118,7 @@ export default function OutboundPage() {
   const [isEditOpen, setEditOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<CampaignTab>("overview");
-  const [agentOptions, setAgentOptions] = useState<AgentOption[]>([]);
+  const [agentOptions, setAgentOptions] = useCachedState<AgentOption[]>("outbound-page:agent-options", []);
   // Bumped whenever a call this campaign placed starts or changes state. The
   // campaign's counters move with its calls, so the detail is re-read rather
   // than left showing the totals from before the call.
@@ -152,7 +153,7 @@ export default function OutboundPage() {
       } catch (error) { if (!cancelled) { setLoadState("error"); setLoadError(error instanceof Error ? error.message : "Failed to load outbound campaigns"); } }
     })();
     return () => { cancelled = true; };
-  }, [getToken, isAuthenticated, isUserLoaded, isAuthLoaded, reloadKey]);
+  }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, reloadKey, setCampaigns]);
 
   useEffect(() => {
     if (!isAuthenticated || !selectedCampaignId) return;
@@ -163,7 +164,7 @@ export default function OutboundPage() {
       catch (error) { if (!cancelled) { setDetailState("error"); setDetailError(error instanceof Error ? error.message : "Failed to load the campaign"); } }
     })();
     return () => { cancelled = true; };
-  }, [getToken, isAuthenticated, selectedCampaignId, progressKey]);
+  }, [getToken, isAuthenticated, progressKey, selectedCampaignId, setCampaigns]);
 
   // The agent picker needs both collections: the agents to choose from, and the
   // phone numbers only to render the line each agent answers on. A failure here
@@ -184,7 +185,7 @@ export default function OutboundPage() {
       } catch { if (!cancelled) setAgentOptions([]); }
     })();
     return () => { cancelled = true; };
-  }, [getToken, isAuthenticated, reloadKey]);
+  }, [getToken, isAuthenticated, reloadKey, setAgentOptions]);
 
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(null), 4000); return () => clearTimeout(timer); }, [notice]);
 
@@ -210,13 +211,15 @@ export default function OutboundPage() {
     finally { setDeletingId(null); }
   }
 
-  const effectiveLoadState: LoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  // Campaigns cached from an earlier visit stay on screen while they refetch.
+  const pendingLoadState: LoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
+  const effectiveLoadState: LoadState = pendingLoadState === "loading" && hasCachedCampaigns ? "ready" : pendingLoadState;
   const effectiveLoadError = authError ?? loadError;
   const updateSelectedLeadCount = useCallback((count: number) => {
     if (!selectedCampaignId) return;
     setCampaigns((current) => current.map((campaign) => campaign.campaign_id === selectedCampaignId ? { ...campaign, leads_count: count } : campaign));
     setDetail((current) => current?.campaign_id === selectedCampaignId ? { ...current, leads_count: count } : current);
-  }, [selectedCampaignId]);
+  }, [selectedCampaignId, setCampaigns]);
   const noteCampaignProgress = useCallback(() => setProgressKey((key) => key + 1), []);
 
   return <div className="ob-shell">

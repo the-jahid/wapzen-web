@@ -8,6 +8,7 @@ import {
   useWorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { useCachedState } from "@/lib/pageCache";
 import {
   createTool as apiCreateTool,
   deleteTool as apiDeleteTool,
@@ -1097,8 +1098,10 @@ const css = `
 export default function ToolsPage() {
   const { getToken } = useAuth();
   const { mode } = useWorkspaceMode();
-  const [tools, setTools] = useState<Tool[]>([]);
+  const [tools, setTools, hasCachedTools] = useCachedState<Tool[]>("tools-page:tools", []);
   const [isLoading, setIsLoading] = useState(true);
+  // Tools cached from an earlier visit stay on screen while they refetch.
+  const showSkeleton = isLoading && !hasCachedTools;
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -1151,7 +1154,7 @@ export default function ToolsPage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken]);
+  }, [getToken, setTools]);
 
   useEffect(() => {
     if (!isCreateOpen && !pendingDelete) return;
@@ -1274,7 +1277,7 @@ export default function ToolsPage() {
       setDetailEpoch((current) => current + 1);
       setNotice({ kind: "success", text: `Tool "${tool.name}" saved.` });
     },
-    [getToken]
+    [getToken, setTools]
   );
 
   // deleteTool removes the tool and, with it, every agent's attachment to it —
@@ -1354,7 +1357,7 @@ export default function ToolsPage() {
                 </button>
               </div>
 
-              {isLoading ? (
+              {showSkeleton ? (
                 <div className="tools-list-empty">
                   <strong>Loading tools…</strong>
                 </div>
