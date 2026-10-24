@@ -14,6 +14,7 @@ import {
   listPhoneNumbers as apiListPhoneNumbers,
   restartPhoneNumberLogin as apiRestartPhoneNumberLogin,
   startPhoneNumberLogin as apiStartPhoneNumberLogin,
+  PhoneNumberError,
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
@@ -1352,6 +1353,19 @@ export default function ChatAgentsPage() {
       } catch (error) {
         console.error("[wa-login] poll failed", { id: numberLoginId, error });
         if (cancelled) return;
+        if (error instanceof PhoneNumberError && error.status === 404) {
+          // The server no longer knows this login — it restarted, which drops
+          // unscanned QR sessions. Re-read the numbers in case the scan landed
+          // first, and drop the dead login so a fresh code is issued.
+          console.warn("[wa-login] login no longer exists on the server; issuing a new QR code");
+          setNumberLogin((current) => (current && current.id === numberLoginId ? null : current));
+          try {
+            setPhoneNumbers(await apiListPhoneNumbers(getToken));
+          } catch {
+            // The list is refreshed again on the next load.
+          }
+          return;
+        }
         setNumberLoginError(
           error instanceof Error ? error.message : "Failed to check the WhatsApp login status"
         );
