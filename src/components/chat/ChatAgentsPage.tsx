@@ -347,16 +347,13 @@ const css = `
 .chat-agent-expanded-topline {
   align-items: center;
   border-bottom: 1px solid var(--border);
-  color: var(--subtle);
   display: flex;
   flex: 0 0 auto;
-  font-size: 10.5px;
-  font-weight: 850;
-  justify-content: space-between;
-  letter-spacing: .75px;
-  padding: 12px 16px;
-  text-transform: uppercase;
+  gap: 14px;
+  padding: 14px 16px;
 }
+.chat-agent-expanded-topline > .chat-detail-head { flex: 1 1 auto; min-width: 0; }
+.chat-agent-expanded-close { flex: 0 0 auto; }
 .chat-agent-expanded-close {
   align-items: center;
   background: var(--panel);
@@ -691,7 +688,7 @@ const css = `
 .chat-card-title { font-size: 13.5px; font-weight: 850; letter-spacing: -.1px; margin: 0; }
 .chat-mini-select { height: 34px; max-width: 210px; width: auto; }
 .chat-helper-line { color: var(--subtle); font-size: 12px; margin-top: 9px; }
-.chat-detail-head { align-items: center; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) auto; padding: 18px; }
+.chat-detail-head { align-items: center; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) auto; }
 .chat-identity { align-items: center; display: grid; gap: 13px; grid-template-columns: 46px minmax(0, 1fr); min-width: 0; }
 .chat-avatar-lg { border-radius: 13px; font-size: 17px; height: 46px; width: 46px; }
 .chat-heading-row { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -733,7 +730,7 @@ const css = `
 .chat-tabs { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex: 0 0 auto; gap: 4px; padding: 4px; }
 .chat-tab { background: transparent; border: 0; border-radius: 9px; color: var(--muted); cursor: pointer; font: inherit; font-size: 12px; font-weight: 750; min-height: 32px; padding: 0 14px; }
 .chat-tab:hover { color: var(--text); }
-.chat-tab.is-active { background: var(--surface); box-shadow: 0 1px 2px var(--app-shadow-soft); color: var(--text); }
+.chat-tab.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-border); color: var(--app-primary-text); }
 /* The conversations workspace scrolls its own two panes, so the card gives it a
    height to work inside instead of growing with the transcript. */
 .chat-card-conversations { display: flex; flex: 1 1 auto; flex-direction: column; height: min(640px, 72vh); min-height: 420px; }
@@ -1004,7 +1001,8 @@ const css = `
   .expandable-card-stage { align-items: stretch; padding: 0; }
   .chat-agent-expandable { border: 0; border-radius: 0; height: 100dvh; max-width: none; }
   .chat-agent-expanded-grid { gap: 12px; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
-  .chat-detail-head { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .chat-agent-expanded-topline { align-items: flex-start; padding: 12px; }
+  .chat-detail-head { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .chat-editor-actions { justify-content: stretch; }
   .chat-editor-actions .chat-btn { flex: 1 1 0; }
   .chat-heading { font-size: 18px; }
@@ -1634,17 +1632,12 @@ export default function ChatAgentsPage() {
             >
               {selected ? (
                 <div className="chat-agent-expanded-shell">
-                  <div className="chat-agent-expanded-topline">
-                    <span>Chat agent details</span>
-                    <button
-                      aria-label="Close chat agent details"
-                      className="chat-agent-expanded-close"
-                      onClick={() => setSelectedId("")}
-                      type="button"
-                    >
-                      <Icon name="x" size={16} sw={2.4} />
-                    </button>
-                  </div>
+                  <AgentHeader
+                    agent={selected}
+                    onClose={() => setSelectedId("")}
+                    onDelete={() => setConfirmingDelete(true)}
+                    onPatch={patchSelected}
+                  />
                   <div className="chat-agent-expanded-grid">
                     <Editor
                       agent={selected}
@@ -1655,7 +1648,6 @@ export default function ChatAgentsPage() {
                         numberLogin && numberLogin.status !== "connected" ? numberLogin : null
                       }
                       loginError={numberLoginError}
-                      onDelete={() => setConfirmingDelete(true)}
                       onPatch={patchSelected}
                       onRefreshNumbers={refreshPhoneNumbers}
                       onStartLogin={startNumberLogin}
@@ -1884,28 +1876,19 @@ function CreateChatAgentModal({
 // header, then the system prompt that decides what the agent says. A chat agent
 // never opens a thread itself, so there is no opening message. Everything else
 // is configuration and lives in the panel to the right.
-function Editor({
+// The expanded card's single top bar: who the agent is, its live switch and
+// delete, and the close button — one strip instead of a label bar stacked
+// over a separate header card.
+function AgentHeader({
   agent,
-  assignableNumbers,
-  isRefreshingNumbers,
-  isStartingLogin,
-  login,
-  loginError,
+  onClose,
   onDelete,
   onPatch,
-  onRefreshNumbers,
-  onStartLogin,
 }: {
   agent: ApiChatAgent;
-  assignableNumbers: AssignableNumber[];
-  isRefreshingNumbers: boolean;
-  isStartingLogin: boolean;
-  login: ApiPhoneNumber | null;
-  loginError: string;
+  onClose: () => void;
   onDelete: () => void;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
-  onRefreshNumbers: () => void;
-  onStartLogin: () => void;
 }) {
   const status = agent.agent.status ?? "inactive";
   // Going live needs a WhatsApp number; pausing an already-live agent never
@@ -1918,11 +1901,6 @@ function Editor({
   // not churn on every keystroke.
   // The draft carries the agent it belongs to, so switching agents mid-rename
   // drops the draft without an effect that resets it.
-  // Which half of the editor is on screen: the agent's own settings, or the
-  // WhatsApp threads it has answered. The choice is kept across agents on
-  // purpose — somebody reading conversations usually wants the next agent's
-  // conversations too, not its prompt.
-  const [tab, setTab] = useState<EditorTab>("agent");
   const [rename, setRename] = useState<{ agentId: string; name: string } | null>(null);
   const draftName = rename?.agentId === agent.id ? rename.name : null;
   const cancelledRename = useRef(false);
@@ -1937,8 +1915,8 @@ function Editor({
   };
 
   return (
-    <div className="chat-editor">
-      <div className="chat-card chat-detail-head">
+    <div className="chat-agent-expanded-topline">
+      <div className="chat-detail-head">
         <div className="chat-identity">
           <span className="chat-avatar chat-avatar-lg" style={{ background: avatarColor(agent.id) }}>
             {agent.agent.name.slice(0, 1).toUpperCase()}
@@ -2013,7 +1991,47 @@ function Editor({
           </button>
         </div>
       </div>
+      <button
+        aria-label="Close chat agent details"
+        className="chat-agent-expanded-close"
+        onClick={onClose}
+        type="button"
+      >
+        <Icon name="x" size={16} sw={2.4} />
+      </button>
+    </div>
+  );
+}
 
+function Editor({
+  agent,
+  assignableNumbers,
+  isRefreshingNumbers,
+  isStartingLogin,
+  login,
+  loginError,
+  onPatch,
+  onRefreshNumbers,
+  onStartLogin,
+}: {
+  agent: ApiChatAgent;
+  assignableNumbers: AssignableNumber[];
+  isRefreshingNumbers: boolean;
+  isStartingLogin: boolean;
+  login: ApiPhoneNumber | null;
+  loginError: string;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+  onRefreshNumbers: () => void;
+  onStartLogin: () => void;
+}) {
+  // Which half of the editor is on screen: the agent's own settings, or the
+  // WhatsApp threads it has answered. The choice is kept across agents on
+  // purpose — somebody reading conversations usually wants the next agent's
+  // conversations too, not its prompt.
+  const [tab, setTab] = useState<EditorTab>("agent");
+
+  return (
+    <div className="chat-editor">
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
           <span className="chat-runtime-alert-icon">!</span>

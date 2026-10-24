@@ -420,6 +420,7 @@ export default function ChatConversationsWorkspace({
                   </div>
                   <div className="cv-thread-actions">
                     <button disabled={busy || !summary} onClick={toggleStatus} type="button">
+                      {summary?.status === "closed" ? <ReopenIcon /> : <CloseThreadIcon />}
                       {summary?.status === "closed" ? "Reopen" : "Close"}
                     </button>
                     <button
@@ -428,6 +429,7 @@ export default function ChatConversationsWorkspace({
                       onClick={() => setConfirmingDelete(true)}
                       type="button"
                     >
+                      <TrashIcon size={14} />
                       Delete
                     </button>
                   </div>
@@ -667,10 +669,27 @@ function ChatIcon() {
   );
 }
 
-function TrashIcon() {
+function TrashIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg aria-hidden="true" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" viewBox="0 0 24 24" width="20">
+    <svg aria-hidden="true" fill="none" height={size} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" viewBox="0 0 24 24" width={size}>
       <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+function CloseThreadIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="14" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14">
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.5 12 2.5 2.5 4.5-5" />
+    </svg>
+  );
+}
+
+function ReopenIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="14" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14">
+      <path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5" />
     </svg>
   );
 }
@@ -778,7 +797,7 @@ const workspaceCSS = `
 .cv-thread-head p{color:var(--app-muted);font-size:11px;margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cv-thread-phone{color:var(--app-text-soft);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700}
 .cv-thread-actions{display:flex;gap:4px;margin-left:auto}
-.cv-thread-actions button{background:transparent;border:1px solid transparent;border-radius:8px;color:var(--app-primary-text);cursor:pointer;font-size:11px;font-weight:750;padding:5px 9px;white-space:nowrap}
+.cv-thread-actions button{align-items:center;display:inline-flex;gap:5px;background:transparent;border:1px solid transparent;border-radius:8px;color:var(--app-primary-text);cursor:pointer;font-size:11px;font-weight:750;padding:5px 9px;white-space:nowrap}
 .cv-thread-actions button:hover{background:var(--app-panel-hover)}
 .cv-thread-actions button.danger{color:var(--app-rose)}
 .cv-thread-actions button:disabled{cursor:not-allowed;opacity:.4}
