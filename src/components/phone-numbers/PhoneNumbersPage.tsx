@@ -798,6 +798,8 @@ const css = `
 .phone-settings-grid > .phone-setting-row .phone-assignment-row { background: var(--surface); }
 .phone-setting-span { grid-column: 1 / -1; }
 .phone-setting-span .phone-assignment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Chat mode has a single assignment row; two columns squeezed it to half width. */
+.phone-setting-span .phone-assignment-grid-single { grid-template-columns: 1fr; }
 @media (max-width: 780px) { .phone-setting-span .phone-assignment-grid { grid-template-columns: 1fr; } }
 .phone-assignment-row {
   background: var(--panel);
@@ -1070,6 +1072,10 @@ const css = `
 }
 @media (max-width: 1180px) {
   .phone-qr-layout { grid-template-columns: 1fr; }
+}
+/* Beside the QR the settings column is too narrow for two pickers side by side. */
+@media (min-width: 1181px) {
+  .phone-qr-layout .phone-setting-span .phone-assignment-grid { grid-template-columns: 1fr; }
 }
 /* Laptops: the last-connected time goes, and the agent pickers drop under
    the number so neither side is squeezed. */
@@ -2180,7 +2186,7 @@ function PhoneNumberDetail({
                       : "Voice agents currently assigned to this number by call direction."}
                   </div>
                 </div>
-                <div className="phone-assignment-grid">
+                <div className={mode === "chat" ? "phone-assignment-grid phone-assignment-grid-single" : "phone-assignment-grid"}>
                   {mode === "chat" ? (
                     <AssignmentRow
                       agent={chatAssignment(phoneNumber.id, agents)}
