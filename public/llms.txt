@@ -76,7 +76,16 @@ The Wapzen dashboard itself is in English.
 
 ## Blog
 
-- [Blog](/blog): comparisons of WhatsApp chatbot and AI calling tools.
+- [Blog](/blog): how-to guides and comparisons of WhatsApp chatbot and AI calling tools.
+- [WhatsApp Zen: meet Wapzen](/blog/whatsapp-zen): the direct answer for people searching "WhatsApp Zen" or wondering whether it is Wapzen, with a concise overview of chat, voice, setup, and the Business API trade-off.
+- [A Zen WhatsApp workflow](/blog/zen-whatsapp-workflow): a practical system for a calmer inbox using AI for repeat questions, clear human handoff rules, and a short review routine.
+- [Auto reply on personal WhatsApp](/blog/whatsapp-auto-reply-personal-account): personal WhatsApp has no auto reply; the WhatsApp Business away message, Android auto-reply apps, and AI auto reply with Wapzen, step by step.
+- [WhatsApp chatbot without the Business API](/blog/whatsapp-chatbot-without-business-api): build an AI chatbot on an existing number with a knowledge base and a QR code, and when the official API is the better choice.
+- [COD order confirmation on WhatsApp](/blog/whatsapp-cod-order-confirmation): an AI voice agent calls each cash on delivery buyer on WhatsApp, sends a confirmation message, and logs the answer; leads can be added through the API.
+- [Wapzen vs AiSensy](/blog/wapzen-vs-aisensy): AiSensy's Free Forever plan and paid add-ons compared with Wapzen's free AI agent for WhatsApp chats and calls.
+- [Wapzen vs Interakt](/blog/wapzen-vs-interakt): Interakt's WhatsApp commerce features (catalog, payments, Shopify, COD-to-prepaid) compared with Wapzen's AI chat and voice agents.
+- [Wapzen vs respond.io](/blog/wapzen-vs-respond-io): respond.io's omnichannel team platform and pricing compared with Wapzen, which is WhatsApp only and free.
+- [Bland AI vs Vapi](/blog/bland-ai-vs-vapi): per-minute pricing, limits, and building compared for two phone AI calling platforms, with Wapzen as the WhatsApp calling option.
 - [Wapzen vs WATI](/blog/wapzen-vs-wati): pricing, AI chatbot, WhatsApp AI calls, setup, and when each fits; WATI suits broadcasts and team inboxes on the official Business API.
 - [7 best WATI alternatives](/blog/wati-alternatives): Wapzen, AiSensy, Interakt, respond.io, Gallabox, Periskope, and Twilio compared on price, Business API, AI agents, and calling.
 - [WATI vs AiSensy vs Interakt](/blog/wati-vs-aisensy-vs-interakt): the three Business API platforms compared on pricing, chatbots, AI, calling, and broadcasts, with Wapzen as the free AI option.

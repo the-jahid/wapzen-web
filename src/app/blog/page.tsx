@@ -7,8 +7,8 @@ import { blogPosts, formatPostDate } from "@/lib/blogPosts";
 import tools from "@/components/free-tools/FreeTools.module.css";
 import styles from "@/components/blog/Blog.module.css";
 
-const title = "Blog: WhatsApp AI Tool Comparisons & Alternatives";
-const description = "Honest comparisons of WhatsApp chatbot and AI calling tools: Wapzen vs WATI, the best WATI alternatives, and WATI vs AiSensy vs Interakt.";
+const title = "Blog: WhatsApp AI Guides, Comparisons & Alternatives";
+const description = "Step-by-step WhatsApp AI guides and honest comparisons: auto reply, chatbots without the API, COD confirmation calls, and Wapzen vs WATI, AiSensy and more.";
 
 export const metadata: Metadata = pageMetadata({ title, description, path: "/blog" });
 
@@ -29,8 +29,8 @@ export default function BlogPage() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     <header className={tools.hero}>
       <span className={tools.eyebrow}><span />Blog</span>
-      <h1 className={tools.title}>The Wapzen blog.<br /><span>Compare before you choose.</span></h1>
-      <p className={tools.lead}>Straight comparisons of WhatsApp chatbot and AI calling platforms: what they cost, what they do well, and where Wapzen fits, or doesn&rsquo;t.</p>
+      <h1 className={tools.title}>The Wapzen blog.<br /><span>Guides and honest comparisons.</span></h1>
+      <p className={tools.lead}>Step-by-step guides with real dashboard screenshots, and straight comparisons of WhatsApp chatbot and AI calling platforms: what they cost, what they do well, and where Wapzen fits, or doesn&rsquo;t.</p>
     </header>
     <div className={styles.postGrid}>
       {blogPosts.map((post) => <Link key={post.href} href={post.href} className={tools.toolTile}>

@@ -34,11 +34,20 @@
 .prose > ol { list-style: decimal; }
 .prose li::marker { color: var(--landing-green); }
 .prose strong { font-weight: 650; color: var(--site-text); }
+.prose > blockquote { padding: 19px 21px; border-left: 3px solid var(--landing-green); border-radius: 0 14px 14px 0; background: var(--site-fill); font-size: 15px; line-height: 1.75; color: var(--site-text-soft); }
 /* Links in running text only; block-level links (review "Visit site") keep their own style. */
 .prose > p a, .prose > ul a, .prose > ol a, .reviewBody a, .note a, .summary a, .sources p a { color: var(--landing-green); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .prose > p a:hover, .prose > ul a:hover, .prose > ol a:hover, .reviewBody a:hover, .note a:hover, .summary a:hover { text-decoration-thickness: 2px; }
 
 .note { padding: 14px 18px; border-left: 3px solid var(--landing-green); border-radius: 0 12px 12px 0; background: var(--site-fill); font-size: 13px; line-height: 1.7; color: var(--site-text-muted); }
+
+/* Dashboard screenshots (always the dark dashboard, so the frame stays dark too) and code samples */
+.figure { display: flex; flex-direction: column; gap: 10px; margin: 4px 0; }
+.figureLink { display: block; overflow: hidden; border: 1px solid var(--site-border); border-radius: 16px; background: #0b0c0f; }
+.figureLink img { display: block; width: 100%; height: auto; }
+.figure figcaption { font-size: 13px; line-height: 1.6; color: var(--site-text-muted); }
+.prose > pre { overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px 18px; border: 1px solid var(--site-border); border-radius: 14px; background: var(--site-fill); font-size: 13px; line-height: 1.65; color: var(--site-text-soft); }
+.prose p code, .prose li code { padding: 1px 6px; border-radius: 6px; background: var(--site-fill); font-size: .9em; }
 
 /* Table with a highlighted row */
 .tableWrap { overflow-x: auto; border: 1px solid var(--site-border); border-radius: 18px; background: var(--site-panel); }

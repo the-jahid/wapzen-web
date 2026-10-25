@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Check, Clock, Plus, X } from "lucide-react";
 import { siteConfig } from "@/lib/site";
@@ -26,7 +27,9 @@ type BlogPostProps = {
   sections: PostSection[];
   faq: Faq[];
   /** Where the post's facts come from; listed with the date they were checked. */
-  sources: Array<{ label: string; href: string }>;
+  sources?: Array<{ label: string; href: string }>;
+  /** Two posts for "keep reading"; defaults to the first two others in the registry. */
+  related?: [string, string];
   /** A marketing page shown beside the other posts in "keep reading". */
   product: string;
   cta: { heading: ReactNode; body: string };
@@ -63,7 +66,7 @@ function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
         dateModified: post.updated,
         articleSection: post.tag,
         inLanguage: "en",
-        image: `${siteConfig.url}/opengraph-image`,
+        image: `${siteConfig.url}${post.image ?? "/opengraph-image"}`,
         mainEntityOfPage: { "@id": `${url}#webpage` },
         isPartOf: { "@id": `${siteConfig.url}/blog#blog` },
         author: organization,
@@ -97,9 +100,9 @@ export function PostMeta({ post }: { post: BlogPostEntry }) {
   </p>;
 }
 
-export function BlogPost({ href, heading, lead, summary, sections, faq, sources, product, cta }: BlogPostProps) {
+export function BlogPost({ href, heading, lead, summary, sections, faq, sources = [], related, product, cta }: BlogPostProps) {
   const post = blogPost(href);
-  const others = blogPosts.filter((entry) => entry.href !== href).slice(0, 2);
+  const others = related ? related.map(blogPost) : blogPosts.filter((entry) => entry.href !== href).slice(0, 2);
   const page = marketingPages.find((entry) => entry.href === product);
   const toc = [...sections.map(({ id, title }) => ({ id, title })), { id: "faq", title: "FAQ" }];
   return <>
@@ -137,14 +140,16 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources,
         </section>
 
         <footer className={styles.sources}>
-          <h2 className={styles.sourcesTitle}>Sources</h2>
-          <p>Prices and features come from each vendor&rsquo;s own pages, checked on {formatPostDate(post.updated)}. They change often, so confirm them on the vendor&rsquo;s site before you buy.</p>
-          <ul>{sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="nofollow noopener noreferrer">{source.label}</a></li>)}</ul>
+          <h2 className={styles.sourcesTitle}>{post.tag === "Guide" ? "About this guide" : "Sources"}</h2>
+          {post.tag === "Guide"
+            ? <p>The steps and screenshots come from Wapzen&rsquo;s dashboard on {formatPostDate(post.updated)}, filled with demo data: the businesses, people, and phone numbers in them are made up.</p>
+            : <p>Prices and features come from each vendor&rsquo;s own pages, checked on {formatPostDate(post.updated)}. They change often, so confirm them on the vendor&rsquo;s site before you buy.</p>}
+          {sources.length > 0 && <ul>{sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="nofollow noopener noreferrer">{source.label}</a></li>)}</ul>}
         </footer>
       </article>
     </div>
 
-    <Section id="keep-reading" heading={<>Keep reading.<br /><span>More comparisons.</span></>}>
+    <Section id="keep-reading" heading={<>Keep reading.<br /><span>More from the blog.</span></>}>
       <div className={tools.grid3}>
         {others.map((entry) => <Link key={entry.href} href={entry.href} className={tools.toolTile}><span className={tools.cardIcon}><entry.icon size={20} /></span><h3 className={marketing.tileTitle}>{entry.name}</h3><p>{entry.description}</p><span>Read post<ArrowRight size={15} /></span></Link>)}
         {page && <Link href={page.href} className={tools.toolTile}><span className={tools.cardIcon}><page.icon size={20} /></span><h3 className={marketing.tileTitle}>{page.name}</h3><p>{page.description}</p><span>Learn more<ArrowRight size={15} /></span></Link>}
@@ -210,6 +215,16 @@ export function Choose({ items, highlight = "Wapzen" }: { items: Array<{ name: s
     <h3 className={styles.chooseTitle}>Choose {item.name} if…</h3>
     <ul>{item.points.map((point) => <li key={point}><Check size={15} />{point}</li>)}</ul>
   </div>)}</div>;
+}
+
+/** A dashboard screenshot from public/blog, linked to the full-size file. width and height are the file's own. */
+export function Screenshot({ src, width, height, alt, caption }: { src: string; width: number; height: number; alt: string; caption: ReactNode }) {
+  return <figure className={styles.figure}>
+    <a href={src} target="_blank" rel="noopener" className={styles.figureLink} aria-label={`${alt} (full size)`}>
+      <Image src={src} width={width} height={height} alt={alt} sizes="(max-width: 1000px) calc(100vw - 32px), 760px" />
+    </a>
+    <figcaption>{caption}</figcaption>
+  </figure>;
 }
 
 /** A short aside inside a section, e.g. a pricing caveat. */
