@@ -7,9 +7,11 @@ import { blogPost, blogPosts, formatPostDate, type BlogPostEntry } from "@/lib/b
 import { marketingPages } from "@/lib/marketingPages";
 import { GetStarted } from "@/components/landing/SiteChrome";
 import { Section } from "@/components/marketing/MarketingPage";
+import { TracingBeam } from "@/components/ui/tracing-beam";
 import tools from "@/components/free-tools/FreeTools.module.css";
 import marketing from "@/components/marketing/Marketing.module.css";
 import styles from "./Blog.module.css";
+import { BlogToc } from "./BlogToc";
 
 // Skeleton for the posts in app/blog: hero with byline, a quick-answer box,
 // the post's sections with a table of contents built from them, FAQ, sources,
@@ -117,13 +119,10 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
 
     <div className={styles.layout}>
       <aside className={styles.toc}>
-        <nav aria-label="On this page">
-          <span>On this page</span>
-          <ol>{toc.map((item) => <li key={item.id}><a href={`#${item.id}`}>{item.title}</a></li>)}</ol>
-        </nav>
+        <BlogToc items={toc} />
       </aside>
 
-      <article className={styles.article}>
+      <article className={styles.article}><TracingBeam className={styles.beam} railClassName={styles.beamRail}>
         <section className={styles.summary} aria-labelledby="summary-title">
           <h2 id="summary-title" className={styles.summaryTitle}>{summary.title}</h2>
           <ul>{summary.items.map((item, i) => <li key={i}><Check size={16} /><span>{item}</span></li>)}</ul>
@@ -148,7 +147,7 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
               : <p>Prices and features come from each vendor&rsquo;s own pages, checked on {formatPostDate(post.updated)}. They change often, so confirm them on the vendor&rsquo;s site before you buy.</p>}
           {sources.length > 0 && <ul>{sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="nofollow noopener noreferrer">{source.label}</a></li>)}</ul>}
         </footer>
-      </article>
+      </TracingBeam></article>
     </div>
 
     <Section id="keep-reading" heading={<>Keep reading.<br /><span>More from the blog.</span></>}>

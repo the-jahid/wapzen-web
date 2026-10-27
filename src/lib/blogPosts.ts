@@ -16,6 +16,8 @@ export type BlogPostEntry = {
   readingMinutes: number;
   /** A screenshot in public/blog used as the article image in structured data. */
   image?: string;
+  /** An illustration for the post's card in the /blog bento, shown instead of `image`. */
+  cover?: string;
 };
 
 // Blog posts in app/blog, newest first. Feeds the /blog index, the sitemap,
@@ -36,6 +38,7 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-10-27",
     readingMinutes: 9,
     image: "/blog/whatsapp-chatbot-without-business-api/conversation.webp",
+    cover: "/whatsapp-ai-voice-agent-hero.png",
   },
   {
     href: "/blog/whatsapp-business-api-pricing",
@@ -228,4 +231,7 @@ export function blogPost(href: string): BlogPostEntry {
 }
 
 /** "25 October 2026"; fixed locale and UTC so server and client agree. */
-export const formatPostDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+/** "27 Oct", for cards. */
+export const formatShortDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+
+export const formatPostDate =(iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
