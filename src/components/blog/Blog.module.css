@@ -39,6 +39,13 @@
 .prose > p a, .prose > ul a, .prose > ol a, .reviewBody a, .note a, .summary a, .sources p a { color: var(--landing-green); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .prose > p a:hover, .prose > ul a:hover, .prose > ol a:hover, .reviewBody a:hover, .note a:hover, .summary a:hover { text-decoration-thickness: 2px; }
 
+/* Mid-post sign-up prompt; dark in both themes, like the closing CTA */
+.inlineCta { display: flex; align-items: center; justify-content: space-between; gap: 18px 28px; margin: 6px 0; padding: 24px 26px; border-radius: 20px; background: #10281f; }
+.inlineCta > div:first-child { min-width: 0; }
+.inlineCta > div:last-child { flex-shrink: 0; }
+.inlineCtaTitle { font-size: 17px; font-weight: 650; line-height: 1.35; letter-spacing: -.02em; color: #fff; }
+.inlineCta p + p { margin-top: 6px; font-size: 14px; line-height: 1.6; color: #b4c8be; }
+
 .note { padding: 14px 18px; border-left: 3px solid var(--landing-green); border-radius: 0 12px 12px 0; background: var(--site-fill); font-size: 13px; line-height: 1.7; color: var(--site-text-muted); }
 
 /* Dashboard screenshots (always the dark dashboard, so the frame stays dark too) and code samples */
@@ -117,6 +124,7 @@
   .toc a { margin-left: 0; padding: 5px 0; border-left: 0; }
 }
 @media (max-width: 680px) {
+  .inlineCta { flex-direction: column; align-items: flex-start; }
   .choose, .prosCons { grid-template-columns: 1fr; }
   .facts { grid-template-columns: 1fr; }
 }

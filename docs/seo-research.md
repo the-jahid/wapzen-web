@@ -106,6 +106,28 @@ How the translations are wired:
 
 Not localized: the dashboard, the Clerk sign-up modal, the /tools pages, and the OG image (English text).
 
+## Blog topics (Oct 27, fifth harvest)
+
+[`seo-blog-topic-research.mjs`](seo-blog-topic-research.mjs) scores ten candidate blog clusters (8–12 seeds each, same five sources and rank weighting, no A–Z expansion) so they can be compared before writing. Shared phrases such as "what is whatsapp chatbot" show up in several clusters, so judge a cluster by its own phrases, not the printed total.
+
+| Cluster | Strongest phrases (score, sources) | Post |
+| --- | --- | --- |
+| What a chatbot is | what is whatsapp chatbot 170 (4/5), how whatsapp chatbot works 102, how does whatsapp chatbot work 99, whatsapp chatbot examples 45 | `/blog/what-is-a-whatsapp-chatbot` (hub: links to every post) |
+| API pricing | whatsapp business api pricing 104 (5/5), …pricing india 94 (5/5), …cost 56, …cost per message 51, …charges 47 | `/blog/whatsapp-business-api-pricing` |
+| ChatGPT on WhatsApp | chatgpt whatsapp number 99 (5/5), how to use / add chatgpt on whatsapp 50, chatgpt whatsapp number 2026 46 | `/blog/chatgpt-on-whatsapp` |
+| n8n | n8n whatsapp chatbot 96 (5/5), n8n whatsapp bot 80, whatsapp ai agent n8n workflow 51, n8n whatsapp ai agent 48 | `/blog/n8n-whatsapp-ai-agent` |
+| App vs API | whatsapp business vs whatsapp business api 83 (5/5), difference between… 63, whatsapp business app vs api 47 | `/blog/whatsapp-business-app-vs-api` |
+| Bans | how to avoid whatsapp ban 50 (5/5), whatsapp business account banned 47, …solution 46, whatsapp temporarily banned 38 | Not built. Strong trust topic for linked-device users |
+| Industries | whatsapp ordering system 50 (5/5), whatsapp appointment booking 50 (5/5), whatsapp ordering system free 36 | Not built. Ordering and booking need API tools, so say so |
+| Prompts | ai agent system prompt 41, chatbot prompt examples 40, ai voice agent prompt generator 39, customer service chatbot prompt 30 | Not built. A copyable prompt-template post converts well |
+| Leads | ai sdr 50, speed to lead 48, ai lead qualification 40 | Not built. Generic SaaS terms, crowded |
+| Auto answer | auto answer whatsapp call iphone 51, whatsapp voicemail 50 | Skipped: phone-setting consumer intent; `/ai-receptionist` carries it |
+
+Blog strategy these posts follow:
+- **Funnel coverage.** Explainers catch the high-volume questions (what is, pricing, ChatGPT); comparisons and guides convert. Every explainer ends at a free setup, and its `InlineCta` (in `components/blog/BlogPost.tsx`) sits right after the section that makes the case, not only at the bottom.
+- **Hub and spokes.** The "what is" post links to every other post, and each new post links back to it and to one sibling. A new post should add a link from the hub.
+- **Facts age.** Meta changes rates on 1 January, April, July, and October. Recheck the pricing post's table and worked examples then. The ChatGPT post's region status is still moving (EU case open, Brazil case open). The 1 October 2026 change (service replies charged after 1,000 a month per number) made older "service conversations are free" copy wrong; `/pricing` and `/whatsapp-business-api-alternative` were corrected the same day.
+
 ## What the landing page now targets
 
 - **Title:** `Free WhatsApp AI Chatbot & AI Calling Agent for Business | Wapzen` (65 chars; Google may cut the brand, and the keywords come first).

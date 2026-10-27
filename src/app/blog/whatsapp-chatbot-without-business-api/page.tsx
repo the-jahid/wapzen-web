@@ -19,7 +19,7 @@ export const metadata: Metadata = pageMetadata({ title: post.title, description:
 const routes = [
   ["How it connects", "Your number is registered to Meta’s platform, usually through a provider", "Your number is linked by QR code, like WhatsApp Web"],
   ["Setup", "Business account, display name review, template approval", "Scan a QR code"],
-  ["Cost", "Provider plan plus per-message charges for templates", "Free right now with Wapzen"],
+  ["Cost", "Provider plan plus Meta’s per-message fees", "Free right now with Wapzen"],
   ["Who it can message", "Anyone opted in, using approved templates", "Replies to people who message you"],
   ["Bulk broadcasts", "Yes, to opted-in contacts", "No"],
   ["Official Meta route", "Yes", "No"],
@@ -124,7 +124,7 @@ const sections = [
         <li><strong>A verified business profile</strong> and Meta’s official platform behind your number.</li>
         <li><strong>Very high volume</strong>, where your whole business depends on WhatsApp staying connected.</li>
       </ul>
-      <p>For a side-by-side look at those platforms, read <Link href="/blog/wati-alternatives">the best WATI alternatives</Link> or <Link href="/blog/wapzen-vs-aisensy">Wapzen vs AiSensy</Link>.</p>
+      <p>For a side-by-side look at those platforms, read <Link href="/blog/wati-alternatives">the best WATI alternatives</Link> or <Link href="/blog/wapzen-vs-aisensy">Wapzen vs AiSensy</Link>, and for what Meta charges per message, <Link href="/blog/whatsapp-business-api-pricing">WhatsApp Business API pricing</Link>.</p>
       <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a linked device. WhatsApp restricts numbers that send bulk or unwanted messages, so use the chatbot to answer people who contact you, never to message people who didn’t.</Note>
     </>,
   },

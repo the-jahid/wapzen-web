@@ -143,7 +143,9 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
           <h2 className={styles.sourcesTitle}>{post.tag === "Guide" ? "About this guide" : "Sources"}</h2>
           {post.tag === "Guide"
             ? <p>The steps and screenshots come from Wapzen&rsquo;s dashboard on {formatPostDate(post.updated)}, filled with demo data: the businesses, people, and phone numbers in them are made up.</p>
-            : <p>Prices and features come from each vendor&rsquo;s own pages, checked on {formatPostDate(post.updated)}. They change often, so confirm them on the vendor&rsquo;s site before you buy.</p>}
+            : post.tag === "Explainer"
+              ? <p>The facts and prices in this post come from the sources below, checked on {formatPostDate(post.updated)}. Meta and other vendors change their prices and policies often, so confirm them at the source before you rely on them. Dashboard screenshots, where shown, use demo data.</p>
+              : <p>Prices and features come from each vendor&rsquo;s own pages, checked on {formatPostDate(post.updated)}. They change often, so confirm them on the vendor&rsquo;s site before you buy.</p>}
           {sources.length > 0 && <ul>{sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="nofollow noopener noreferrer">{source.label}</a></li>)}</ul>}
         </footer>
       </article>
@@ -225,6 +227,14 @@ export function Screenshot({ src, width, height, alt, caption }: { src: string; 
     </a>
     <figcaption>{caption}</figcaption>
   </figure>;
+}
+
+/** A sign-up prompt inside a section, placed where the post has just made the case. */
+export function InlineCta({ title, body, label = "Start free" }: { title: string; body: string; label?: string }) {
+  return <aside className={styles.inlineCta} aria-label={title}>
+    <div><p className={styles.inlineCtaTitle}>{title}</p><p>{body}</p></div>
+    <div><GetStarted label={label} /></div>
+  </aside>;
 }
 
 /** A short aside inside a section, e.g. a pricing caveat. */

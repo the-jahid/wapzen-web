@@ -31,7 +31,7 @@ const included = [
 
 const costs = [
   { icon: CreditCard, title: "Platform subscription", body: "Most WhatsApp chatbot platforms charge a monthly plan, often tiered by seats, contacts, or conversations. Wapzen is currently $0." },
-  { icon: Receipt, title: "Business API message fees", body: "Platforms built on the WhatsApp Business API pass on Meta's per-message charges for template messages. Wapzen links your number by QR code, so there are none." },
+  { icon: Receipt, title: "Business API message fees", body: "Platforms built on the WhatsApp Business API pass on Meta's per-message charges: for every template, and since 1 October 2026 for replies beyond 1,000 a month per number. Wapzen links your number by QR code, so there are none." },
   { icon: Sparkles, title: "AI usage", body: "Many tools ask you to bring your own OpenAI key and pay for AI usage separately. Wapzen includes the AI models and the voices." },
   { icon: PhoneCall, title: "Calling minutes", body: "AI phone agents are usually billed per minute, plus a rented phone number. Wapzen's AI calls run over WhatsApp on your own number, with no per-minute charges." },
   { icon: Code2, title: "Setup and development", body: "Custom WhatsApp bots often need a developer to build and host them. Wapzen is no-code: connect your number, configure your agent, and go live." },
@@ -41,7 +41,7 @@ const costs = [
 const comparison = [
   ["Monthly price", "Paid plans, often tiered", "Free right now"],
   ["WhatsApp Business API", "Usually required", "Not needed: link by QR code"],
-  ["Per-message fees", "Meta template fees passed on", "None"],
+  ["Per-message fees", "Meta’s message fees passed on", "None"],
   ["AI models", "Often bring your own API key", "GPT and Claude included"],
   ["AI voice calls on WhatsApp", "Rare, or a paid add-on", "Included, inbound and outbound"],
   ["Credit card to start", "Often required for a trial", "Not required"],

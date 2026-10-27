@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Columns3, GitCompareArrows, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, QrCode, Scale, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, Coins, Columns3, GitCompareArrows, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, QrCode, Scale, Sparkles, Workflow, type LucideIcon } from "lucide-react";
 
 export type BlogPostEntry = {
   href: string;
@@ -7,7 +7,8 @@ export type BlogPostEntry = {
   /** Short name for the breadcrumb. */
   name: string;
   description: string;
-  tag: "Comparison" | "Alternatives" | "Guide";
+  /** Guides show demo dashboard screenshots; explainers cite Meta's and vendors' docs. */
+  tag: "Comparison" | "Alternatives" | "Guide" | "Explainer";
   icon: LucideIcon;
   /** ISO dates. Bump `updated` whenever prices or facts in the post change. */
   published: string;
@@ -24,6 +25,63 @@ export type BlogPostEntry = {
 // Guides show dashboard screenshots (public/blog/<slug>/, demo data): retake
 // them when the screens they show change.
 export const blogPosts: BlogPostEntry[] = [
+  {
+    href: "/blog/what-is-a-whatsapp-chatbot",
+    title: "What Is a WhatsApp Chatbot? How It Works, Examples & Cost (2026)",
+    name: "What is a WhatsApp chatbot?",
+    description: "What a WhatsApp chatbot is, how it works behind the scenes, examples by industry, what it costs in 2026, and how to set one up free in about 15 minutes.",
+    tag: "Explainer",
+    icon: Bot,
+    published: "2026-10-27",
+    updated: "2026-10-27",
+    readingMinutes: 9,
+    image: "/blog/whatsapp-chatbot-without-business-api/conversation.webp",
+  },
+  {
+    href: "/blog/whatsapp-business-api-pricing",
+    title: "WhatsApp Business API Pricing 2026: Rates by Country & Real Cost",
+    name: "WhatsApp Business API pricing",
+    description: "What the WhatsApp Business API costs in 2026: Meta's per-message rates for India, the US, UK and more, the 1 October changes, and provider fees on top.",
+    tag: "Explainer",
+    icon: Coins,
+    published: "2026-10-27",
+    updated: "2026-10-27",
+    readingMinutes: 8,
+  },
+  {
+    href: "/blog/chatgpt-on-whatsapp",
+    title: "ChatGPT on WhatsApp in 2026: Is 1-800-ChatGPT Still Working?",
+    name: "ChatGPT on WhatsApp",
+    description: "Is ChatGPT still on WhatsApp? Where 1-800-ChatGPT works in 2026, why it left most countries, and how a business can put GPT on its own number.",
+    tag: "Explainer",
+    icon: Sparkles,
+    published: "2026-10-27",
+    updated: "2026-10-27",
+    readingMinutes: 6,
+    image: "/blog/whatsapp-chatbot-without-business-api/chat-agent.webp",
+  },
+  {
+    href: "/blog/whatsapp-business-app-vs-api",
+    title: "WhatsApp Business App vs API (2026): Differences, Costs & Limits",
+    name: "WhatsApp Business app vs API",
+    description: "WhatsApp Business app vs the Business API: features, costs, limits, coexistence and who each suits, plus a third route that adds AI without the API.",
+    tag: "Comparison",
+    icon: Layers,
+    published: "2026-10-27",
+    updated: "2026-10-27",
+    readingMinutes: 7,
+  },
+  {
+    href: "/blog/n8n-whatsapp-ai-agent",
+    title: "n8n WhatsApp AI Agent: How to Build One (and a No-Code Option)",
+    name: "n8n WhatsApp AI agent",
+    description: "Build a WhatsApp AI agent in n8n step by step: the Meta setup, the workflow, real costs and pitfalls, plus a no-code option if you'd rather skip the build.",
+    tag: "Explainer",
+    icon: Workflow,
+    published: "2026-10-27",
+    updated: "2026-10-27",
+    readingMinutes: 8,
+  },
   {
     href: "/blog/whatsapp-zen",
     title: "WhatsApp Zen: Are You Looking for Wapzen?",

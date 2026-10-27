@@ -7,8 +7,8 @@ import { blogPosts, formatPostDate } from "@/lib/blogPosts";
 import tools from "@/components/free-tools/FreeTools.module.css";
 import styles from "@/components/blog/Blog.module.css";
 
-const title = "Blog: WhatsApp AI Guides, Comparisons & Alternatives";
-const description = "Step-by-step WhatsApp AI guides and honest comparisons: auto reply, chatbots without the API, COD confirmation calls, and Wapzen vs WATI, AiSensy and more.";
+const title = "Blog: WhatsApp AI Guides, Explainers & Comparisons";
+const description = "WhatsApp AI guides, explainers and honest comparisons: chatbots without the API, Business API pricing, ChatGPT on WhatsApp, n8n agents, and Wapzen vs WATI.";
 
 export const metadata: Metadata = pageMetadata({ title, description, path: "/blog" });
 
@@ -30,7 +30,7 @@ export default function BlogPage() {
     <header className={tools.hero}>
       <span className={tools.eyebrow}><span />Blog</span>
       <h1 className={tools.title}>The Wapzen blog.<br /><span>Guides and honest comparisons.</span></h1>
-      <p className={tools.lead}>Step-by-step guides with real dashboard screenshots, and straight comparisons of WhatsApp chatbot and AI calling platforms: what they cost, what they do well, and where Wapzen fits, or doesn&rsquo;t.</p>
+      <p className={tools.lead}>Step-by-step guides with real dashboard screenshots, explainers on WhatsApp pricing and rules, and straight comparisons of WhatsApp chatbot and AI calling platforms: what they cost, what they do well, and where Wapzen fits, or doesn&rsquo;t.</p>
     </header>
     <div className={styles.postGrid}>
       {blogPosts.map((post) => <Link key={post.href} href={post.href} className={tools.toolTile}>

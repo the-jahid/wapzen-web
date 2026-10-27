@@ -17,7 +17,7 @@ export const metadata: Metadata = pageMetadata({ title, description, path });
 const apiFacts = [
   { icon: BadgeCheck, title: "Meta setup", body: "You need a Meta business account and a phone number registered to the platform, usually through a provider (a BSP) that connects it for you." },
   { icon: FileCheck, title: "Approved templates", body: "Messages you start, or send more than 24 hours after the customer's last message, must use message templates that Meta has approved." },
-  { icon: Receipt, title: "Per-message fees", body: "Meta charges for template messages, with rates by country and message category, and most providers add a monthly plan on top." },
+  { icon: Receipt, title: "Per-message fees", body: "Meta charges for template messages, and since 1 October 2026 for service replies beyond 1,000 a month per number, with rates by country and category. Most providers add a monthly plan on top." },
 ];
 
 const comparison = [
@@ -39,7 +39,7 @@ const steps = [
 
 const faqs = [
   { q: "What is the WhatsApp Business API?", a: "It's Meta's official interface, now called the WhatsApp Business Platform, that lets companies send and receive WhatsApp messages from their own software, usually through a provider. It's built for messaging at scale and uses approved templates for messages the business starts." },
-  { q: "Is the WhatsApp Business API free?", a: "Not entirely. Meta's Cloud API has no access fee, but Meta charges for template messages at rates that depend on the country and category, and most providers charge a monthly plan. Free-form replies within 24 hours of a customer's last message are generally not charged by Meta." },
+  { q: "Is the WhatsApp Business API free?", a: "Not entirely. Meta's Cloud API has no access fee, but Meta charges for template messages at rates that depend on the country and category, and most providers charge a monthly plan. Free-form replies within 24 hours of a customer's last message used to be free; since 1 October 2026, only the first 1,000 a month per business number are." },
   { q: "Can I use WhatsApp for business without the API?", a: "Yes. The WhatsApp Business app is free for manual chats and simple away messages. Wapzen adds an AI chatbot and an AI voice agent to a WhatsApp or WhatsApp Business number without the API, by linking it with a QR code." },
   { q: "Is there a free WhatsApp API?", a: "Meta's own Cloud API has no access fee, though template messages cost money. If what you need is AI that answers messages and calls, rather than an API to build on, Wapzen is currently free and needs no API at all." },
   { q: "Is Wapzen an unofficial WhatsApp API?", a: "Wapzen isn't an API you build on. It's a ready-made product that links your number the way WhatsApp Web does and runs AI agents on it. It isn't an official Meta product, so for high-volume broadcasts or enterprise-scale messaging, the official Business API is the better fit." },
