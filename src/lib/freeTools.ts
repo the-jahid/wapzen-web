@@ -1,4 +1,4 @@
-import { Earth, Link2, QrCode, Send } from "lucide-react";
+import { Bold, Earth, Link2, QrCode, Send } from "lucide-react";
 
 // Public free tools under /tools. Feeds the /tools index, the site footer and
 // the sitemap, so a new tool only needs its page plus an entry here.
@@ -26,5 +26,11 @@ export const freeTools = [
     name: "WhatsApp Country Code Finder",
     description: "Look up any country's calling code and convert a local phone number into the international format WhatsApp needs.",
     icon: Earth,
+  },
+  {
+    href: "/tools/whatsapp-text-formatter",
+    name: "WhatsApp Text Formatter",
+    description: "Add bold, italic, strikethrough, monospace, lists and quotes to a message, preview it as WhatsApp shows it, or copy it in fancy fonts.",
+    icon: Bold,
   },
 ] as const;

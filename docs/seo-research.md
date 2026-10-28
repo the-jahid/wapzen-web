@@ -118,7 +118,7 @@ Not localized: the dashboard, the Clerk sign-up modal, the /tools pages, and the
 | n8n | n8n whatsapp chatbot 96 (5/5), n8n whatsapp bot 80, whatsapp ai agent n8n workflow 51, n8n whatsapp ai agent 48 | `/blog/n8n-whatsapp-ai-agent` |
 | App vs API | whatsapp business vs whatsapp business api 83 (5/5), difference between… 63, whatsapp business app vs api 47 | `/blog/whatsapp-business-app-vs-api` |
 | Bans | how to avoid whatsapp ban 50 (5/5), whatsapp business account banned 47, …solution 46, whatsapp temporarily banned 38 | Not built. Strong trust topic for linked-device users |
-| Industries | whatsapp ordering system 50 (5/5), whatsapp appointment booking 50 (5/5), whatsapp ordering system free 36 | Not built. Ordering and booking need API tools, so say so |
+| Industries | whatsapp ordering system 50 (5/5), whatsapp appointment booking 50 (5/5), whatsapp ordering system free 36 | Built Oct 28 (see below): `/blog/whatsapp-food-ordering-system`, `/blog/whatsapp-appointment-booking` |
 | Prompts | ai agent system prompt 41, chatbot prompt examples 40, ai voice agent prompt generator 39, customer service chatbot prompt 30 | Not built. A copyable prompt-template post converts well |
 | Leads | ai sdr 50, speed to lead 48, ai lead qualification 40 | Not built. Generic SaaS terms, crowded |
 | Auto answer | auto answer whatsapp call iphone 51, whatsapp voicemail 50 | Skipped: phone-setting consumer intent; `/ai-receptionist` carries it |
@@ -127,6 +127,30 @@ Blog strategy these posts follow:
 - **Funnel coverage.** Explainers catch the high-volume questions (what is, pricing, ChatGPT); comparisons and guides convert. Every explainer ends at a free setup, and its `InlineCta` (in `components/blog/BlogPost.tsx`) sits right after the section that makes the case, not only at the bottom.
 - **Hub and spokes.** The "what is" post links to every other post, and each new post links back to it and to one sibling. A new post should add a link from the hub.
 - **Facts age.** Meta changes rates on 1 January, April, July, and October. Recheck the pricing post's table and worked examples then. The ChatGPT post's region status is still moving (EU case open, Brazil case open). The 1 October 2026 change (service replies charged after 1,000 a month per number) made older "service conversations are free" copy wrong; `/pricing` and `/whatsapp-business-api-alternative` were corrected the same day.
+
+## Blog posts and a tool (Oct 28, sixth harvest)
+
+Search Console's first day (Oct 27) showed impressions on comparison posts, `/free-whatsapp-chatbot`, the calling pages and `/tools`, and the first clicks on the chatbot-without-API guide and the QR code generator. Free tools and specific how-to posts get picked up quickly, so this round adds more of both.
+
+[`seo-blog-tool-research.mjs`](seo-blog-tool-research.mjs) scores 12 blog clusters and 8 free-tool clusters, with the same five sources and rank weighting. A SERP check then ruled out candidates whose results are held by large vendors.
+
+| Cluster | Strongest phrases (score, sources) | Page |
+| --- | --- | --- |
+| Calling API | whatsapp business calling api 98 (5/5), …pricing 75, whatsapp business calling 45 (5/5), whatsapp calling api pricing 40 | `/blog/whatsapp-business-calling-api` |
+| Meta's AI agent | whatsapp business ai agent 96 (5/5), meta ai whatsapp business 56 (5/5), meta business ai 50 (5/5), …ai agent turn off 48 | `/blog/whatsapp-business-ai-agent` |
+| Food ordering | whatsapp food ordering system 105 (5/5), whatsapp ordering system free 76, whatsapp food ordering 71, how to take orders on whatsapp business 50 (5/5) | `/blog/whatsapp-food-ordering-system` |
+| Booking | whatsapp appointment booking free 70, …bot 59, …system 51, whatsapp booking system / bot 50 (5/5), whatsapp appointment reminder 40 | `/blog/whatsapp-appointment-booking` |
+| Greeting messages | whatsapp business greeting message example 76, …greeting message 68 (5/5), …welcome message example 56, …greeting message not working 54 | `/blog/whatsapp-business-greeting-message` |
+| Text formatter (tool) | whatsapp text formatting 112 (5/5), …tricks 88 (5/5), whatsapp text formatter 74, whatsapp bold text 50 (5/5), whatsapp fancy text 47 (5/5), whatsapp font generator 40 | `/tools/whatsapp-text-formatter` |
+| Marketing | whatsapp marketing strategy 109, whatsapp broadcast list 80 (5/5), whatsapp marketing tips 76 (5/5) | Not built: broadcasts need the API, and the SERP is crowded |
+| Pricing calculator (tool) | whatsapp api pricing calculator 93, whatsapp message cost calculator 84 | Not built: respond.io, SleekFlow, Kommo and AiSensy own the SERP |
+| Prompt generator (tool) | ai voice agent prompt generator 103, chatbot prompt generator 55, system prompt generator 50 (5/5) | Not built yet; a strong fit (users write agent prompts) for a later round |
+| Widget (tool) | whatsapp chat widget for website free 60, add whatsapp to website 54 (5/5), whatsapp floating button 49 (5/5) | Not built yet |
+
+Notes on these pages:
+- **The formatter's SERP** is held by small vendor tool pages (whapi.cloud, flowgent, whautomate), the same tier as wapzen.io. The page covers the formatting cluster with the tool and the fancy-text cluster with Unicode fonts, and says plainly that Unicode letters are bad for screen readers.
+- **The ordering and booking posts describe the product as it is:** chat agents don't see the customer's number (so the agent asks for one), aren't told today's date (so the availability API should return it), and get the first 3,000 characters of a tool's response. If any of that changes in the server, update both posts.
+- **Meta Business Agent is moving fast.** The app's paid tiers weren't published, and the turn-off steps come from a third-party guide. Recheck both, and the Calling API's permission limits and country list, when Meta's quarterly changes land.
 
 ## What the landing page now targets
 

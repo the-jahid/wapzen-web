@@ -63,6 +63,7 @@
 - [WhatsApp Chat Link Generator](/tools/whatsapp-link-generator)
 - [WhatsApp QR Code Generator](/tools/whatsapp-qr-code-generator)
 - [WhatsApp Country Code Finder](/tools/whatsapp-country-code-finder)
+- [WhatsApp Text Formatter](/tools/whatsapp-text-formatter): bold, italic, strikethrough, monospace, inline code, lists and quotes with a live WhatsApp preview, plus Unicode fancy fonts.
 
 ## Other languages
 
@@ -77,6 +78,11 @@ The Wapzen dashboard itself is in English.
 ## Blog
 
 - [Blog](/blog): how-to guides, explainers, and comparisons of WhatsApp chatbot and AI calling tools.
+- [WhatsApp Business Calling API](/blog/whatsapp-business-calling-api): how Meta's Calling API works, which calls are free, per-minute billing in 6-second pulses, call permission limits (1 request a day, 2 a week), countries whose business numbers cannot call out, setup, and the linked-device alternative.
+- [WhatsApp Business AI agent](/blog/whatsapp-business-ai-agent): Meta Business Agent (formerly Business AI) in the WhatsApp Business app and on the Business API: what it does, setup, how to pause or turn it off, pricing ($2.00 per million tokens on the API from 1 August 2026), limits, and a comparison with Wapzen.
+- [WhatsApp food ordering system](/blog/whatsapp-food-ordering-system): taking food orders with the WhatsApp Business catalog and cart, ordering platforms on the Business API, or an AI agent that logs confirmed orders to a Google Sheet through an API request tool (Apps Script and instructions included).
+- [WhatsApp appointment booking](/blog/whatsapp-appointment-booking): booking links, booking requests saved to a Google Sheet, and live booking through a booking system's API, by chat or WhatsApp call, plus three ways to send appointment reminders.
+- [WhatsApp Business greeting messages](/blog/whatsapp-business-greeting-message): 40 copy-and-paste greeting message examples by industry, setup steps, and why a greeting message stops sending (14-day rule, recipients, Meta Business Agent).
 - [What is a WhatsApp chatbot?](/blog/what-is-a-whatsapp-chatbot): rule-based vs AI chatbots, how a reply is produced, API vs linked-device connection, examples by industry, costs, and a four-step setup.
 - [WhatsApp Business API pricing](/blog/whatsapp-business-api-pricing): Meta's per-message rates by country from 1 October 2026 (India in INR), the change that made service replies chargeable beyond 1,000 a month per number, provider fees, and three worked monthly bills.
 - [ChatGPT on WhatsApp](/blog/chatgpt-on-whatsapp): where 1-800-ChatGPT works in 2026 (EEA since 13 July 2026; not the US, UK, or India), the timeline of Meta's general-purpose AI ban, and why business support bots are unaffected.

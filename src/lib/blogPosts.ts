@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, Coins, Columns3, GitCompareArrows, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, QrCode, Scale, Sparkles, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, Coins, Columns3, GitCompareArrows, Hand, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, PhoneCall, QrCode, Scale, Sparkles, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
 
 export type BlogPostEntry = {
   href: string;
@@ -27,6 +27,61 @@ export type BlogPostEntry = {
 // Guides show dashboard screenshots (public/blog/<slug>/, demo data): retake
 // them when the screens they show change.
 export const blogPosts: BlogPostEntry[] = [
+  {
+    href: "/blog/whatsapp-business-calling-api",
+    title: "WhatsApp Business Calling API (2026): Pricing, Limits & Setup",
+    name: "WhatsApp Business Calling API",
+    description: "How the WhatsApp Business Calling API works in 2026: which calls are free, per-minute pricing, permission limits, countries, setup, and a no-API option.",
+    tag: "Explainer",
+    icon: PhoneCall,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 8,
+  },
+  {
+    href: "/blog/whatsapp-business-ai-agent",
+    title: "WhatsApp Business AI Agent: Meta Business Agent Explained (2026)",
+    name: "WhatsApp Business AI agent",
+    description: "Meta Business Agent, the AI agent in WhatsApp Business, explained: what it does, how to set it up or turn it off, what it costs, and where it falls short.",
+    tag: "Explainer",
+    icon: BotMessageSquare,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 8,
+  },
+  {
+    href: "/blog/whatsapp-food-ordering-system",
+    title: "WhatsApp Food Ordering System: Take Orders for Free (2026)",
+    name: "WhatsApp food ordering system",
+    description: "Three ways to take food orders on WhatsApp: the free catalog and cart, an ordering platform, or an AI agent that takes each order and logs it in a sheet.",
+    tag: "Explainer",
+    icon: UtensilsCrossed,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/whatsapp-appointment-booking",
+    title: "WhatsApp Appointment Booking: Free Bot Setup Guide (2026)",
+    name: "WhatsApp appointment booking",
+    description: "Take appointment bookings on WhatsApp for free: send a booking link, collect requests in a sheet, or let an AI agent book live slots by chat or call.",
+    tag: "Explainer",
+    icon: CalendarCheck,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/whatsapp-business-greeting-message",
+    title: "40 WhatsApp Business Greeting Message Examples (Copy & Paste)",
+    name: "WhatsApp Business greeting messages",
+    description: "40 WhatsApp Business greeting message examples by industry, ready to copy, plus how to set one up and what to check when it isn't sending.",
+    tag: "Explainer",
+    icon: Hand,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 8,
+  },
   {
     href: "/blog/what-is-a-whatsapp-chatbot",
     title: "What Is a WhatsApp Chatbot? How It Works, Examples & Cost (2026)",

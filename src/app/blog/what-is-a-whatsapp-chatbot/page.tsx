@@ -77,7 +77,7 @@ const sections = [
       <h3>Where the chatbot plugs in: API or linked device</h3>
       <p>Step 2 hides the biggest choice you’ll make. There are two ways to connect software to a WhatsApp number:</p>
       <Comparison caption="The two ways to connect a chatbot to a WhatsApp number" columns={["WhatsApp Business API", "Linked device (QR code)"]} rows={routes} />
-      <p>The API is Meta’s official route and the right one for broadcasts at scale. The linked-device route is faster and has no Meta fees, which suits businesses whose WhatsApp is mostly customers asking questions. The full trade-off is in <Link href="/blog/whatsapp-business-app-vs-api">WhatsApp Business app vs API</Link>.</p>
+      <p>The API is Meta’s official route and the right one for broadcasts at scale. The linked-device route is faster and has no Meta fees, which suits businesses whose WhatsApp is mostly customers asking questions. The full trade-off is in <Link href="/blog/whatsapp-business-app-vs-api">WhatsApp Business app vs API</Link>. For voice calls, Meta’s official route is the <Link href="/blog/whatsapp-business-calling-api">WhatsApp Business Calling API</Link>, and the WhatsApp Business app now has an AI agent of its own, <Link href="/blog/whatsapp-business-ai-agent">Meta Business Agent</Link>.</p>
     </>,
   },
   {
@@ -89,9 +89,9 @@ const sections = [
       <p>Stock, sizes, delivery areas and times, cash on delivery, and returns, which make up most of a store’s WhatsApp. A good store bot answers these from the catalogue and policies, and leaves refunds and complaints to a person.</p>
       <blockquote>“Is the vitamin C serum good for oily skin, and can I pay on delivery?” → “Yes, it’s oil-free and suits oily skin. Cash on delivery is available on orders up to ₹5,000.”</blockquote>
       <h3>Clinic or dental practice</h3>
-      <p>Opening hours, consultation fees, which doctor sees what, and how to prepare for a visit. The bot can collect booking requests; confirming a slot automatically needs a connection to your booking system.</p>
+      <p>Opening hours, consultation fees, which doctor sees what, and how to prepare for a visit. The bot can collect booking requests; confirming a slot automatically needs a connection to your booking system. <Link href="/blog/whatsapp-appointment-booking">WhatsApp appointment booking</Link> shows both setups.</p>
       <h3>Restaurant</h3>
-      <p>Menu questions, vegetarian and allergy options, delivery radius, and table requests, answered from the menu you upload, at the hours people actually ask: late evening.</p>
+      <p>Menu questions, vegetarian and allergy options, delivery radius, and table requests, answered from the menu you upload, at the hours people actually ask: late evening. A bot can take the order itself, too: see <Link href="/blog/whatsapp-food-ordering-system">WhatsApp food ordering</Link>.</p>
       <h3>Real estate</h3>
       <p>Answers about listings, price, location, and amenities, plus a few qualifying questions (budget, area, move-in date) before an agent calls. See <Link href="/ai-calling-agent-for-real-estate">AI for real estate</Link>.</p>
       <h3>Coaching and education</h3>
@@ -151,7 +151,7 @@ const sections = [
         <li>Customers <strong>buy from whoever replies first</strong>, so slow replies cost sales.</li>
         <li>You get questions in <strong>more than one language</strong>.</li>
       </ul>
-      <p>If you get a handful of messages a day and each one is a custom quote, the free <Link href="/whatsapp-auto-reply">away message in WhatsApp Business</Link> may be all you need for now.</p>
+      <p>If you get a handful of messages a day and each one is a custom quote, the free <Link href="/whatsapp-auto-reply">away message in WhatsApp Business</Link> and a good <Link href="/blog/whatsapp-business-greeting-message">greeting message</Link> may be all you need for now.</p>
       <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a linked device. Use the chatbot to answer people who message you, never to message people who didn’t: WhatsApp restricts numbers that send bulk or unwanted messages.</Note>
     </>,
   },
