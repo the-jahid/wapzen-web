@@ -175,6 +175,40 @@ How the Italian blog is wired:
   - The ChatGPT timeline is still moving: Meta has appealed, and the EU case is open.
   - Italian outlets disagree on whether the +39 exemption kept ChatGPT working from January to July. The post says what the July coverage reported.
 
+## Mexico and Brazil blogs (Oct 28, eighth harvest)
+
+[`seo-blog-latam-research.mjs`](seo-blog-latam-research.mjs) `mx|br` scores 11 clusters per market. It uses Google and YouTube (`hl=es-419&gl=mx` or `hl=pt-BR&gl=br`, `ie/oe=utf-8`) and DuckDuckGo (`kl=mx-es`, `kl=br-pt`). The SERP check used DuckDuckGo's HTML results by region, but they rate-limit after about two queries, so the rest used web search. Topics whose results are held by big brands were dropped. That ruled out Brazil's "como vender pelo whatsapp", where Stone, SumUp, Mercado Pago and PagBank rank.
+
+| Market | Cluster | Strongest phrases (score, sources) | Post |
+| --- | --- | --- | --- |
+| Mexico | Chatbot | chatbot para whatsapp business 34 (3/3), chatbot whatsapp business gratis 31, bot de whatsapp 30, chatbot con ia para whatsapp 30 | `/es-mx/blog/chatbot-para-whatsapp-business` (SERP: sendpulse, respond.io, kommo; no big sites) |
+| Mexico | Selling | cómo vender por whatsapp business 44 (3/3), cómo vender por whatsapp 41, catálogo… 30, pedidos por whatsapp 30, tienda en whatsapp 30 | `/es-mx/blog/como-vender-por-whatsapp` |
+| Mexico | Bookings | agendar citas por whatsapp 39 (3/3), …business 37, agenda whatsapp business 30, recordatorio de citas por whatsapp gratis 28 | `/es-mx/blog/agendar-citas-por-whatsapp` (SERP: small booking apps) |
+| Mexico | Cost | whatsapp business es gratis 30 (3/3), …tiene costo 30, whatsapp business api costos 30, cuánto cuesta… 26 | `/es-mx/blog/whatsapp-business-precio` |
+| Mexico | Messages | mensaje de bienvenida / de ausencia / respuestas rápidas / mensajes automáticos whatsapp business 30 each (3/3) | `/es-mx/blog/mensajes-automaticos-whatsapp-business` |
+| Mexico | Not built | chatgpt en whatsapp gratis 30 (it doesn't work in Mexico since 15 Jan 2026), alternativas a manychat 30, leadsales precios 30, conmutador virtual 30 (a phone PBX, not ours) | |
+| Brazil | Greeting | mensagem de saudação whatsapp business 47 (3/3), mensagem automática / de ausência… 30, respostas rápidas 29 | `/pt-br/blog/mensagem-de-saudacao-whatsapp-business` |
+| Brazil | Is it paid | whatsapp business é pago ou gratuito 36 (3/3), …é pago 33, …pago 30, preço mensagem whatsapp api oficial 29 | `/pt-br/blog/whatsapp-business-e-pago` |
+| Brazil | Bot | como criar um robô no whatsapp 30 (3/3), como fazer chatbot… 30, bot whatsapp 30, robô para whatsapp gratuito 29 | `/pt-br/blog/como-criar-robo-whatsapp` |
+| Brazil | Scheduling | agendamento pelo whatsapp 30 (3/3), agenda whatsapp 30, agenda whatsapp business 26 | `/pt-br/blog/agendamento-pelo-whatsapp` (SERP: SleekFlow, WATI, AgendaPro) |
+| Brazil | App vs normal | diferença entre whatsapp e whatsapp business 30, …ou normal 30, como usar… no pc 24, …em dois celulares 22 | `/pt-br/blog/diferenca-whatsapp-e-whatsapp-business` |
+| Brazil | Not built | api whatsapp não oficial / z-api / evolution api 30 each (honesty risk: Wapzen is a linked device too), whatsapp banido 30, botconversa preço 27, disparo em massa 30 (broadcasts) | |
+
+How these blogs are wired:
+- Mexico is a new locale, `es-MX`, at `/es-mx`, with only a blog. Its footer lists Spain's Spanish pages through `locales["es-MX"].fallback` and `solutionsFor()`. Spain's label became "Español (España)".
+- Brazil's blog is `/pt-br/blog`, beside the existing pt-BR marketing pages.
+- `components/blog/LocaleBlogIndex.tsx` renders every non-English blog index (/it, /pt-br, /es-mx). The sitemap lists one index per locale that has `ui.blog`.
+- hreflang clusters now span up to four languages, e.g. /blog/whatsapp-business-greeting-message ↔ it, es-MX and pt-BR.
+- Mexican Spanish copy uses celular, lada, CLABE/SPEI, OXXO, 911 and "Configuración" for the iPhone settings tab. Brazil uses Pix, boleto, LGPD, SAMU 192 and "Ferramentas comerciais".
+- Official-API provider lists name only vendors known to be official BSPs. Mexico: Kommo, ManyChat, Botmaker, Treble, WATI. Brazil: Blip, Zenvia, Umbler Talk. Leadsales, BotConversa and Digisac were left out because it is unclear whether they use the official API.
+
+Facts that age:
+- Meta's Mexico card from 1 Oct 2026 is published in USD and MXN. Marketing is US$0.0397 / MXN 0.7298, up from US$0.0305. Utility, authentication and service are US$0.0085 / MXN 0.1565.
+- Brazil's BRL card: marketing R$ 0,3217; utility, authentication and service R$ 0,035.
+- Brazil's paid "transmissão comercial" in the Business app costs R$ 0,3217 per delivered message. The free allowance isn't published. The common broadcast list (256 contacts, saved numbers only) is still free.
+- Meta One launched 15 Sep 2026. Business plans: Essencial R$ 59, Avançado R$ 199, Expert R$ 599, Máximo R$ 1.999. These come from Meta's announcement.
+- ChatGPT on WhatsApp: off in Mexico. In Brazil it is unclear (CADE dispute, Meta charges AI providers per message), so no Brazilian ChatGPT post was written.
+
 ## What the landing page now targets
 
 - **Title:** `Free WhatsApp AI Chatbot & AI Calling Agent for Business | Wapzen` (65 chars; Google may cut the brand, and the keywords come first).

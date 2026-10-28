@@ -109,3 +109,21 @@ The Wapzen dashboard itself is in English.
 - [Chatbot WhatsApp Business](/it/blog/chatbot-whatsapp-business): message types (fixed, menu, AI), how a reply is produced, three ways to build a bot (API platforms such as Spoki and Callbell, n8n, AI by QR code), examples for Italian sectors, AI Act and GDPR notes. English version: /blog/what-is-a-whatsapp-chatbot.
 - [Messaggi automatici WhatsApp Business](/it/blog/messaggi-automatici-whatsapp-business): 40 Italian greeting, away and quick reply examples by sector, setup steps, and why automatic messages don't send. English version: /blog/whatsapp-business-greeting-message.
 - [ChatGPT su WhatsApp](/it/blog/chatgpt-whatsapp): 1-800-ChatGPT back in Italy since mid-July 2026, how to use it, the AGCM and European Commission timeline, Meta AI (no full off switch in Italy), and AI on a business's own number. English version: /blog/chatgpt-on-whatsapp.
+
+## Blog in Mexican Spanish
+
+- [Blog (México)](/es-mx/blog): WhatsApp Business guides for businesses in Mexico.
+- [Chatbot para WhatsApp Business](/es-mx/blog/chatbot-para-whatsapp-business): fixed messages vs menu bots vs AI chatbots, three ways to build a bot (API platforms such as Kommo, ManyChat and Botmaker, n8n, AI by QR code), examples by business type. English version: /blog/what-is-a-whatsapp-chatbot.
+- [Cómo vender por WhatsApp](/es-mx/blog/como-vender-por-whatsapp): profile, catalog and cart, labels by sales stage, collecting payment in Mexico (SPEI transfer, payment links, cash at stores), follow-up without spam, AI replies.
+- [Agendar citas por WhatsApp](/es-mx/blog/agendar-citas-por-whatsapp): booking by hand, by booking link, or with an AI agent, and three ways to send reminders (API templates at US$0.0085 / MXN 0.1565). English version: /blog/whatsapp-appointment-booking.
+- [¿WhatsApp Business tiene costo?](/es-mx/blog/whatsapp-business-precio): the free app vs the paid API, Meta's Mexico rates from 1 October 2026 (marketing US$0.0397 / MXN 0.7298; utility, authentication and service US$0.0085 / MXN 0.1565, service free for the first 1,000 a month per number) and three monthly bills. English version: /blog/whatsapp-business-api-pricing.
+- [Mensajes automáticos de WhatsApp Business](/es-mx/blog/mensajes-automaticos-whatsapp-business): 40 welcome, away and quick reply examples in Mexican Spanish, setup steps, and why automatic messages don't send. English version: /blog/whatsapp-business-greeting-message.
+
+## Blog in Brazilian Portuguese
+
+- [Blog (Brasil)](/pt-br/blog): WhatsApp Business guides for Brazilian businesses.
+- [Mensagem de saudação no WhatsApp Business](/pt-br/blog/mensagem-de-saudacao-whatsapp-business): 40 greeting, away and quick reply examples by segment, setup steps, and why greeting messages don't send. English version: /blog/whatsapp-business-greeting-message.
+- [WhatsApp Business é pago?](/pt-br/blog/whatsapp-business-e-pago): what is free and what is paid in Brazil in 2026: the app, business broadcasts (R$ 0,3217 per delivered message), Meta One plans (from R$ 59 a month) and the official API (marketing R$ 0,3217; utility, authentication and service R$ 0,035). English version: /blog/whatsapp-business-api-pricing.
+- [Como criar um robô no WhatsApp](/pt-br/blog/como-criar-robo-whatsapp): three ways to build a WhatsApp bot (API platforms such as Blip, Zenvia and Umbler Talk, n8n, AI by QR code), examples by segment, LGPD notes. English version: /blog/what-is-a-whatsapp-chatbot.
+- [Agendamento pelo WhatsApp](/pt-br/blog/agendamento-pelo-whatsapp): booking by hand, by booking link, or with an AI agent, and three ways to send appointment reminders (API templates at R$ 0,035). English version: /blog/whatsapp-appointment-booking.
+- [WhatsApp ou WhatsApp Business](/pt-br/blog/diferenca-whatsapp-e-whatsapp-business): the differences, migrating without losing chats, using one account on two phones and a PC, landlines, and when the official API makes sense.

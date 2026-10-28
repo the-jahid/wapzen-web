@@ -164,11 +164,19 @@ export const marketingPages: MarketingPageEntry[] = [
 
 export const pagesIn = (locale: Locale) => marketingPages.filter((page) => (page.locale ?? "en") === locale);
 
+/** The pages to list for a language: its own, or its fallback language's when it has none. */
+export function solutionsFor(locale: Locale) {
+  const own = pagesIn(locale);
+  const fallback = locales[locale].fallback;
+  return own.length === 0 && fallback ? pagesIn(fallback) : own;
+}
+
 /** Each language's entry point, for the footer's language links. */
 export const localeHome: Record<Locale, string> = {
   en: "/",
   "pt-BR": "/pt-br/chatbot-whatsapp-com-ia",
   es: "/es/chatbot-whatsapp-gratis",
+  "es-MX": "/es-mx/blog",
   it: "/it/chatbot-whatsapp-gratis",
 };
 

@@ -1,10 +1,10 @@
 // Languages of the public marketing pages. English pages live at the root;
-// the others under /pt-br, /es and /it (see app/<prefix>/layout.tsx). Each
+// the others under /pt-br, /es, /es-mx and /it (see app/<prefix>/layout.tsx). Each
 // localized page names its English equivalent in lib/marketingPages.ts (blog
 // posts in lib/blogPosts.ts), which drives the hreflang alternates. The
 // dashboard itself is English-only.
 
-export type Locale = "en" | "pt-BR" | "es" | "it";
+export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "it";
 
 /** The blog index and the fixed text of its posts, in one language. */
 export type BlogUi = {
@@ -67,7 +67,15 @@ type Ui = {
   blog?: BlogUi;
 };
 
-export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLocale: string; label: string; ui: Ui }> = {
+export const locales: Record<Locale, {
+  hreflang: string;
+  htmlLang: string;
+  ogLocale: string;
+  label: string;
+  /** A language whose marketing pages stand in where this one has none (es-MX uses Spain's). */
+  fallback?: Locale;
+  ui: Ui;
+}> = {
   en: {
     hreflang: "en",
     htmlLang: "en",
@@ -166,13 +174,33 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
         backToTop: "Voltar ao topo ↑",
         languages: "Idiomas",
       },
+      blog: {
+        href: "/pt-br/blog",
+        label: "Blog",
+        dateLocale: "pt-BR",
+        author: "Equipe Wapzen",
+        updated: "Atualizado em",
+        minRead: (minutes) => `${minutes} min de leitura`,
+        tags: { Comparison: "Comparação", Alternatives: "Alternativas", Guide: "Guia", Explainer: "Entenda" },
+        onThisPage: "Nesta página",
+        faqTitle: "Perguntas frequentes",
+        sourcesTitle: "Fontes",
+        guideTitle: "Sobre este guia",
+        guideNote: (date) => `Os passos e as telas vêm do painel da Wapzen em ${date}, com dados de demonstração: empresas, pessoas e números de telefone são fictícios.`,
+        explainerNote: (date) => `Os fatos e preços deste artigo vêm das fontes abaixo, conferidas em ${date}. A Meta e outros fornecedores mudam preços e regras com frequência: confirme na fonte antes de tomar decisões.`,
+        comparisonNote: (date) => `Preços e recursos vêm das páginas de cada fornecedor, conferidas em ${date}. Eles mudam com frequência: confirme no site do fornecedor antes de contratar.`,
+        keepReading: ["Continue lendo.", "Mais do blog."],
+        readPost: "Ler artigo",
+        learnMore: "Saiba mais",
+        choose: (name) => `Escolha ${name} se…`,
+      },
     },
   },
   es: {
     hreflang: "es",
     htmlLang: "es",
     ogLocale: "es_ES",
-    label: "Español",
+    label: "Español (España)",
     ui: {
       nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
       login: "Entrar",
@@ -205,6 +233,67 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
         rights: "Todos los derechos reservados.",
         backToTop: "Volver arriba ↑",
         languages: "Idiomas",
+      },
+    },
+  },
+  "es-MX": {
+    hreflang: "es-MX",
+    htmlLang: "es-MX",
+    ogLocale: "es_MX",
+    label: "Español (México)",
+    fallback: "es",
+    ui: {
+      nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
+      login: "Iniciar sesión",
+      dashboard: "Panel",
+      home: "Inicio",
+      breadcrumb: "Ruta de navegación",
+      startFree: "Empieza gratis",
+      explore: ["Sigue explorando.", "Wapzen, gratis."],
+      readMore: "Leer más",
+      openTools: "Abrir herramientas",
+      toolsTitle: "Herramientas gratis para WhatsApp",
+      toolsBody: "Generadores de enlaces y códigos QR, ladas internacionales y más. En inglés, sin registro.",
+      copy: "Copiar",
+      copied: "Copiado",
+      footer: {
+        tagline: ["Chatbots y agentes de voz con IA para WhatsApp.", "Con la información de tu negocio."],
+        product: "PRODUCTO",
+        features: "Funciones",
+        chatbot: "Chatbot con IA",
+        voiceAgent: "Agente de voz con IA",
+        useCases: "Casos de uso",
+        industries: "Industrias",
+        howItWorks: "Cómo funciona",
+        faq: "Preguntas frecuentes",
+        freeTools: "HERRAMIENTAS GRATIS",
+        allTools: "Todas las herramientas",
+        solutions: "SOLUCIONES",
+        connect: "HABLEMOS",
+        sayHello: "Escríbenos",
+        rights: "Todos los derechos reservados.",
+        backToTop: "Volver arriba ↑",
+        languages: "Idiomas",
+      },
+      blog: {
+        href: "/es-mx/blog",
+        label: "Blog",
+        dateLocale: "es-MX",
+        author: "Equipo Wapzen",
+        updated: "Actualizado el",
+        minRead: (minutes) => `${minutes} min de lectura`,
+        tags: { Comparison: "Comparativa", Alternatives: "Alternativas", Guide: "Guía", Explainer: "A fondo" },
+        onThisPage: "En esta página",
+        faqTitle: "Preguntas frecuentes",
+        sourcesTitle: "Fuentes",
+        guideTitle: "Sobre esta guía",
+        guideNote: (date) => `Los pasos y las pantallas vienen del panel de Wapzen del ${date}, con datos de demostración: negocios, personas y números de teléfono son ficticios.`,
+        explainerNote: (date) => `Los datos y precios de este artículo vienen de las fuentes de abajo, revisadas el ${date}. Meta y otros proveedores cambian sus precios y reglas seguido: confírmalos en la fuente antes de tomar decisiones.`,
+        comparisonNote: (date) => `Precios y funciones vienen de la página de cada proveedor, revisadas el ${date}. Cambian seguido: confírmalos en el sitio del proveedor antes de contratar.`,
+        keepReading: ["Sigue leyendo.", "Más del blog."],
+        readPost: "Leer artículo",
+        learnMore: "Conoce más",
+        choose: (name) => `Elige ${name} si…`,
       },
     },
   },
