@@ -152,6 +152,29 @@ Notes on these pages:
 - **The ordering and booking posts describe the product as it is:** chat agents don't see the customer's number (so the agent asks for one), aren't told today's date (so the availability API should return it), and get the first 3,000 characters of a tool's response. If any of that changes in the server, update both posts.
 - **Meta Business Agent is moving fast.** The app's paid tiers weren't published, and the turn-off steps come from a third-party guide. Recheck both, and the Calling API's permission limits and country list, when Meta's quarterly changes land.
 
+## Italian blog (Oct 28, seventh harvest)
+
+[`seo-blog-it-research.mjs`](seo-blog-it-research.mjs) scores 11 Italian clusters against Google and YouTube (`hl=it&gl=it`, `ie/oe=utf-8`) and DuckDuckGo (`kl=it-it`). Bing is left out because it ignores the market. With three sources the scores run lower than in the English runs, so compare Italian clusters with each other, not with the English tables.
+
+| Cluster | Strongest phrases (score, sources) | Post |
+| --- | --- | --- |
+| Costs | whatsapp business costo 30 (3/3), …costo italia 25, costo whatsapp business api 25, quanto costa whatsapp business api 20, whatsapp business è a pagamento 20 | `/it/blog/whatsapp-business-costo` (hreflang: API pricing post) |
+| App vs normal | come usare whatsapp business 42, differenza tra whatsapp e whatsapp business 30 (3/3), whatsapp business vs whatsapp 30 (3/3), …a cosa serve 25, …o normale 20 | `/it/blog/differenza-whatsapp-whatsapp-business` (no English twin) |
+| Chatbot | chatbot whatsapp business 56 (3/3), bot whatsapp 30 (3/3), chatbot whatsapp business gratis 29 (3/3), come creare un bot su whatsapp 20 | `/it/blog/chatbot-whatsapp-business` (hreflang: what-is post) |
+| Automatic messages | messaggi automatici whatsapp business 39, programmare messaggi… 31, messaggio di benvenuto… 29, risposte rapide… 20, esempio messaggio di benvenuto… 19 | `/it/blog/messaggi-automatici-whatsapp-business` (hreflang: greeting post) |
+| ChatGPT / Meta AI | chatgpt whatsapp numero 37, chatgpt whatsapp 30 (3/3), intelligenza artificiale whatsapp 30, meta ai whatsapp 30, come togliere meta ai da whatsapp 30 (3/3) | `/it/blog/chatgpt-whatsapp` (hreflang: ChatGPT post) |
+| Competitors | spoki whatsapp 39 (3/3), spoki 30, callbell 30, wati whatsapp 30, spoki prezzi 28 | Not built. A Spoki/Callbell comparison is the next Italian candidate; check their price pages first |
+| Bans | whatsapp bannato 30 (3/3), account whatsapp bloccato 29 (3/3), …per spam 20 | Not built |
+| Broadcast | lista broadcast whatsapp 30 (3/3), …come funziona 27 (3/3), whatsapp marketing 30 | Not built: broadcasts need the API |
+
+How the Italian blog is wired:
+- Posts live in `src/app/it/blog/<slug>` and are registered in `src/lib/blogPosts.ts` with `locale: "it"`, plus `alternateOf` when an English post covers the same topic. `hreflangLinks()` now also reads blog posts and each language's blog index. The English twins list the Italian page automatically, and `/blog` and `/it/blog` are alternates.
+- The fixed post text (byline, dates, FAQ heading, sources note, "keep reading", tags) comes from `ui.blog` in `src/lib/locales.ts`. A language gets a blog link in the nav and footer only when it has `ui.blog`. `/blog` shows English posts only (`postsIn("en")`). `/it/blog` is a plain grid, because five posts are too few for the bento.
+- Facts that age:
+  - Meta's EUR card for Italy changes every quarter. From 1 October 2026 it is €0.0658 for marketing and €0.0248 for utility, authentication and service. Two reprints agree; Meta's page wasn't readable as a table.
+  - The ChatGPT timeline is still moving: Meta has appealed, and the EU case is open.
+  - Italian outlets disagree on whether the +39 exemption kept ChatGPT working from January to July. The post says what the July coverage reported.
+
 ## What the landing page now targets
 
 - **Title:** `Free WhatsApp AI Chatbot & AI Calling Agent for Business | Wapzen` (65 chars; Google may cut the brand, and the keywords come first).

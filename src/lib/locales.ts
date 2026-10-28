@@ -1,13 +1,37 @@
 // Languages of the public marketing pages. English pages live at the root;
 // the others under /pt-br, /es and /it (see app/<prefix>/layout.tsx). Each
-// localized page names its English equivalent in lib/marketingPages.ts, which
-// drives the hreflang alternates. The dashboard itself is English-only.
+// localized page names its English equivalent in lib/marketingPages.ts (blog
+// posts in lib/blogPosts.ts), which drives the hreflang alternates. The
+// dashboard itself is English-only.
 
 export type Locale = "en" | "pt-BR" | "es" | "it";
 
+/** The blog index and the fixed text of its posts, in one language. */
+export type BlogUi = {
+  href: string;
+  label: string;
+  /** BCP 47 locale for dates ("28 October 2026", "28 ottobre 2026"). */
+  dateLocale: string;
+  author: string;
+  updated: string;
+  minRead: (minutes: number) => string;
+  tags: Record<"Comparison" | "Alternatives" | "Guide" | "Explainer", string>;
+  onThisPage: string;
+  faqTitle: string;
+  sourcesTitle: string;
+  guideTitle: string;
+  /** The note above the sources, by post kind, with the date the facts were checked. */
+  guideNote: (date: string) => string;
+  explainerNote: (date: string) => string;
+  comparisonNote: (date: string) => string;
+  keepReading: [string, string];
+  readPost: string;
+  learnMore: string;
+  choose: (name: string) => string;
+};
+
 type Ui = {
-  /** `blog` is set only where the blog has posts in that language (English). */
-  nav: { features: string; pricing: string; tools: string; faq: string; faqHref: string; blog?: string };
+  nav: { features: string; pricing: string; tools: string; faq: string; faqHref: string };
   login: string;
   dashboard: string;
   home: string;
@@ -30,7 +54,6 @@ type Ui = {
     industries: string;
     howItWorks: string;
     faq: string;
-    blog?: string;
     freeTools: string;
     allTools: string;
     solutions: string;
@@ -40,6 +63,8 @@ type Ui = {
     backToTop: string;
     languages: string;
   };
+  /** Set only where the blog has posts in that language (English, Italian). */
+  blog?: BlogUi;
 };
 
 export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLocale: string; label: string; ui: Ui }> = {
@@ -49,7 +74,7 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
     ogLocale: "en_US",
     label: "English",
     ui: {
-      nav: { features: "Features", pricing: "Pricing", tools: "Free tools", faq: "FAQ", faqHref: "/#faq", blog: "Blog" },
+      nav: { features: "Features", pricing: "Pricing", tools: "Free tools", faq: "FAQ", faqHref: "/#faq" },
       login: "Log in",
       dashboard: "Dashboard",
       home: "Home",
@@ -72,7 +97,6 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
         industries: "Industries",
         howItWorks: "How it works",
         faq: "FAQ",
-        blog: "Blog",
         freeTools: "FREE TOOLS",
         allTools: "All free tools",
         solutions: "SOLUTIONS",
@@ -81,6 +105,26 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
         rights: "All rights reserved.",
         backToTop: "Back to top ↑",
         languages: "Languages",
+      },
+      blog: {
+        href: "/blog",
+        label: "Blog",
+        dateLocale: "en-GB",
+        author: "Wapzen team",
+        updated: "Updated",
+        minRead: (minutes) => `${minutes} min read`,
+        tags: { Comparison: "Comparison", Alternatives: "Alternatives", Guide: "Guide", Explainer: "Explainer" },
+        onThisPage: "On this page",
+        faqTitle: "Frequently asked questions",
+        sourcesTitle: "Sources",
+        guideTitle: "About this guide",
+        guideNote: (date) => `The steps and screenshots come from Wapzen’s dashboard on ${date}, filled with demo data: the businesses, people, and phone numbers in them are made up.`,
+        explainerNote: (date) => `The facts and prices in this post come from the sources below, checked on ${date}. Meta and other vendors change their prices and policies often, so confirm them at the source before you rely on them. Dashboard screenshots, where shown, use demo data.`,
+        comparisonNote: (date) => `Prices and features come from each vendor’s own pages, checked on ${date}. They change often, so confirm them on the vendor’s site before you buy.`,
+        keepReading: ["Keep reading.", "More from the blog."],
+        readPost: "Read post",
+        learnMore: "Learn more",
+        choose: (name) => `Choose ${name} if…`,
       },
     },
   },
@@ -201,6 +245,26 @@ export const locales: Record<Locale, { hreflang: string; htmlLang: string; ogLoc
         rights: "Tutti i diritti riservati.",
         backToTop: "Torna su ↑",
         languages: "Lingue",
+      },
+      blog: {
+        href: "/it/blog",
+        label: "Blog",
+        dateLocale: "it-IT",
+        author: "Team Wapzen",
+        updated: "Aggiornato il",
+        minRead: (minutes) => `${minutes} min di lettura`,
+        tags: { Comparison: "Confronto", Alternatives: "Alternative", Guide: "Guida", Explainer: "Approfondimento" },
+        onThisPage: "In questa pagina",
+        faqTitle: "Domande frequenti",
+        sourcesTitle: "Fonti",
+        guideTitle: "Informazioni su questa guida",
+        guideNote: (date) => `I passaggi e le schermate vengono dalla dashboard di Wapzen del ${date}, con dati dimostrativi: attività, persone e numeri di telefono sono inventati.`,
+        explainerNote: (date) => `Fatti e prezzi di questo articolo vengono dalle fonti qui sotto, verificate il ${date}. Meta e gli altri fornitori cambiano spesso prezzi e regole: controllali alla fonte prima di basarti su di essi.`,
+        comparisonNote: (date) => `Prezzi e funzioni vengono dalle pagine di ciascun fornitore, verificate il ${date}. Cambiano spesso: controllali sul sito del fornitore prima di acquistare.`,
+        keepReading: ["Continua a leggere.", "Altri articoli dal blog."],
+        readPost: "Leggi l’articolo",
+        learnMore: "Scopri di più",
+        choose: (name) => `Scegli ${name} se…`,
       },
     },
   },

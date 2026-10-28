@@ -5,7 +5,7 @@ import styles from "./Blog.module.css";
 // The post's table of contents. Marks the section being read: the last one
 // whose top has scrolled above 35% of the viewport.
 
-export function BlogToc({ items }: { items: Array<{ id: string; title: string }> }) {
+export function BlogToc({ items, label }: { items: Array<{ id: string; title: string }>; label: string }) {
   const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,8 +31,8 @@ export function BlogToc({ items }: { items: Array<{ id: string; title: string }>
     };
   }, [items]);
 
-  return <nav aria-label="On this page">
-    <span>On this page</span>
+  return <nav aria-label={label}>
+    <span>{label}</span>
     <ol>{items.map((item, i) => <li key={item.id}>
       <a href={`#${item.id}`} aria-current={item.id === active ? "location" : undefined}>
         <span className={styles.tocIndex} aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>

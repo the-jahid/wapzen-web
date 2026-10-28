@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Check, Clock, Plus, X } from "lucide-react";
 import { siteConfig } from "@/lib/site";
-import { blogPost, blogPosts, formatPostDate, type BlogPostEntry } from "@/lib/blogPosts";
+import { blogPost, blogUi, formatPostDate, postsIn, type BlogPostEntry } from "@/lib/blogPosts";
+import { locales, type Locale } from "@/lib/locales";
 import { marketingPages } from "@/lib/marketingPages";
 import { GetStarted } from "@/components/landing/SiteChrome";
 import { Section } from "@/components/marketing/MarketingPage";
@@ -13,10 +14,11 @@ import marketing from "@/components/marketing/Marketing.module.css";
 import styles from "./Blog.module.css";
 import { BlogToc } from "./BlogToc";
 
-// Skeleton for the posts in app/blog: hero with byline, a quick-answer box,
-// the post's sections with a table of contents built from them, FAQ, sources,
-// "keep reading" links and a CTA, plus BlogPosting/FAQPage structured data.
-// Building blocks for section bodies are exported below.
+// Skeleton for the posts in app/blog and app/it/blog: hero with byline, a
+// quick-answer box, the post's sections with a table of contents built from
+// them, FAQ, sources, "keep reading" links and a CTA, plus BlogPosting/FAQPage
+// structured data. The fixed text follows the post's registry locale (BlogUi
+// in lib/locales.ts). Building blocks for section bodies are exported below.
 
 type Faq = { q: string; a: string };
 type PostSection = { id: string; title: string; body: ReactNode };
@@ -30,7 +32,7 @@ type BlogPostProps = {
   faq: Faq[];
   /** Where the post's facts come from; listed with the date they were checked. */
   sources?: Array<{ label: string; href: string }>;
-  /** Two posts for "keep reading"; defaults to the first two others in the registry. */
+  /** Two posts for "keep reading"; defaults to the first two others in the post's language. */
   related?: [string, string];
   /** A marketing page shown beside the other posts in "keep reading". */
   product: string;
@@ -39,6 +41,9 @@ type BlogPostProps = {
 
 function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
   const url = `${siteConfig.url}${post.href}`;
+  const locale = post.locale ?? "en";
+  const blog = `${siteConfig.url}${blogUi(locale).href}`;
+  const inLanguage = locales[locale].hreflang;
   const organization = {
     "@type": "Organization",
     "@id": `${siteConfig.url}/#organization`,
@@ -55,7 +60,7 @@ function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
         url,
         name: post.title,
         description: post.description,
-        inLanguage: "en",
+        inLanguage,
         isPartOf: { "@id": `${siteConfig.url}/#website` },
         breadcrumb: { "@id": `${url}#breadcrumb` },
       },
@@ -66,11 +71,11 @@ function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
         description: post.description,
         datePublished: post.published,
         dateModified: post.updated,
-        articleSection: post.tag,
-        inLanguage: "en",
+        articleSection: blogUi(locale).tags[post.tag],
+        inLanguage,
         image: `${siteConfig.url}${post.image ?? "/opengraph-image"}`,
         mainEntityOfPage: { "@id": `${url}#webpage` },
-        isPartOf: { "@id": `${siteConfig.url}/blog#blog` },
+        isPartOf: { "@id": `${blog}#blog` },
         author: organization,
         publisher: organization,
       },
@@ -79,7 +84,7 @@ function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
         "@id": `${url}#breadcrumb`,
         itemListElement: [
           { "@type": "ListItem", position: 1, name: siteConfig.name, item: siteConfig.url },
-          { "@type": "ListItem", position: 2, name: "Blog", item: `${siteConfig.url}/blog` },
+          { "@type": "ListItem", position: 2, name: blogUi(locale).label, item: blog },
           { "@type": "ListItem", position: 3, name: post.name, item: url },
         ],
       },
@@ -93,25 +98,30 @@ function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
   };
 }
 
-/** Date, reading time and author line, shared by posts and the /blog index. */
+/** Date, reading time and author line, in the post's language. */
 export function PostMeta({ post }: { post: BlogPostEntry }) {
+  const t = blogUi(post.locale);
   return <p className={styles.meta}>
-    <span>Wapzen team</span>
-    <span><CalendarDays size={14} />Updated <time dateTime={post.updated}>{formatPostDate(post.updated)}</time></span>
-    <span><Clock size={14} />{post.readingMinutes} min read</span>
+    <span>{t.author}</span>
+    <span><CalendarDays size={14} />{t.updated} <time dateTime={post.updated}>{formatPostDate(post.updated, t.dateLocale)}</time></span>
+    <span><Clock size={14} />{t.minRead(post.readingMinutes)}</span>
   </p>;
 }
 
 export function BlogPost({ href, heading, lead, summary, sections, faq, sources = [], related, product, cta }: BlogPostProps) {
   const post = blogPost(href);
-  const others = related ? related.map(blogPost) : blogPosts.filter((entry) => entry.href !== href).slice(0, 2);
+  const locale = post.locale ?? "en";
+  const { ui } = locales[locale];
+  const t = blogUi(locale);
+  const checked = formatPostDate(post.updated, t.dateLocale);
+  const others = related ? related.map(blogPost) : postsIn(locale).filter((entry) => entry.href !== href).slice(0, 2);
   const page = marketingPages.find((entry) => entry.href === product);
-  const toc = [...sections.map(({ id, title }) => ({ id, title })), { id: "faq", title: "FAQ" }];
+  const toc = [...sections.map(({ id, title }) => ({ id, title })), { id: "faq", title: ui.nav.faq }];
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(postJsonLd(post, faq)).replace(/</g, "\\u003c") }} />
     <header className={tools.hero}>
-      <nav className={tools.crumbs} aria-label="Breadcrumb"><Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/blog">Blog</Link><span aria-hidden="true">/</span><span aria-current="page">{post.name}</span></nav>
-      <span className={tools.eyebrow}><span />{post.tag}</span>
+      <nav className={tools.crumbs} aria-label={ui.breadcrumb}><Link href="/">{ui.home}</Link><span aria-hidden="true">/</span><Link href={t.href}>{t.label}</Link><span aria-hidden="true">/</span><span aria-current="page">{post.name}</span></nav>
+      <span className={tools.eyebrow}><span />{t.tags[post.tag]}</span>
       <h1 className={tools.title}>{heading}</h1>
       <p className={tools.lead}>{lead}</p>
       <PostMeta post={post} />
@@ -119,7 +129,7 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
 
     <div className={styles.layout}>
       <aside className={styles.toc}>
-        <BlogToc items={toc} />
+        <BlogToc items={toc} label={t.onThisPage} />
       </aside>
 
       <article className={styles.article}><TracingBeam className={styles.beam} railClassName={styles.beamRail}>
@@ -134,33 +144,29 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
         </section>)}
 
         <section id="faq" className={styles.block} aria-labelledby="faq-title">
-          <h2 id="faq-title" className={styles.heading}>Frequently asked questions</h2>
+          <h2 id="faq-title" className={styles.heading}>{t.faqTitle}</h2>
           <div className={tools.faqList}>{faq.map((item) => <details key={item.q} className={tools.faqItem}><summary>{item.q}<Plus size={18} /></summary><p>{item.a}</p></details>)}</div>
         </section>
 
         <footer className={styles.sources}>
-          <h2 className={styles.sourcesTitle}>{post.tag === "Guide" ? "About this guide" : "Sources"}</h2>
-          {post.tag === "Guide"
-            ? <p>The steps and screenshots come from Wapzen&rsquo;s dashboard on {formatPostDate(post.updated)}, filled with demo data: the businesses, people, and phone numbers in them are made up.</p>
-            : post.tag === "Explainer"
-              ? <p>The facts and prices in this post come from the sources below, checked on {formatPostDate(post.updated)}. Meta and other vendors change their prices and policies often, so confirm them at the source before you rely on them. Dashboard screenshots, where shown, use demo data.</p>
-              : <p>Prices and features come from each vendor&rsquo;s own pages, checked on {formatPostDate(post.updated)}. They change often, so confirm them on the vendor&rsquo;s site before you buy.</p>}
+          <h2 className={styles.sourcesTitle}>{post.tag === "Guide" ? t.guideTitle : t.sourcesTitle}</h2>
+          <p>{post.tag === "Guide" ? t.guideNote(checked) : post.tag === "Explainer" ? t.explainerNote(checked) : t.comparisonNote(checked)}</p>
           {sources.length > 0 && <ul>{sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="nofollow noopener noreferrer">{source.label}</a></li>)}</ul>}
         </footer>
       </TracingBeam></article>
     </div>
 
-    <Section id="keep-reading" heading={<>Keep reading.<br /><span>More from the blog.</span></>}>
+    <Section id="keep-reading" heading={<>{t.keepReading[0]}<br /><span>{t.keepReading[1]}</span></>}>
       <div className={tools.grid3}>
-        {others.map((entry) => <Link key={entry.href} href={entry.href} className={tools.toolTile}><span className={tools.cardIcon}><entry.icon size={20} /></span><h3 className={marketing.tileTitle}>{entry.name}</h3><p>{entry.description}</p><span>Read post<ArrowRight size={15} /></span></Link>)}
-        {page && <Link href={page.href} className={tools.toolTile}><span className={tools.cardIcon}><page.icon size={20} /></span><h3 className={marketing.tileTitle}>{page.name}</h3><p>{page.description}</p><span>Learn more<ArrowRight size={15} /></span></Link>}
+        {others.map((entry) => <Link key={entry.href} href={entry.href} className={tools.toolTile}><span className={tools.cardIcon}><entry.icon size={20} /></span><h3 className={marketing.tileTitle}>{entry.name}</h3><p>{entry.description}</p><span>{t.readPost}<ArrowRight size={15} /></span></Link>)}
+        {page && <Link href={page.href} className={tools.toolTile}><span className={tools.cardIcon}><page.icon size={20} /></span><h3 className={marketing.tileTitle}>{page.name}</h3><p>{page.description}</p><span>{t.learnMore}<ArrowRight size={15} /></span></Link>}
       </div>
     </Section>
 
     <section className={tools.cta} aria-labelledby="cta-title">
       <div className={tools.ctaInner}>
         <div><h2 id="cta-title">{cta.heading}</h2><p>{cta.body}</p></div>
-        <div><GetStarted label="Start free" /></div>
+        <div><GetStarted label={ui.startFree} /></div>
       </div>
     </section>
   </>;
@@ -211,9 +217,9 @@ export function ProsCons({ pros, cons }: { pros: string[]; cons: string[] }) {
 }
 
 /** "Choose X if…" cards; the card named `highlight` gets the brand accent. */
-export function Choose({ items, highlight = "Wapzen" }: { items: Array<{ name: string; points: string[] }>; highlight?: string }) {
+export function Choose({ items, highlight = "Wapzen", locale = "en" }: { items: Array<{ name: string; points: string[] }>; highlight?: string; locale?: Locale }) {
   return <div className={styles.choose}>{items.map((item) => <div key={item.name} className={styles.chooseCard} data-highlight={item.name === highlight || undefined}>
-    <h3 className={styles.chooseTitle}>Choose {item.name} if…</h3>
+    <h3 className={styles.chooseTitle}>{blogUi(locale).choose(item.name)}</h3>
     <ul>{item.points.map((point) => <li key={point}><Check size={15} />{point}</li>)}</ul>
   </div>)}</div>;
 }

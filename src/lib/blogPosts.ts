@@ -1,4 +1,5 @@
 import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, Coins, Columns3, GitCompareArrows, Hand, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, PhoneCall, QrCode, Scale, Sparkles, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
   href: string;
@@ -18,9 +19,14 @@ export type BlogPostEntry = {
   image?: string;
   /** An illustration for the post's card in the /blog bento, shown instead of `image`. */
   cover?: string;
+  /** Defaults to "en". Posts in other languages live under that language's blog (app/it/blog). */
+  locale?: Locale;
+  /** For a post in another language: the English post it covers (hreflang). */
+  alternateOf?: string;
 };
 
-// Blog posts in app/blog, newest first. Feeds the /blog index, the sitemap,
+// Blog posts in app/blog (English) and app/it/blog (Italian), newest first
+// within each language. Feeds each language's blog index, the sitemap,
 // each post's "keep reading" links and its metadata, so a new post only needs
 // a page plus an entry here. Comparison posts quote competitors' prices: keep
 // them in step with the vendors' pricing pages and update `updated` with them.
@@ -277,7 +283,82 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-10-25",
     readingMinutes: 6,
   },
+  // Italian, in app/it/blog (index /it/blog). Researched with
+  // docs/seo-blog-it-research.mjs; rates are Meta's EUR card for Italy.
+  {
+    href: "/it/blog/whatsapp-business-costo",
+    title: "Quanto costa WhatsApp Business? Prezzi 2026 di app e API in Italia",
+    name: "Quanto costa WhatsApp Business",
+    description: "WhatsApp Business è a pagamento? Cosa costa nel 2026: l'app gratuita, l'API con le tariffe Meta per l'Italia in euro dal 1° ottobre ed esempi di spesa mensile.",
+    tag: "Explainer",
+    icon: Coins,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 8,
+    locale: "it",
+    alternateOf: "/blog/whatsapp-business-api-pricing",
+  },
+  {
+    href: "/it/blog/differenza-whatsapp-whatsapp-business",
+    title: "Differenza tra WhatsApp e WhatsApp Business: quale scegliere (2026)",
+    name: "WhatsApp o WhatsApp Business",
+    description: "La differenza tra WhatsApp e WhatsApp Business: funzioni, costi, numero fisso, come passare all'app Business senza perdere le chat e quando serve l'API.",
+    tag: "Comparison",
+    icon: Layers,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 7,
+    locale: "it",
+  },
+  {
+    href: "/it/blog/chatbot-whatsapp-business",
+    title: "Chatbot WhatsApp Business: cos'è, come funziona e come crearlo gratis",
+    name: "Chatbot WhatsApp Business",
+    description: "Cos'è un chatbot per WhatsApp Business, i tre modi per creare un bot (API, n8n o AI sul tuo numero), quanto costa ed esempi per ristoranti, negozi e studi.",
+    tag: "Explainer",
+    icon: Bot,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 9,
+    locale: "it",
+    alternateOf: "/blog/what-is-a-whatsapp-chatbot",
+  },
+  {
+    href: "/it/blog/messaggi-automatici-whatsapp-business",
+    title: "Messaggi automatici WhatsApp Business: 40 esempi da copiare (2026)",
+    name: "Messaggi automatici WhatsApp Business",
+    description: "40 esempi di messaggi di benvenuto, messaggi di assenza e risposte rapide per WhatsApp Business, divisi per settore, più come impostarli e perché non partono.",
+    tag: "Explainer",
+    icon: Hand,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 9,
+    locale: "it",
+    alternateOf: "/blog/whatsapp-business-greeting-message",
+  },
+  {
+    href: "/it/blog/chatgpt-whatsapp",
+    title: "ChatGPT su WhatsApp in Italia (2026): numero e come usarlo",
+    name: "ChatGPT su WhatsApp",
+    description: "ChatGPT su WhatsApp funziona in Italia? Il numero ufficiale, come usarlo, perché era sparito a gennaio 2026, Meta AI e l'AI per il WhatsApp aziendale.",
+    tag: "Explainer",
+    icon: Sparkles,
+    published: "2026-10-28",
+    updated: "2026-10-28",
+    readingMinutes: 7,
+    locale: "it",
+    alternateOf: "/blog/chatgpt-on-whatsapp",
+  },
 ];
+
+export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);
+
+/** The blog strings for a post's language; only languages with a blog have them. */
+export function blogUi(locale: Locale = "en") {
+  const ui = locales[locale].ui.blog;
+  if (!ui) throw new Error(`No blog strings for locale ${locale}`);
+  return ui;
+}
 
 export function blogPost(href: string): BlogPostEntry {
   const post = blogPosts.find((entry) => entry.href === href);
@@ -285,8 +366,9 @@ export function blogPost(href: string): BlogPostEntry {
   return post;
 }
 
-/** "25 October 2026"; fixed locale and UTC so server and client agree. */
+// Fixed locale and UTC so server and client agree; dateLocale is a BlogUi's.
 /** "27 Oct", for cards. */
-export const formatShortDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+export const formatShortDate = (iso: string, dateLocale = "en-GB") => new Date(`${iso}T00:00:00Z`).toLocaleDateString(dateLocale, { day: "numeric", month: "short", timeZone: "UTC" });
 
-export const formatPostDate =(iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+/** "25 October 2026" or "25 ottobre 2026". */
+export const formatPostDate = (iso: string, dateLocale = "en-GB") => new Date(`${iso}T00:00:00Z`).toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });

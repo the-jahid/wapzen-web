@@ -100,3 +100,12 @@ The Wapzen dashboard itself is in English.
 - [Wapzen vs WATI](/blog/wapzen-vs-wati): pricing, AI chatbot, WhatsApp AI calls, setup, and when each fits; WATI suits broadcasts and team inboxes on the official Business API.
 - [7 best WATI alternatives](/blog/wati-alternatives): Wapzen, AiSensy, Interakt, respond.io, Gallabox, Periskope, and Twilio compared on price, Business API, AI agents, and calling.
 - [WATI vs AiSensy vs Interakt](/blog/wati-vs-aisensy-vs-interakt): the three Business API platforms compared on pricing, chatbots, AI, calling, and broadcasts, with Wapzen as the free AI option.
+
+## Blog in Italian
+
+- [Blog (italiano)](/it/blog): guides on WhatsApp Business for Italian businesses.
+- [Quanto costa WhatsApp Business](/it/blog/whatsapp-business-costo): the free app vs the paid API, Meta's EUR rates for Italian numbers from 1 October 2026 (marketing €0.0658; utility, authentication and service €0.0248, service free for the first 1,000 a month per number), provider fees, and three Italian monthly bills. English version: /blog/whatsapp-business-api-pricing.
+- [WhatsApp o WhatsApp Business](/it/blog/differenza-whatsapp-whatsapp-business): the differences between WhatsApp, WhatsApp Business and the Business API, switching numbers without losing chats, landline numbers, and when the API is needed.
+- [Chatbot WhatsApp Business](/it/blog/chatbot-whatsapp-business): message types (fixed, menu, AI), how a reply is produced, three ways to build a bot (API platforms such as Spoki and Callbell, n8n, AI by QR code), examples for Italian sectors, AI Act and GDPR notes. English version: /blog/what-is-a-whatsapp-chatbot.
+- [Messaggi automatici WhatsApp Business](/it/blog/messaggi-automatici-whatsapp-business): 40 Italian greeting, away and quick reply examples by sector, setup steps, and why automatic messages don't send. English version: /blog/whatsapp-business-greeting-message.
+- [ChatGPT su WhatsApp](/it/blog/chatgpt-whatsapp): 1-800-ChatGPT back in Italy since mid-July 2026, how to use it, the AGCM and European Commission timeline, Meta AI (no full off switch in Italy), and AI on a business's own number. English version: /blog/chatgpt-on-whatsapp.

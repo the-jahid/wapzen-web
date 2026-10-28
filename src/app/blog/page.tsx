@@ -4,13 +4,16 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight, ArrowUpRight } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 import { pageMetadata } from "@/lib/pageMetadata";
-import { blogPosts, formatShortDate, type BlogPostEntry } from "@/lib/blogPosts";
+import { formatShortDate, postsIn, type BlogPostEntry } from "@/lib/blogPosts";
 import styles from "@/components/blog/BlogIndex.module.css";
 
 const title = "Blog: WhatsApp AI Guides, Explainers & Comparisons";
 const description = "WhatsApp AI guides, explainers and honest comparisons: chatbots without the API, Business API pricing, ChatGPT on WhatsApp, n8n agents, and Wapzen vs WATI.";
 
 export const metadata: Metadata = pageMetadata({ title, description, path: "/blog" });
+
+// English posts only; the Italian ones have their own index at /it/blog.
+const blogPosts = postsIn("en");
 
 const jsonLd = {
   "@context": "https://schema.org",

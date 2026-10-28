@@ -1,4 +1,5 @@
 import { Building2, ConciergeBell, Globe, Headset, LifeBuoy, MapPin, MessageCircle, MessageSquareReply, PhoneCall, QrCode, Tag, type LucideIcon } from "lucide-react";
+import { blogPosts } from "./blogPosts";
 import { locales, type Locale } from "./locales";
 import { siteConfig } from "./site";
 
@@ -171,14 +172,22 @@ export const localeHome: Record<Locale, string> = {
   it: "/it/chatbot-whatsapp-gratis",
 };
 
+// Every page that can have a translation: marketing pages, blog posts, and
+// each language's blog index as a translation of /blog.
+const blogIndexes = (Object.keys(locales) as Locale[]).flatMap((locale) => {
+  const href = locales[locale].ui.blog?.href;
+  return href && locale !== "en" ? [{ href, locale, alternateOf: "/blog" }] : [];
+});
+const translatable: Array<{ href: string; locale?: Locale; alternateOf?: string }> = [...marketingPages, ...blogPosts, ...blogIndexes];
+
 /**
  * hreflang alternates for a page that has translations (or is one): the
  * English page plus every page that names it in alternateOf, with the English
  * page as x-default. Undefined for pages without translations.
  */
 export function hreflangLinks(path: string): Record<string, string> | undefined {
-  const root = marketingPages.find((page) => page.href === path)?.alternateOf ?? path;
-  const translations = marketingPages.filter((page) => page.alternateOf === root);
+  const root = translatable.find((page) => page.href === path)?.alternateOf ?? path;
+  const translations = translatable.filter((page) => page.alternateOf === root);
   if (translations.length === 0) return undefined;
   return {
     [locales.en.hreflang]: root,

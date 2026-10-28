@@ -33,11 +33,11 @@ export function SiteHeader({ links, brandHref, locale = "en" }: { links: Array<{
 // The footer's SOLUTIONS column lists the pages in the current language; the
 // bottom row links each language's entry page.
 export function SiteFooter({ brandHref, locale = "en" }: { brandHref?: string; locale?: Locale }) {
-  const t = locales[locale].ui.footer;
+  const { footer: t, blog } = locales[locale].ui;
   return <footer className={styles.footer}>
     <div className={styles.footerTop}>
       <div><Brand href={brandHref} /><p>{t.tagline[0]}<br />{t.tagline[1]}</p></div>
-      <nav aria-label={t.product}><span>{t.product}</span><Link href="/#capabilities">{t.features}</Link><Link href="/#chat-agent">{t.chatbot}</Link><Link href="/#voice-agent">{t.voiceAgent}</Link><Link href="/#use-cases">{t.useCases}</Link><Link href="/#industries">{t.industries}</Link><Link href="/#workflow">{t.howItWorks}</Link><Link href="/#faq">{t.faq}</Link>{t.blog && <Link href="/blog">{t.blog}</Link>}</nav>
+      <nav aria-label={t.product}><span>{t.product}</span><Link href="/#capabilities">{t.features}</Link><Link href="/#chat-agent">{t.chatbot}</Link><Link href="/#voice-agent">{t.voiceAgent}</Link><Link href="/#use-cases">{t.useCases}</Link><Link href="/#industries">{t.industries}</Link><Link href="/#workflow">{t.howItWorks}</Link><Link href="/#faq">{t.faq}</Link>{blog && <Link href={blog.href}>{blog.label}</Link>}</nav>
       <nav aria-label={t.freeTools}><span>{t.freeTools}</span>{freeTools.map((tool) => <Link key={tool.href} href={tool.href}>{tool.name}</Link>)}<Link href="/tools">{t.allTools}</Link></nav>
       <nav aria-label={t.solutions}><span>{t.solutions}</span>{pagesIn(locale).map((page) => <Link key={page.href} href={page.href}>{page.name}</Link>)}</nav>
       <div className={styles.footerContact}><span>{t.connect}</span><a href="https://wa.me/8801701750469" target="_blank" rel="noopener noreferrer">{t.sayHello}<ArrowUpRight size={19} /></a><small>+880 1701 750469</small></div>
