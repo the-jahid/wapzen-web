@@ -259,6 +259,47 @@ export function deleteTool(
   );
 }
 
+// ToolTestResult is one test run of an api_request tool (POST …/test): what was
+// sent, what came back, and the text an agent would have read as the result.
+// A request that failed is still a successful test — ok and error say how the
+// endpoint behaved.
+export type ToolTestResult = {
+  ok: boolean;
+  status_code?: number;
+  duration_ms: number;
+  request?: {
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    body?: string;
+  };
+  content_type?: string;
+  body: string;
+  truncated: boolean;
+  error?: string;
+  model_result: string;
+};
+
+// testTool sends the tool's request once with the given arguments. Passing
+// apiRequest tests that configuration instead of the stored one, so an edit can
+// be tried before it is saved.
+export function testTool(
+  toolId: string,
+  args: Record<string, unknown>,
+  apiRequest: ToolApiRequestConfig | undefined,
+  getToken: AuthTokenGetter
+): Promise<ToolTestResult> {
+  return request<ToolTestResult>(
+    `/v1/dashboard/tools/${encodeURIComponent(toolId)}/test`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ arguments: args, api_request: apiRequest }),
+    },
+    getToken
+  );
+}
+
 // emptyApiRequestConfig is the shape a new api_request tool starts from, with
 // the server's own defaults so the form shows what would be stored.
 export function emptyApiRequestConfig(): ToolApiRequestConfig {

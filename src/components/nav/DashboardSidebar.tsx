@@ -31,6 +31,7 @@ import {
   WorkspaceModeToggle,
   type NavIconName,
 } from "@/components/nav/workspaceMode";
+import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import styles from "./DashboardSidebar.module.css";
 
 const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
@@ -92,16 +93,27 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
           <span className={styles.logoMark}><BrandMark /></span>
           <span className={styles.topbarName}>Wapzen</span>
         </Link>
-        <button
-          aria-controls="dashboard-drawer"
-          aria-expanded={drawerOpen}
-          aria-label={drawerOpen ? "Close menu" : "Open menu"}
-          className={styles.iconButton}
-          onClick={() => setDrawerOpen((open) => !open)}
-          type="button"
-        >
-          {drawerOpen ? <X size={18} /> : <Menu size={18} />}
-        </button>
+        <span className={styles.topbarActions}>
+          <a
+            aria-label="Need help? Chat with support on WhatsApp"
+            className={`${styles.iconButton} ${styles.supportIconButton}`}
+            href={SUPPORT_WHATSAPP_URL}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <WhatsAppGlyph size={18} />
+          </a>
+          <button
+            aria-controls="dashboard-drawer"
+            aria-expanded={drawerOpen}
+            aria-label={drawerOpen ? "Close menu" : "Open menu"}
+            className={styles.iconButton}
+            onClick={() => setDrawerOpen((open) => !open)}
+            type="button"
+          >
+            {drawerOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </span>
       </header>
       <div
         aria-hidden="true"
@@ -181,6 +193,18 @@ function SidebarBody({
       </nav>
 
       <div className={styles.footer}>
+        <a
+          className={styles.supportCard}
+          href={SUPPORT_WHATSAPP_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <span className={styles.supportIcon}><WhatsAppGlyph size={18} /></span>
+          <span className={styles.supportText}>
+            <span className={styles.supportTitle}>Trouble connecting?</span>
+            <span className={styles.supportHint}>Chat with us on WhatsApp</span>
+          </span>
+        </a>
         <WorkspaceModeToggle />
         <ThemeToggle />
         <div className={styles.userCard}>
@@ -194,3 +218,4 @@ function SidebarBody({
     </>
   );
 }
+

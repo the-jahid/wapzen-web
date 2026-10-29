@@ -13,6 +13,7 @@ import {
   createTool as apiCreateTool,
   deleteTool as apiDeleteTool,
   listTools as apiListTools,
+  testTool as apiTestTool,
   updateTool as apiUpdateTool,
   emptyApiRequestConfig,
   isValidToolName,
@@ -21,6 +22,7 @@ import {
   ToolError,
   type ApiTool,
   type CreateToolPayload,
+  type ToolTestResult,
   type UpdateToolPayload,
 } from "@/lib/tools";
 
@@ -919,6 +921,28 @@ const css = `
 .tools-toggle.is-on .tools-toggle-track { background: var(--primary); border-color: transparent; }
 .tools-toggle.is-on .tools-toggle-knob { background: var(--app-on-accent); transform: translateX(20px); }
 .tools-toggle-label { font-size: 12.5px; font-weight: 750; }
+.tools-test-args { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.tools-test-req { color: var(--rose); font-weight: 800; }
+.tools-test-type { color: var(--faint); font-weight: 700; }
+.tools-test-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.tools-test-result { border-top: 1px solid var(--border); display: grid; gap: 14px; padding-top: 14px; }
+.tools-test-error { background: var(--app-rose-soft); border: 1px solid var(--app-rose-border); border-radius: 10px; color: var(--app-rose-text); font-size: 12.5px; font-weight: 700; padding: 10px 12px; }
+.tools-test-pre {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+  max-height: 320px;
+  overflow: auto;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.tools-badge-ok { background: var(--app-green-soft); border: 1px solid var(--app-green-border); color: var(--green); }
+.tools-badge-fail { background: var(--app-rose-soft); border: 1px solid var(--app-rose-border); color: var(--app-rose-text); }
 .tools-required {
   align-items: center;
   color: var(--subtle);
@@ -1901,8 +1925,8 @@ function ToolDetail({
                   <span className="tools-field-label">Timeout (s)</span>
                   <input
                     className="tools-input"
-                    max={120}
-                    min={1}
+                    max={toolBounds.timeoutMax}
+                    min={toolBounds.timeoutMin}
                     onChange={(event) =>
                       patchTool({ timeoutSeconds: Number(event.target.value) || 1 })
                     }
@@ -2064,6 +2088,8 @@ function ToolDetail({
               )}
             </div>
           </section>
+
+          <ToolTestPanel draft={draft} isDirty={isDirty} />
         </>
       ) : null}
 
@@ -2151,5 +2177,188 @@ function ToolDetail({
         </section>
       ) : null}
     </div>
+  );
+}
+
+// argumentValue turns what was typed for one parameter into the JSON value the
+// model would have sent: a number for a number, a boolean for a boolean, and
+// nothing at all for an optional field left blank.
+function argumentValue(param: ParamRow, raw: string): unknown {
+  const trimmed = raw.trim();
+  if (trimmed === "") return undefined;
+  if (param.type === "number") {
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : trimmed;
+  }
+  if (param.type === "boolean") return trimmed === "true";
+  return raw;
+}
+
+// prettyBody indents a JSON response so it can be read; anything else is shown
+// as it arrived.
+function prettyBody(body: string): string {
+  try {
+    return JSON.stringify(JSON.parse(body), null, 2);
+  } catch {
+    return body;
+  }
+}
+
+// ToolTestPanel runs the tool's request once, from the dashboard, through the
+// same code path an agent uses mid-conversation — so what it shows is exactly
+// what the agent would get. Unsaved edits are tested as they stand, which lets
+// a URL or parameter change be tried before it is saved.
+function ToolTestPanel({ draft, isDirty }: { draft: Tool; isDirty: boolean }) {
+  const { getToken } = useAuth();
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [isRunning, setIsRunning] = useState(false);
+  const [result, setResult] = useState<ToolTestResult | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
+
+  const namedParams = draft.parameters.filter((param) => param.name.trim() !== "");
+
+  async function run() {
+    if (isRunning) return;
+    setRunError(null);
+    if (!isAbsoluteHttpUrl(draft.url)) {
+      setRunError("Set a full http(s) Server URL above before testing.");
+      return;
+    }
+    const args: Record<string, unknown> = {};
+    for (const param of namedParams) {
+      const value = argumentValue(param, values[param.id] ?? "");
+      if (value !== undefined) args[param.name.trim()] = value;
+    }
+    setIsRunning(true);
+    setResult(null);
+    try {
+      const apiRequest = isDirty ? toConfig(draft).api_request : undefined;
+      setResult(await apiTestTool(draft.id, args, apiRequest, getToken));
+    } catch (error) {
+      setRunError(describeError(error, "The test could not be run."));
+    } finally {
+      setIsRunning(false);
+    }
+  }
+
+  return (
+    <section className="tools-card">
+      <div className="tools-card-head">
+        <h3 className="tools-card-title">Test tool</h3>
+        <div className="tools-card-copy">
+          Fill in the arguments the agent would send and run the request for real.
+        </div>
+      </div>
+      <div className="tools-card-body">
+        {namedParams.length === 0 ? (
+          <span className="tools-field-hint">
+            This tool has no parameters, so it is called with an empty payload.
+          </span>
+        ) : (
+          <div className="tools-test-args">
+            {namedParams.map((param) => (
+              <label className="tools-field" key={param.id}>
+                <span className="tools-field-label">
+                  <span className="tools-mono">{param.name.trim()}</span>
+                  {param.required ? <span className="tools-test-req"> required</span> : null}
+                  <span className="tools-test-type"> · {param.type}</span>
+                </span>
+                {param.type === "boolean" ? (
+                  <select
+                    className="tools-select"
+                    onChange={(event) =>
+                      setValues((current) => ({ ...current, [param.id]: event.target.value }))
+                    }
+                    value={values[param.id] ?? ""}
+                  >
+                    <option value="">(not sent)</option>
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                  </select>
+                ) : (
+                  <input
+                    className="tools-input tools-mono"
+                    inputMode={param.type === "number" ? "decimal" : undefined}
+                    onChange={(event) =>
+                      setValues((current) => ({ ...current, [param.id]: event.target.value }))
+                    }
+                    placeholder={param.description || param.name}
+                    value={values[param.id] ?? ""}
+                  />
+                )}
+                {param.description ? (
+                  <span className="tools-field-hint">{param.description}</span>
+                ) : null}
+              </label>
+            ))}
+          </div>
+        )}
+
+        <div className="tools-test-actions">
+          <button
+            className="tools-btn tools-btn-primary"
+            disabled={isRunning}
+            onClick={run}
+            type="button"
+          >
+            <Icon name="spark" size={16} />
+            {isRunning ? "Running…" : "Run test"}
+          </button>
+          <span className="tools-field-hint">
+            {isDirty ? "Tests your unsaved changes. " : ""}
+            The request is really sent, so a tool that books or writes data will do it.
+          </span>
+        </div>
+
+        {runError ? <div className="tools-test-error">{runError}</div> : null}
+
+        {result ? (
+          <div className="tools-test-result" aria-live="polite">
+            <div className="tools-detail-sub">
+              <span className={`tools-badge ${result.ok ? "tools-badge-ok" : "tools-badge-fail"}`}>
+                {result.status_code ? `HTTP ${result.status_code}` : "No response"}
+              </span>
+              <span className="tools-badge tools-badge-neutral">{result.duration_ms} ms</span>
+              {result.content_type ? (
+                <span className="tools-badge tools-badge-neutral">{result.content_type}</span>
+              ) : null}
+            </div>
+
+            {result.error ? <div className="tools-test-error">{result.error}</div> : null}
+
+            <div className="tools-field">
+              <span className="tools-field-label">What the agent reads</span>
+              <pre className="tools-test-pre">{result.model_result || "—"}</pre>
+            </div>
+
+            {result.status_code ? (
+              <div className="tools-field">
+                <span className="tools-field-label">
+                  Response body{result.truncated ? " (first 20,000 characters)" : ""}
+                </span>
+                <pre className="tools-test-pre">{result.body ? prettyBody(result.body) : "(empty)"}</pre>
+                {result.ok && result.body.trim().toLowerCase() === "accepted" ? (
+                  <span className="tools-field-hint">
+                    &quot;Accepted&quot; is what a Make.com webhook answers when the scenario has no
+                    Webhook response module, so the agent gets no real data. Add one that returns
+                    the result.
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+
+            {result.request ? (
+              <div className="tools-field">
+                <span className="tools-field-label">Request sent</span>
+                <pre className="tools-test-pre">
+                  {`${result.request.method} ${result.request.url}`}
+                  {result.request.body ? `\n\n${prettyBody(result.request.body)}` : ""}
+                </pre>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </section>
   );
 }

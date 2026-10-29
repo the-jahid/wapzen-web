@@ -7,6 +7,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
 import {
@@ -744,6 +745,13 @@ const css = `
 .chat-list-head { align-items: flex-start; }
 .chat-list-head > div { min-width: 0; }
 .chat-list-head .chat-btn { flex: 0 0 auto; }
+.chat-list-actions { display: flex; flex: 0 0 auto; gap: 8px; }
+/* WhatsApp's own green, matching the sidebar's support card. */
+.chat-btn-whatsapp { background: #25d366; border-color: transparent; color: #fff; text-decoration: none; }
+.chat-btn-whatsapp:hover { background: #1fb956; }
+.chat-btn-whatsapp:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
+/* Shown instead of the full label once the header is too narrow for it. */
+.chat-btn-label-short { display: none; }
 .chat-config-fields {
   border-bottom: 1px solid var(--border);
   display: grid;
@@ -1019,9 +1027,11 @@ const css = `
   .chat-card-conversations { height: min(640px, calc(100dvh - 220px)); min-height: 380px; }
   .chat-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
 }
-/* Narrow phones: the create button drops its label so the header fits. */
+/* Narrow phones: the create button drops its label so the header fits; the
+   WhatsApp help button keeps a short one so it still says what it is for. */
 @media (max-width: 420px) {
   .chat-list-head .chat-btn-label { display: none; }
+  .chat-list-head .chat-btn-label-short { display: inline; }
   .chat-list-head .chat-btn { min-height: 36px; padding: 0 11px; }
   .chat-avatar { height: 30px; width: 30px; }
   .chat-accordion-button { gap: 8px; grid-template-columns: 28px minmax(0, 1fr) minmax(0, auto) 18px; padding: 11px 10px; }
@@ -1577,15 +1587,28 @@ export default function ChatAgentsPage() {
                     {showSkeleton ? "Loading chat agents..." : `${chatAgents.length} chat agents`}
                   </div>
                 </div>
-                <button
-                  aria-label="New chat agent"
-                  className="chat-btn chat-btn-primary chat-btn-sm"
-                  onClick={openCreateModal}
-                  type="button"
-                >
-                  <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
-                  <span className="chat-btn-label">New chat agent</span>
-                </button>
+                <div className="chat-list-actions">
+                  <a
+                    aria-label="Trouble connecting? Chat with us on WhatsApp"
+                    className="chat-btn chat-btn-whatsapp chat-btn-sm"
+                    href={SUPPORT_WHATSAPP_URL}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <WhatsAppGlyph size={15} />
+                    <span className="chat-btn-label">Trouble connecting?</span>
+                    <span className="chat-btn-label-short">Need help?</span>
+                  </a>
+                  <button
+                    aria-label="New chat agent"
+                    className="chat-btn chat-btn-primary chat-btn-sm"
+                    onClick={openCreateModal}
+                    type="button"
+                  >
+                    <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
+                    <span className="chat-btn-label">New chat agent</span>
+                  </button>
+                </div>
               </div>
               <div className="chat-panel-body">
                 <div className="chat-search">
