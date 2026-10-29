@@ -1259,7 +1259,7 @@ export default function PhoneNumbersPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<BrowseView>("list");
+  const [viewMode, setViewMode] = useState<BrowseView>("grid");
   const [label, setLabel] = useState("");
   const [activeLogin, setActiveLogin] = useState<ApiPhoneNumber | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
