@@ -9,10 +9,10 @@ import styles from "./AccountBlockedScreen.module.css";
 import { WhatsAppGlyph } from "./supportWhatsApp";
 
 // While true, every dashboard page sits behind this notice: nobody can scan a
-// QR code, link a number or switch an agent back on. All agents were set to
-// inactive in the database when this went up (2026-10-30); flipping this back
-// to false does not reactivate them.
-export const MAINTENANCE_MODE = true;
+// QR code, link a number or switch an agent back on. Off since 2026-10-30: the
+// pause is now enforced silently by the server (migration 00061 keeps every
+// agent inactive), so the dashboard stays usable.
+export const MAINTENANCE_MODE = false;
 
 const EARLY_ACCESS_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
   "Hi, I'd like early access to the next Wapzen update.",
