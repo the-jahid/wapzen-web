@@ -62,10 +62,12 @@ import {
   getPhoneNumber as apiGetPhoneNumber,
   listPhoneNumbers as apiListPhoneNumbers,
   restartPhoneNumberLogin as apiRestartPhoneNumberLogin,
+  startPhoneNumberCodeLogin as apiStartPhoneNumberCodeLogin,
   startPhoneNumberLogin as apiStartPhoneNumberLogin,
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
+import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 
 type Option<T extends string = string> = {
   id: T;
@@ -2336,7 +2338,6 @@ const css = `
 .tool-new-type-label { color: var(--text); display: block; font-size: 12.5px; font-weight: 800; }
 .tool-new-type-blurb { color: var(--subtle); display: block; font-size: 11px; line-height: 1.45; margin-top: 2px; }
 .tool-new-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.tool-new-grid.is-single { grid-template-columns: minmax(0, 1fr); }
 .tool-new-suggest {
   align-items: center;
   color: var(--subtle);
@@ -4036,6 +4037,26 @@ export default function AgentsPage() {
     }
   }
 
+  // Starts a login linked by a typed pairing code instead of a scan. It replaces
+  // whatever QR login the agent had, so that one leaves the list. Throws for
+  // WhatsAppLinkHelp to show the message.
+  async function startNumberCodeLogin(phone: string) {
+    if (!selectedAgent) return;
+    const agentId = selectedAgent.id;
+    const replacedId = numberLogin?.phone.id;
+    const label = numberLoginLabel.trim();
+    setNumberLoginError("");
+    const started = await apiStartPhoneNumberCodeLogin(
+      { phone_number: phone, ...(label ? { label } : {}), agent_id: agentId },
+      getToken
+    );
+    setNumberLogin({ agentId, phone: started });
+    setPhoneNumbers((current) =>
+      upsertPhoneNumber(current.filter((entry) => entry.id !== replacedId), started)
+    );
+    setNumberLoginLabel("");
+  }
+
   // upsertKnowledgeBase folds a knowledge base created or indexed from the
   // attach modal back into the catalogue, so its row shows the new source count
   // without reloading the page. The listing is newest first, which is where a
@@ -4308,6 +4329,7 @@ export default function AgentsPage() {
                   }
                   numbers={assignableNumbers}
                   onLabelChange={setNumberLoginLabel}
+                  onRequestCode={startNumberCodeLogin}
                   onSelectNumber={(phoneNumberId) => patchSelected({ phone_number_id: phoneNumberId })}
                   onStartLogin={startNumberLogin}
                 />
@@ -4714,6 +4736,7 @@ function PhoneNumberSetupCard({
   login,
   numbers,
   onLabelChange,
+  onRequestCode,
   onSelectNumber,
   onStartLogin,
 }: {
@@ -4724,6 +4747,7 @@ function PhoneNumberSetupCard({
   login: ApiPhoneNumber | null;
   numbers: AssignableNumber[];
   onLabelChange: (value: string) => void;
+  onRequestCode: (phone: string) => Promise<void>;
   onSelectNumber: (phoneNumberId: string) => void;
   onStartLogin: (restart: boolean) => void;
 }) {
@@ -4731,6 +4755,8 @@ function PhoneNumberSetupCard({
   // passed down, because connecting assigns the number and closes this card.
   const isPending = login?.status === "pending_qr";
   const canRestart = Boolean(login);
+  // A code login still rotates QR codes underneath; the code is what to show.
+  const showsCode = isPending && Boolean(login?.pairing_code);
 
   return (
     <div className="agents-card editor-card number-setup">
@@ -4750,7 +4776,7 @@ function PhoneNumberSetupCard({
             <span className="number-setup-pane-note">WhatsApp › Linked devices</span>
           </div>
 
-          <div className="number-qr-frame">
+          {showsCode ? null : <div className="number-qr-frame">
             {isPending && login?.qr_code ? (
               <Image
                 alt="WhatsApp login QR code"
@@ -4772,7 +4798,9 @@ function PhoneNumberSetupCard({
                 </span>
               </div>
             )}
-          </div>
+          </div>}
+
+          <WhatsAppLinkHelp disabled={isStarting} login={login} onRequestCode={onRequestCode} />
 
           <div className="number-setup-status">
             {isPending
@@ -5862,45 +5890,24 @@ const toolTypeLabels: Record<ToolType, string> = {
   send_text: "Send Text",
 };
 
-// The four tool types with the one-line blurb the create panel shows, so the
-// choice can be made here instead of opening the Tools workspace to find out
-// what each one does. Mirrors the same list in components/tools/ToolsPage.tsx.
+// The tool types the create panel offers, with the one-line blurb it shows.
+// Only API requests can be created. Mirrors creatableToolTypes in
+// components/tools/ToolsPage.tsx.
 const toolTypeOptions: { id: ToolType; icon: IconName; blurb: string }[] = [
   {
     id: "api_request",
     icon: "globe",
     blurb: "Call an HTTP endpoint mid-call and speak the response back.",
   },
-  {
-    id: "transfer_call",
-    icon: "transfer",
-    blurb: "Announce a handover to another number, then release the caller.",
-  },
-  {
-    id: "end_call",
-    icon: "phoneOff",
-    blurb: "Let the agent hang up once the conversation is finished.",
-  },
-  {
-    id: "send_text",
-    icon: "message",
-    blurb: "Send the caller a WhatsApp message while the call is running.",
-  },
 ];
 
-// ToolDraft is the create panel's form state: every variant's fields on one
-// object, so a field does not have to reach through an optional block. Only the
-// ones belonging to `type` are ever sent (see draftToolPayload).
+// ToolDraft is the create panel's form state.
 type ToolDraft = {
   type: ToolType;
   name: string;
   description: string;
   method: HttpMethod;
   url: string;
-  destination: string;
-  transferMessage: string;
-  textBody: string;
-  endMessage: string;
 };
 
 function emptyToolDraft(): ToolDraft {
@@ -5910,51 +5917,21 @@ function emptyToolDraft(): ToolDraft {
     description: "",
     method: emptyApiRequestConfig().method,
     url: "",
-    destination: "",
-    transferMessage: "Connecting you to a teammate now, one moment.",
-    textBody: "",
-    endMessage: "",
   };
 }
 
-// draftToolPayload renders the create body: the one configuration block the
-// chosen type reads, and only that one — the server refuses a foreign block.
-// send_text and end_call omit theirs when nothing was typed, which is what lets
-// the model word the message itself.
+// draftToolPayload renders the create body with its api_request block.
 function draftToolPayload(draft: ToolDraft): CreateToolPayload {
-  const base = {
+  return {
     type: draft.type,
     name: draft.name.trim(),
     description: draft.description.trim(),
+    api_request: {
+      ...emptyApiRequestConfig(),
+      method: draft.method,
+      url: draft.url.trim(),
+    },
   };
-
-  switch (draft.type) {
-    case "api_request":
-      return {
-        ...base,
-        api_request: {
-          ...emptyApiRequestConfig(),
-          method: draft.method,
-          url: draft.url.trim(),
-        },
-      };
-    case "transfer_call":
-      return {
-        ...base,
-        transfer_call: {
-          destination: draft.destination.trim(),
-          message: draft.transferMessage.trim(),
-        },
-      };
-    case "send_text":
-      return draft.textBody.trim() ? { ...base, send_text: { body: draft.textBody.trim() } } : base;
-    case "end_call":
-      return draft.endMessage.trim()
-        ? { ...base, end_call: { message: draft.endMessage.trim() } }
-        : base;
-    default:
-      return base;
-  }
 }
 
 // describeToolError turns a failed create into one line. A 400 carrying
@@ -5967,13 +5944,6 @@ function describeToolError(error: unknown, fallback: string): string {
     return error.message;
   }
   return fallback;
-}
-
-// looksLikeE164 mirrors the destination check the server runs, so a mistyped
-// number is caught before the round trip. It is deliberately permissive about
-// which ranges exist: the point is to catch a name typed into a phone field.
-function looksLikeE164(value: string): boolean {
-  return /^\+\d{7,15}$/.test(value);
 }
 
 // ToolsSectionModal decides which tools this agent may reach for, and can author
@@ -6073,12 +6043,8 @@ function ToolsSectionModal({
       setCreateError("Describe the tool — the description is what the model reads.");
       return;
     }
-    if (draft.type === "api_request" && !draft.url.trim()) {
+    if (!draft.url.trim()) {
       setCreateError("An API request tool needs an endpoint URL.");
-      return;
-    }
-    if (draft.type === "transfer_call" && !looksLikeE164(draft.destination.trim())) {
-      setCreateError("Enter the destination in E.164 form, e.g. +8801639726992.");
       return;
     }
 
@@ -6108,7 +6074,6 @@ function ToolsSectionModal({
   // an answer to a problem rather than as a second name field.
   const nameSuggestion =
     trimmedDraftName && !isValidToolName(trimmedDraftName) ? suggestToolName(trimmedDraftName) : "";
-  const hasSideField = draft.type === "api_request" || draft.type === "transfer_call";
 
   return (
     <div
@@ -6256,7 +6221,7 @@ function ToolsSectionModal({
                   })}
                 </div>
 
-                <div className={`tool-new-grid${hasSideField ? "" : " is-single"}`}>
+                <div className="tool-new-grid">
                   <label className="field-row">
                     <span className="field-label">Name</span>
                     <input
@@ -6269,38 +6234,21 @@ function ToolsSectionModal({
                     />
                   </label>
 
-                  {draft.type === "api_request" ? (
-                    <label className="field-row">
-                      <span className="field-label">Method</span>
-                      <select
-                        className="agents-select"
-                        disabled={isBusy}
-                        onChange={(event) =>
-                          patchDraft({ method: event.target.value as HttpMethod })
-                        }
-                        value={draft.method}
-                      >
-                        {httpMethods.map((method) => (
-                          <option key={method} value={method}>
-                            {method}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : null}
-
-                  {draft.type === "transfer_call" ? (
-                    <label className="field-row">
-                      <span className="field-label">Destination</span>
-                      <input
-                        className="agents-input"
-                        disabled={isBusy}
-                        onChange={(event) => patchDraft({ destination: event.target.value })}
-                        placeholder="+8801639726992"
-                        value={draft.destination}
-                      />
-                    </label>
-                  ) : null}
+                  <label className="field-row">
+                    <span className="field-label">Method</span>
+                    <select
+                      className="agents-select"
+                      disabled={isBusy}
+                      onChange={(event) => patchDraft({ method: event.target.value as HttpMethod })}
+                      value={draft.method}
+                    >
+                      {httpMethods.map((method) => (
+                        <option key={method} value={method}>
+                          {method}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
 
                 {nameSuggestion ? (
@@ -6334,82 +6282,24 @@ function ToolsSectionModal({
                   </div>
                 </label>
 
-                {draft.type === "api_request" ? (
-                  <label className="field-row">
-                    <span className="field-label">Endpoint URL</span>
-                    <input
-                      className="agents-input"
-                      disabled={isBusy}
-                      maxLength={toolBounds.urlLength}
-                      onChange={(event) => patchDraft({ url: event.target.value })}
-                      placeholder="https://api.example.com/orders/lookup"
-                      value={draft.url}
-                    />
-                    <div className="field-hint">
-                      Headers and the parameters the model fills in are added in the{" "}
-                      <Link className="kb-attach-link" href="/dashboard/tools">
-                        Tools
-                      </Link>{" "}
-                      workspace.
-                    </div>
-                  </label>
-                ) : null}
-
-                {draft.type === "transfer_call" ? (
-                  <label className="field-row">
-                    <span className="field-label">Handover message</span>
-                    <textarea
-                      className="agents-textarea"
-                      disabled={isBusy}
-                      maxLength={toolBounds.messageLength}
-                      onChange={(event) => patchDraft({ transferMessage: event.target.value })}
-                      placeholder="Connecting you to a teammate now, one moment."
-                      style={{ minHeight: 70 }}
-                      value={draft.transferMessage}
-                    />
-                    <div className="field-hint">
-                      A WhatsApp call cannot be bridged onto a second leg: the agent says this,
-                      records the destination against the call, then releases the caller.
-                    </div>
-                  </label>
-                ) : null}
-
-                {draft.type === "send_text" ? (
-                  <label className="field-row">
-                    <span className="field-label">Message</span>
-                    <textarea
-                      className="agents-textarea"
-                      disabled={isBusy}
-                      maxLength={toolBounds.messageLength}
-                      onChange={(event) => patchDraft({ textBody: event.target.value })}
-                      placeholder="Leave empty and the agent writes the message itself."
-                      style={{ minHeight: 70 }}
-                      value={draft.textBody}
-                    />
-                    <div className="field-hint">
-                      Optional. A fixed body is sent verbatim; leave it empty to let the agent word
-                      the message from the conversation.
-                    </div>
-                  </label>
-                ) : null}
-
-                {draft.type === "end_call" ? (
-                  <label className="field-row">
-                    <span className="field-label">Goodbye</span>
-                    <input
-                      className="agents-input"
-                      disabled={isBusy}
-                      maxLength={toolBounds.messageLength}
-                      onChange={(event) => patchDraft({ endMessage: event.target.value })}
-                      placeholder="Thanks for calling — goodbye!"
-                      value={draft.endMessage}
-                    />
-                    <div className="field-hint">
-                      Optional. The agent speaks its closing line and hangs up once it has finished
-                      saying it, never mid-sentence.
-                    </div>
-                  </label>
-                ) : null}
+                <label className="field-row">
+                  <span className="field-label">Endpoint URL</span>
+                  <input
+                    className="agents-input"
+                    disabled={isBusy}
+                    maxLength={toolBounds.urlLength}
+                    onChange={(event) => patchDraft({ url: event.target.value })}
+                    placeholder="https://api.example.com/orders/lookup"
+                    value={draft.url}
+                  />
+                  <div className="field-hint">
+                    Headers and the parameters the model fills in are added in the{" "}
+                    <Link className="kb-attach-link" href="/dashboard/tools">
+                      Tools
+                    </Link>{" "}
+                    workspace.
+                  </div>
+                </label>
 
                 {createError ? <div className="form-error">{createError}</div> : null}
 

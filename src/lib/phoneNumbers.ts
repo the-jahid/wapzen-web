@@ -14,6 +14,13 @@ export type ApiPhoneNumber = {
   wa_jid?: string | null;
   status: PhoneNumberStatus;
   qr_code?: string | null;
+  // How long qr_code stays scannable, counted from when the server answered:
+  // WhatsApp gives the first code 60s and each later one 20s. Only on an
+  // unscanned QR login.
+  qr_expires_in_ms?: number | null;
+  // Set only on an unscanned login started with startPhoneNumberCodeLogin: the
+  // "ABCD-EFGH" code the user types into WhatsApp instead of scanning.
+  pairing_code?: string | null;
   last_connected_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -78,6 +85,22 @@ export function startPhoneNumberLogin(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+  }, getToken);
+}
+
+// startPhoneNumberCodeLogin is startPhoneNumberLogin for someone who can't scan
+// (usually because the dashboard is open on the phone itself): the login comes
+// back with a pairing_code to type into WhatsApp › Linked devices › Link with
+// phone number instead. It ends any QR login the user has running, so the
+// caller must swap the returned login in for that one. phone_number is E.164.
+export function startPhoneNumberCodeLogin(
+  payload: { phone_number: string; label?: string; agent_id?: string },
+  getToken: AuthTokenGetter
+): Promise<ApiPhoneNumber> {
+  return request<ApiPhoneNumber>("/v1/phone-number/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, pairing_method: "phone_code" }),
   }, getToken);
 }
 

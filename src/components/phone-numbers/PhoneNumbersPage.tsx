@@ -29,10 +29,12 @@ import {
   logoutPhoneNumber as apiLogoutPhoneNumber,
   rePairPhoneNumber as apiRePairPhoneNumber,
   restartPhoneNumberLogin as apiRestartPhoneNumberLogin,
+  startPhoneNumberCodeLogin as apiStartPhoneNumberCodeLogin,
   startPhoneNumberLogin as apiStartPhoneNumberLogin,
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
+import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 
 type IconName =
   | "grid"
@@ -950,6 +952,7 @@ const css = `
 .phone-status-neutral { background: var(--app-border); color: var(--subtle); }
 .phone-dot { background: currentColor; border-radius: 50%; height: 6px; width: 6px; }
 .phone-qr-layout { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); }
+.phone-qr-column { display: grid; gap: 12px; min-width: 0; }
 .phone-qr-frame {
   align-items: center;
   aspect-ratio: 1;
@@ -1451,6 +1454,22 @@ export default function PhoneNumbersPage() {
     }
   }
 
+  // Swaps the selected QR login for one linked by a typed pairing code. The
+  // server ends the QR login, so it leaves the list and the new one takes its
+  // place. Throws for WhatsAppLinkHelp to show the message.
+  async function startCodeLogin(phone: string) {
+    const replaced = selectedPhoneNumber?.status === "pending_qr" ? selectedPhoneNumber : null;
+    const started = await apiStartPhoneNumberCodeLogin(
+      { phone_number: phone, ...(replaced?.label ? { label: replaced.label } : {}) },
+      getToken
+    );
+    setActiveLogin(started);
+    setPhoneNumbers((current) =>
+      upsertPhoneNumber(current.filter((entry) => entry.id !== replaced?.id), started)
+    );
+    setSelectedId(started.id);
+  }
+
   async function disconnect(phone: ApiPhoneNumber) {
     if (disconnectingId) return;
     const action = phone.status === "connected" ? "Disconnect and remove" : "Remove";
@@ -1667,6 +1686,7 @@ export default function PhoneNumbersPage() {
               onCreate={() => setIsCreateOpen(true)}
               onDisconnect={disconnect}
               onRePair={rePair}
+              onRequestCode={startCodeLogin}
               onRefresh={refresh}
               phoneNumber={selectedPhoneNumber}
             />
@@ -1709,6 +1729,7 @@ function PhoneNumberExpandableCard({
   onCreate,
   onDisconnect,
   onRePair,
+  onRequestCode,
   onRefresh,
   phoneNumber,
 }: {
@@ -1726,6 +1747,7 @@ function PhoneNumberExpandableCard({
   onCreate: () => void;
   onDisconnect: (phoneNumber: ApiPhoneNumber) => void;
   onRePair: () => void;
+  onRequestCode: (phone: string) => Promise<void>;
   onRefresh: () => void;
   phoneNumber: ApiPhoneNumber | null;
 }) {
@@ -1763,6 +1785,7 @@ function PhoneNumberExpandableCard({
               mode={mode}
               onAssignAgent={onAssignAgent}
               onCreate={onCreate}
+              onRequestCode={onRequestCode}
               onRetry={onRefresh}
               phoneNumber={phoneNumber}
             />
@@ -2112,6 +2135,7 @@ function PhoneNumberDetail({
   mode,
   onAssignAgent,
   onCreate,
+  onRequestCode,
   onRetry,
   phoneNumber,
 }: {
@@ -2124,6 +2148,7 @@ function PhoneNumberDetail({
   mode: WorkspaceMode;
   onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
   onCreate: () => void;
+  onRequestCode: (phone: string) => Promise<void>;
   onRetry: () => void;
   phoneNumber: ApiPhoneNumber | null;
 }) {
@@ -2221,22 +2246,28 @@ function PhoneNumberDetail({
               </div>
             </div>
           </div>
-          {phoneNumber.qr_code && phoneNumber.status === "pending_qr" ? (
-            <div className="phone-qr-frame">
-              <Image
-                alt="WhatsApp login QR code"
-                className="phone-qr-image"
-                height={280}
-                src={phoneNumber.qr_code}
-                unoptimized
-                width={280}
-              />
-            </div>
-          ) : (
-            <div className="phone-qr-placeholder">
-              {phoneNumber.status === "pending_qr" ? "Waiting for QR code..." : statusLabels[phoneNumber.status]}
-            </div>
-          )}
+          <div className="phone-qr-column">
+            {phoneNumber.status === "pending_qr" && phoneNumber.pairing_code ? null : phoneNumber.qr_code &&
+              phoneNumber.status === "pending_qr" ? (
+              <div className="phone-qr-frame">
+                <Image
+                  alt="WhatsApp login QR code"
+                  className="phone-qr-image"
+                  height={280}
+                  src={phoneNumber.qr_code}
+                  unoptimized
+                  width={280}
+                />
+              </div>
+            ) : (
+              <div className="phone-qr-placeholder">
+                {phoneNumber.status === "pending_qr" ? "Waiting for QR code..." : statusLabels[phoneNumber.status]}
+              </div>
+            )}
+            {phoneNumber.status === "pending_qr" ? (
+              <WhatsAppLinkHelp disabled={!isAuthenticated} login={phoneNumber} onRequestCode={onRequestCode} />
+            ) : null}
+          </div>
         </div>
       </section>
     </div>

@@ -148,6 +148,10 @@ const toolTypes: {
   },
 ];
 
+// Only API requests can be created. The other types stay in toolTypes so tools
+// made before still show their own label and icon.
+const creatableToolTypes = toolTypes.filter((type) => type.id === "api_request");
+
 const httpMethods: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 const paramTypes: ParamType[] = ["string", "number", "boolean"];
 
@@ -300,13 +304,8 @@ function toCreatePayload(tool: Tool): CreateToolPayload {
   };
 }
 
-// looksLikeE164 and isAbsoluteHttpUrl mirror the two checks the server runs on
-// a create, so the create dialog can name the offending field before spending a
-// round trip on it.
-function looksLikeE164(value: string): boolean {
-  return /^\+\d{7,15}$/.test(value);
-}
-
+// isAbsoluteHttpUrl mirrors the endpoint check the server runs on a create, so
+// the create dialog can name the field before spending a round trip on it.
 function isAbsoluteHttpUrl(value: string): boolean {
   const trimmed = value.trim();
   if (!trimmed || trimmed.length > toolBounds.urlLength) return false;
@@ -1131,16 +1130,13 @@ export default function ToolsPage() {
   const [query, setQuery] = useState("");
   const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [draftType, setDraftType] = useState<ToolType>("api_request");
   const [draftName, setDraftName] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
-  // The one piece of configuration the chosen type cannot be created without.
-  // The rest of a tool is filled in from the detail pane, but the server refuses
-  // an api_request with no endpoint and a transfer_call with no destination, so
-  // those two are asked for here instead of failing the create.
+  // New tools are always API requests. The rest of a tool is filled in from the
+  // detail pane, but the server refuses an api_request with no endpoint, so that
+  // is asked for here instead of failing the create.
   const [draftMethod, setDraftMethod] = useState<HttpMethod>("POST");
   const [draftUrl, setDraftUrl] = useState("");
-  const [draftDestination, setDraftDestination] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Tool | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1211,19 +1207,16 @@ export default function ToolsPage() {
   const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
 
   function openCreate() {
-    setDraftType("api_request");
     setDraftName("");
     setDraftDescription("");
     setDraftMethod(emptyApiRequestConfig().method);
     setDraftUrl("");
-    setDraftDestination("");
     setIsCreateOpen(true);
   }
 
   // createTool posts the new tool and selects it. Beyond the name, description
   // and type, only the configuration the server insists on at create time is
-  // sent — the endpoint for an api_request, the destination for a transfer_call.
-  // Headers, parameters and the spoken lines are filled in from the detail pane.
+  // sent — the endpoint. Headers and parameters are filled in from the detail pane.
   async function createTool() {
     if (isCreating) return;
 
@@ -1248,9 +1241,9 @@ export default function ToolsPage() {
       setNotice({ kind: "error", text: "Describe the tool — it is what the model reads." });
       return;
     }
-    // Both checks mirror what the server enforces, so a mistyped value is named
-    // here rather than coming back as a validation error on the whole request.
-    if (draftType === "api_request" && !isAbsoluteHttpUrl(draftUrl)) {
+    // This mirrors what the server enforces, so a mistyped value is named here
+    // rather than coming back as a validation error on the whole request.
+    if (!isAbsoluteHttpUrl(draftUrl)) {
       setNotice({
         kind: "error",
         text: draftUrl.trim()
@@ -1259,18 +1252,9 @@ export default function ToolsPage() {
       });
       return;
     }
-    if (draftType === "transfer_call" && !looksLikeE164(draftDestination.trim())) {
-      setNotice({
-        kind: "error",
-        text: "Enter the destination in E.164 form, e.g. +8801639726992.",
-      });
-      return;
-    }
-
-    const draft = emptyTool("", draftType, name, draftDescription.trim());
+    const draft = emptyTool("", "api_request", name, draftDescription.trim());
     draft.method = draftMethod;
     draft.url = draftUrl.trim();
-    draft.destination = draftDestination.trim();
     const payload = toCreatePayload(draft);
 
     setIsCreating(true);
@@ -1546,13 +1530,8 @@ export default function ToolsPage() {
             <div className="tools-modal-section">
               <span className="tools-field-label">Tool type</span>
               <div className="tools-type-grid">
-                {toolTypes.map((type) => (
-                  <button
-                    className={`tools-type-card${type.id === draftType ? " is-selected" : ""}`}
-                    key={type.id}
-                    onClick={() => setDraftType(type.id)}
-                    type="button"
-                  >
+                {creatableToolTypes.map((type) => (
+                  <button className="tools-type-card is-selected" key={type.id} type="button">
                     <span className={`tools-tile tools-accent-${type.accent}`}>
                       <Icon name={type.icon} size={16} />
                     </span>
@@ -1591,56 +1570,36 @@ export default function ToolsPage() {
                 />
               </label>
 
-              {draftType === "api_request" ? (
-                <>
-                  <div className="tools-grid-2">
-                    <label className="tools-field">
-                      <span className="tools-field-label">Method</span>
-                      <select
-                        className="tools-select"
-                        onChange={(event) => setDraftMethod(event.target.value as HttpMethod)}
-                        value={draftMethod}
-                      >
-                        {httpMethods.map((method) => (
-                          <option key={method} value={method}>
-                            {method}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="tools-field">
-                      <span className="tools-field-label">Endpoint URL</span>
-                      <input
-                        className="tools-input tools-mono"
-                        maxLength={toolBounds.urlLength}
-                        onChange={(event) => setDraftUrl(event.target.value)}
-                        placeholder="https://api.example.com/v1/availability"
-                        value={draftUrl}
-                      />
-                    </label>
-                  </div>
-                  <span className="tools-field-hint">
-                    Headers, the timeout and the parameters the model fills in are set next, in the
-                    tool&apos;s own panel.
-                  </span>
-                </>
-              ) : null}
-
-              {draftType === "transfer_call" ? (
+              <div className="tools-grid-2">
                 <label className="tools-field">
-                  <span className="tools-field-label">Transfer to</span>
+                  <span className="tools-field-label">Method</span>
+                  <select
+                    className="tools-select"
+                    onChange={(event) => setDraftMethod(event.target.value as HttpMethod)}
+                    value={draftMethod}
+                  >
+                    {httpMethods.map((method) => (
+                      <option key={method} value={method}>
+                        {method}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="tools-field">
+                  <span className="tools-field-label">Endpoint URL</span>
                   <input
                     className="tools-input tools-mono"
-                    onChange={(event) => setDraftDestination(event.target.value)}
-                    placeholder="+8801639726992"
-                    value={draftDestination}
+                    maxLength={toolBounds.urlLength}
+                    onChange={(event) => setDraftUrl(event.target.value)}
+                    placeholder="https://api.example.com/v1/availability"
+                    value={draftUrl}
                   />
-                  <span className="tools-field-hint">
-                    E.164 format, starting with the country code. The line the agent says before
-                    handing over is set next, in the tool&apos;s own panel.
-                  </span>
                 </label>
-              ) : null}
+              </div>
+              <span className="tools-field-hint">
+                Headers, the timeout and the parameters the model fills in are set next, in the
+                tool&apos;s own panel.
+              </span>
             </div>
 
             <div className="tools-modal-actions">

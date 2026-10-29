@@ -14,11 +14,13 @@ import {
   getPhoneNumber as apiGetPhoneNumber,
   listPhoneNumbers as apiListPhoneNumbers,
   restartPhoneNumberLogin as apiRestartPhoneNumberLogin,
+  startPhoneNumberCodeLogin as apiStartPhoneNumberCodeLogin,
   startPhoneNumberLogin as apiStartPhoneNumberLogin,
   PhoneNumberError,
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
+import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
 import { useCachedState } from "@/lib/pageCache";
 import {
@@ -1431,6 +1433,18 @@ export default function ChatAgentsPage() {
     }
   }, [getToken, isStartingLogin, numberLogin, selected]);
 
+  // Swaps the QR login for one linked by a typed pairing code. The server ends
+  // the QR login, and the poll picks up the new one by its id. Throws for
+  // WhatsAppLinkHelp to show the message.
+  const startNumberCodeLogin = useCallback(
+    async (phone: string) => {
+      setNumberLoginError("");
+      const started = await apiStartPhoneNumberCodeLogin({ phone_number: phone }, getToken);
+      setNumberLogin(started);
+    },
+    [getToken]
+  );
+
   // A chat agent with no number gets its QR code without being asked: opening
   // the editor starts the login, and a session that runs out of codes is
   // reissued, so what is on screen is always a scannable code.
@@ -1722,6 +1736,7 @@ export default function ChatAgentsPage() {
                       loginError={numberLoginError}
                       onPatch={patchSelected}
                       onRefreshNumbers={refreshPhoneNumbers}
+                      onRequestCode={startNumberCodeLogin}
                       onStartLogin={startNumberLogin}
                     />
                     <ConfigPanel
@@ -2084,6 +2099,7 @@ function Editor({
   loginError,
   onPatch,
   onRefreshNumbers,
+  onRequestCode,
   onStartLogin,
 }: {
   agent: ApiChatAgent;
@@ -2094,6 +2110,7 @@ function Editor({
   loginError: string;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
   onRefreshNumbers: () => void;
+  onRequestCode: (phone: string) => Promise<void>;
   onStartLogin: () => void;
 }) {
   // Which half of the editor is on screen: the agent's own settings, or the
@@ -2166,6 +2183,7 @@ function Editor({
                 }))
               }
               onRefreshNumbers={onRefreshNumbers}
+              onRequestCode={onRequestCode}
               onStartLogin={onStartLogin}
             />
           )}
@@ -2205,6 +2223,7 @@ function PhoneNumberSetupCard({
   numbers,
   onSelectNumber,
   onRefreshNumbers,
+  onRequestCode,
   onStartLogin,
 }: {
   agentName: string;
@@ -2215,12 +2234,15 @@ function PhoneNumberSetupCard({
   numbers: AssignableNumber[];
   onSelectNumber: (phoneNumberId: string) => void;
   onRefreshNumbers: () => void;
+  onRequestCode: (phone: string) => Promise<void>;
   onStartLogin: () => void;
 }) {
   // `login` is the unfinished session for this agent; a connected one is never
   // passed down, because connecting assigns the number and closes this card.
   const isPending = login?.status === "pending_qr";
   const canRestart = Boolean(login);
+  // A code login still rotates QR codes underneath; the code is what to show.
+  const showsCode = isPending && Boolean(login?.pairing_code);
 
   return (
     <div className="chat-card chat-number-setup">
@@ -2240,7 +2262,7 @@ function PhoneNumberSetupCard({
             <span className="chat-number-pane-note">WhatsApp › Linked devices</span>
           </div>
 
-          <div className="chat-qr-frame">
+          {showsCode ? null : <div className="chat-qr-frame">
             {isPending && login?.qr_code ? (
               <Image
                 alt="WhatsApp login QR code"
@@ -2264,7 +2286,9 @@ function PhoneNumberSetupCard({
                 </span>
               </div>
             )}
-          </div>
+          </div>}
+
+          <WhatsAppLinkHelp disabled={isStarting} login={login} onRequestCode={onRequestCode} />
 
           <div className="chat-number-status">
             {isStarting
