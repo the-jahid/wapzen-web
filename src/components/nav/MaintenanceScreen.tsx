@@ -12,7 +12,7 @@ import { WhatsAppGlyph } from "./supportWhatsApp";
 // QR code, link a number or switch an agent back on. The server keeps every
 // agent inactive on its own (migration 00061), so turning this off only hides
 // the notice; it does not take any agent live.
-export const MAINTENANCE_MODE = false;
+export const MAINTENANCE_MODE = true;
 
 const EARLY_ACCESS_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
   "Hi, I'd like early access to the next Wapzen update.",
