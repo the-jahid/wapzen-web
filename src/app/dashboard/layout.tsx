@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { preconnect } from "react-dom";
 
+import { AccountBlockedScreen } from "@/components/nav/AccountBlockedScreen";
+
 export const metadata: Metadata = {
   title: "Dashboard",
   robots: {
@@ -26,5 +28,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // anonymous kind those requests (and their CORS preflights) use.
   const origin = apiOrigin();
   if (origin) preconnect(origin, { crossOrigin: "anonymous" });
-  return children;
+  return (
+    <>
+      {children}
+      <AccountBlockedScreen />
+    </>
+  );
 }

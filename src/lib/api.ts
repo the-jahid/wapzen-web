@@ -1,3 +1,5 @@
+import { noteAccountBlocked } from "./accountBlocked";
+
 const baseServerURL = process.env.NEXT_PUBLIC_BASE_SERVER_URL;
 
 // Account-level API calls use Clerk's getToken so every request can resolve a
@@ -81,7 +83,10 @@ export function serverFetchWithBearerToken(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  return fetch(serverURL(path), { ...init, headers });
+  return fetch(serverURL(path), { ...init, headers }).then((response) => {
+    noteAccountBlocked(response);
+    return response;
+  });
 }
 
 export function serverFetchWithAPIKey(path: string, apiKey: string, init?: RequestInit): Promise<Response> {
