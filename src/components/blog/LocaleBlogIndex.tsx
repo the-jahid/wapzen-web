@@ -7,8 +7,8 @@ import { solutionsFor } from "@/lib/marketingPages";
 import styles from "./BlogIndex.module.css";
 
 // Blog index for a language other than English (/it/blog, /pt-br/blog,
-// /es-mx/blog): every post in that language, then the language's solution
-// pages. Too few posts for the /blog bento, so it is the plain grid only.
+// /es-mx/blog, /es/blog, /de/blog, /fr/blog, /nl/blog): every post in that
+// language, then the language's solution pages. Too few posts for the /blog bento, so it is the plain grid only.
 // Each page passes its own copy and builds its metadata with pageMetadata().
 
 type LocaleBlogIndexProps = {
@@ -24,7 +24,8 @@ type LocaleBlogIndexProps = {
 export function LocaleBlogIndex({ locale, description, heading, intro, postsHeading, solutionsHeading }: LocaleBlogIndexProps) {
   const t = blogUi(locale);
   const posts = postsIn(locale);
-  const solutions = solutionsFor(locale);
+  // English fallback pages (de, fr, nl) stay in the footer, not in the index.
+  const solutions = solutionsFor(locale).filter((page) => (page.locale ?? "en") !== "en");
   const url = `${siteConfig.url}${t.href}`;
   const inLanguage = locales[locale].hreflang;
   const jsonLd = {

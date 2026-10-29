@@ -34,7 +34,7 @@ import {
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
-import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
+import { normalizePhone, useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 
 type IconName =
   | "grid"
@@ -1043,6 +1043,20 @@ const css = `
 .phone-modal-body { display: grid; gap: 12px; padding: 18px 20px; }
 .phone-field { display: grid; gap: 7px; min-width: 0; }
 .phone-field-label { color: var(--subtle); font-size: 11.5px; font-weight: 700; }
+.phone-field-error { color: var(--app-rose-text); font-size: 12px; line-height: 1.4; }
+.phone-modal-switch {
+  background: none;
+  border: 0;
+  color: var(--app-primary-text);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 700;
+  justify-self: start;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .phone-input {
   background: var(--panel);
   border: 1px solid var(--app-border);
@@ -1431,13 +1445,17 @@ export default function PhoneNumbersPage() {
     };
   }, [activeLoginID, getToken, selectedPendingLoginID, setPhoneNumbers]);
 
-  async function startLogin() {
+  // With a phone number it links by pairing code (the create modal on a phone)
+  // rather than by QR.
+  async function startLogin(phone?: string) {
     if (isStarting || !isAuthenticated) return;
 
     setIsStarting(true);
     try {
       const payload = label.trim() ? { label: label.trim() } : {};
-      const started = await apiStartPhoneNumberLogin(payload, getToken);
+      const started = phone
+        ? await apiStartPhoneNumberCodeLogin({ ...payload, phone_number: phone }, getToken)
+        : await apiStartPhoneNumberLogin(payload, getToken);
       setActiveLogin(started);
       setPhoneNumbers((current) => upsertPhoneNumber(current, started));
       setSelectedId(started.id);
@@ -2543,22 +2561,43 @@ function CreatePhoneNumberModal({
   label: string;
   onCancel: () => void;
   onLabelChange: (value: string) => void;
-  onStart: () => void;
+  onStart: (phone?: string) => void;
 }) {
+  // A phone can't scan its own screen, so it starts a pairing-code login from
+  // the number instead, unless a second device is there to scan with.
+  const isPhone = useIsPhone();
+  const [wantsQr, setWantsQr] = useState(false);
+  const byCode = isPhone && !wantsQr;
+  const [number, setNumber] = useState("");
+  const [numberError, setNumberError] = useState("");
+
   return (
     <div className="phone-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && onCancel()}>
       <form
         className="phone-modal-card"
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          onStart();
+          if (!byCode) {
+            onStart();
+            return;
+          }
+          const normalized = normalizePhone(number);
+          if ("error" in normalized) {
+            setNumberError(normalized.error);
+            return;
+          }
+          setNumberError("");
+          onStart(normalized.phone);
         }}
       >
         <div className="phone-modal-head">
           <div>
             <h2 className="phone-modal-title">Create Phone Number</h2>
             <div className="phone-modal-copy">
-              Start a WhatsApp QR login session. The phone number is detected automatically after you scan the QR code.
+              {byCode
+                ? "Enter the WhatsApp number to link. WhatsApp gives you a code to type in on this phone — no QR scan needed."
+                : "Start a WhatsApp QR login session. The phone number is detected automatically after you scan the QR code."}
             </div>
           </div>
           <button aria-label="Close create phone number modal" className="phone-modal-close" onClick={onCancel} type="button">
@@ -2576,6 +2615,26 @@ function CreatePhoneNumberModal({
               value={label}
             />
           </label>
+          {byCode ? (
+            <label className="phone-field">
+              <span className="phone-field-label">WhatsApp number, with country code</span>
+              <input
+                autoComplete="tel"
+                className="phone-input"
+                inputMode="tel"
+                onChange={(event) => setNumber(event.target.value)}
+                placeholder="+880 1XXX XXXXXX"
+                type="tel"
+                value={number}
+              />
+              {numberError ? <span className="phone-field-error">{numberError}</span> : null}
+            </label>
+          ) : null}
+          {isPhone ? (
+            <button className="phone-modal-switch" onClick={() => setWantsQr(!wantsQr)} type="button">
+              {wantsQr ? "Link with phone number instead" : "Scanning from another device? Use a QR code"}
+            </button>
+          ) : null}
         </div>
         <div className="phone-modal-footer">
           <button className="phone-top-btn" onClick={onCancel} type="button">
@@ -2583,7 +2642,7 @@ function CreatePhoneNumberModal({
           </button>
           <button className="phone-ghost-btn" disabled={isStarting || !isAuthenticated} type="submit">
             <Icon name="plus" size={15} />
-            {isStarting ? "Starting..." : "Create"}
+            {isStarting ? "Starting..." : byCode ? "Get code" : "Create"}
           </button>
         </div>
       </form>

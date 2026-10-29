@@ -7,7 +7,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
-import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
+import { LIMIT_WHATSAPP_URL, SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
 import {
@@ -20,7 +20,7 @@ import {
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
-import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
+import { useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
 import { useCachedState } from "@/lib/pageCache";
 import {
@@ -28,6 +28,7 @@ import {
   createDashboardChatAgent,
   deleteDashboardChatAgent,
   getDashboardChatAgent,
+  isChatAgentLimitError,
   listDashboardChatAgents,
   updateDashboardChatAgent,
   type ApiChatAgent,
@@ -516,6 +517,7 @@ const css = `
 .chat-runtime-alert-title { color: var(--app-amber-text); font-size: 13px; font-weight: 800; margin: 0; }
 .chat-runtime-alert-time { color: var(--subtle); font-weight: 600; }
 .chat-runtime-alert-copy { color: var(--text); font-size: 12.5px; line-height: 1.5; margin: 4px 0 0; overflow-wrap: anywhere; }
+.chat-limit-alert .chat-btn-whatsapp { margin-top: 10px; }
 .chat-btn-sm { font-size: 12px; min-height: 32px; padding: 0 10px; }
 .chat-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
 .chat-section:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
@@ -1004,6 +1006,7 @@ export default function ChatAgentsPage() {
   const [notice, setNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [createForm, setCreateForm] = useState<CreateForm | null>(null);
   const [createError, setCreateError] = useState("");
+  const [createLimitReached, setCreateLimitReached] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   // The delete button only asks; the agent goes once the modal is confirmed.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -1102,7 +1105,11 @@ export default function ChatAgentsPage() {
         const fresh = await getDashboardChatAgent(selectedLiveId, getToken);
         if (cancelled) return;
         setChatAgents((current) =>
-          current.map((item) => (item.id === fresh.id ? { ...item, runtime: fresh.runtime } : item))
+          current.map((item) =>
+            item.id === fresh.id
+              ? { ...item, reply_limit_reached: fresh.reply_limit_reached, runtime: fresh.runtime }
+              : item
+          )
         );
       } catch {
         // A missed refresh is retried on the next tick.
@@ -1320,8 +1327,13 @@ export default function ChatAgentsPage() {
   // (roughly one a minute, then one every 20s) which the server stores as they
   // arrive and the poll above picks up. This only has to keep a live session
   // there to receive them.
+  //
+  // A phone gets none: it can't scan its own screen, so its codes only ever ran
+  // out unscanned. The card offers it the number form instead.
+  const isPhone = useIsPhone();
   useEffect(() => {
     if (!isAuthenticated || !selected || selected.agent.phone_number_id || isStartingLogin) return;
+    if (isPhone) return;
 
     // A live session already has a code on screen, and it serves this agent as
     // readily as the one it was started from: the scan is assigned to whichever
@@ -1342,7 +1354,7 @@ export default function ChatAgentsPage() {
 
     autoLoginKey.current = key;
     void startNumberLogin();
-  }, [isAuthenticated, isStartingLogin, numberLogin, selected, startNumberLogin]);
+  }, [isAuthenticated, isPhone, isStartingLogin, numberLogin, selected, startNumberLogin]);
 
   // The pick-a-number half of the setup card. A number another chat agent
   // already holds stays listed, but says who holds it and cannot be picked —
@@ -1383,12 +1395,14 @@ export default function ChatAgentsPage() {
 
   const openCreateModal = useCallback(() => {
     setCreateError("");
+    setCreateLimitReached(false);
     setCreateForm(newCreateForm(chatAgents.length + 1));
   }, [chatAgents.length]);
 
   const closeCreateModal = useCallback(() => {
     setCreateForm(null);
     setCreateError("");
+    setCreateLimitReached(false);
   }, []);
 
   const createAgent = useCallback(async () => {
@@ -1406,7 +1420,11 @@ export default function ChatAgentsPage() {
       setCreateForm(null);
       setNotice({ kind: "success", text: `Created "${created.agent.name}"` });
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Could not create chat agent");
+      if (isChatAgentLimitError(error)) {
+        setCreateLimitReached(true);
+      } else {
+        setCreateError(error instanceof Error ? error.message : "Could not create chat agent");
+      }
     } finally {
       setIsCreating(false);
     }
@@ -1668,6 +1686,7 @@ export default function ChatAgentsPage() {
           error={createError}
           form={createForm}
           isSubmitting={isCreating}
+          limitReached={createLimitReached}
           onCancel={closeCreateModal}
           onCreate={createAgent}
           phoneNumbers={phoneNumbers}
@@ -1695,6 +1714,7 @@ function CreateChatAgentModal({
   error,
   form,
   isSubmitting,
+  limitReached,
   onCancel,
   onCreate,
   phoneNumbers,
@@ -1703,6 +1723,7 @@ function CreateChatAgentModal({
   error: string;
   form: CreateForm;
   isSubmitting: boolean;
+  limitReached: boolean;
   onCancel: () => void;
   onCreate: () => void;
   phoneNumbers: ApiPhoneNumber[];
@@ -1763,6 +1784,12 @@ function CreateChatAgentModal({
         </div>
 
         <div className="chat-modal-body">
+          {limitReached ? (
+            <LimitReachedAlert title="You've reached your chat agent limit">
+              Your account can&apos;t have more chat agents right now. Message us on WhatsApp and
+              we&apos;ll help you add more.
+            </LimitReachedAlert>
+          ) : null}
           {error ? <div className="chat-modal-error">{error}</div> : null}
 
           <div className="chat-modal-section">
@@ -1949,6 +1976,29 @@ function AgentHeader({
   );
 }
 
+// Shown only once a limit has been hit — the limits themselves are never
+// advertised — with a way to reach us on WhatsApp to lift it.
+function LimitReachedAlert({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <div className="chat-card chat-runtime-alert chat-limit-alert" role="alert">
+      <span className="chat-runtime-alert-icon">!</span>
+      <div style={{ minWidth: 0 }}>
+        <p className="chat-runtime-alert-title">{title}</p>
+        <p className="chat-runtime-alert-copy">{children}</p>
+        <a
+          className="chat-btn chat-btn-whatsapp chat-btn-sm"
+          href={LIMIT_WHATSAPP_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <WhatsAppGlyph size={15} />
+          Message us on WhatsApp
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function Editor({
   agent,
   assignableNumbers,
@@ -1980,6 +2030,12 @@ function Editor({
 
   return (
     <div className="chat-editor">
+      {agent.reply_limit_reached ? (
+        <LimitReachedAlert title="This agent has reached its message limit">
+          It no longer replies to new WhatsApp messages. Message us on WhatsApp to keep it
+          answering.
+        </LimitReachedAlert>
+      ) : null}
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
           <span className="chat-runtime-alert-icon">!</span>
@@ -2102,6 +2158,11 @@ function PhoneNumberSetupCard({
   const canRestart = Boolean(login);
   // A code login still rotates QR codes underneath; the code is what to show.
   const showsCode = isPending && Boolean(login?.pairing_code);
+  // A phone can't scan its own screen, and almost nobody links from one by QR,
+  // so it gets the number form alone unless a second device is at hand.
+  const isPhone = useIsPhone();
+  const [wantsQr, setWantsQr] = useState(false);
+  const offersQr = !isPhone || wantsQr;
 
   return (
     <div className="chat-card chat-number-setup">
@@ -2121,7 +2182,7 @@ function PhoneNumberSetupCard({
             <span className="chat-number-pane-note">WhatsApp › Linked devices</span>
           </div>
 
-          {showsCode ? null : <div className="chat-qr-frame">
+          {showsCode || !offersQr ? null : <div className="chat-qr-frame">
             {isPending && login?.qr_code ? (
               <Image
                 alt="WhatsApp login QR code"
@@ -2152,16 +2213,32 @@ function PhoneNumberSetupCard({
           <div className="chat-number-status">
             {isStarting
               ? "Getting a fresh code…"
-              : isPending
-                ? "Open WhatsApp › Linked devices and scan. The code refreshes itself until it is scanned, and the number is assigned to this agent the moment it connects — keep this page open."
-                : login
-                  ? `This login ${phoneStatusLabels[login.status].toLowerCase()}. A new code follows in a moment.`
-                  : "The number is detected automatically after you scan."}
+              : showsCode || (isPending && !offersQr)
+                ? "The number is assigned to this agent the moment it connects — keep this page open."
+                : isPending
+                  ? "Open WhatsApp › Linked devices and scan. The code refreshes itself until it is scanned, and the number is assigned to this agent the moment it connects — keep this page open."
+                  : !offersQr
+                    ? "The number is assigned to this agent the moment it connects."
+                    : login
+                      ? `This login ${phoneStatusLabels[login.status].toLowerCase()}. A new code follows in a moment.`
+                      : "The number is detected automatically after you scan."}
           </div>
 
           {/* The code is issued and reissued on its own; the button is only the
               way back from a login that stopped without one on screen. */}
-          {isPending || isStarting ? null : (
+          {showsCode ? null : !offersQr ? (
+            <button
+              className="wa-link-text-btn"
+              disabled={isStarting}
+              onClick={() => {
+                setWantsQr(true);
+                if (!isPending) onStartLogin();
+              }}
+              type="button"
+            >
+              Scanning from another device? Show a QR code
+            </button>
+          ) : isPending || isStarting ? null : (
             <button
               className="chat-btn chat-btn-primary chat-btn-sm"
               onClick={onStartLogin}

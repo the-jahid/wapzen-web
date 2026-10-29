@@ -209,6 +209,68 @@ Facts that age:
 - Meta One launched 15 Sep 2026. Business plans: Essencial R$ 59, Avançado R$ 199, Expert R$ 599, Máximo R$ 1.999. These come from Meta's announcement.
 - ChatGPT on WhatsApp: off in Mexico. In Brazil it is unclear (CADE dispute, Meta charges AI providers per message), so no Brazilian ChatGPT post was written.
 
+## Industry blogs (Oct 30, ninth harvest)
+
+[`seo-blog-industry-research.mjs`](seo-blog-industry-research.mjs) scores one cluster per industry (12–13 seeds each, same five sources and rank weighting as the English runs). Generic phrases such as "what is whatsapp chatbot" turn up in every cluster; judge each cluster by its own phrases. The SERPs are held by chatbot vendors' blogs (Gallabox, AiSensy, WATI, BotPenguin, QuickReply, Pabbly), the same tier as wapzen.io, plus freelancer listings.
+
+| Cluster | Strongest phrases (score, sources) | Post |
+| --- | --- | --- |
+| Real estate | whatsapp chatbot for real estate 72 (5/5), whatsapp automation for real estate 71, ai chatbot for real estate 50 (5/5), real estate whatsapp marketing 40, real estate lead follow up system 39, …greeting message / …follow up schedule 24, …follow up scripts 21 | `/blog/whatsapp-chatbot-for-real-estate` (the how-to; `/ai-calling-agent-for-real-estate` stays the product page) |
+| Clinics | ai receptionist for medical office 59, whatsapp chatbot for hospital 57, ai receptionist for dental office 55, …dental clinics 48, …clinics / whatsapp ai receptionist 40, whatsapp automation for clinics 37, ai front desk for medical office 24 | `/blog/whatsapp-ai-receptionist-for-clinics` |
+| Ecommerce | whatsapp chatbot for ecommerce 71, whatsapp automation for ecommerce 67, whatsapp order status 55, woocommerce whatsapp order notification 47 (5/5), whatsapp order tracking 46, whatsapp abandoned cart shopify 40, abandoned cart whatsapp message 38, …template 34 | `/blog/whatsapp-chatbot-for-ecommerce` |
+| Education | whatsapp chatbot for education 63, whatsapp for schools / for education 40, ai chatbot for school 39, whatsapp message for tuition classes 30, …sample 24, whatsapp chatbot for college 30, ai chatbot for school helpdesk 27 | `/blog/whatsapp-chatbot-for-education` |
+
+What these posts commit to (keep them in step with the server):
+- **"AI receptionist for medical office" is mostly phone-line intent.** The clinics post says plainly that Wapzen answers WhatsApp chats and calls, not a landline, and compares the two.
+- **Wapzen can't start a chat by message.** Shipping notifications, cart reminders, fee reminders and announcements need Business API templates (or Channels and Communities for schools). The posts say so and quote Meta's categories: cart reminders are marketing even when requested, order and shipping updates are utility, and recalls that invite a new booking can be marketing.
+- **Product limits the posts state:** the chat agent reads 1:1 text only (no voice notes, photos or groups) and has no per-chat takeover; the voice agent isn't told the lead's name or details; adding a lead dials at once; no redial; agents know today's date (since 2026-10-29); tool responses are cut at 3,000 characters.
+- **Facts that age:** the HBR lead-response figures (2011 study), Baymard's 70.22% (50 studies, page updated 22 Sep 2025), and Meta's rates from the 1 Oct 2026 card, which the pricing post also uses.
+- The same day, the English, Mexican and Brazilian booking posts were corrected: they said agents don't know today's date, which stopped being true on 2026-10-29.
+
+## Playbook blogs (Oct 30, tenth harvest)
+
+[`seo-blog-playbook-research.mjs`](seo-blog-playbook-research.mjs) scores five how-to clusters, with the same sources and weighting. The SERPs are vendor docs and blogs (Chatlayer, Kommunicate, Landbot, BotPenguin, Gallabox, WATI, Hyperleap), plus SaySimple, Rasayel and Qualimero for away messages. WhatsApp's own Help Center ranks for the away-message setup.
+
+| Cluster | Strongest phrases (score, sources) | Post |
+| --- | --- | --- |
+| Handoff | whatsapp live chat support 44 (5/5), chatbot human handoff / chatbot to human handoff / live agent handoff / human takeover in chatbot / whatsapp live chat agent 30 | `/blog/whatsapp-chatbot-human-handoff` (the weakest cluster, but it's a trust topic) |
+| Prompts | how to write a system prompt / ai agent instructions 50 (5/5), ai agent system prompt 48 (5/5), chatbot / system / ai agent prompt examples and ai receptionist prompt 40, ai agent instructions template 35 | `/blog/ai-agent-system-prompt-examples` |
+| Knowledge base | chatbot knowledge base / ai knowledge base / rag chatbot / train ai on your own data 50 (5/5), knowledge base for chatbot / …examples / …best practices 40, faq chatbot 34 | `/blog/chatbot-knowledge-base` |
+| Leads | whatsapp zoho crm integration 57, whatsapp crm integration / hubspot integration / lead qualification process / whatsapp lead generation 50 (5/5), whatsapp to google sheets 46 (5/5), lead qualification questions / bant questions 40 | `/blog/whatsapp-lead-qualification` |
+| Away message | whatsapp business away message not working 105 (5/5), whatsapp away message example 73, whatsapp business away message 65 (5/5), whatsapp ai auto reply 50 (5/5), …not showing 42, whatsapp holiday message 40 | `/blog/whatsapp-away-message` (the strongest cluster this round) |
+
+What these posts commit to (keep them in step with the server):
+- **Handoff:** there is no per-chat pause. Closing a thread is bookkeeping, and pausing the agent stops it in every chat. A reply from the dashboard's Conversation tab joins the agent's history; a reply from the phone doesn't. `transfer_call` can't bridge a call. If a per-chat takeover ships, rewrite the post's "tools" table and Wapzen section.
+- **Knowledge base:** the retrieval numbers come from `whatsapplogin/manager.go`: top 4 passages, 3,000 characters with titles, the query built from the message plus the last 4 messages. Chunks default to 2,000/400 characters. Files over 300,000 characters are refused, and there are no URL sources and no in-place edits.
+- **Leads:** an `api_request` tool POSTs one flat JSON object of its parameters, so the post routes CRMs through a webhook automation. Don't name Zapier/Make action labels that weren't checked.
+- **Away message:** setup and the internet-connection requirement come from WhatsApp's Help Center (the page renders client-side, so fetch tools see no text). Wapzen has no reply schedule. The title promises 30 examples.
+- The same day, the hub's setup step stopped saying "pick a GPT or Claude model": chat agents have been locked to Claude Sonnet 4.6 since 2026-10-29. Other pages still say it (see the memory note on the model lock).
+
+## European blogs (Oct 30, eleventh harvest)
+
+One post per big European market, for businesses ready to buy. [`seo-blog-europe-research.mjs`](seo-blog-europe-research.mjs) takes a market (`uk|de|fr|es|nl`) and scores six buyer-intent clusters (prices, providers, GDPR, chatbots, AI phone answering, industries) against Google and YouTube (`hl/gl`, `ie/oe=utf-8`) and DuckDuckGo (`kl=`). Compare scores within a market, not across markets.
+
+| Market | Strongest phrases (score, sources) | Post |
+| --- | --- | --- |
+| UK | ai receptionist for small business uk 45, ai receptionist uk 30 (3/3), ai phone answering service 27, virtual receptionist uk 20 | `/blog/ai-receptionist-uk` (English, no twin) |
+| Germany | whatsapp business api kosten 37, …kostenpflichtig 36, whatsapp business kosten 30 (3/3), …api anbieter 20 | `/de/blog/whatsapp-business-api-kosten` (hreflang: API pricing post) |
+| France | chatbot whatsapp business 55 (3/3), chatbot whatsapp gratuit 46 (3/3), bot whatsapp 30 (3/3), créer un chatbot whatsapp 18–24 | `/fr/blog/chatbot-whatsapp-business` (hreflang: what-is post) |
+| Spain | recepcionista virtual 30 (3/3), agente de voz ia 30 (3/3), asistente telefónico ia 20, centralita virtual ia 20, secretaria virtual ia 19 | `/es/blog/recepcionista-virtual-ia` (no twin) |
+| Netherlands | whatsapp business kosten 30 (3/3), whatsapp business api kosten 28, whatsapp zakelijk kosten 24, moet je betalen voor whatsapp business 10 | `/nl/blog/whatsapp-zakelijk-kosten` (hreflang: API pricing post) |
+
+Not built, and why:
+- **DE "ki telefonassistent"** (handwerk 48 3/3, arztpraxis 38, kosten 27): the biggest German buyer cluster, but searchers want their landline answered and Wapzen answers WhatsApp only. FR "agent vocal ia" / "standard téléphonique ia" has the same mismatch.
+- **"whatsapp business dsgvo konform"** (42, 41, 34) and UK "is whatsapp gdpr compliant" (25, 20): strong, but an honest post needs Wapzen's own GDPR position (DPA/AVV, data location, AI subprocessors), which isn't documented. The pricing posts carry a short neutral GDPR note instead.
+- **Spain chatbot cluster** (chatbot whatsapp business 55): `/es/chatbot-whatsapp-gratis` already targets it.
+
+Wiring: de, fr and nl are new locales with a blog only (`fallback: "en"` puts the English solution pages in their footer; `LocaleBlogIndex` keeps English pages out of the index). Spain (`es`) gained `ui.blog` and `/es/blog`.
+
+Facts that age (recheck each quarter, 1 Jan/Apr/Jul/Oct):
+- Meta rates from 1 October 2026 (two reprints each): Germany €0.1131 marketing / €0.0456 utility, authentication and service; Netherlands €0.1323 / €0.0414; France €0.0712 / €0.0248; Spain €0.0585 / €0.0166; UK £0.0458 / £0.0159. Service is free for the first 1,000 a month per number.
+- Providers, from their own pages on 30 Oct 2026: 360dialog €49/€99/€500 per number a month; Superchat Free €0, Basic €89, Professional €149, Advanced €299 a month (net, 12-month minimum); hellomateo on request (12-month minimum); Trengo Boost €299 (yearly) or €349 (monthly) for 10 users, Pro €499/€599; Landbot Professional WA €160 a month (yearly), 500 AI chats, then €0.10; Kanal €89, Scale with AI €149; IONOS AI Receptionist £9/£19/£29 + VAT; Moneypenny AI from £25; Connect Communications from £14.99 + VAT; Recepcionista.com €99/€199/€299 + IVA, €0.18 a minute extra. Secretaria.es (from €69) and Fonvirtual (from €150) come from Minute Call's comparison, not their own pages.
+- UK National Living Wage £12.71 from April 2026 (GOV.UK). EU AI Act Article 50 (tell people they're talking to an AI) applies from 2 August 2026, untouched by the Digital Omnibus.
+- Copy rule: chat agents have hidden reply caps, so these posts say "free to start" and "message us for high volume", and never list Wapzen at €0 a month as if it had no limits.
+
 ## What the landing page now targets
 
 - **Title:** `Free WhatsApp AI Chatbot & AI Calling Agent for Business | Wapzen` (65 chars; Google may cut the brand, and the keywords come first).

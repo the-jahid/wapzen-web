@@ -67,7 +67,7 @@ import {
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
-import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
+import { useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 
 type Option<T extends string = string> = {
   id: T;
@@ -4800,6 +4800,11 @@ function PhoneNumberSetupCard({
   const canRestart = Boolean(login);
   // A code login still rotates QR codes underneath; the code is what to show.
   const showsCode = isPending && Boolean(login?.pairing_code);
+  // A phone can't scan its own screen, and almost nobody links from one by QR,
+  // so it gets the number form alone unless a second device is at hand.
+  const isPhone = useIsPhone();
+  const [wantsQr, setWantsQr] = useState(false);
+  const offersQr = !isPhone || wantsQr;
 
   return (
     <div className="agents-card editor-card number-setup">
@@ -4819,7 +4824,7 @@ function PhoneNumberSetupCard({
             <span className="number-setup-pane-note">WhatsApp › Linked devices</span>
           </div>
 
-          {showsCode ? null : <div className="number-qr-frame">
+          {showsCode || !offersQr ? null : <div className="number-qr-frame">
             {isPending && login?.qr_code ? (
               <Image
                 alt="WhatsApp login QR code"
@@ -4849,8 +4854,10 @@ function PhoneNumberSetupCard({
             {isPending
               ? "Waiting for the scan. The number is assigned to this agent the moment it connects."
               : login
-                ? `This login ${phoneStatusLabels[login.status].toLowerCase()}. Get a new QR code to try again.`
-                : "The number is detected automatically after you scan."}
+                ? `This login ${phoneStatusLabels[login.status].toLowerCase()}. ${offersQr ? "Get a new QR code" : "Get a new code"} to try again.`
+                : offersQr
+                  ? "The number is detected automatically after you scan."
+                  : "The number is assigned to this agent the moment it connects."}
           </div>
 
           {!login ? (
@@ -4863,15 +4870,29 @@ function PhoneNumberSetupCard({
             />
           ) : null}
 
-          <button
-            className="agents-btn agents-btn-primary agents-btn-sm"
-            disabled={isStarting}
-            onClick={() => onStartLogin(canRestart)}
-            type="button"
-          >
-            <Icon name={canRestart ? "refresh" : "plus"} size={15} stroke="#fff" sw={2.2} />
-            {isStarting ? "Starting…" : canRestart ? "New QR code" : "Start WhatsApp login"}
-          </button>
+          {offersQr ? (
+            <button
+              className="agents-btn agents-btn-primary agents-btn-sm"
+              disabled={isStarting}
+              onClick={() => onStartLogin(canRestart)}
+              type="button"
+            >
+              <Icon name={canRestart ? "refresh" : "plus"} size={15} stroke="#fff" sw={2.2} />
+              {isStarting ? "Starting…" : canRestart ? "New QR code" : "Start WhatsApp login"}
+            </button>
+          ) : showsCode ? null : (
+            <button
+              className="wa-link-text-btn"
+              disabled={isStarting}
+              onClick={() => {
+                setWantsQr(true);
+                if (!isPending) onStartLogin(canRestart);
+              }}
+              type="button"
+            >
+              Scanning from another device? Show a QR code
+            </button>
+          )}
 
           {error ? <div className="number-setup-error">{error}</div> : null}
         </section>

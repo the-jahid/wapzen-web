@@ -52,6 +52,9 @@ export type ApiChatAgent = {
   prompt?: ChatPromptSection;
   knowledge_base?: ChatKnowledgeBaseSection;
   tools?: ChatToolsSection;
+  // True once the agent, or the number it answers on, has sent every reply it
+  // is allowed; it stays silent until the limit is lifted. Read-only.
+  reply_limit_reached?: boolean;
   runtime?: ChatRuntimeSection;
 };
 
@@ -85,12 +88,19 @@ type Envelope<T> = { success: boolean; message: string; data: T };
 
 export class ChatAgentError extends Error {
   readonly status: number;
+  // A machine-readable reason the server gave, such as "chat_agent_limit".
+  readonly code: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code = "") {
     super(message);
     this.name = "ChatAgentError";
     this.status = status;
+    this.code = code;
   }
+}
+
+export function isChatAgentLimitError(error: unknown): boolean {
+  return error instanceof ChatAgentError && error.code === "chat_agent_limit";
 }
 
 async function request<T>(
@@ -112,7 +122,12 @@ async function request<T>(
     // The status fallback below covers an unexpected non-JSON response.
   }
   if (!response.ok || !envelope?.success) {
-    throw new ChatAgentError(envelope?.message || `Request failed (${response.status})`, response.status);
+    const code = (envelope?.data as { code?: unknown } | undefined)?.code;
+    throw new ChatAgentError(
+      envelope?.message || `Request failed (${response.status})`,
+      response.status,
+      typeof code === "string" ? code : ""
+    );
   }
   return envelope.data;
 }

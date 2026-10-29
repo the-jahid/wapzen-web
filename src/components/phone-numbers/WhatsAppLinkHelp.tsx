@@ -7,6 +7,10 @@ import type { ApiPhoneNumber } from "@/lib/phoneNumbers";
 // more of 20s — and a pairing code dies with it.
 const CODE_LIFETIME_MS = 160_000;
 
+// The pairing countdown turns red with this long left: about what it takes to
+// find Linked devices and type 8 characters.
+const CODE_ENDING_MS = 30_000;
+
 // A phone can't scan its own screen. Someone on a touch-first, phone-width
 // screen almost certainly has WhatsApp on that same device, so the code form is
 // what they see first.
@@ -34,7 +38,9 @@ function isPhoneScreen() {
   );
 }
 
-function useIsPhone() {
+// The setup cards ask this before starting a login: a phone gets no QR login
+// unless asked for one, only the number form.
+export function useIsPhone() {
   return useSyncExternalStore(subscribePhoneQuery, isPhoneScreen, () => false);
 }
 
@@ -76,10 +82,9 @@ export function WhatsAppLinkHelp({
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [isRequesting, setIsRequesting] = useState(false);
-  // When this page last got a code, which is what the countdown runs from. A
-  // code picked up from a login started elsewhere (a reload) shows none.
+  // When this page last got a code: the countdown's fallback for a server that
+  // doesn't say how long the code has left.
   const [issuedAt, setIssuedAt] = useState<number | null>(null);
-  const [now, setNow] = useState(0);
 
   // How many logins this card has shown. A second one means the first ran out
   // unscanned — or the phone refused it — so the help leads with what to try.
@@ -106,13 +111,21 @@ export function WhatsAppLinkHelp({
     return () => window.clearInterval(interval);
   }, [qrCode, qrExpiresIn]);
 
+  // The pairing code's countdown, re-anchored to each poll the same way.
+  const codeExpiresIn = pairingCode ? login?.pairing_expires_in_ms ?? null : null;
+  const codeDeadlineKnown = codeExpiresIn !== null || issuedAt !== null;
+  const [codeLeft, setCodeLeft] = useState<number | null>(null);
+
   useEffect(() => {
-    if (issuedAt === null) return;
-    const tick = () => setNow(Date.now());
-    const interval = window.setInterval(tick, 1000);
+    if (!pairingCode) return;
+    const deadline =
+      codeExpiresIn !== null ? Date.now() + codeExpiresIn : issuedAt !== null ? issuedAt + CODE_LIFETIME_MS : null;
+    if (deadline === null) return;
+    const tick = () => setCodeLeft(Math.max(0, deadline - Date.now()));
+    const interval = window.setInterval(tick, 250);
     tick();
     return () => window.clearInterval(interval);
-  }, [issuedAt]);
+  }, [pairingCode, codeExpiresIn, issuedAt]);
 
   async function requestCode(value: string) {
     const normalized = normalizePhone(value);
@@ -139,40 +152,58 @@ export function WhatsAppLinkHelp({
   }
 
   if (pairingCode) {
-    const remaining = issuedAt !== null && now > 0 ? CODE_LIFETIME_MS - (now - issuedAt) : null;
+    const remaining = codeDeadlineKnown ? codeLeft : null;
+    const expired = remaining !== null && remaining <= 0;
+    const canRenew = !disabled && !isRequesting && Boolean(login?.phone_number);
+    const renew = () => login?.phone_number && void requestCode(login.phone_number);
     return (
       <div className="wa-link">
-        <div className="wa-link-code" aria-label={`Pairing code ${pairingCode.split("").join(" ")}`}>
+        {remaining === null ? (
+          <div className="wa-link-timer" role="timer">
+            <span>The code works for about 2 minutes — enter it right away.</span>
+          </div>
+        ) : (
+          <div className={`wa-link-timer${remaining <= CODE_ENDING_MS ? " is-ending" : ""}`} role="timer">
+            <span>{expired ? "This code has expired." : `Code expires in ${formatCountdown(remaining)}`}</span>
+            <span className="wa-link-timer-track" aria-hidden="true">
+              <span style={{ transform: `scaleX(${Math.min(1, remaining / CODE_LIFETIME_MS)})` }} />
+            </span>
+          </div>
+        )}
+        <div
+          className={`wa-link-code${expired ? " is-expired" : ""}`}
+          aria-label={`Pairing code ${pairingCode.split("").join(" ")}`}
+        >
           {pairingCode}
         </div>
-        <ol className="wa-link-steps">
-          <li>
-            On the phone with {login?.phone_number || "this number"}, open the WhatsApp notification{" "}
-            <b>&ldquo;Enter code to link new device&rdquo;</b>.
-          </li>
-          <li>
-            No notification? Open WhatsApp › <b>Linked devices</b> › <b>Link a device</b> ›{" "}
-            <b>Link with phone number instead</b>.
-          </li>
-          <li>Type the code above. The number connects by itself — keep this page open.</li>
-        </ol>
-        <div className="wa-link-foot">
-          <span>
-            {remaining === null
-              ? "The code works for about 2 minutes."
-              : remaining > 0
-                ? `Expires in ${formatCountdown(remaining)}`
-                : "This code has expired."}
-          </span>
-          <button
-            className="wa-link-text-btn"
-            disabled={disabled || isRequesting || !login?.phone_number}
-            onClick={() => login?.phone_number && void requestCode(login.phone_number)}
-            type="button"
-          >
+        {expired ? (
+          <button className="wa-link-btn wa-link-btn-wide" disabled={!canRenew} onClick={renew} type="button">
             {isRequesting ? "Getting a code…" : "Get a new code"}
           </button>
-        </div>
+        ) : null}
+        <ol className="wa-link-steps">
+          <li>
+            Open <b>WhatsApp</b> on the phone with {login?.phone_number || "this number"}. If you see the
+            notification <b>&ldquo;Enter code to link new device&rdquo;</b>, tap it and skip to step 4.
+          </li>
+          <li>
+            Tap <b>⋮ Menu</b> (Android) or <b>Settings</b> (iPhone) › <b>Linked devices</b> ›{" "}
+            <b>Link a device</b>.
+          </li>
+          <li>
+            The camera opens. Don&rsquo;t scan — tap <b>Link with phone number instead</b> at the bottom of
+            the screen.
+          </li>
+          <li>Type the 8 characters above. The number connects by itself — keep this page open.</li>
+        </ol>
+        <p className="wa-link-note">
+          Nothing on your phone? Check that {login?.phone_number || "the number"} is the WhatsApp number on it.
+        </p>
+        {expired ? null : (
+          <button className="wa-link-text-btn" disabled={!canRenew} onClick={renew} type="button">
+            {isRequesting ? "Getting a code…" : "Get a new code"}
+          </button>
+        )}
         {error ? <div className="wa-link-error">{error}</div> : null}
         <style dangerouslySetInnerHTML={{ __html: css }} />
       </div>
@@ -195,8 +226,8 @@ export function WhatsAppLinkHelp({
       ) : null}
       {isPhone ? (
         <p className="wa-link-note">
-          <b>On your phone?</b> It can&rsquo;t scan its own screen — link with your phone number below
-          instead.
+          <b>On your phone?</b> It can&rsquo;t scan its own screen. Enter the number below and WhatsApp
+          gives you a code to type in — no scan needed.
         </p>
       ) : (
         <ol className="wa-link-steps">
@@ -327,6 +358,8 @@ const css = `
   text-align: center;
   user-select: all;
 }
+.wa-link-code.is-expired { color: var(--app-muted); text-decoration: line-through; }
+.wa-link-btn-wide { justify-self: stretch; padding: 10px 14px; }
 .wa-link-timer {
   color: var(--app-text-soft);
   display: grid;

@@ -21,6 +21,9 @@ export type ApiPhoneNumber = {
   // Set only on an unscanned login started with startPhoneNumberCodeLogin: the
   // "ABCD-EFGH" code the user types into WhatsApp instead of scanning.
   pairing_code?: string | null;
+  // How long pairing_code can still be typed in, counted from when the server
+  // answered. Only alongside pairing_code.
+  pairing_expires_in_ms?: number | null;
   last_connected_at?: string | null;
   created_at: string;
   updated_at: string;

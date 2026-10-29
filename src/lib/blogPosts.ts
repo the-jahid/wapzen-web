@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, Coins, Columns3, GitCompareArrows, Hand, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, PhoneCall, QrCode, Scale, ShoppingBag, Sparkles, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Coins, Columns3, ConciergeBell, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, Library, ListChecks, MessageCircle, MessageSquareReply, Moon, PackageCheck, PhoneCall, QrCode, Scale, ScrollText, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Target, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -25,7 +25,7 @@ export type BlogPostEntry = {
   alternateOf?: string;
 };
 
-// Blog posts in app/blog (English) and app/it/blog (Italian), newest first
+// Blog posts in app/blog (English) and app/<locale>/blog (the others), newest first
 // within each language. Feeds each language's blog index, the sitemap,
 // each post's "keep reading" links and its metadata, so a new post only needs
 // a page plus an entry here. Comparison posts quote competitors' prices: keep
@@ -33,6 +33,120 @@ export type BlogPostEntry = {
 // Guides show dashboard screenshots (public/blog/<slug>/, demo data): retake
 // them when the screens they show change.
 export const blogPosts: BlogPostEntry[] = [
+  // UK post of the European set (one post per market, for businesses ready to
+  // buy), researched with docs/seo-blog-europe-research.mjs uk.
+  {
+    href: "/blog/ai-receptionist-uk",
+    title: "AI Receptionist for Small Business UK: Costs & Options (2026)",
+    name: "AI receptionist UK",
+    description: "What an AI receptionist costs a UK small business in 2026: phone-line AI from £9 a month, answering services, a hire, and a WhatsApp AI receptionist.",
+    tag: "Explainer",
+    icon: ConciergeBell,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 9,
+  },
+  // How-to posts, researched with docs/seo-blog-playbook-research.mjs.
+  {
+    href: "/blog/whatsapp-chatbot-human-handoff",
+    title: "WhatsApp Chatbot Human Handoff: AI to a Person and Back (2026)",
+    name: "WhatsApp chatbot human handoff",
+    description: "How to hand a WhatsApp chat from AI to a person and back: when to hand off, what the bot should say, how takeover works in each tool, and rules to copy.",
+    tag: "Explainer",
+    icon: Handshake,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 8,
+  },
+  {
+    href: "/blog/ai-agent-system-prompt-examples",
+    title: "AI Agent Instructions: System Prompt Examples by Use Case (2026)",
+    name: "AI agent system prompt examples",
+    description: "How to write instructions (a system prompt) for a WhatsApp AI agent: the structure that works, 8 copyable examples by use case, voice tips and fixes.",
+    tag: "Explainer",
+    icon: ScrollText,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 10,
+  },
+  {
+    href: "/blog/chatbot-knowledge-base",
+    title: "Chatbot Knowledge Base: How to Build One Your AI Answers Well From",
+    name: "Chatbot knowledge base",
+    description: "How to build a chatbot knowledge base that gives right answers: what to include, how to write and split it, how retrieval works, and how to fix gaps.",
+    tag: "Explainer",
+    icon: Library,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/whatsapp-lead-qualification",
+    title: "WhatsApp Lead Qualification: Questions to Ask & CRM Integration",
+    name: "WhatsApp lead qualification",
+    description: "Qualify WhatsApp leads with AI: the questions to ask (BANT, simplified), sets by industry, lead scoring, and sending leads to HubSpot, Zoho or Sheets.",
+    tag: "Explainer",
+    icon: Target,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 8,
+  },
+  {
+    href: "/blog/whatsapp-away-message",
+    title: "WhatsApp Away Message vs AI Auto-Reply: 30 Examples & Fixes",
+    name: "WhatsApp away message",
+    description: "30 WhatsApp away message examples to copy, how to set one up, why it's not working, and when an AI auto-reply that answers questions works better.",
+    tag: "Explainer",
+    icon: Moon,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 8,
+  },
+  // Industry posts, researched with docs/seo-blog-industry-research.mjs.
+  {
+    href: "/blog/whatsapp-chatbot-for-real-estate",
+    title: "WhatsApp Chatbot for Real Estate: Answer Listings & Call Leads Back",
+    name: "WhatsApp chatbot for real estate",
+    description: "Set up a WhatsApp chatbot for real estate that answers listing questions from your brochures, qualifies buyers, and calls new leads back within a minute.",
+    tag: "Explainer",
+    icon: Building2,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/whatsapp-ai-receptionist-for-clinics",
+    title: "WhatsApp AI Receptionist for Clinics & Dental Offices (2026 Guide)",
+    name: "AI receptionist for clinics",
+    description: "How a WhatsApp AI receptionist answers patient chats and calls for clinics and dental offices: questions, booking requests, reminders, and the rules to set.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 8,
+  },
+  {
+    href: "/blog/whatsapp-chatbot-for-ecommerce",
+    title: "WhatsApp Automation for Ecommerce: Order Status, Returns & Carts",
+    name: "WhatsApp automation for ecommerce",
+    description: "A WhatsApp chatbot for ecommerce that answers order status and returns, plus the honest options for abandoned-cart follow-up and what each one costs.",
+    tag: "Explainer",
+    icon: ShoppingCart,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/whatsapp-chatbot-for-education",
+    title: "WhatsApp Chatbot for Education: Schools & Coaching Centres (2026)",
+    name: "WhatsApp chatbot for education",
+    description: "A WhatsApp chatbot for schools and coaching centres: answer admission and fee questions, book demo classes, call enquiries back, plus message samples.",
+    tag: "Explainer",
+    icon: GraduationCap,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 8,
+  },
   {
     href: "/blog/whatsapp-business-calling-api",
     title: "WhatsApp Business Calling API (2026): Pricing, Limits & Setup",
@@ -74,7 +188,7 @@ export const blogPosts: BlogPostEntry[] = [
     tag: "Explainer",
     icon: CalendarCheck,
     published: "2026-10-28",
-    updated: "2026-10-28",
+    updated: "2026-10-30",
     readingMinutes: 9,
   },
   {
@@ -96,7 +210,7 @@ export const blogPosts: BlogPostEntry[] = [
     tag: "Explainer",
     icon: Bot,
     published: "2026-10-27",
-    updated: "2026-10-27",
+    updated: "2026-10-30",
     readingMinutes: 9,
     image: "/blog/whatsapp-chatbot-without-business-api/conversation.webp",
     cover: "/whatsapp-ai-voice-agent-hero.png",
@@ -384,7 +498,7 @@ export const blogPosts: BlogPostEntry[] = [
     tag: "Explainer",
     icon: CalendarCheck,
     published: "2026-10-28",
-    updated: "2026-10-28",
+    updated: "2026-10-30",
     readingMinutes: 8,
     locale: "es-MX",
     alternateOf: "/blog/whatsapp-appointment-booking",
@@ -464,7 +578,7 @@ export const blogPosts: BlogPostEntry[] = [
     tag: "Explainer",
     icon: CalendarCheck,
     published: "2026-10-28",
-    updated: "2026-10-28",
+    updated: "2026-10-30",
     readingMinutes: 8,
     locale: "pt-BR",
     alternateOf: "/blog/whatsapp-appointment-booking",
@@ -480,6 +594,60 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-10-28",
     readingMinutes: 7,
     locale: "pt-BR",
+  },
+  // Germany, France, Spain and the Netherlands: one post per market for
+  // businesses ready to buy, researched with docs/seo-blog-europe-research.mjs.
+  // Rates are Meta's EUR card for each country.
+  {
+    href: "/de/blog/whatsapp-business-api-kosten",
+    title: "WhatsApp Business API Kosten 2026: Preise, Anbieter & Beispiele",
+    name: "WhatsApp Business API Kosten",
+    description: "Was kostet die WhatsApp Business API? Metas Preise für Deutschland seit 1. Oktober 2026, Anbieter im Vergleich, Rechenbeispiele und was gratis bleibt.",
+    tag: "Explainer",
+    icon: Coins,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 9,
+    locale: "de",
+    alternateOf: "/blog/whatsapp-business-api-pricing",
+  },
+  {
+    href: "/fr/blog/chatbot-whatsapp-business",
+    title: "Chatbot WhatsApp Business : fonctionnement, prix et solutions (2026)",
+    name: "Chatbot WhatsApp Business",
+    description: "Comment marche un chatbot WhatsApp Business, les trois façons d’en créer un, ce qu’il coûte en France (tarifs Meta, abonnements) et ce qu’impose l’AI Act.",
+    tag: "Explainer",
+    icon: Bot,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 9,
+    locale: "fr",
+    alternateOf: "/blog/what-is-a-whatsapp-chatbot",
+  },
+  {
+    href: "/es/blog/recepcionista-virtual-ia",
+    title: "Recepcionista virtual con IA: precios y opciones para tu negocio (2026)",
+    name: "Recepcionista virtual con IA",
+    description: "Cuánto cuesta una recepcionista virtual en España: servicios con personas, IA para el teléfono desde 99 €/mes y una recepcionista con IA para WhatsApp.",
+    tag: "Explainer",
+    icon: ConciergeBell,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 8,
+    locale: "es",
+  },
+  {
+    href: "/nl/blog/whatsapp-zakelijk-kosten",
+    title: "WhatsApp Zakelijk kosten 2026: wat is gratis en wat betaal je?",
+    name: "WhatsApp Zakelijk kosten",
+    description: "Kost WhatsApp Business geld? Wat gratis is in de app, wat de API kost met de tarieven van Meta voor Nederland sinds 1 oktober 2026, plus rekenvoorbeelden.",
+    tag: "Explainer",
+    icon: Coins,
+    published: "2026-10-30",
+    updated: "2026-10-30",
+    readingMinutes: 8,
+    locale: "nl",
+    alternateOf: "/blog/whatsapp-business-api-pricing",
   },
 ];
 
