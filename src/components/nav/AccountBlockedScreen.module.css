@@ -31,6 +31,11 @@
   color: #dc2626;
 }
 
+.iconPaused {
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+}
+
 .title {
   margin: 0 0 10px;
   font-size: 1.35rem;

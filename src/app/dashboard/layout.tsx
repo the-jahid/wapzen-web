@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { preconnect } from "react-dom";
 
 import { AccountBlockedScreen } from "@/components/nav/AccountBlockedScreen";
+import { MaintenanceScreen } from "@/components/nav/MaintenanceScreen";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -31,6 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       {children}
+      <MaintenanceScreen />
       <AccountBlockedScreen />
     </>
   );
