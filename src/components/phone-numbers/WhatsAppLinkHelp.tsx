@@ -11,19 +11,31 @@ const CODE_LIFETIME_MS = 160_000;
 // screen almost certainly has WhatsApp on that same device, so the code form is
 // what they see first.
 const PHONE_QUERY = "(pointer: coarse) and (max-width: 820px)";
+const TOUCH_QUERY = "(pointer: coarse)";
+
+// Chrome's "Desktop site" on a phone widens the page past any width query and
+// reports a desktop user agent, but the screen keeps a phone's short side —
+// tablets start around 600px.
+const PHONE_SCREEN_SHORT_SIDE = 600;
 
 function subscribePhoneQuery(onChange: () => void) {
-  const query = window.matchMedia(PHONE_QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
+  const queries = [window.matchMedia(PHONE_QUERY), window.matchMedia(TOUCH_QUERY)];
+  for (const query of queries) query.addEventListener("change", onChange);
+  return () => {
+    for (const query of queries) query.removeEventListener("change", onChange);
+  };
+}
+
+function isPhoneScreen() {
+  if (window.matchMedia(PHONE_QUERY).matches) return true;
+  return (
+    window.matchMedia(TOUCH_QUERY).matches &&
+    Math.min(window.screen.width, window.screen.height) < PHONE_SCREEN_SHORT_SIDE
+  );
 }
 
 function useIsPhone() {
-  return useSyncExternalStore(
-    subscribePhoneQuery,
-    () => window.matchMedia(PHONE_QUERY).matches,
-    () => false
-  );
+  return useSyncExternalStore(subscribePhoneQuery, isPhoneScreen, () => false);
 }
 
 // normalizePhone turns what people type ("+880 1639-726992", "8801639726992")
@@ -68,6 +80,15 @@ export function WhatsAppLinkHelp({
   // code picked up from a login started elsewhere (a reload) shows none.
   const [issuedAt, setIssuedAt] = useState<number | null>(null);
   const [now, setNow] = useState(0);
+
+  // How many logins this card has shown. A second one means the first ran out
+  // unscanned — or the phone refused it — so the help leads with what to try.
+  const loginId = login?.id ?? null;
+  const [seen, setSeen] = useState({ id: loginId, count: loginId ? 1 : 0 });
+  if (seen.id !== loginId) {
+    setSeen({ id: loginId, count: loginId ? seen.count + 1 : seen.count });
+  }
+  const isRetry = seen.count > 1;
 
   const pairingCode = login?.status === "pending_qr" ? login.pairing_code ?? null : null;
   const qrCode = login?.status === "pending_qr" && !pairingCode ? login.qr_code ?? null : null;
@@ -158,7 +179,7 @@ export function WhatsAppLinkHelp({
     );
   }
 
-  const showForm = formOpen ?? isPhone;
+  const showForm = formOpen ?? (isPhone || isRetry);
   // Only the first code outlives 20s, so a reading above that is the first.
   const qrLifetime = qrExpiresIn !== null && qrExpiresIn > 20_000 ? 60_000 : 20_000;
 
@@ -186,6 +207,20 @@ export function WhatsAppLinkHelp({
           </li>
           <li>Point the phone&rsquo;s camera at this QR code.</li>
         </ol>
+      )}
+      {isPhone ? null : (
+        <details className="wa-link-trouble" open={isRetry}>
+          <summary>Scan not working?</summary>
+          <ul>
+            <li>
+              <b>Phone shows an error?</b> WhatsApp links at most 4 devices. Open <b>Linked devices</b>,
+              log out one you no longer use, then scan again.
+            </li>
+            <li>Update WhatsApp on the phone — an old version can refuse new links.</li>
+            <li>Camera won&rsquo;t read it? Make this window bigger, or hold the phone a little further back.</li>
+            <li>Still stuck? Link with your phone number instead — no scan needed.</li>
+          </ul>
+        </details>
       )}
 
       {showForm ? (
@@ -234,6 +269,10 @@ const css = `
 }
 .wa-link-steps b, .wa-link-note b { color: var(--app-text); font-weight: 700; }
 .wa-link-note { color: var(--app-muted); font-size: 12.5px; line-height: 1.45; margin: 0; }
+.wa-link-trouble { color: var(--app-muted); font-size: 12.5px; line-height: 1.45; }
+.wa-link-trouble summary { color: var(--app-text-soft); cursor: pointer; font-weight: 700; }
+.wa-link-trouble ul { display: grid; gap: 4px; margin: 6px 0 0; padding-left: 18px; }
+.wa-link-trouble b { color: var(--app-text); font-weight: 700; }
 .wa-link-form { display: grid; gap: 6px; }
 .wa-link-label { color: var(--app-text-soft); font-size: 12px; font-weight: 700; }
 .wa-link-row { display: flex; gap: 8px; min-width: 0; }
