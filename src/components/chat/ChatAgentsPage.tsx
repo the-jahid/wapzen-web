@@ -966,7 +966,7 @@ function createFormToPayload(form: CreateForm): CreateChatAgentPayload {
     agent: {
       name: form.name.trim(),
       phone_number_id: form.phone_number_id || null,
-      status: chatAgentDefaults.status,
+      status: form.phone_number_id ? "active" : chatAgentDefaults.status,
     },
     prompt: { system_prompt: form.system_prompt },
     knowledge_base: { knowledge_base_ids: [] },
@@ -1184,7 +1184,7 @@ export default function ChatAgentsPage() {
       }
       const updated = {
         ...target,
-        agent: { ...target.agent, phone_number_id: phoneNumberId },
+        agent: { ...target.agent, phone_number_id: phoneNumberId, status: "active" as const },
         updated_at: new Date().toISOString(),
       };
       editRevisions.current.set(agentId, (editRevisions.current.get(agentId) ?? 0) + 1);
@@ -2038,7 +2038,7 @@ function Editor({
               onSelectNumber={(phoneNumberId) =>
                 onPatch((current) => ({
                   ...current,
-                  agent: { ...current.agent, phone_number_id: phoneNumberId },
+                  agent: { ...current.agent, phone_number_id: phoneNumberId, status: "active" },
                 }))
               }
               onRefreshNumbers={onRefreshNumbers}
@@ -2300,7 +2300,12 @@ function ConfigPanel({
                   agent: {
                     ...current.agent,
                     phone_number_id: event.target.value || null,
-                    status: event.target.value ? current.agent.status : "inactive",
+                    // Connecting a number takes the agent live; removing it pauses it.
+                    status: !event.target.value
+                      ? "inactive"
+                      : event.target.value === current.agent.phone_number_id
+                        ? current.agent.status
+                        : "active",
                   },
                 }))
               }

@@ -1045,11 +1045,12 @@ function unassignStolenNumber(agents: Agent[], claimer: Agent): Agent[] {
 // user picked something else never overwrites that pick — the same rule the
 // server applies when it assigns the scanned number. This only mirrors that
 // server-side assignment into the editor, which is already saved by the time
-// the poll sees the number connected.
+// the poll sees the number connected. The server also takes the agent live on
+// that assignment, so the mirror does too.
 function assignPhoneNumber(agents: Agent[], agentId: string, phoneNumberId: string): Agent[] {
   return agents.map((agent) =>
     agent.id === agentId && !agent.phone_number_id
-      ? { ...agent, phone_number_id: phoneNumberId }
+      ? { ...agent, phone_number_id: phoneNumberId, status: "live" }
       : agent
   );
 }
@@ -4151,8 +4152,8 @@ export default function AgentsPage() {
     return saveAgent(agent, (saved) => `Agent "${saved.name}" updated`);
   }
 
-  // Removing the assigned number persists immediately, because Publish (the only
-  // other save path) requires a number and so can never save its absence. A live
+  // Removing the assigned number persists immediately, because Publish requires a
+  // number and so can never save its absence. A live
   // agent has nothing to answer calls on once its number is gone, so the removal
   // also pauses it — the backend rejects an active agent with no phone number.
   async function unassignSelectedNumber() {
@@ -4169,6 +4170,44 @@ export default function AgentsPage() {
           ? `Phone number removed — "${saved.name}" paused`
           : `Phone number removed from "${saved.name}"`
     );
+  }
+
+  // Picking a number persists immediately and takes the agent live: the server
+  // activates an agent when it gains a number, so connecting one is the whole
+  // setup. Only the number is sent, so unsaved local edits stay local.
+  async function assignSelectedNumber(phoneNumberId: string) {
+    if (!selectedAgent || isSaving) return;
+    if (selectedAgent.phone_number_id === phoneNumberId) return;
+    setIsSaving(true);
+    try {
+      const saved = agentFromApi(
+        await apiUpdateAgent(selectedAgent.id, { agent: { phone_number_id: phoneNumberId } }, getToken)
+      );
+      setAgents((current) =>
+        unassignStolenNumber(
+          current.map((agent) =>
+            agent.id === saved.id
+              ? { ...agent, phone_number_id: saved.phone_number_id, status: saved.status }
+              : agent
+          ),
+          saved
+        )
+      );
+      setNotice({
+        kind: "success",
+        text:
+          saved.status === "live"
+            ? `Phone number connected — "${saved.name}" is live`
+            : `Phone number connected to "${saved.name}"`,
+      });
+    } catch (error) {
+      setNotice({
+        kind: "error",
+        text: error instanceof Error ? error.message : "Failed to assign phone number",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   // Pause/resume only patches the status so unsaved local edits stay local.
@@ -4334,7 +4373,7 @@ export default function AgentsPage() {
                   numbers={assignableNumbers}
                   onLabelChange={setNumberLoginLabel}
                   onRequestCode={startNumberCodeLogin}
-                  onSelectNumber={(phoneNumberId) => patchSelected({ phone_number_id: phoneNumberId })}
+                  onSelectNumber={(phoneNumberId) => void assignSelectedNumber(phoneNumberId)}
                   onStartLogin={startNumberLogin}
                 />
               ) : null}
@@ -4433,7 +4472,7 @@ export default function AgentsPage() {
                       if (value === "") {
                         void unassignSelectedNumber();
                       } else {
-                        patchSelected({ phone_number_id: value });
+                        void assignSelectedNumber(value);
                       }
                     }}
                     options={editorPhoneNumberOptions}
