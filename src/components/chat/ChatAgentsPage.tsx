@@ -32,7 +32,6 @@ import {
   updateDashboardChatAgent,
   type ApiChatAgent,
   type CreateChatAgentPayload,
-  type ChatModelProvider,
 } from "@/lib/chatAgents";
 
 type IconName =
@@ -61,7 +60,7 @@ type IconName =
 
 // The collapsible parts of the configuration panel, one per section of the
 // chat-agent contract.
-type ConfigSectionId = "model" | "knowledge-base" | "tools";
+type ConfigSectionId = "knowledge-base" | "tools";
 
 // The editor's two tabs. "agent" is everything that configures the agent;
 // "conversation" is the record of what it has already said.
@@ -72,45 +71,6 @@ const editorTabs: { id: EditorTab; label: string }[] = [
   { id: "conversation", label: "Conversation" },
 ];
 
-
-const providerModels: Record<ChatModelProvider, string[]> = {
-  openai: [
-    "gpt-5.6-sol",
-    "gpt-5.6-terra",
-    "gpt-5.6-luna",
-    "gpt-5.5",
-    "gpt-5.4",
-    "gpt-5.4-mini",
-    "gpt-5.4-nano",
-    "gpt-5.2",
-    "gpt-5.1",
-    "gpt-5-pro",
-    "gpt-5",
-    "gpt-5-mini",
-    "gpt-5-nano",
-    "gpt-5-chat-latest",
-    "gpt-4.1",
-    "gpt-4.1-mini",
-    "gpt-4.1-nano",
-    "gpt-4o",
-    "gpt-4o-mini",
-    "o3",
-    "o4-mini",
-  ],
-  anthropic: [
-    "claude-sonnet-5",
-    "claude-opus-5",
-    "claude-fable-5-1",
-    "claude-fable-5",
-    "claude-haiku-4-5-20251001",
-    "claude-sonnet-4-6",
-    "claude-sonnet-4-5-20250929",
-    "claude-opus-4-8",
-    "claude-opus-4-7",
-    "claude-opus-4-6",
-    "claude-opus-4-5-20251101",
-  ],
-};
 
 const phoneStatusLabels: Record<PhoneNumberStatus, string> = {
   pending_qr: "Pending QR",
@@ -421,95 +381,6 @@ const css = `
   padding: 0 34px 0 12px;
 }
 .chat-select option { background: var(--surface); color: var(--text); }
-.chat-model-picker, .chat-provider-picker { position: relative; }
-.chat-modal-section:has(.chat-picker-trigger.is-open),
-.chat-accordion-item:has(.chat-picker-trigger.is-open) { position: relative; z-index: 5; }
-.chat-accordion-item:has(.chat-picker-trigger.is-open) { overflow: visible; }
-.chat-picker-trigger {
-  align-items: center;
-  background: var(--panel);
-  border: 1px solid var(--app-border);
-  border-radius: 11px;
-  color: var(--text);
-  cursor: pointer;
-  display: grid;
-  gap: 3px 10px;
-  grid-template-columns: minmax(0, 1fr) auto;
-  min-height: 48px;
-  padding: 7px 10px 7px 12px;
-  text-align: left;
-  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
-  width: 100%;
-}
-.chat-picker-trigger:hover { background: var(--panel-hover); border-color: var(--app-border-strong); }
-.chat-picker-trigger.is-open { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
-.chat-model-trigger {
-  min-height: 48px;
-}
-.chat-model-trigger-title { font-size: 13px; font-weight: 780; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-model-trigger-id { color: var(--faint); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-picker-trigger-chevron { color: var(--subtle); display: inline-flex; grid-column: 2; grid-row: 1 / 3; transition: transform .18s ease; }
-.chat-picker-trigger.is-open .chat-picker-trigger-chevron { color: var(--primary-light); transform: rotate(180deg); }
-.chat-picker-menu {
-  background: var(--surface);
-  border: 1px solid var(--app-border-strong);
-  border-radius: 12px;
-  box-shadow: 0 16px 42px var(--app-shadow-color);
-  display: grid;
-  gap: 8px;
-  left: 0;
-  margin-top: 7px;
-  padding: 8px;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  z-index: 30;
-}
-.chat-provider-trigger { min-height: 48px; }
-.chat-provider-value { align-items: center; display: flex; font-size: 13px; font-weight: 780; gap: 9px; }
-.chat-provider-mark {
-  align-items: center;
-  background: var(--primary-soft);
-  border: 1px solid var(--app-primary-border);
-  border-radius: 7px;
-  color: var(--primary-light);
-  display: inline-flex;
-  font-size: 10px;
-  font-weight: 900;
-  height: 24px;
-  justify-content: center;
-  letter-spacing: -.2px;
-  width: 24px;
-}
-.chat-provider-menu { gap: 3px; padding: 6px; }
-.chat-provider-option { align-items: center; grid-template-columns: auto minmax(0, 1fr) auto; }
-.chat-provider-option .chat-model-option-check { grid-column: 3; grid-row: 1; }
-.chat-model-search { position: relative; }
-.chat-model-search-icon { color: var(--faint); display: inline-flex; left: 10px; position: absolute; top: 50%; transform: translateY(-50%); }
-.chat-model-search .chat-input { height: 36px; padding-left: 34px; }
-.chat-model-list { display: grid; gap: 3px; max-height: 252px; overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
-.chat-model-group + .chat-model-group { border-top: 1px solid var(--border); margin-top: 5px; padding-top: 7px; }
-.chat-model-group-title { color: var(--faint); font-size: 9.5px; font-weight: 850; letter-spacing: .8px; padding: 3px 8px 5px; text-transform: uppercase; }
-.chat-model-option {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  border-radius: 9px;
-  color: var(--text);
-  cursor: pointer;
-  display: grid;
-  gap: 2px 8px;
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 8px;
-  text-align: left;
-  width: 100%;
-}
-.chat-model-option:hover { background: var(--app-hover); }
-.chat-model-option.is-selected { background: var(--primary-soft); color: var(--app-primary-text); }
-.chat-model-option-name { font-size: 12.5px; font-weight: 750; }
-.chat-model-option-id { color: var(--faint); font-size: 10px; }
-.chat-model-option-check { color: var(--primary-light); display: inline-flex; grid-column: 2; grid-row: 1 / 3; }
-.chat-model-empty { color: var(--subtle); font-size: 12px; padding: 18px 10px; text-align: center; }
 .chat-textarea {
   background: var(--panel);
   border: 1px solid var(--app-border);
@@ -534,7 +405,7 @@ const css = `
   display: grid;
   align-content: start;
   gap: 12px;
-  grid-template-areas: "avatar identity status" "model model model" "resources resources chevron";
+  grid-template-areas: "avatar identity status" "resources resources chevron";
   grid-template-columns: 36px minmax(0, 1fr) auto;
   padding: 16px;
   text-align: left;
@@ -579,9 +450,7 @@ const css = `
 .chat-list-identity { display: grid; gap: 3px; grid-area: identity; min-width: 0; }
 .chat-list-name { font-size: 13.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-list-phone { color: var(--subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-list-model { color: var(--text); display: grid; font-size: 11.5px; font-weight: 700; gap: 2px; grid-area: model; border-top: 1px solid var(--border); padding-top: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-list-meta-label { color: var(--faint); font-size: 9.5px; font-weight: 850; letter-spacing: .6px; text-transform: uppercase; }
-.chat-list-resources { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 11px; gap: 9px; grid-area: resources; }
+.chat-list-resources { align-items: center; border-top: 1px solid var(--border); color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 11px; gap: 9px; grid-area: resources; padding-top: 12px; }
 .chat-list-resources > span { align-items: center; display: inline-flex; gap: 4px; white-space: nowrap; }
 .chat-list-chevron { color: var(--faint); display: inline-flex; grid-area: chevron; justify-self: end; transition: color .18s ease, transform .18s ease; }
 .chat-list-row:hover .chat-list-chevron { color: var(--primary-light); transform: translateX(2px); }
@@ -1076,12 +945,11 @@ function upsertPhoneNumber(current: ApiPhoneNumber[], updated: ApiPhoneNumber): 
 
 // The create modal only asks for a name and a number; the rest of the form keeps
 // the defaults a new agent is created with, and is edited in the editor afterwards.
+// There is no model setting: every chat agent answers with the one model the
+// server allows, so neither payload below sends a model section.
 type CreateForm = {
   name: string;
   phone_number_id: string;
-  provider: ChatModelProvider;
-  model: string;
-  temperature: number;
   system_prompt: string;
 };
 
@@ -1089,9 +957,6 @@ function newCreateForm(index: number): CreateForm {
   return {
     name: `New chat agent ${index}`,
     phone_number_id: "",
-    provider: chatAgentDefaults.model.provider,
-    model: chatAgentDefaults.model.name,
-    temperature: chatAgentDefaults.model.temperature,
     system_prompt: "You are a helpful WhatsApp assistant.",
   };
 }
@@ -1103,7 +968,6 @@ function createFormToPayload(form: CreateForm): CreateChatAgentPayload {
       phone_number_id: form.phone_number_id || null,
       status: chatAgentDefaults.status,
     },
-    model: { provider: form.provider, name: form.model, temperature: form.temperature },
     prompt: { system_prompt: form.system_prompt },
     knowledge_base: { knowledge_base_ids: [] },
     tools: { tool_ids: [] },
@@ -1113,7 +977,6 @@ function createFormToPayload(form: CreateForm): CreateChatAgentPayload {
 function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
   return {
     agent: { ...agent.agent },
-    model: agent.model ? { ...agent.model } : undefined,
     prompt: agent.prompt ? { ...agent.prompt } : undefined,
     knowledge_base: agent.knowledge_base
       ? { knowledge_base_ids: [...(agent.knowledge_base.knowledge_base_ids ?? [])] }
@@ -1647,10 +1510,6 @@ export default function ChatAgentsPage() {
                           <span className="chat-skel" style={{ width: "58%" }} />
                           <span className="chat-skel chat-skel-sm" style={{ width: "38%" }} />
                         </span>
-                        <span className="chat-list-model">
-                          <span className="chat-skel chat-skel-sm" style={{ width: 42 }} />
-                          <span className="chat-skel" style={{ width: 84 }} />
-                        </span>
                         <span className="chat-list-resources">
                           <span className="chat-skel chat-skel-sm" style={{ width: 96 }} />
                         </span>
@@ -1689,10 +1548,6 @@ export default function ChatAgentsPage() {
                             <span className="chat-list-phone">
                               {phone ? phoneNumberLabel(phone) : "No phone number"}
                             </span>
-                          </span>
-                          <span className="chat-list-model">
-                            <span className="chat-list-meta-label">Model</span>
-                            {agent.model?.name ?? chatAgentDefaults.model.name}
                           </span>
                           <span className="chat-list-resources">
                             <span><Icon name="book" size={12} />{knowledgeCount} KB</span>
@@ -1889,7 +1744,7 @@ function CreateChatAgentModal({
               Create chat agent
             </h2>
             <div className="chat-modal-subtitle">
-              Name it and choose which number it answers on. The model, prompt, knowledge bases
+              Name it and choose which number it answers on. The prompt, knowledge bases
               and tools are set in the editor once it exists.
             </div>
           </div>
@@ -2394,8 +2249,7 @@ function ConfigPanel({
   phoneNumbers: ApiPhoneNumber[];
   tools: ApiTool[];
 }) {
-  const [openSection, setOpenSection] = useState<ConfigSectionId | null>("model");
-  const provider = agent.model?.provider ?? chatAgentDefaults.model.provider;
+  const [openSection, setOpenSection] = useState<ConfigSectionId | null>("knowledge-base");
   const attachedKbs = agent.knowledge_base?.knowledge_base_ids ?? [];
   const attachedTools = agent.tools?.tool_ids ?? [];
   // end_call and transfer_call exist to release a phone call, so the server
@@ -2413,7 +2267,7 @@ function ConfigPanel({
         <div>
           <h2 className="chat-panel-title">Chat agent configuration</h2>
           <div className="chat-panel-copy">
-            How the agent is addressed, which model answers, and what it can reach.
+            How the agent is addressed and what it can reach.
           </div>
         </div>
       </div>
@@ -2464,70 +2318,6 @@ function ConfigPanel({
         </div>
 
         <div className="chat-accordion-list">
-          <ConfigSection
-            icon="spark"
-            id="model"
-            isOpen={openSection === "model"}
-            meta={agent.model?.name ?? chatAgentDefaults.model.name}
-            onToggle={setOpenSection}
-            title="Model"
-          >
-            <div className="chat-fields">
-              <div className="chat-field">
-                <span className="chat-control-label">Provider</span>
-                <ProviderPicker
-                  onChange={(next) => {
-                    onPatch((current) => ({
-                      ...current,
-                      model: { ...current.model, provider: next, name: providerModels[next][0] },
-                    }));
-                  }}
-                  value={provider}
-                />
-              </div>
-              <div className="chat-field">
-                <span className="chat-control-label">Model</span>
-                <ModelPicker
-                  onChange={(model) =>
-                    onPatch((current) => ({
-                      ...current,
-                      model: { ...current.model, name: model },
-                    }))
-                  }
-                  provider={provider}
-                  value={agent.model?.name ?? providerModels[provider][0]}
-                />
-              </div>
-              <label className="chat-field">
-                <span className="chat-range-head">
-                  <span className="chat-control-label" style={{ marginBottom: 0 }}>
-                    Temperature
-                  </span>
-                  <span className="chat-range-value">
-                    {(agent.model?.temperature ?? chatAgentDefaults.model.temperature).toFixed(1)}
-                  </span>
-                </span>
-                <input
-                  className="chat-range"
-                  max={1}
-                  min={0.1}
-                  onChange={(event) =>
-                    onPatch((current) => ({
-                      ...current,
-                      model: { ...current.model, temperature: Number(event.target.value) },
-                    }))
-                  }
-                  step={0.1}
-                  type="range"
-                  value={agent.model?.temperature ?? chatAgentDefaults.model.temperature}
-                />
-                <span className="chat-field-hint">
-                  Lower keeps replies predictable; higher lets the agent vary its wording.
-                </span>
-              </label>
-            </div>
-          </ConfigSection>
-
           <ConfigSection
             icon="book"
             id="knowledge-base"
@@ -2621,236 +2411,6 @@ function ConfigPanel({
         </div>
       </div>
     </aside>
-  );
-}
-
-function modelDisplayName(model: string): string {
-  const parts = model.replace(/-\d{8}$/, "").split("-");
-  if (parts[0] === "gpt") {
-    return `GPT-${parts[1]}${parts
-      .slice(2)
-      .map((part) => ` ${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-      .join("")}`;
-  }
-  return parts
-    .map((part, index) =>
-      index === 0 && /^o\d/.test(part)
-        ? part
-        : `${part.charAt(0).toUpperCase()}${part.slice(1)}`
-    )
-    .join(" ");
-}
-
-function modelGroup(provider: ChatModelProvider, model: string): string {
-  if (provider === "anthropic") {
-    if (model.includes("fable-5") || model.includes("opus-5") || model.includes("sonnet-5")) {
-      return "Claude 5";
-    }
-    if (model.includes("haiku")) return "Fast models";
-    return "Claude 4";
-  }
-  if (model.startsWith("gpt-5.6")) return "GPT-5.6";
-  if (model.startsWith("gpt-5")) return "GPT-5";
-  if (model.startsWith("o")) return "Reasoning models";
-  return "GPT-4";
-}
-
-const providerPickerOptions: Array<{ id: ChatModelProvider; label: string; mark: string }> = [
-  { id: "openai", label: "OpenAI", mark: "AI" },
-  { id: "anthropic", label: "Anthropic", mark: "A" },
-];
-
-function ProviderPicker({
-  onChange,
-  value,
-}: {
-  onChange: (provider: ChatModelProvider) => void;
-  value: ChatModelProvider;
-}) {
-  const [open, setOpen] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
-  const selected = providerPickerOptions.find((provider) => provider.id === value)!;
-
-  useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (!pickerRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  return (
-    <div className="chat-provider-picker" ref={pickerRef}>
-      <button
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        className={`chat-picker-trigger chat-provider-trigger${open ? " is-open" : ""}`}
-        onClick={() => setOpen((current) => !current)}
-        type="button"
-      >
-        <span className="chat-provider-value">
-          <span className="chat-provider-mark">{selected.mark}</span>
-          {selected.label}
-        </span>
-        <span className="chat-picker-trigger-chevron">
-          <Icon name="chevron" size={16} sw={2.4} />
-        </span>
-      </button>
-      {open ? (
-        <div className="chat-picker-menu chat-provider-menu" role="listbox">
-          {providerPickerOptions.map((provider) => (
-            <button
-              aria-selected={provider.id === value}
-              className={`chat-model-option chat-provider-option${
-                provider.id === value ? " is-selected" : ""
-              }`}
-              key={provider.id}
-              onClick={() => {
-                onChange(provider.id);
-                setOpen(false);
-              }}
-              role="option"
-              type="button"
-            >
-              <span className="chat-provider-mark">{provider.mark}</span>
-              <span className="chat-model-option-name">{provider.label}</span>
-              {provider.id === value ? (
-                <span className="chat-model-option-check">
-                  <Icon name="check" size={15} sw={2.6} />
-                </span>
-              ) : null}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function ModelPicker({
-  onChange,
-  provider,
-  value,
-}: {
-  onChange: (model: string) => void;
-  provider: ChatModelProvider;
-  value: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const pickerRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const models = providerModels[provider];
-  const filteredModels = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return models;
-    return models.filter(
-      (model) =>
-        model.toLowerCase().includes(normalized) ||
-        modelDisplayName(model).toLowerCase().includes(normalized)
-    );
-  }, [models, query]);
-  const groups = useMemo(() => {
-    const grouped = new Map<string, string[]>();
-    for (const model of filteredModels) {
-      const group = modelGroup(provider, model);
-      grouped.set(group, [...(grouped.get(group) ?? []), model]);
-    }
-    return [...grouped.entries()];
-  }, [filteredModels, provider]);
-
-  useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (!pickerRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  return (
-    <div className="chat-model-picker" ref={pickerRef}>
-      <button
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        className={`chat-picker-trigger chat-model-trigger${open ? " is-open" : ""}`}
-        onClick={() => {
-          setOpen((current) => !current);
-          setQuery("");
-          if (!open) window.setTimeout(() => searchRef.current?.focus(), 0);
-        }}
-        type="button"
-      >
-        <span className="chat-model-trigger-title">{modelDisplayName(value)}</span>
-        <span className="chat-model-trigger-id">{value}</span>
-        <span className="chat-picker-trigger-chevron">
-          <Icon name="chevron" size={16} sw={2.4} />
-        </span>
-      </button>
-      {open ? (
-        <div className="chat-picker-menu chat-model-menu">
-          <div className="chat-model-search">
-            <span className="chat-model-search-icon">
-              <Icon name="search" size={15} sw={2.2} />
-            </span>
-            <input
-              aria-label="Search models"
-              className="chat-input"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={`Search ${provider === "openai" ? "OpenAI" : "Anthropic"} models`}
-              ref={searchRef}
-              value={query}
-            />
-          </div>
-          <div className="chat-model-list" role="listbox">
-            {groups.length ? (
-              groups.map(([group, groupModels]) => (
-                <div className="chat-model-group" key={group}>
-                  <div className="chat-model-group-title">{group}</div>
-                  {groupModels.map((model) => (
-                    <button
-                      aria-selected={model === value}
-                      className={`chat-model-option${model === value ? " is-selected" : ""}`}
-                      key={model}
-                      onClick={() => {
-                        onChange(model);
-                        setOpen(false);
-                        setQuery("");
-                      }}
-                      role="option"
-                      type="button"
-                    >
-                      <span className="chat-model-option-name">{modelDisplayName(model)}</span>
-                      <span className="chat-model-option-id">{model}</span>
-                      {model === value ? (
-                        <span className="chat-model-option-check">
-                          <Icon name="check" size={15} sw={2.6} />
-                        </span>
-                      ) : null}
-                    </button>
-                  ))}
-                </div>
-              ))
-            ) : (
-              <div className="chat-model-empty">No models match “{query}”.</div>
-            )}
-          </div>
-        </div>
-      ) : null}
-    </div>
   );
 }
 

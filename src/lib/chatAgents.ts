@@ -5,7 +5,10 @@ import { serverFetch, type AuthTokenGetter } from "./api";
 // keys for external clients.
 
 export type ChatAgentStatus = "active" | "inactive";
-export type ChatModelProvider = "openai" | "anthropic";
+// The server answers every chat agent with Claude Sonnet 4.6 and rejects any
+// other model, so the dashboard never sends a model section; the type only
+// describes what the API returns.
+export type ChatModelProvider = "anthropic";
 
 export type ChatAgentSection = {
   name: string;
@@ -75,7 +78,7 @@ export type UpdateChatAgentPayload = {
 // dashboard form starts on the same values the API would apply.
 export const chatAgentDefaults = {
   status: "inactive" as ChatAgentStatus,
-  model: { provider: "anthropic" as ChatModelProvider, name: "claude-sonnet-5", temperature: 0.3 },
+  model: { provider: "anthropic" as ChatModelProvider, name: "claude-sonnet-4-6", temperature: 0.3 },
 };
 
 type Envelope<T> = { success: boolean; message: string; data: T };
