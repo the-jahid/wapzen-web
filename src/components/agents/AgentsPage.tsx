@@ -1685,7 +1685,8 @@ const css = `
   text-transform: uppercase;
 }
 .number-setup-copy { color: var(--subtle); font-size: 12.5px; line-height: 1.55; margin: 0 0 14px; }
-.number-setup-grid { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); }
+/* 260px floor keeps the QR's modules big enough for a phone camera at 1x DPR. */
+.number-setup-grid { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
 .number-setup-pane {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -1708,7 +1709,8 @@ const css = `
   overflow: hidden;
   padding: 8px;
 }
-.number-qr-image { height: 100%; object-fit: contain; width: 100%; }
+/* Scale the QR by repeating pixels: smoothing greys the module edges. */
+.number-qr-image { height: 100%; image-rendering: pixelated; object-fit: contain; width: 100%; }
 /* Nothing to scan yet: drop the white square down to a hint-sized panel. */
 .number-qr-frame:has(.number-qr-placeholder) { aspect-ratio: auto; background: var(--surface-2); min-height: 148px; }
 .number-qr-placeholder {

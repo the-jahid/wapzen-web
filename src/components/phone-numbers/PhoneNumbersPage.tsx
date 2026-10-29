@@ -961,7 +961,8 @@ const css = `
   padding: 12px;
   width: 100%;
 }
-.phone-qr-image { height: 100%; object-fit: contain; width: 100%; }
+/* Scale the QR by repeating pixels: smoothing greys the module edges. */
+.phone-qr-image { height: 100%; image-rendering: pixelated; object-fit: contain; width: 100%; }
 .phone-qr-placeholder {
   align-items: center;
   aspect-ratio: 1;

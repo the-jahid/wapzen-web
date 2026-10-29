@@ -867,7 +867,8 @@ const css = `
   text-transform: uppercase;
 }
 .chat-number-copy { color: var(--subtle); font-size: 12.5px; line-height: 1.55; margin: 0 0 14px; }
-.chat-number-grid { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(220px, 290px) minmax(0, 1fr); }
+/* 260px floor keeps the QR's modules big enough for a phone camera at 1x DPR. */
+.chat-number-grid { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
 .chat-number-pane {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -910,7 +911,8 @@ const css = `
   overflow: hidden;
   padding: 8px;
 }
-.chat-qr-image { height: 100%; object-fit: contain; width: 100%; }
+/* Scale the QR by repeating pixels: smoothing greys the module edges. */
+.chat-qr-image { height: 100%; image-rendering: pixelated; object-fit: contain; width: 100%; }
 /* Nothing to scan yet: drop the white square down to a hint-sized panel. */
 .chat-qr-frame:has(.chat-qr-placeholder) { aspect-ratio: auto; background: var(--panel-hover); min-height: 148px; }
 .chat-qr-placeholder {
