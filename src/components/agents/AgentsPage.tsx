@@ -3975,8 +3975,12 @@ export default function AgentsPage() {
         const updated = await apiGetPhoneNumber(numberLoginId, getToken);
         if (cancelled) return;
         setNumberLoginError("");
+        // A scan of a number the account already has relinks that number, so
+        // the login comes back as it, under the number's own id.
         setNumberLogin((current) =>
-          current && current.phone.id === updated.id ? { ...current, phone: updated } : current
+          current && (current.phone.id === updated.id || current.phone.id === numberLoginId)
+            ? { ...current, phone: updated }
+            : current
         );
         setPhoneNumbers((current) => upsertPhoneNumber(current, updated));
         if (updated.status === "connected") {

@@ -1216,7 +1216,11 @@ export default function ChatAgentsPage() {
         });
         if (cancelled) return;
         setNumberLoginError("");
-        setNumberLogin((current) => (current && current.id === updated.id ? updated : current));
+        // A scan of a number the account already has relinks that number, so
+        // the login comes back as it, under the number's own id.
+        setNumberLogin((current) =>
+          current && (current.id === updated.id || current.id === numberLoginId) ? updated : current
+        );
         setPhoneNumbers((current) => upsertPhoneNumber(current, updated));
         if (updated.status === "connected") {
           const target = scanTargetRef.current;
