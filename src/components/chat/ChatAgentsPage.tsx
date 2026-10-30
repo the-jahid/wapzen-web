@@ -564,6 +564,9 @@ const css = `
 .chat-card-title { font-size: 13.5px; font-weight: 850; letter-spacing: -.1px; margin: 0; }
 .chat-mini-select { height: 34px; max-width: 210px; width: auto; }
 .chat-helper-line { color: var(--subtle); font-size: 12px; margin-top: 9px; }
+.chat-char-count { color: var(--subtle); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 650; white-space: nowrap; }
+.chat-char-count.near { color: var(--amber); }
+.chat-char-count.over { color: var(--rose); }
 .chat-detail-head { align-items: center; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) auto; }
 .chat-identity { align-items: center; display: grid; gap: 13px; grid-template-columns: 46px minmax(0, 1fr); min-width: 0; }
 .chat-avatar-lg { border-radius: 13px; font-size: 17px; height: 46px; width: 46px; }
@@ -2106,9 +2109,11 @@ function Editor({
           <div className="chat-card chat-card-grow">
             <div className="chat-card-head">
               <h3 className="chat-card-title">System Prompt</h3>
+              <PromptCounter value={agent.prompt?.system_prompt ?? ""} />
             </div>
             <textarea
               className="chat-textarea"
+              maxLength={SYSTEM_PROMPT_MAX_CHARS}
               onChange={(event) =>
                 onPatch((current) => ({
                   ...current,
@@ -2122,6 +2127,24 @@ function Editor({
         </>
       )}
     </div>
+  );
+}
+
+// SYSTEM_PROMPT_MAX_CHARS matches the servers' cap. The prompt is resent with
+// every reply, so its length is the main per-reply cost a free account adds.
+const SYSTEM_PROMPT_MAX_CHARS = 8000;
+
+// PromptCounter counts code points, as the servers do, so an emoji is one
+// character here and there. It warns from 90% and turns red past the cap,
+// which only a prompt saved before the cap existed can be.
+function PromptCounter({ value }: { value: string }) {
+  const count = Array.from(value).length;
+  const state =
+    count > SYSTEM_PROMPT_MAX_CHARS ? "over" : count >= SYSTEM_PROMPT_MAX_CHARS * 0.9 ? "near" : "";
+  return (
+    <span className={`chat-char-count ${state}`} aria-live="polite">
+      {count.toLocaleString()} / {SYSTEM_PROMPT_MAX_CHARS.toLocaleString()}
+    </span>
   );
 }
 

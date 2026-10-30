@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import {
   useWorkspaceMode,
+  type WorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import { useCachedState } from "@/lib/pageCache";
@@ -31,8 +32,8 @@ import {
 // it is saved, so a form is not sending a PATCH per keystroke — the detail pane
 // tracks its own dirty state and saves on demand.
 //
-// A tool defines an action; it is offered on a call only once an agent attaches
-// it, which is done from the agent's Tools section rather than here.
+// A tool defines an action; it is offered on a call or in a chat only once an
+// agent attaches it, which is done from the agent's Tools section rather than here.
 
 type IconName =
   | "grid"
@@ -117,6 +118,8 @@ const toolTypes: {
   icon: IconName;
   accent: "primary" | "sky" | "rose" | "green" | "amber";
   blurb: string;
+  // The blurb in the chat workspace, for the types a chat agent can run.
+  chatBlurb?: string;
 }[] = [
   {
     id: "api_request",
@@ -124,6 +127,7 @@ const toolTypes: {
     icon: "globe",
     accent: "primary",
     blurb: "Call an HTTP endpoint mid-call and speak the response back.",
+    chatBlurb: "Call an HTTP endpoint mid-chat and answer from the response.",
   },
   {
     id: "transfer_call",
@@ -145,12 +149,22 @@ const toolTypes: {
     icon: "message",
     accent: "green",
     blurb: "Send the caller a WhatsApp message while the call is running.",
+    chatBlurb: "Send a link, address or reference as a WhatsApp message of its own.",
   },
 ];
 
-// Only API requests can be created. The other types stay in toolTypes so tools
-// made before still show their own label and icon.
-const creatableToolTypes = toolTypes.filter((type) => type.id === "api_request");
+// Only API requests can be created for calls; a chat can also send a text. The
+// other types stay in toolTypes so tools made before still show their own label
+// and icon.
+function creatableToolTypes(mode: WorkspaceMode) {
+  const ids: ToolType[] = mode === "chat" ? ["api_request", "send_text"] : ["api_request"];
+  return toolTypes.filter((type) => ids.includes(type.id));
+}
+
+function typeBlurb(type: ToolType, mode: WorkspaceMode) {
+  const meta = toolMeta(type);
+  return mode === "chat" ? meta.chatBlurb ?? meta.blurb : meta.blurb;
+}
 
 const httpMethods: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 const paramTypes: ParamType[] = ["string", "number", "boolean"];
@@ -1132,9 +1146,10 @@ export default function ToolsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
-  // New tools are always API requests. The rest of a tool is filled in from the
-  // detail pane, but the server refuses an api_request with no endpoint, so that
-  // is asked for here instead of failing the create.
+  const [draftType, setDraftType] = useState<ToolType>("api_request");
+  // The rest of a tool is filled in from the detail pane, but the server refuses
+  // an api_request with no endpoint, so that is asked for here instead of
+  // failing the create.
   const [draftMethod, setDraftMethod] = useState<HttpMethod>("POST");
   const [draftUrl, setDraftUrl] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -1209,6 +1224,7 @@ export default function ToolsPage() {
   function openCreate() {
     setDraftName("");
     setDraftDescription("");
+    setDraftType("api_request");
     setDraftMethod(emptyApiRequestConfig().method);
     setDraftUrl("");
     setIsCreateOpen(true);
@@ -1216,7 +1232,8 @@ export default function ToolsPage() {
 
   // createTool posts the new tool and selects it. Beyond the name, description
   // and type, only the configuration the server insists on at create time is
-  // sent — the endpoint. Headers and parameters are filled in from the detail pane.
+  // sent — an API request's endpoint. Headers, parameters and a text's message
+  // are filled in from the detail pane.
   async function createTool() {
     if (isCreating) return;
 
@@ -1243,7 +1260,8 @@ export default function ToolsPage() {
     }
     // This mirrors what the server enforces, so a mistyped value is named here
     // rather than coming back as a validation error on the whole request.
-    if (!isAbsoluteHttpUrl(draftUrl)) {
+    const isApiRequest = draftType === "api_request";
+    if (isApiRequest && !isAbsoluteHttpUrl(draftUrl)) {
       setNotice({
         kind: "error",
         text: draftUrl.trim()
@@ -1252,9 +1270,11 @@ export default function ToolsPage() {
       });
       return;
     }
-    const draft = emptyTool("", "api_request", name, draftDescription.trim());
-    draft.method = draftMethod;
-    draft.url = draftUrl.trim();
+    const draft = emptyTool("", draftType, name, draftDescription.trim());
+    if (isApiRequest) {
+      draft.method = draftMethod;
+      draft.url = draftUrl.trim();
+    }
     const payload = toCreatePayload(draft);
 
     setIsCreating(true);
@@ -1417,7 +1437,7 @@ export default function ToolsPage() {
                         </span>
                         <span className="tools-row-identity">
                           <span className="tools-row-name">{tool.name}</span>
-                          <span className="tools-row-desc">{tool.description || meta.blurb}</span>
+                          <span className="tools-row-desc">{tool.description || typeBlurb(tool.type, mode)}</span>
                         </span>
                         <span className="tools-badge tools-badge-neutral tools-row-type">{meta.label}</span>
                         <span className="tools-row-summary">
@@ -1457,7 +1477,7 @@ export default function ToolsPage() {
                           <span className="tools-badge tools-badge-neutral">{meta.label}</span>
                         </span>
                         <span className="tools-card-name">{tool.name}</span>
-                        <span className="tools-card-desc">{tool.description || meta.blurb}</span>
+                        <span className="tools-card-desc">{tool.description || typeBlurb(tool.type, mode)}</span>
                         <span className="tools-card-foot">
                           {summary.method ? (
                             <span className="tools-chip-method">{summary.method}</span>
@@ -1500,6 +1520,7 @@ export default function ToolsPage() {
                 onError={(message) => setNotice({ kind: "error", text: message })}
                 onSave={saveTool}
                 tool={selected}
+                mode={mode}
               />
             ) : null}
           </ExpandableCardDemoStandard>
@@ -1530,14 +1551,20 @@ export default function ToolsPage() {
             <div className="tools-modal-section">
               <span className="tools-field-label">Tool type</span>
               <div className="tools-type-grid">
-                {creatableToolTypes.map((type) => (
-                  <button className="tools-type-card is-selected" key={type.id} type="button">
+                {creatableToolTypes(mode).map((type) => (
+                  <button
+                    aria-pressed={draftType === type.id}
+                    className={`tools-type-card${draftType === type.id ? " is-selected" : ""}`}
+                    key={type.id}
+                    onClick={() => setDraftType(type.id)}
+                    type="button"
+                  >
                     <span className={`tools-tile tools-accent-${type.accent}`}>
                       <Icon name={type.icon} size={16} />
                     </span>
                     <span style={{ minWidth: 0 }}>
                       <span className="tools-type-name">{type.label}</span>
-                      <span className="tools-type-blurb">{type.blurb}</span>
+                      <span className="tools-type-blurb">{typeBlurb(type.id, mode)}</span>
                     </span>
                   </button>
                 ))}
@@ -1570,36 +1597,45 @@ export default function ToolsPage() {
                 />
               </label>
 
-              <div className="tools-grid-2">
-                <label className="tools-field">
-                  <span className="tools-field-label">Method</span>
-                  <select
-                    className="tools-select"
-                    onChange={(event) => setDraftMethod(event.target.value as HttpMethod)}
-                    value={draftMethod}
-                  >
-                    {httpMethods.map((method) => (
-                      <option key={method} value={method}>
-                        {method}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="tools-field">
-                  <span className="tools-field-label">Endpoint URL</span>
-                  <input
-                    className="tools-input tools-mono"
-                    maxLength={toolBounds.urlLength}
-                    onChange={(event) => setDraftUrl(event.target.value)}
-                    placeholder="https://api.example.com/v1/availability"
-                    value={draftUrl}
-                  />
-                </label>
-              </div>
-              <span className="tools-field-hint">
-                Headers, the timeout and the parameters the model fills in are set next, in the
-                tool&apos;s own panel.
-              </span>
+              {draftType === "api_request" ? (
+                <>
+                  <div className="tools-grid-2">
+                    <label className="tools-field">
+                      <span className="tools-field-label">Method</span>
+                      <select
+                        className="tools-select"
+                        onChange={(event) => setDraftMethod(event.target.value as HttpMethod)}
+                        value={draftMethod}
+                      >
+                        {httpMethods.map((method) => (
+                          <option key={method} value={method}>
+                            {method}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="tools-field">
+                      <span className="tools-field-label">Endpoint URL</span>
+                      <input
+                        className="tools-input tools-mono"
+                        maxLength={toolBounds.urlLength}
+                        onChange={(event) => setDraftUrl(event.target.value)}
+                        placeholder="https://api.example.com/v1/availability"
+                        value={draftUrl}
+                      />
+                    </label>
+                  </div>
+                  <span className="tools-field-hint">
+                    Headers, the timeout and the parameters the model fills in are set next, in the
+                    tool&apos;s own panel.
+                  </span>
+                </>
+              ) : (
+                <span className="tools-field-hint">
+                  Set a fixed message next, in the tool&apos;s own panel, or leave it blank to let
+                  the model write the message itself.
+                </span>
+              )}
             </div>
 
             <div className="tools-modal-actions">
@@ -1646,8 +1682,10 @@ export default function ToolsPage() {
             </h2>
             <p className="tools-modal-copy" id="delete-tool-copy">
               <strong>{pendingDelete.name}</strong> will be deleted and detached from every agent
-              using it, which stops those agents being able to take that action. Calls already in
-              progress keep it for the rest of the call.
+              using it, which stops those agents being able to take that action.{" "}
+              {mode === "chat"
+                ? "A reply already being written keeps it until that reply is sent."
+                : "Calls already in progress keep it for the rest of the call."}
             </p>
             <div className="tools-modal-actions">
               <button
@@ -1696,13 +1734,16 @@ function ToolDetail({
   onDelete,
   onError,
   onBack,
+  mode,
 }: {
   tool: Tool;
   onSave: (draft: Tool) => Promise<void>;
   onDelete: () => void;
   onError: (message: string) => void;
   onBack: () => void;
+  mode: WorkspaceMode;
 }) {
+  const isChat = mode === "chat";
   const [draft, setDraft] = useState<Tool>(tool);
   const [isSaving, setIsSaving] = useState(false);
   const meta = toolMeta(draft.type);
@@ -1850,7 +1891,11 @@ function ToolDetail({
           <section className="tools-card">
             <div className="tools-card-head">
               <h3 className="tools-card-title">Request</h3>
-              <div className="tools-card-copy">Where the call goes while the caller waits.</div>
+              <div className="tools-card-copy">
+                {isChat
+                  ? "Where the request goes while the reply waits on it."
+                  : "Where the call goes while the caller waits."}
+              </div>
             </div>
             <div className="tools-card-body">
               <div className="tools-grid-2">
@@ -2091,7 +2136,11 @@ function ToolDetail({
         <section className="tools-card">
           <div className="tools-card-head">
             <h3 className="tools-card-title">Message</h3>
-            <div className="tools-card-copy">Sent to the caller&apos;s number during the call.</div>
+            <div className="tools-card-copy">
+              {isChat
+                ? "Sent into the chat as a WhatsApp message of its own."
+                : "Sent to the caller’s number during the call."}
+            </div>
           </div>
           <div className="tools-card-body">
             <label className="tools-field">

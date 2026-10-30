@@ -82,6 +82,11 @@ export function serverFetchWithBearerToken(
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
+  // Free ngrok tunnels answer browser requests with an HTML warning page
+  // unless this header is present.
+  if (baseServerURL?.includes(".ngrok")) {
+    headers.set("ngrok-skip-browser-warning", "1");
+  }
 
   return fetch(serverURL(path), { ...init, headers }).then((response) => {
     noteAccountBlocked(response);
