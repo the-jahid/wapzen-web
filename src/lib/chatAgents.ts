@@ -52,8 +52,8 @@ export type ApiChatAgent = {
   prompt?: ChatPromptSection;
   knowledge_base?: ChatKnowledgeBaseSection;
   tools?: ChatToolsSection;
-  // True once the agent, or the number it answers on, has sent every reply it
-  // is allowed; it stays silent until the limit is lifted. Read-only.
+  // True once the account has sent every reply it is allowed; the agent stays
+  // silent until the limit is lifted. Read-only.
   reply_limit_reached?: boolean;
   runtime?: ChatRuntimeSection;
 };

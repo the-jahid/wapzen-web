@@ -1788,9 +1788,9 @@ function CreateChatAgentModal({
 
         <div className="chat-modal-body">
           {limitReached ? (
-            <LimitReachedAlert title="You've reached your chat agent limit">
-              Your account can&apos;t have more chat agents right now. Message us on WhatsApp and
-              we&apos;ll help you add more.
+            <LimitReachedAlert title="You have reached your free limit">
+              Your free plan includes one chat agent. To add more, you need a paid plan: message
+              us on WhatsApp to buy one.
             </LimitReachedAlert>
           ) : null}
           {error ? <div className="chat-modal-error">{error}</div> : null}
@@ -2034,9 +2034,9 @@ function Editor({
   return (
     <div className="chat-editor">
       {agent.reply_limit_reached ? (
-        <LimitReachedAlert title="This agent has reached its message limit">
-          It no longer replies to new WhatsApp messages. Message us on WhatsApp to keep it
-          answering.
+        <LimitReachedAlert title="You have reached your free limit">
+          This agent no longer replies to new WhatsApp messages. To keep it answering, you need a
+          paid plan: message us on WhatsApp to buy one.
         </LimitReachedAlert>
       ) : null}
       {agent.runtime?.last_error ? (

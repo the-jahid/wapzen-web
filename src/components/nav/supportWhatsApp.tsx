@@ -3,9 +3,9 @@ export const SUPPORT_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeUR
   "Hi, I need help connecting my WhatsApp number on Wapzen.",
 )}`;
 
-/** Opens a WhatsApp chat with support when the account has reached a limit. */
+/** Opens a WhatsApp chat with support to buy a paid plan once a free limit is reached. */
 export const LIMIT_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
-  "Hi, I've reached my limit on Wapzen and would like to continue using my chat agents.",
+  "Hi, I've reached my free limit on Wapzen and would like to buy a paid plan.",
 )}`;
 
 export function WhatsAppGlyph({ size }: { size: number }) {
