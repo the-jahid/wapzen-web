@@ -8,9 +8,9 @@ import { BlogPost, InlineCta, Note } from "@/components/blog/BlogPost";
 // Targets "whatsapp appointment booking free" (70), "…bot" (59), "…system"
 // (51), "whatsapp appointment booking" / "whatsapp booking system" /
 // "whatsapp booking bot" (50 each, 5/5), "whatsapp appointment reminder" (40),
-// autocomplete 2026-10-28. Keep in step with the server: agents are told
-// today's date in the number's time zone (since 2026-10-29), a tool response is
-// cut at 3,000 characters, and adding a campaign lead dials at once.
+// autocomplete 2026-10-28. Keep in step with the server: agents aren't told
+// today's date (hence the tip to return it from the availability API), a tool
+// response is cut at 3,000 characters, and adding a campaign lead dials at once.
 const href = "/blog/whatsapp-appointment-booking";
 const post = blogPost(href);
 
@@ -68,9 +68,10 @@ To take a booking request:
 
 Rules: short replies, one question at a time. Never promise a slot yourself.`;
 
-const availability = `Free slots for cleaning (30 min):
-Thu 5 Nov 2026: 10:00, 11:30, 16:00
-Fri 6 Nov 2026: 12:00, 17:30`;
+const availability = `Today is Tuesday 28 October 2026.
+Free slots for cleaning (30 min):
+Wed 29 Oct: 10:00, 11:30, 16:00
+Thu 30 Oct: 12:00, 17:30`;
 
 const faqs = [
   { q: "Can I take appointment bookings on WhatsApp for free?", a: "Yes. Send customers a free scheduling page such as Calendly, Cal.com, or a Google Calendar appointment schedule, or collect booking requests in a Google Sheet. Wapzen's AI chat agent, which answers the questions and handles either route, is currently free." },
@@ -124,7 +125,7 @@ const sections = [
       <p>Then create a chat agent, attach your knowledge base and the tool, and adapt these instructions:</p>
       <pre><code>{prompt}</code></pre>
       <p>Each request lands in the sheet marked <strong>To confirm</strong>, with the time it came in, so your team can work out what “tomorrow” meant. Confirm it in the same WhatsApp chat.</p>
-      <Note>The agent doesn’t see the customer’s WhatsApp number, so the instructions ask for one. It does know today’s date, in your number’s time zone, so it understands “tomorrow” and “next Tuesday”.</Note>
+      <Note>The agent doesn’t see the customer’s WhatsApp number, so the instructions ask for one. It also doesn’t know today’s date, which is why it saves the day the way the customer said it.</Note>
     </>,
   },
   {
@@ -139,7 +140,7 @@ const sections = [
       <p>Put your API key in the tool’s <strong>Headers</strong> (for example <code>Authorization</code>); it’s stored with the tool and never shown to the agent. If your system has no API but connects to Zapier, Make, or n8n, put a webhook there in between.</p>
       <h3>Two details that make or break it</h3>
       <ul>
-        <li><strong>Return full dates.</strong> The agent knows today’s date, so it can work out “next Tuesday”. Give each free slot its weekday and date, so it matches the right one:</li>
+        <li><strong>Return today’s date.</strong> The agent doesn’t know what day it is, so “next Tuesday” needs an anchor. Have the availability response start with it:</li>
       </ul>
       <pre><code>{availability}</code></pre>
       <ul>

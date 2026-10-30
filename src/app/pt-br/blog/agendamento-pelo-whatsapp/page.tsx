@@ -10,7 +10,7 @@ import { BlogPost, InlineCta, Note } from "@/components/blog/BlogPost";
 // (10), "lembrete de consulta whatsapp" (10), "robô de agendamento whatsapp"
 // (10), autocomplete BR 2026-10-28; resultados de fornecedores (SleekFlow,
 // WATI, AgendaPro), sem portais grandes. Limites do produto (iguais ao post em
-// inglês): o agente não vê o número do cliente, sabe a data de hoje (desde 2026-10-29), lê os
+// inglês): o agente não vê o número do cliente, não sabe a data de hoje, lê os
 // primeiros 3.000 caracteres de uma ferramenta, e adicionar um lead a uma
 // campanha liga na hora. Versão em inglês: /blog/whatsapp-appointment-booking.
 const href = "/pt-br/blog/agendamento-pelo-whatsapp";
@@ -86,7 +86,7 @@ const sections = [
         <li><strong>Registra o pedido</strong> numa planilha do Google com uma ferramenta de API, para você confirmar depois. Não precisa de sistema de agendamento.</li>
         <li><strong>Agenda no seu sistema</strong>, se ele tiver API: com uma ferramenta consulta os horários livres do dia que o cliente pediu e com outra cria o agendamento no horário escolhido.</li>
       </ul>
-      <Note>O agente não vê o número de WhatsApp do cliente, então peça nas instruções para ele perguntar. Ele sabe a data de hoje, no fuso horário do seu número, então entende “amanhã” e “terça que vem”; mesmo assim, vale o seu sistema devolver cada horário livre com dia da semana e data. E ele lê os primeiros 3.000 caracteres de cada resposta: devolva uma lista curta de horários, não a agenda inteira.</Note>
+      <Note>O agente não vê o número de WhatsApp do cliente, então peça nas instruções para ele perguntar. Ele também não sabe a data de hoje: se o seu sistema devolve a data atual junto com os horários livres, ele entende “terça que vem”. E ele lê os primeiros 3.000 caracteres de cada resposta: devolva uma lista curta de horários, não a agenda inteira.</Note>
       <InlineCta title="Deixe a IA agendar pelo WhatsApp" body="A Wapzen tira dúvidas e marca horários no seu número de sempre, por mensagem ou ligação de WhatsApp, a qualquer hora. Grátis por enquanto." label="Comece grátis" />
       <p>Muitos clientes preferem ligar. Um agente de voz da Wapzen atende as ligações de WhatsApp no mesmo número e pode usar as mesmas ferramentas para marcar o horário em voz alta. Veja <Link href="/pt-br/blog/como-criar-robo-whatsapp">como criar um robô no WhatsApp</Link>.</p>
     </>,

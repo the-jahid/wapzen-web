@@ -86,18 +86,18 @@ const sections = [
     body: <>
       <p>What a chatbot handles depends on what your customers ask. Six common setups:</p>
       <h3>Online store</h3>
-      <p>Stock, sizes, delivery areas and times, cash on delivery, and returns, which make up most of a store’s WhatsApp. A good store bot answers these from the catalogue and policies, and leaves refunds and complaints to a person. Order lookups, return requests, and abandoned carts are covered in <Link href="/blog/whatsapp-chatbot-for-ecommerce">WhatsApp automation for ecommerce</Link>.</p>
+      <p>Stock, sizes, delivery areas and times, cash on delivery, and returns, which make up most of a store’s WhatsApp. A good store bot answers these from the catalogue and policies, and leaves refunds and complaints to a person.</p>
       <blockquote>“Is the vitamin C serum good for oily skin, and can I pay on delivery?” → “Yes, it’s oil-free and suits oily skin. Cash on delivery is available on orders up to ₹5,000.”</blockquote>
       <h3>Clinic or dental practice</h3>
-      <p>Opening hours, consultation fees, which doctor sees what, and how to prepare for a visit. The bot can collect booking requests; confirming a slot automatically needs a connection to your booking system. <Link href="/blog/whatsapp-appointment-booking">WhatsApp appointment booking</Link> shows both setups, and <Link href="/blog/whatsapp-ai-receptionist-for-clinics">WhatsApp AI receptionist for clinics</Link> adds the medical-advice and privacy rules.</p>
+      <p>Opening hours, consultation fees, which doctor sees what, and how to prepare for a visit. The bot can collect booking requests; confirming a slot automatically needs a connection to your booking system. <Link href="/blog/whatsapp-appointment-booking">WhatsApp appointment booking</Link> shows both setups.</p>
       <h3>Restaurant</h3>
       <p>Menu questions, vegetarian and allergy options, delivery radius, and table requests, answered from the menu you upload, at the hours people actually ask: late evening. A bot can take the order itself, too: see <Link href="/blog/whatsapp-food-ordering-system">WhatsApp food ordering</Link>.</p>
       <h3>Real estate</h3>
-      <p>Answers about listings, price, location, and amenities, plus a few qualifying questions (budget, area, move-in date) before an agent calls. <Link href="/blog/whatsapp-chatbot-for-real-estate">WhatsApp chatbot for real estate</Link> sets it up, including AI calls to new leads, and <Link href="/blog/whatsapp-lead-qualification">WhatsApp lead qualification</Link> covers the questions and the CRM for any business.</p>
+      <p>Answers about listings, price, location, and amenities, plus a few qualifying questions (budget, area, move-in date) before an agent calls. See <Link href="/ai-calling-agent-for-real-estate">AI for real estate</Link>.</p>
       <h3>Coaching and education</h3>
-      <p>Course fees, batch timings, syllabus, and demo-class requests, the same ten questions every parent asks, in every language they ask in. See <Link href="/blog/whatsapp-chatbot-for-education">WhatsApp chatbot for education</Link>.</p>
+      <p>Course fees, batch timings, syllabus, and demo-class requests, the same ten questions every parent asks, in every language they ask in.</p>
       <h3>Local services</h3>
-      <p>Salons, repair shops, and travel agents: prices, availability, and directions, with anything unusual handed to the owner. For tone and handoff rules, see <Link href="/blog/zen-whatsapp-workflow">a calmer WhatsApp workflow</Link>. In the UK, <Link href="/blog/ai-receptionist-uk">AI receptionist for small business UK</Link> compares what phone-line AI and answering services cost.</p>
+      <p>Salons, repair shops, and travel agents: prices, availability, and directions, with anything unusual handed to the owner. For tone and handoff rules, see <Link href="/blog/zen-whatsapp-workflow">a calmer WhatsApp workflow</Link>.</p>
     </>,
   },
   {
@@ -108,7 +108,7 @@ const sections = [
         pros={["Replies in seconds, day and night", "Gives the same correct answer every time", "Answers in the customer’s language", "Clears the repeat questions so people handle the hard ones", "Keeps every conversation saved and searchable"]}
         cons={["Only as good as its knowledge base: missing info means vague answers", "Upset customers usually want a person", "Needs a weekly read-through to stay sharp", "Unofficial routes put a number at risk if you use them to spam", "Text bots don’t answer voice notes or images"]}
       />
-      <p>The failure that hurts most is a confident wrong answer. Prevent it with one line in the instructions, “if the knowledge base doesn’t say, tell the customer a person will reply”, and by adding an answer to the knowledge base every time you spot a gap. When and how the bot should pass a chat to a person is in <Link href="/blog/whatsapp-chatbot-human-handoff">WhatsApp chatbot human handoff</Link>.</p>
+      <p>The failure that hurts most is a confident wrong answer. Prevent it with one line in the instructions, “if the knowledge base doesn’t say, tell the customer a person will reply”, and by adding an answer to the knowledge base every time you spot a gap.</p>
     </>,
   },
   {
@@ -131,8 +131,8 @@ const sections = [
     body: <>
       <p>With Wapzen, the whole setup is four steps:</p>
       <ol>
-        <li><strong>Make a knowledge base.</strong> Paste or upload your price list, delivery and payment rules, return policy, and FAQ (text, PDF, or Word). <Link href="/blog/chatbot-knowledge-base">How to build a chatbot knowledge base</Link> shows how to write it so the AI finds the right answer.</li>
-        <li><strong>Create a chat agent.</strong> Write a short system prompt: who it works for, what it helps with, and its rules, and attach the knowledge base. There are <Link href="/blog/ai-agent-system-prompt-examples">eight system prompt examples</Link> to start from.</li>
+        <li><strong>Make a knowledge base.</strong> Paste or upload your price list, delivery and payment rules, return policy, and FAQ (text, PDF, or Word).</li>
+        <li><strong>Create a chat agent.</strong> Write a short system prompt: who it works for, what it helps with, and its rules. Pick a GPT or Claude model and attach the knowledge base.</li>
         <li><strong>Connect your number.</strong> Scan a QR code from WhatsApp’s Linked devices screen and choose the agent for that number.</li>
         <li><strong>Test it,</strong> by messaging your number from another phone with the questions customers ask most.</li>
       </ol>
@@ -151,7 +151,7 @@ const sections = [
         <li>Customers <strong>buy from whoever replies first</strong>, so slow replies cost sales.</li>
         <li>You get questions in <strong>more than one language</strong>.</li>
       </ul>
-      <p>If you get a handful of messages a day and each one is a custom quote, the free <Link href="/blog/whatsapp-away-message">away message in WhatsApp Business</Link> and a good <Link href="/blog/whatsapp-business-greeting-message">greeting message</Link> may be all you need for now.</p>
+      <p>If you get a handful of messages a day and each one is a custom quote, the free <Link href="/whatsapp-auto-reply">away message in WhatsApp Business</Link> and a good <Link href="/blog/whatsapp-business-greeting-message">greeting message</Link> may be all you need for now.</p>
       <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a linked device. Use the chatbot to answer people who message you, never to message people who didn’t: WhatsApp restricts numbers that send bulk or unwanted messages.</Note>
     </>,
   },

@@ -178,9 +178,6 @@ export const localeHome: Record<Locale, string> = {
   es: "/es/chatbot-whatsapp-gratis",
   "es-MX": "/es-mx/blog",
   it: "/it/chatbot-whatsapp-gratis",
-  de: "/de/blog",
-  fr: "/fr/blog",
-  nl: "/nl/blog",
 };
 
 // Every page that can have a translation: marketing pages, blog posts, and

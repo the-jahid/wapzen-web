@@ -10,7 +10,7 @@ import { BlogPost, InlineCta, Note } from "@/components/blog/BlogPost";
 // por whatsapp gratis" (28, 3/3), "bot de whatsapp para agendar citas" (20),
 // autocompletado MX 2026-10-28. Los resultados son apps de citas pequeñas.
 // Límites del producto (igual que el post en inglés): el agente no ve el número
-// del cliente, sabe la fecha de hoy (desde 2026-10-29), lee los primeros 3,000 caracteres de una
+// del cliente, no sabe la fecha de hoy, lee los primeros 3,000 caracteres de una
 // herramienta, y agregar un lead a una campaña llama al instante. Versión en
 // inglés: /blog/whatsapp-appointment-booking.
 const href = "/es-mx/blog/agendar-citas-por-whatsapp";
@@ -86,7 +86,7 @@ const sections = [
         <li><strong>Registra la solicitud</strong> en una hoja de Google con una herramienta de API, para que tú confirmes después. No necesitas sistema de citas.</li>
         <li><strong>Agenda en tu sistema</strong>, si tiene API: con una herramienta consulta los horarios libres del día que pide el cliente y con otra crea la cita en el horario que eligió.</li>
       </ul>
-      <Note>El agente no ve el número de WhatsApp del cliente, así que pídele en las instrucciones que lo solicite. Sí sabe la fecha de hoy, en la zona horaria de tu número, así que entiende “mañana” y “el próximo martes”; aun así, conviene que tu sistema devuelva cada horario libre con su día y fecha. Y lee los primeros 3,000 caracteres de cada respuesta: devuelve una lista corta de horarios, no toda la agenda.</Note>
+      <Note>El agente no ve el número de WhatsApp del cliente, así que pídele en las instrucciones que lo solicite. Tampoco sabe la fecha de hoy: si tu sistema devuelve la fecha actual junto con los horarios libres, entiende bien “el próximo martes”. Y lee los primeros 3,000 caracteres de cada respuesta: devuelve una lista corta de horarios, no toda la agenda.</Note>
       <InlineCta title="Que la IA agende tus citas por WhatsApp" body="Wapzen contesta dudas y toma citas en tu número de siempre, por chat o por llamada de WhatsApp, a cualquier hora. Gratis por ahora." label="Empieza gratis" />
       <p>Muchos clientes prefieren llamar. Un agente de voz de Wapzen contesta las llamadas de WhatsApp en el mismo número y puede usar las mismas herramientas para tomar la cita en voz alta. Conoce cómo funciona un <Link href="/es-mx/blog/chatbot-para-whatsapp-business">chatbot para WhatsApp Business</Link>.</p>
     </>,
