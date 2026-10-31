@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -573,6 +573,30 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-01",
     readingMinutes: 12,
     locale: "pt-BR",
+  },
+  {
+    href: "/es/blog/chatbot-whatsapp-centros-unas-citas-gratis",
+    title: "Chatbot WhatsApp para centros de uñas: empieza gratis con IA",
+    name: "Chatbot WhatsApp para centros de uñas",
+    description: "Organiza citas y consultas de manicura con un chatbot de WhatsApp con IA. Descubre cómo usarlo en tu centro de uñas con Wapzen, gratis para empezar.",
+    tag: "Explainer",
+    icon: Hand,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 12,
+    locale: "es",
+  },
+  {
+    href: "/es/blog/chatbot-whatsapp-peluquerias-citas-ia-gratis",
+    title: "Chatbot WhatsApp para peluquerías: citas con IA, empieza gratis",
+    name: "Chatbot WhatsApp para peluquerías",
+    description: "Organiza las citas de tu peluquería por WhatsApp con IA. Responde sobre cortes, tintes y mechas y empieza gratis con Wapzen.",
+    tag: "Explainer",
+    icon: Scissors,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 14,
+    locale: "es",
   },
 ];
 

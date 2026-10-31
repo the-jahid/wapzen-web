@@ -135,3 +135,9 @@ The Wapzen dashboard itself is in English.
 - [Agendamento pelo WhatsApp](/pt-br/blog/agendamento-pelo-whatsapp): booking by hand, by booking link, or with an AI agent, and three ways to send appointment reminders (API templates at R$ 0,035). English version: /blog/whatsapp-appointment-booking.
 - [WhatsApp ou WhatsApp Business](/pt-br/blog/diferenca-whatsapp-e-whatsapp-business): the differences, migrating without losing chats, using one account on two phones and a PC, landlines, and when the official API makes sense.
 - [Chatbot para clínica odontológica](/pt-br/blog/chatbot-whatsapp-clinica-odontologica): an AI receptionist for Brazilian dental clinics on WhatsApp: five sample chats, setup steps, booking options, and the LGPD, CFO and WhatsApp policy limits. The chatbot never diagnoses or prescribes.
+
+## Blog in Spanish (Spain)
+
+- [Blog (España)](/es/blog): WhatsApp guides for businesses in Spain.
+- [Chatbot WhatsApp para centros de uñas](/es/blog/chatbot-whatsapp-centros-unas-citas-gratis): an AI assistant for nail salons in Spain: what to ask before booking, five sample chats, illustrative treatment times, chatbot vs booking software, setup steps, and the RGPD, LSSI and AI Act limits. Free to start with usage limits; bookings need a connected calendar.
+- [Chatbot WhatsApp para peluquerías](/es/blog/chatbot-whatsapp-peluquerias-citas-ia-gratis): an AI receptionist for hair salons and barbers in Spain: six sample chats, scheduling colour services and several stylists, chatbot vs booking software, setup steps, and the RGPD, LSSI and AI Act limits. Free to start with usage limits; bookings need a connected calendar.
