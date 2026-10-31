@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, ShoppingBag, ShoppingCart, Sparkles, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, ShoppingBag, ShoppingCart, Sparkles, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -340,6 +340,29 @@ export const blogPosts: BlogPostEntry[] = [
     published: "2026-11-01",
     updated: "2026-11-01",
     readingMinutes: 7,
+  },
+  // Free chatbot and auto-reply guides, after the older posts for the same reason.
+  {
+    href: "/blog/best-free-whatsapp-ai-chatbot-guide",
+    title: "Free WhatsApp AI Chatbot: How to Choose the Best One in 2026",
+    name: "How to choose a free WhatsApp AI chatbot",
+    description: "Looking for a free WhatsApp AI chatbot? Compare free chatbot options, hidden costs, features, and a 7-day testing plan before choosing one.",
+    tag: "Explainer",
+    icon: Gift,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 10,
+  },
+  {
+    href: "/blog/whatsapp-ai-auto-reply-customer-conversations",
+    title: "WhatsApp AI Auto Reply: 12 Customer Chats You Can Automate",
+    name: "WhatsApp AI auto reply examples",
+    description: "12 WhatsApp AI auto-reply examples for customer service, sales, orders, and bookings, with the rule each one needs and how to start for free.",
+    tag: "Explainer",
+    icon: MessagesSquare,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 12,
   },
   // Italian, in app/it/blog (index /it/blog). Researched with
   // docs/seo-blog-it-research.mjs; rates are Meta's EUR card for Italy.

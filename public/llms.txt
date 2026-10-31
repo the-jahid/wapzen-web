@@ -105,6 +105,8 @@ The Wapzen dashboard itself is in English.
 - [WhatsApp order confirmation messages](/blog/whatsapp-order-confirmation-messages): 25 copy-and-paste templates for new orders, payment and COD, shipping, delivery and customer care, and changes, cancellations and refunds.
 - [Reduce missed WhatsApp orders](/blog/reduce-missed-whatsapp-orders): why orders get missed in busy chats, six steps to fix it with AI automation and human escalation, and five numbers to track.
 - [WhatsApp order changes and cancellations](/blog/whatsapp-order-changes-cancellations): safe workflows for order changes, cancellations, and refund requests through a connected system, what to leave to a person, and five automation mistakes to avoid.
+- [How to choose a free WhatsApp AI chatbot](/blog/best-free-whatsapp-ai-chatbot-guide): what "free" means across the WhatsApp Business app, trials, free tiers, DIY bots, and Wapzen (free to start, with usage limits), a 12-point checklist, a seven-day pilot, and a 40-point scorecard.
+- [WhatsApp AI auto reply examples](/blog/whatsapp-ai-auto-reply-customer-conversations): 12 illustrative customer conversations with the rule each one needs, which messages to automate or escalate, setup, what to measure, and common mistakes.
 
 ## Blog in Italian
 
