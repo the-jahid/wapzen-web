@@ -18,6 +18,7 @@ import {
   createTool as apiCreateTool,
   deleteTool as apiDeleteTool,
   listTools as apiListTools,
+  saveOrderFields as apiSaveOrderFields,
   testTool as apiTestTool,
   updateTool as apiUpdateTool,
   emptyApiRequestConfig,
@@ -27,6 +28,7 @@ import {
   ToolError,
   type ApiTool,
   type CreateToolPayload,
+  type OrderField,
   type ToolTestResult,
   type UpdateToolPayload,
 } from "@/lib/tools";
@@ -100,6 +102,8 @@ type Tool = {
   // Built in: shown with a Default badge, and can't be edited or deleted.
   isSystem: boolean;
   agentCount: number;
+  // Take Order
+  orderFields: OrderField[];
   // API Request
   method: HttpMethod;
   url: string;
@@ -225,6 +229,7 @@ function emptyTool(id: string, type: ToolType, name: string, description: string
     description,
     isSystem: false,
     agentCount: 0,
+    orderFields: [],
     method: defaults.method,
     url: defaults.url,
     timeoutSeconds: defaults.timeout_seconds,
@@ -253,6 +258,7 @@ function fromApi(tool: ApiTool): Tool {
   const base = emptyTool(tool.id, tool.type, tool.name, tool.description);
   base.isSystem = tool.is_system ?? false;
   base.agentCount = tool.chat_agent_ids?.length ?? 0;
+  base.orderFields = tool.order?.fields ?? [];
   if (tool.api_request) {
     base.method = tool.api_request.method;
     base.url = tool.api_request.url;
@@ -644,6 +650,13 @@ const css = `
 .tools-tab:focus-visible { border-radius: 8px; box-shadow: 0 0 0 3px var(--app-primary-ring); outline: none; }
 .tools-tab-badge { background: var(--primary); border-radius: 999px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 850; line-height: 1; padding: 3px 6px; }
 .tools-default-note { align-items: center; display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.tools-order-fields { display: grid; gap: 10px; }
+.tools-order-field { align-items: center; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) auto auto; }
+.tools-order-field-name { display: grid; gap: 2px; min-width: 0; }
+.tools-order-field-label { color: var(--text); font-size: 13px; font-weight: 750; }
+.tools-order-field-required { align-items: center; color: var(--subtle); cursor: pointer; display: inline-flex; font-size: 12.5px; gap: 6px; }
+.tools-order-field-required input { accent-color: var(--primary); margin: 0; }
+.tools-order-field-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 14px; }
 .tools-function-params { display: grid; gap: 8px; }
 .tools-function-param { align-items: baseline; display: grid; gap: 10px; grid-template-columns: 150px minmax(0, 1fr); }
 .tools-function-param span:last-child { color: var(--subtle); font-size: 12.5px; }
@@ -1379,6 +1392,16 @@ export default function ToolsPage() {
     [getToken, setTools]
   );
 
+  const saveFields = useCallback(
+    async (toolId: string, fields: OrderField[]) => {
+      const tool = fromApi(await apiSaveOrderFields(toolId, fields, getToken));
+      setTools((current) => current.map((item) => (item.id === tool.id ? tool : item)));
+      setDetailEpoch((current) => current + 1);
+      setNotice({ kind: "success", text: "Order fields saved." });
+    },
+    [getToken, setTools]
+  );
+
   // deleteTool removes the tool and, with it, every agent's attachment to it —
   // the join rows cascade — so an agent using it stops offering that action.
   async function deleteTool(tool: Tool) {
@@ -1624,7 +1647,13 @@ export default function ToolsPage() {
             open={Boolean(selected)}
           >
             {selected?.isSystem ? (
-              <SystemToolDetail onBack={() => setSelectedId(null)} tool={selected} />
+              <SystemToolDetail
+                key={`${selected.id}:${detailEpoch}`}
+                onBack={() => setSelectedId(null)}
+                onError={(message) => setNotice({ kind: "error", text: message })}
+                onSaveFields={(fields) => saveFields(selected.id, fields)}
+                tool={selected}
+              />
             ) : selected ? (
               <ToolDetail
                 key={`${selected.id}:${detailEpoch}`}
@@ -1834,20 +1863,63 @@ export default function ToolsPage() {
   );
 }
 
-// What create_order collects, as the model sees it (order-tool.ts on the server).
-const orderFields: { name: string; note: string }[] = [
-  { name: "customer_name", note: "Required." },
-  { name: "phone", note: "Required. On WhatsApp the sender's number is used if none is given." },
-  { name: "description", note: "Required. What the customer wants, in full." },
-  { name: "email", note: "Optional." },
-  { name: "items", note: "Optional. Each with a name, quantity and note." },
-  { name: "delivery_address", note: "Optional." },
-];
+// The fields with a meaning of their own on an order (order-tool.ts on the
+// server). Their names stay put; a field the owner added can be renamed.
+const builtInFieldNotes: Record<string, string> = {
+  customer_name: "If left out, the customer's WhatsApp name is saved.",
+  phone: "The sender's WhatsApp number is saved whether or not this is here.",
+  description: "What the customer wants, in full.",
+  email: "",
+  items: "Each with a name, quantity and note.",
+  delivery_address: "",
+};
 
-// SystemToolDetail shows a built-in tool, which has nothing to edit here: what
-// an owner controls about it is set per agent, in the agent's Tools section.
-function SystemToolDetail({ tool, onBack }: { tool: Tool; onBack: () => void }) {
+const maxOrderFields = 20;
+
+type OrderFieldRow = OrderField & { id: string };
+
+// SystemToolDetail shows a built-in tool. Its one account-wide setting is what
+// it collects; the rest is set per agent, in the agent's Tools section. The
+// parent keys this on the tool id and the save epoch, so the rows below always
+// start from stored values.
+function SystemToolDetail({
+  tool,
+  onBack,
+  onError,
+  onSaveFields,
+}: {
+  tool: Tool;
+  onBack: () => void;
+  onError: (message: string) => void;
+  onSaveFields: (fields: OrderField[]) => Promise<void>;
+}) {
   const meta = toolMeta(tool.type);
+  const [rows, setRows] = useState<OrderFieldRow[]>(() =>
+    tool.orderFields.map((field) => ({ ...field, id: rowId("f") }))
+  );
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const hasBlankName = rows.some((row) => !row.label.trim());
+
+  function change(next: (current: OrderFieldRow[]) => OrderFieldRow[]) {
+    setRows(next);
+    setIsDirty(true);
+  }
+
+  function patch(id: string, update: Partial<OrderField>) {
+    change((current) => current.map((row) => (row.id === id ? { ...row, ...update } : row)));
+  }
+
+  async function save() {
+    setIsSaving(true);
+    try {
+      await onSaveFields(rows.map(({ key, label, required }) => ({ key, label, required })));
+    } catch (error) {
+      onError(describeError(error, "Could not save the order fields."));
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="tools-detail">
       <button className="tools-back" onClick={onBack} type="button">
@@ -1881,8 +1953,8 @@ function SystemToolDetail({ tool, onBack }: { tool: Tool; onBack: () => void }) 
         </div>
         <div className="tools-card-body">
           <p className="tools-field-hint tools-default-note">
-            This tool is built in, so it can&apos;t be edited or deleted. To use it, open a chat agent,
-            select Take Order under Tools, then turn on order taking and write your order instructions.
+            This tool is built in, so it can&apos;t be deleted. To use it, open a chat agent, select
+            Take Order under Tools, then turn on order taking and write your order instructions.
           </p>
           <div className="tools-default-note">
             <Link className="tools-btn tools-btn-primary tools-btn-sm" href="/dashboard/chat">
@@ -1895,16 +1967,78 @@ function SystemToolDetail({ tool, onBack }: { tool: Tool; onBack: () => void }) 
       <section className="tools-card">
         <div className="tools-card-head">
           <h3 className="tools-card-title">What it collects</h3>
-          <div className="tools-card-copy">The details saved with each order.</div>
+          <div className="tools-card-copy">
+            The details saved with each order, on every agent that takes orders. Agents won&apos;t
+            place an order until they have the required ones.
+          </div>
         </div>
         <div className="tools-card-body">
-          <div className="tools-function-params">
-            {orderFields.map((field) => (
-              <div className="tools-function-param" key={field.name}>
-                <span className="tools-mono">{field.name}</span>
-                <span>{field.note}</span>
-              </div>
-            ))}
+          <div className="tools-order-fields">
+            {rows.map((row) => {
+              const isBuiltIn = row.key !== undefined && row.key in builtInFieldNotes;
+              return (
+                <div className="tools-order-field" key={row.id}>
+                  <div className="tools-order-field-name">
+                    {isBuiltIn ? (
+                      <>
+                        <span className="tools-order-field-label">{row.label}</span>
+                        {builtInFieldNotes[row.key ?? ""] ? (
+                          <span className="tools-field-hint">{builtInFieldNotes[row.key ?? ""]}</span>
+                        ) : null}
+                      </>
+                    ) : (
+                      <input
+                        aria-label="Field name"
+                        className="tools-input"
+                        maxLength={60}
+                        onChange={(event) => patch(row.id, { label: event.target.value })}
+                        placeholder="Field name, like Table number"
+                        value={row.label}
+                      />
+                    )}
+                  </div>
+                  <label className="tools-order-field-required">
+                    <input
+                      checked={row.required}
+                      onChange={(event) => patch(row.id, { required: event.target.checked })}
+                      type="checkbox"
+                    />
+                    Required
+                  </label>
+                  <button
+                    aria-label={`Delete ${row.label || "field"}`}
+                    className="tools-icon-button"
+                    disabled={rows.length === 1}
+                    onClick={() => change((current) => current.filter((item) => item.id !== row.id))}
+                    title={rows.length === 1 ? "Keep at least one field" : "Delete field"}
+                    type="button"
+                  >
+                    <Icon name="trash" size={15} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="tools-order-field-actions">
+            <button
+              className="tools-btn tools-btn-secondary tools-btn-sm"
+              disabled={rows.length >= maxOrderFields}
+              onClick={() =>
+                change((current) => [...current, { id: rowId("f"), label: "", required: false }])
+              }
+              type="button"
+            >
+              <Icon name="plus" size={14} sw={2.4} />
+              Add field
+            </button>
+            <button
+              className="tools-btn tools-btn-primary tools-btn-sm"
+              disabled={!isDirty || isSaving || hasBlankName}
+              onClick={save}
+              type="button"
+            >
+              {isSaving ? "Saving…" : "Save fields"}
+            </button>
           </div>
         </div>
       </section>

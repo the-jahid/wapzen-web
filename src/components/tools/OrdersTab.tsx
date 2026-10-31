@@ -50,6 +50,16 @@ function statusMeta(status: OrderStatus) {
   return orderStatuses.find((item) => item.id === status) ?? orderStatuses[0];
 }
 
+// The owner can delete Description from Take Order, so the list falls back on
+// what was collected instead.
+function orderSummary(order: ApiOrder) {
+  return (
+    order.description ||
+    order.items.map((item) => item.name).join(", ") ||
+    (order.custom_fields ?? []).map((field) => `${field.label}: ${field.value}`).join(", ")
+  );
+}
+
 function StatusBadge({ status }: { status: OrderStatus }) {
   const meta = statusMeta(status);
   return <span className={`orders-status tools-accent-${meta.accent}`}>{meta.label}</span>;
@@ -353,11 +363,11 @@ export default function OrdersTab({
                       #{order.order_number}
                     </button>
                   </td>
-                  <td className="orders-strong">{order.customer_name}</td>
-                  <td className="tools-mono">{order.phone}</td>
+                  <td className="orders-strong">{order.customer_name || "—"}</td>
+                  <td className="tools-mono">{order.phone || "—"}</td>
                   <td>{order.email ?? "—"}</td>
-                  <td className="orders-truncate" title={order.description}>
-                    {order.description}
+                  <td className="orders-truncate" title={orderSummary(order)}>
+                    {orderSummary(order) || "—"}
                   </td>
                   <td>{order.agent_name ?? "Deleted agent"}</td>
                   <td>
@@ -382,8 +392,8 @@ export default function OrdersTab({
                 <span className="tools-card-name">#{order.order_number}</span>
                 <StatusBadge status={order.status} />
               </span>
-              <span className="orders-strong">{order.customer_name}</span>
-              <span className="tools-card-desc">{order.description}</span>
+              <span className="orders-strong">{order.customer_name || "—"}</span>
+              <span className="tools-card-desc">{orderSummary(order)}</span>
               <span className="tools-card-foot">
                 <span className="tools-chip-line tools-mono">{order.phone}</span>
                 <span className="tools-chip-tail">{dateFormatter.format(new Date(order.created_at))}</span>
@@ -535,12 +545,16 @@ function OrderDrawer({
           </label>
 
           <dl className="orders-facts">
-            <Fact label="Customer">{order.customer_name}</Fact>
+            <Fact label="Customer">{order.customer_name || "Not given"}</Fact>
             <Fact label="Phone">
-              <span className="orders-copyable">
-                <span className="tools-mono">{order.phone}</span>
-                <CopyButton label="Phone" onCopy={() => copy("Phone", order.phone)} />
-              </span>
+              {order.phone ? (
+                <span className="orders-copyable">
+                  <span className="tools-mono">{order.phone}</span>
+                  <CopyButton label="Phone" onCopy={() => copy("Phone", order.phone)} />
+                </span>
+              ) : (
+                "Not given"
+              )}
             </Fact>
             <Fact label="Email">
               {order.email ? (
@@ -553,14 +567,21 @@ function OrderDrawer({
               )}
             </Fact>
             <Fact label="Delivery address">{order.delivery_address ?? "Not given"}</Fact>
+            {(order.custom_fields ?? []).map((field) => (
+              <Fact key={field.key} label={field.label}>
+                {field.value}
+              </Fact>
+            ))}
             <Fact label="Agent">{order.agent_name ?? "Deleted agent"}</Fact>
             <Fact label="Channel">{order.channel === "voice" ? "Voice" : "Chat"}</Fact>
           </dl>
 
-          <div className="tools-field">
-            <span className="tools-field-label">Description</span>
-            <p className="orders-text">{order.description}</p>
-          </div>
+          {order.description ? (
+            <div className="tools-field">
+              <span className="tools-field-label">Description</span>
+              <p className="orders-text">{order.description}</p>
+            </div>
+          ) : null}
 
           {order.items.length > 0 ? (
             <div className="tools-field">

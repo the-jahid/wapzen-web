@@ -72,9 +72,14 @@ export type ApiTool = {
   transfer_call?: ToolTransferCallConfig | null;
   send_text?: ToolSendTextConfig | null;
   end_call?: ToolEndCallConfig | null;
+  order?: { fields: OrderField[] } | null;
   created_at: string;
   updated_at: string;
 };
+
+// OrderField is one detail Take Order collects. A new field has no key yet: the
+// server makes one from its label.
+export type OrderField = { key?: string; label: string; required: boolean };
 
 // CreateToolPayload is the POST body. type, name and description are required;
 // api_request and transfer_call also require their configuration block, while
@@ -249,6 +254,23 @@ export function updateTool(
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+    },
+    getToken
+  );
+}
+
+// saveOrderFields replaces the whole list Take Order collects.
+export function saveOrderFields(
+  toolId: string,
+  fields: OrderField[],
+  getToken: AuthTokenGetter
+): Promise<ApiTool> {
+  return request<ApiTool>(
+    `/v1/dashboard/tools/${encodeURIComponent(toolId)}/order-fields`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fields }),
     },
     getToken
   );

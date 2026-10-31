@@ -25,6 +25,8 @@ export type ApiOrder = {
   description: string;
   items: ApiOrderItem[];
   delivery_address: string | null;
+  // Values for the fields the owner added to Take Order. Absent from older servers.
+  custom_fields?: { key: string; label: string; value: string }[];
   status: OrderStatus;
   channel: "chat" | "voice";
   internal_note: string | null;
