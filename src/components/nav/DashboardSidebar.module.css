@@ -68,6 +68,9 @@
 .navLabel { min-width: 0; }
 .badge { margin-left: auto; padding: 1px 7px; border-radius: 20px; background: var(--app-primary); color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; }
 
+.menuButton { position: relative; }
+.menuDot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--app-primary); box-shadow: 0 0 0 2px var(--app-bg); }
+
 /* ---------- Footer ---------- */
 .footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
 .userCard {

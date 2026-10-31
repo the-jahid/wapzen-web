@@ -32,6 +32,7 @@ import {
   type NavIconName,
 } from "@/components/nav/workspaceMode";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
+import { useNewOrders } from "@/components/nav/useNewOrders";
 import styles from "./DashboardSidebar.module.css";
 
 const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
@@ -70,6 +71,7 @@ type DashboardSidebarProps = {
  */
 export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const newOrders = useNewOrders();
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -84,7 +86,7 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
     <div className={styles.root} data-stack={stackBelow}>
       <aside aria-label="Dashboard" className={styles.rail}>
         <div className={styles.panel}>
-          <SidebarBody activeLabel={activeLabel} badges={badges} />
+          <SidebarBody activeLabel={activeLabel} badges={badges} newOrders={newOrders} />
         </div>
       </aside>
 
@@ -106,12 +108,19 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
           <button
             aria-controls="dashboard-drawer"
             aria-expanded={drawerOpen}
-            aria-label={drawerOpen ? "Close menu" : "Open menu"}
-            className={styles.iconButton}
+            aria-label={
+              drawerOpen
+                ? "Close menu"
+                : newOrders > 0
+                  ? `Open menu, ${newOrders} new order${newOrders === 1 ? "" : "s"}`
+                  : "Open menu"
+            }
+            className={`${styles.iconButton} ${styles.menuButton}`}
             onClick={() => setDrawerOpen((open) => !open)}
             type="button"
           >
             {drawerOpen ? <X size={18} /> : <Menu size={18} />}
+            {newOrders > 0 && !drawerOpen ? <span className={styles.menuDot} /> : null}
           </button>
         </span>
       </header>
@@ -137,7 +146,12 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
           <X size={18} />
         </button>
         <div className={styles.panel}>
-          <SidebarBody activeLabel={activeLabel} badges={badges} onNavigate={() => setDrawerOpen(false)} />
+          <SidebarBody
+            activeLabel={activeLabel}
+            badges={badges}
+            newOrders={newOrders}
+            onNavigate={() => setDrawerOpen(false)}
+          />
         </div>
       </aside>
     </div>
@@ -147,10 +161,12 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
 function SidebarBody({
   activeLabel,
   badges,
+  newOrders,
   onNavigate,
 }: {
   activeLabel: string;
   badges?: Partial<Record<string, number>>;
+  newOrders: number;
   onNavigate?: () => void;
 }) {
   const { user } = useUser();
@@ -173,12 +189,14 @@ function SidebarBody({
           const Icon = navIcons[item.icon];
           const count = badges?.[item.label];
           const active = item.label === activeLabel;
+          // New orders live under Tools, so while any wait, Tools opens them.
+          const ordersWaiting = item.label === "Tools" && newOrders > 0;
           return (
             <Link
               aria-current={active ? "page" : undefined}
               className={styles.navItem}
               data-active={active || undefined}
-              href={item.href ?? "#"}
+              href={ordersWaiting ? "/dashboard/tools?tab=orders" : item.href ?? "#"}
               key={item.label}
               onClick={onNavigate}
             >
@@ -186,7 +204,11 @@ function SidebarBody({
                 <Icon size={18} strokeWidth={1.9} />
               </span>
               <span className={styles.navLabel}>{item.label}</span>
-              {count ? <span className={styles.badge}>{count}</span> : null}
+              {ordersWaiting ? (
+                <span className={styles.badge}>{newOrders} new</span>
+              ) : count ? (
+                <span className={styles.badge}>{count}</span>
+              ) : null}
             </Link>
           );
         })}

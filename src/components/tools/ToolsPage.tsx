@@ -12,7 +12,7 @@ import {
   type WorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
-import { listOrders } from "@/lib/orders";
+import { newOrdersCacheKey } from "@/components/nav/useNewOrders";
 import { useCachedState } from "@/lib/pageCache";
 import {
   createTool as apiCreateTool,
@@ -1190,17 +1190,14 @@ const css = `
 }
 `;
 
-// How often the Orders tab's badge re-reads the new-order count while the tab
-// itself is closed; once open, its own list keeps the count current.
-const newOrdersRefreshMs = 15000;
-
 export default function ToolsPage() {
   const { getToken } = useAuth();
   const { mode } = useWorkspaceMode();
   const searchParams = useSearchParams();
   // The tab lives in the URL so it survives a refresh and can be linked to.
   const showOrders = searchParams.get("tab") === "orders";
-  const [newOrders, setNewOrders] = useCachedState<number>("tools-page:new-orders", 0);
+  // The sidebar keeps this count current on every page.
+  const [newOrders, setNewOrders] = useCachedState<number>(newOrdersCacheKey, 0);
   const [tools, setTools, hasCachedTools] = useCachedState<Tool[]>("tools-page:tools", []);
   const [isLoading, setIsLoading] = useState(true);
   // Tools cached from an earlier visit stay on screen while they refetch.
@@ -1256,24 +1253,6 @@ export default function ToolsPage() {
       cancelled = true;
     };
   }, [getToken, setTools]);
-
-  useEffect(() => {
-    if (showOrders) return;
-    let cancelled = false;
-    const refresh = () => {
-      listOrders(getToken, { limit: 1 })
-        .then((result) => {
-          if (!cancelled) setNewOrders(result.newOrders);
-        })
-        .catch(() => undefined); // A missed count is retried on the next tick.
-    };
-    refresh();
-    const timer = window.setInterval(refresh, newOrdersRefreshMs);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-  }, [getToken, setNewOrders, showOrders]);
 
   useEffect(() => {
     if (!isCreateOpen && !pendingDelete) return;
@@ -1421,7 +1400,7 @@ export default function ToolsPage() {
   return (
     <div className={`tools-shell${mode === "chat" ? " app-accent-green" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <DashboardSidebar activeLabel="Tools" badges={{ Tools: tools.length }} stackBelow={900} />
+      <DashboardSidebar activeLabel="Tools" stackBelow={900} />
 
       <main className="tools-main">
         <div className="tools-content">
