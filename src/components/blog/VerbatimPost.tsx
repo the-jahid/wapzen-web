@@ -10,11 +10,11 @@ import tools from "@/components/free-tools/FreeTools.module.css";
 import landing from "@/components/landing/CoreLanding.module.css";
 import styles from "./Blog.module.css";
 
-// Skeleton for posts published word for word, in a language the site's chrome
-// isn't written in (the Irish posts in app/blog): everything inside <article>
-// comes from the post itself, so the summary box, byline, table of contents,
-// sources note and "keep reading" of BlogPost are left out. The post's own
-// closing section becomes the CTA band and its FAQ feeds the FAQPage data.
+// Skeleton for posts published word for word (the Irish posts in app/blog, the
+// German posts in app/de/blog): everything inside <article> comes from the post
+// itself, so the summary box, byline, table of contents, sources note and "keep
+// reading" of BlogPost are left out. The post's own closing section becomes the
+// CTA band and its FAQ feeds the FAQPage data.
 
 type Faq = { q: string; a: string };
 type PostSection = { id: string; title: string; body: ReactNode };
@@ -33,14 +33,15 @@ type VerbatimPostProps = {
 
 /** pageMetadata plus the post's search terms and its language for social previews. */
 export function verbatimPostMetadata(post: BlogPostEntry, ogLocale: string, keywords: string[]): Metadata {
-  const metadata = pageMetadata({ title: post.title, description: post.description, path: post.href, article: { publishedTime: post.published, modifiedTime: post.updated } });
+  const metadata = pageMetadata({ title: post.title, description: post.description, path: post.href, locale: post.locale, article: { publishedTime: post.published, modifiedTime: post.updated } });
   return { ...metadata, keywords, openGraph: { ...metadata.openGraph, locale: ogLocale } };
 }
 
 export function VerbatimPost({ href, heading, lead, intro, sections, faqTitle, faq, closing }: VerbatimPostProps) {
   const post = blogPost(href);
-  const { ui } = locales.en;
-  const t = blogUi();
+  const locale = post.locale ?? "en";
+  const { ui } = locales[locale];
+  const t = blogUi(locale);
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(postJsonLd(post, faq)).replace(/</g, "\\u003c") }} />
     <header className={tools.hero}>

@@ -1,10 +1,10 @@
 // Languages of the public marketing pages. English pages live at the root;
-// the others under /pt-br, /es, /es-mx and /it (see app/<prefix>/layout.tsx). Each
+// the others under /pt-br, /es, /es-mx, /it and /de (see app/<prefix>/layout.tsx). Each
 // localized page names its English equivalent in lib/marketingPages.ts (blog
 // posts in lib/blogPosts.ts), which drives the hreflang alternates. The
 // dashboard itself is English-only.
 
-export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "it";
+export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "it" | "de";
 
 /** The blog index and the fixed text of its posts, in one language. */
 export type BlogUi = {
@@ -374,6 +374,67 @@ export const locales: Record<Locale, {
         readPost: "Leggi l’articolo",
         learnMore: "Scopri di più",
         choose: (name) => `Scegli ${name} se…`,
+      },
+    },
+  },
+  de: {
+    hreflang: "de",
+    htmlLang: "de",
+    ogLocale: "de_DE",
+    label: "Deutsch",
+    fallback: "en",
+    ui: {
+      nav: { features: "Funktionen", pricing: "Preise", tools: "Gratis-Tools", faq: "FAQ", faqHref: "#faq" },
+      login: "Anmelden",
+      dashboard: "Dashboard",
+      home: "Startseite",
+      breadcrumb: "Brotkrümelnavigation",
+      startFree: "Kostenlos starten",
+      explore: ["Weiter entdecken.", "Wapzen kostenlos starten."],
+      readMore: "Mehr erfahren",
+      openTools: "Tools öffnen",
+      toolsTitle: "Kostenlose WhatsApp-Tools",
+      toolsBody: "Link- und QR-Code-Generatoren, Ländervorwahlen und mehr. Auf Englisch, ohne Anmeldung.",
+      copy: "Kopieren",
+      copied: "Kopiert",
+      footer: {
+        tagline: ["KI-Chatbots und KI-Sprachagenten für WhatsApp.", "Mit dem Wissen Ihres Unternehmens."],
+        product: "PRODUKT",
+        features: "Funktionen",
+        chatbot: "KI-Chatbot",
+        voiceAgent: "KI-Sprachagent",
+        useCases: "Anwendungsfälle",
+        industries: "Branchen",
+        howItWorks: "So funktioniert’s",
+        faq: "Häufige Fragen",
+        freeTools: "GRATIS-TOOLS",
+        allTools: "Alle Tools",
+        solutions: "LÖSUNGEN",
+        connect: "KONTAKT",
+        sayHello: "Schreiben Sie uns",
+        rights: "Alle Rechte vorbehalten.",
+        backToTop: "Nach oben ↑",
+        languages: "Sprachen",
+      },
+      blog: {
+        href: "/de/blog",
+        label: "Blog",
+        dateLocale: "de-DE",
+        author: "Wapzen-Team",
+        updated: "Aktualisiert am",
+        minRead: (minutes) => `${minutes} Min. Lesezeit`,
+        tags: { Comparison: "Vergleich", Alternatives: "Alternativen", Guide: "Anleitung", Explainer: "Ratgeber" },
+        onThisPage: "Auf dieser Seite",
+        faqTitle: "Häufig gestellte Fragen",
+        sourcesTitle: "Quellen",
+        guideTitle: "Über diese Anleitung",
+        guideNote: (date) => `Die Schritte und Screenshots stammen aus dem Wapzen-Dashboard vom ${date}, mit Demodaten: Unternehmen, Personen und Telefonnummern sind erfunden.`,
+        explainerNote: (date) => `Fakten und Preise in diesem Artikel stammen aus den Quellen unten, geprüft am ${date}. Meta und andere Anbieter ändern Preise und Bedingungen oft: Prüfen Sie sie an der Quelle, bevor Sie sich darauf verlassen.`,
+        comparisonNote: (date) => `Preise und Funktionen stammen von den Seiten der jeweiligen Anbieter, geprüft am ${date}. Sie ändern sich oft: Prüfen Sie sie beim Anbieter, bevor Sie buchen.`,
+        keepReading: ["Weiterlesen.", "Mehr aus dem Blog."],
+        readPost: "Artikel lesen",
+        learnMore: "Mehr erfahren",
+        choose: (name) => `Wählen Sie ${name}, wenn…`,
       },
     },
   },

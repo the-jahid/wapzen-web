@@ -147,3 +147,10 @@ The Wapzen dashboard itself is in English.
 - [Comhrábot WhatsApp saor in aisce do shiopaí ar líne in Éirinn](/blog/whatsapp-chatbot-ecommerce-ireland): a WhatsApp AI chatbot for online shops in Ireland, in Irish: order questions, 24-hour customer service, delivery and returns, and setup steps.
 - [Comhrábot WhatsApp do ghníomhaireachtaí taistil agus d'óstáin in Éirinn](/blog/whatsapp-chatbot-travel-agencies-hotels-ireland): a WhatsApp AI chatbot for travel agencies, hotels and tour operators in Ireland, in Irish: booking enquiries, tour details and guest questions.
 - [Comhrábot WhatsApp le haghaidh áirithintí salon, spá agus giomnáisiam in Éirinn](/blog/whatsapp-booking-chatbot-salons-gyms-ireland): a WhatsApp AI chatbot for salons, spas and gyms in Ireland, in Irish: appointments, price lists, out-of-hours replies and fitness classes.
+
+## Blog in German (for businesses in Germany)
+
+- [Blog (Deutschland)](/de/blog): WhatsApp AI chatbot guides for businesses in Germany.
+- [WhatsApp Chatbot für Handwerker](/de/blog/whatsapp-chatbot-handwerker-kostenlos): a WhatsApp AI chatbot for electricians, plumbers and other trades in Germany: answering enquiries around the clock, preparing appointments, pre-qualifying requests, and setup steps.
+- [WhatsApp KI Chatbot für Autohäuser und Kfz-Werkstätten](/de/blog/whatsapp-ki-chatbot-autohaus-kfz-werkstatt): a WhatsApp AI chatbot for car dealerships and garages in Germany: service appointments, vehicle questions, repair status, test drives and after-hours replies.
+- [WhatsApp Chatbot für Solarfirmen und Wärmepumpen](/de/blog/whatsapp-chatbot-solarfirma-waermepumpe): a WhatsApp AI chatbot for solar and heat pump companies in Germany: pre-qualifying leads, general product questions, preparing consultations and multilingual replies.

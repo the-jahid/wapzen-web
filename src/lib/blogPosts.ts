@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, CalendarCheck, Car, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -635,6 +635,42 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-01",
     readingMinutes: 4,
     language: "ga-IE",
+  },
+  {
+    href: "/de/blog/whatsapp-chatbot-handwerker-kostenlos",
+    title: "WhatsApp Chatbot für Handwerker kostenlos",
+    name: "Kostenloser WhatsApp Chatbot für Handwerker",
+    description: "Kostenloser WhatsApp KI-Chatbot für Handwerker in Deutschland. Kundenanfragen automatisch beantworten, Termine vorbereiten und 24/7 erreichbar sein.",
+    tag: "Explainer",
+    icon: Wrench,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 4,
+    locale: "de",
+  },
+  {
+    href: "/de/blog/whatsapp-ki-chatbot-autohaus-kfz-werkstatt",
+    title: "WhatsApp KI Chatbot für Autohäuser & Kfz-Werkstätten",
+    name: "WhatsApp KI Chatbot für Autohäuser und Kfz-Werkstätten",
+    description: "Kostenloser WhatsApp KI-Chatbot für Autohäuser und Kfz-Werkstätten. Automatisieren Sie Kundenanfragen, Servicetermine und Fahrzeuginformationen.",
+    tag: "Explainer",
+    icon: Car,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 4,
+    locale: "de",
+  },
+  {
+    href: "/de/blog/whatsapp-chatbot-solarfirma-waermepumpe",
+    title: "WhatsApp Chatbot für Solarfirmen & Wärmepumpen",
+    name: "WhatsApp KI Chatbot für Solarfirmen und Wärmepumpen-Anbieter",
+    description: "Kostenloser WhatsApp KI-Chatbot für Solarfirmen und Wärmepumpen-Anbieter. Kundenanfragen automatisieren, Interessenten vorqualifizieren und 24/7 erreichbar sein.",
+    tag: "Explainer",
+    icon: SunMedium,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 5,
+    locale: "de",
   },
 ];
 

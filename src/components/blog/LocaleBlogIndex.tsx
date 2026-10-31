@@ -24,7 +24,7 @@ type LocaleBlogIndexProps = {
 export function LocaleBlogIndex({ locale, description, heading, intro, postsHeading, solutionsHeading }: LocaleBlogIndexProps) {
   const t = blogUi(locale);
   const posts = postsIn(locale);
-  const solutions = solutionsFor(locale);
+  const solutions = solutionsFor(locale).filter((page) => (page.locale ?? "en") !== "en");
   const url = `${siteConfig.url}${t.href}`;
   const inLanguage = locales[locale].hreflang;
   const jsonLd = {
