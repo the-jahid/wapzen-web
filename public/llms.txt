@@ -141,3 +141,9 @@ The Wapzen dashboard itself is in English.
 - [Blog (España)](/es/blog): WhatsApp guides for businesses in Spain.
 - [Chatbot WhatsApp para centros de uñas](/es/blog/chatbot-whatsapp-centros-unas-citas-gratis): an AI assistant for nail salons in Spain: what to ask before booking, five sample chats, illustrative treatment times, chatbot vs booking software, setup steps, and the RGPD, LSSI and AI Act limits. Free to start with usage limits; bookings need a connected calendar.
 - [Chatbot WhatsApp para peluquerías](/es/blog/chatbot-whatsapp-peluquerias-citas-ia-gratis): an AI receptionist for hair salons and barbers in Spain: six sample chats, scheduling colour services and several stylists, chatbot vs booking software, setup steps, and the RGPD, LSSI and AI Act limits. Free to start with usage limits; bookings need a connected calendar.
+
+## Blog in Irish (for businesses in Ireland)
+
+- [Comhrábot WhatsApp saor in aisce do shiopaí ar líne in Éirinn](/blog/whatsapp-chatbot-ecommerce-ireland): a WhatsApp AI chatbot for online shops in Ireland, in Irish: order questions, 24-hour customer service, delivery and returns, and setup steps.
+- [Comhrábot WhatsApp do ghníomhaireachtaí taistil agus d'óstáin in Éirinn](/blog/whatsapp-chatbot-travel-agencies-hotels-ireland): a WhatsApp AI chatbot for travel agencies, hotels and tour operators in Ireland, in Irish: booking enquiries, tour details and guest questions.
+- [Comhrábot WhatsApp le haghaidh áirithintí salon, spá agus giomnáisiam in Éirinn](/blog/whatsapp-booking-chatbot-salons-gyms-ireland): a WhatsApp AI chatbot for salons, spas and gyms in Ireland, in Irish: appointments, price lists, out-of-hours replies and fitness classes.

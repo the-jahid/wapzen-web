@@ -39,11 +39,11 @@ type BlogPostProps = {
   cta: { heading: ReactNode; body: string };
 };
 
-function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
+export function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
   const url = `${siteConfig.url}${post.href}`;
   const locale = post.locale ?? "en";
   const blog = `${siteConfig.url}${blogUi(locale).href}`;
-  const inLanguage = locales[locale].hreflang;
+  const inLanguage = post.language ?? locales[locale].hreflang;
   const organization = {
     "@type": "Organization",
     "@id": `${siteConfig.url}/#organization`,

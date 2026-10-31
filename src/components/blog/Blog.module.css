@@ -8,6 +8,8 @@
 
 /* Table of contents beside the article */
 .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 56px; max-width: 1100px; margin: 0 auto; padding: 12px 24px 0; }
+/* No table of contents (VerbatimPost): one centred column, as wide as the article. */
+.layoutSolo { grid-template-columns: minmax(0, 1fr); max-width: 808px; }
 .toc nav { position: sticky; top: 104px; display: flex; flex-direction: column; gap: 14px; }
 .toc nav > span { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--site-text-muted); }
 /* Numbered, no rule of its own (the tracing beam is the rule); the section being read gets a green pill. */

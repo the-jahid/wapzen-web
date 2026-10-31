@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -23,6 +23,8 @@ export type BlogPostEntry = {
   locale?: Locale;
   /** For a post in another language: the English post it covers (hreflang). */
   alternateOf?: string;
+  /** BCP 47 language of a post written in another language than its blog (Irish posts in /blog). */
+  language?: string;
 };
 
 // Blog posts in app/blog (English) and app/it/blog (Italian), newest first
@@ -597,6 +599,42 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-01",
     readingMinutes: 14,
     locale: "es",
+  },
+  {
+    href: "/blog/whatsapp-chatbot-ecommerce-ireland",
+    title: "Comhrábot WhatsApp Saor in Aisce do Ghnólachtaí Ríomhthráchtála in Éirinn",
+    name: "Comhrábot WhatsApp saor in aisce do shiopaí ar líne in Éirinn",
+    description: "Faigh comhrábot WhatsApp AI saor in aisce do do shiopa ar líne in Éirinn. Freagair ceisteanna custaiméirí, cabhraigh le horduithe agus cuir seirbhís ar fáil 24/7.",
+    tag: "Explainer",
+    icon: ShoppingBag,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 3,
+    language: "ga-IE",
+  },
+  {
+    href: "/blog/whatsapp-chatbot-travel-agencies-hotels-ireland",
+    title: "Comhrábot WhatsApp do Ghníomhaireachtaí Taistil agus d'Óstáin in Éirinn",
+    name: "Comhrábot WhatsApp do ghníomhaireachtaí taistil agus d'óstáin in Éirinn",
+    description: "Uathoibrigh fiosrúcháin faoi áirithintí, seomraí agus turais le comhrábot WhatsApp AI saor in aisce do ghníomhaireachtaí taistil agus d'óstáin in Éirinn.",
+    tag: "Explainer",
+    icon: BedDouble,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 3,
+    language: "ga-IE",
+  },
+  {
+    href: "/blog/whatsapp-booking-chatbot-salons-gyms-ireland",
+    title: "Comhrábot WhatsApp le haghaidh Áirithintí Salon in Éirinn",
+    name: "Comhrábot WhatsApp le haghaidh áirithintí salon, spá agus giomnáisiam in Éirinn",
+    description: "Bain úsáid as comhrábot WhatsApp AI saor in aisce chun ceisteanna faoi choinní, phraghsanna agus ranganna a fhreagairt do salons, spánna agus giomnáisiamaí in Éirinn.",
+    tag: "Explainer",
+    icon: Scissors,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 4,
+    language: "ga-IE",
   },
 ];
 
