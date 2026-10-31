@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, ShoppingBag, ShoppingCart, Sparkles, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -560,6 +560,18 @@ export const blogPosts: BlogPostEntry[] = [
     published: "2026-10-28",
     updated: "2026-10-28",
     readingMinutes: 7,
+    locale: "pt-BR",
+  },
+  {
+    href: "/pt-br/blog/chatbot-whatsapp-clinica-odontologica",
+    title: "Chatbot para clínica odontológica no WhatsApp: comece grátis",
+    name: "Chatbot para clínica odontológica",
+    description: "Descubra como usar um chatbot com IA no WhatsApp da sua clínica odontológica para responder pacientes, organizar agendamentos e automatizar o atendimento.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 12,
     locale: "pt-BR",
   },
 ];
