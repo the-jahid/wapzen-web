@@ -100,6 +100,11 @@ The Wapzen dashboard itself is in English.
 - [Wapzen vs WATI](/blog/wapzen-vs-wati): pricing, AI chatbot, WhatsApp AI calls, setup, and when each fits; WATI suits broadcasts and team inboxes on the official Business API.
 - [7 best WATI alternatives](/blog/wati-alternatives): Wapzen, AiSensy, Interakt, respond.io, Gallabox, Periskope, and Twilio compared on price, Business API, AI agents, and calling.
 - [WATI vs AiSensy vs Interakt](/blog/wati-vs-aisensy-vs-interakt): the three Business API platforms compared on pricing, chatbots, AI, calling, and broadcasts, with Wapzen as the free AI option.
+- [WhatsApp order taking chatbot](/blog/whatsapp-order-taking-chatbot): how an AI chatbot answers product questions, collects order details, confirms a summary, and saves the order with Wapzen's built-in Take Order tool or an API request.
+- [WhatsApp order tracking bot](/blog/whatsapp-order-tracking-bot): verifying the customer, looking up status in a connected order system, explaining statuses in plain language, and how tracking differs from proactive shipping notifications.
+- [WhatsApp order confirmation messages](/blog/whatsapp-order-confirmation-messages): 25 copy-and-paste templates for new orders, payment and COD, shipping, delivery and customer care, and changes, cancellations and refunds.
+- [Reduce missed WhatsApp orders](/blog/reduce-missed-whatsapp-orders): why orders get missed in busy chats, six steps to fix it with AI automation and human escalation, and five numbers to track.
+- [WhatsApp order changes and cancellations](/blog/whatsapp-order-changes-cancellations): safe workflows for order changes, cancellations, and refund requests through a connected system, what to leave to a person, and five automation mistakes to avoid.
 
 ## Blog in Italian
 

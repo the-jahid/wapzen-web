@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, Coins, Columns3, GitCompareArrows, Hand, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, PhoneCall, QrCode, Scale, ShoppingBag, Sparkles, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, CalendarCheck, ClipboardCheck, Coins, Columns3, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, ShoppingBag, ShoppingCart, Sparkles, Truck, UtensilsCrossed, Workflow, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -282,6 +282,64 @@ export const blogPosts: BlogPostEntry[] = [
     published: "2026-10-25",
     updated: "2026-10-25",
     readingMinutes: 6,
+  },
+  // Order handling series. These stay after the older posts, not at the top:
+  // those rank, and the /blog bento and the WATI posts' default "keep reading"
+  // links both take the first entries.
+  {
+    href: "/blog/whatsapp-order-taking-chatbot",
+    title: "WhatsApp Order Taking Chatbot: Automate Orders with AI",
+    name: "WhatsApp order taking chatbot",
+    description: "Learn how a WhatsApp order taking chatbot collects customer orders, confirms details and automates order workflows with Wapzen.",
+    tag: "Explainer",
+    icon: ShoppingCart,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 6,
+  },
+  {
+    href: "/blog/whatsapp-order-tracking-bot",
+    title: "WhatsApp Order Tracking Bot: Automate Delivery Updates",
+    name: "WhatsApp order tracking bot",
+    description: "Discover how a WhatsApp order tracking bot checks order status, answers delivery questions and reduces repetitive customer support.",
+    tag: "Explainer",
+    icon: Truck,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 6,
+  },
+  {
+    href: "/blog/whatsapp-order-confirmation-messages",
+    title: "25 WhatsApp Order Confirmation Messages & Templates",
+    name: "WhatsApp order confirmation messages",
+    description: "Copy 25 WhatsApp order confirmation messages for online shops, COD orders, shipping updates, delivery, cancellations and customer support.",
+    tag: "Explainer",
+    icon: ClipboardCheck,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 7,
+  },
+  {
+    href: "/blog/reduce-missed-whatsapp-orders",
+    title: "How to Reduce Missed WhatsApp Orders with AI Automation",
+    name: "Reduce missed WhatsApp orders",
+    description: "Losing customer orders in busy WhatsApp chats? Learn practical ways to reduce missed orders, improve response times and automate with AI.",
+    tag: "Explainer",
+    icon: Inbox,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 6,
+  },
+  {
+    href: "/blog/whatsapp-order-changes-cancellations",
+    title: "WhatsApp Order Changes & Cancellations: AI Automation Guide",
+    name: "WhatsApp order changes and cancellations",
+    description: "Learn how to manage WhatsApp order changes, cancellations and refund requests safely using AI chatbots, automation and human support.",
+    tag: "Explainer",
+    icon: RefreshCcw,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 7,
   },
   // Italian, in app/it/blog (index /it/blog). Researched with
   // docs/seo-blog-it-research.mjs; rates are Meta's EUR card for Italy.
