@@ -313,6 +313,27 @@ Goal: be found by ChatGPT and Claude in Italy, Germany and the rest of Europe fo
 
 **Unknown:** we can't see ChatGPT's own answers from here. Measure by asking it the page FAQs in each language, and check Search Console and Bing Webmaster Tools after 4-6 weeks. Off-site mentions are the part these pages can't supply: comparison sites, review sites and Reddit.
 
+## Latin America buyer posts (Nov 1, thirteenth harvest)
+
+Asked which businesses would pay for a product like Wapzen, then five posts to rank in Google and ChatGPT in Latin America. `docs/seo-blog-latam-verticals-research.mjs br|mx|co|cl` scored 11 verticals. Cluster totals include generic chatbot phrases, so the table counts only phrases that name the vertical plus a chatbot, AI or WhatsApp word. Autocomplete is nearly identical across mx, co and cl, so it can't separate those markets.
+
+| Vertical | Brazil | Spanish markets | Proof that buyers pay |
+| --- | --- | --- | --- |
+| Delivery, restaurants | 334 (chatbot para delivery 30, 3/3) | 171-185 | iFood bought Anota AI in 2022; 3,000 to 70,000 registered restaurants by April 2025 (Bloomberg Línea) |
+| Real estate | 197 (ia para corretor de imóveis 25) | 187-197 (ia para inmobiliarias 30, 3/3) | Lastro US$15M Series A, 1,000+ brokerages, 2M+ people mostly on WhatsApp (Prosus); Morada.ai R$ 17M, about 200 developers |
+| Lawyers | 133 | 107-140 | Not checked; OAB limits on advertising make it harder |
+| Insurance | 68 | 77-97 | Not checked |
+| Aesthetics | 54 | 20 | Vendor pages only |
+| Dental | 0 | 23-73 | Dentalink (Santiago), AgendaPro US$35M Series B |
+| Cars | 114 | 0 | Vendor claims; dropped for no Spanish demand |
+| COD stores | 0 | 10 | Lucid Bot US$44 a month, Dropi's AI confirmation, Releasit, EasySell: the clearest public price list of any vertical |
+
+The five, one buyer per market: `/pt-br/blog/chatbot-para-delivery-whatsapp` (Brazil), `/pt-br/blog/ia-para-imobiliaria-whatsapp` (Brazil), `/es-mx/blog/ia-para-inmobiliarias-whatsapp` (Mexico), `/es-co/blog/chatbot-whatsapp-contraentrega` (Colombia), `/es-cl/blog/chatbot-whatsapp-clinica-dental` (Chile). Colombia and Chile were chosen on proof of payment and thin competition, not on autocomplete demand, so expect those two to be slower. Colombia and Chile got their own blog-only locales, because `/es-mx` in the URL and `es-MX` in the markup would tell search engines and assistants the wrong country.
+
+The 62-80% figure ("WhatsApp users in Latin America who talk to companies") traces only to one vendor blog with no named study, so no post uses it. The 82% Sebrae figure is the sourced replacement: WhatsApp is the main communication and sales channel for 82% of MEIs and small businesses (Pulso dos Pequenos Negócios, 12th edition, Feb-Mar 2026, about 8,200 respondents).
+
+Facts that age: iFood fees (third party, June 2025); Colombia US$0.0125 marketing and US$0.0008 utility, Chile US$0.0889 and US$0.0200 (Zernio citing Meta's 1 Oct 2026 card, recheck each quarter); Lucid Bot US$44; Colombia's refund period after Ley 2439 and Sentencia C-192/26 (the post states no number because the ruling's operative part couldn't be read); **Chile's Ley 21.719: recheck after 30 November 2026. The post says 1 December 2026 unless the bill the Senate passed on 28 October, moving it to 15 October 2027, is published first.**
+
 ## What the landing page now targets
 
 - **Title:** `Free WhatsApp AI Chatbot & AI Calling Agent for Business | Wapzen` (65 chars; Google may cut the brand, and the keywords come first).

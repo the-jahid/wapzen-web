@@ -177,6 +177,8 @@ export const localeHome: Record<Locale, string> = {
   "pt-BR": "/pt-br/chatbot-whatsapp-com-ia",
   es: "/es/chatbot-whatsapp-gratis",
   "es-MX": "/es-mx/blog",
+  "es-CO": "/es-co/blog",
+  "es-CL": "/es-cl/blog",
   it: "/it/chatbot-whatsapp-gratis",
   de: "/de/blog",
 };

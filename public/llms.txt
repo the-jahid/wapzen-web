@@ -125,6 +125,7 @@ The Wapzen dashboard itself is in English.
 - [Agendar citas por WhatsApp](/es-mx/blog/agendar-citas-por-whatsapp): booking by hand, by booking link, or with an AI agent, and three ways to send reminders (API templates at US$0.0085 / MXN 0.1565). English version: /blog/whatsapp-appointment-booking.
 - [¿WhatsApp Business tiene costo?](/es-mx/blog/whatsapp-business-precio): the free app vs the paid API, Meta's Mexico rates from 1 October 2026 (marketing US$0.0397 / MXN 0.7298; utility, authentication and service US$0.0085 / MXN 0.1565, service free for the first 1,000 a month per number) and three monthly bills. English version: /blog/whatsapp-business-api-pricing.
 - [Mensajes automáticos de WhatsApp Business](/es-mx/blog/mensajes-automaticos-whatsapp-business): 40 welcome, away and quick reply examples in Mexican Spanish, setup steps, and why automatic messages don't send. English version: /blog/whatsapp-business-greeting-message.
+- [IA para inmobiliarias en México](/es-mx/blog/ia-para-inmobiliarias-whatsapp): an AI agent that answers real estate prospects on WhatsApp in Mexico: who already pays for this (Lastro, Vambe), questions for buyers and renters (Infonavit, Fovissste), NOM-247-SE-2021, the 2025 data protection law, rental fraud, and how it compares with Vambe and Cliengo. Free to start with usage limits; text only, replies only.
 
 ## Blog in Brazilian Portuguese
 
@@ -135,12 +136,24 @@ The Wapzen dashboard itself is in English.
 - [Agendamento pelo WhatsApp](/pt-br/blog/agendamento-pelo-whatsapp): booking by hand, by booking link, or with an AI agent, and three ways to send appointment reminders (API templates at R$ 0,035). English version: /blog/whatsapp-appointment-booking.
 - [WhatsApp ou WhatsApp Business](/pt-br/blog/diferenca-whatsapp-e-whatsapp-business): the differences, migrating without losing chats, using one account on two phones and a PC, landlines, and when the official API makes sense.
 - [Chatbot para clínica odontológica](/pt-br/blog/chatbot-whatsapp-clinica-odontologica): an AI receptionist for Brazilian dental clinics on WhatsApp: five sample chats, setup steps, booking options, and the LGPD, CFO and WhatsApp policy limits. The chatbot never diagnoses or prescribes.
+- [Chatbot para delivery no WhatsApp](/pt-br/blog/chatbot-para-delivery-whatsapp): an AI agent that takes delivery orders by text for Brazilian restaurants: what an R$ 100 order costs on iFood (12% to 23% plus 3.2%) against a direct order, a sample order, five setup steps, limits (no voice notes, no Pix confirmation, no kitchen printer), and how it compares with Anota AI, which iFood bought in 2022 and which grew to 70,000 registered restaurants.
+- [IA para imobiliária e corretor de imóveis](/pt-br/blog/ia-para-imobiliaria-whatsapp): an AI agent that answers property leads on WhatsApp in Brazil: who already pays (Lastro's Lais at 1,000+ agencies, Morada.ai), qualification questions for buyers and renters, a commission example, Lei 6.530 and LGPD limits, and how it compares with Lais and Morada.ai. Free to start with usage limits; text only, replies only.
 
 ## Blog in Spanish (Spain)
 
 - [Blog (España)](/es/blog): WhatsApp guides for businesses in Spain.
 - [Chatbot WhatsApp para centros de uñas](/es/blog/chatbot-whatsapp-centros-unas-citas-gratis): an AI assistant for nail salons in Spain: what to ask before booking, five sample chats, illustrative treatment times, chatbot vs booking software, setup steps, and the RGPD, LSSI and AI Act limits. Free to start with usage limits; bookings need a connected calendar.
 - [Chatbot WhatsApp para peluquerías](/es/blog/chatbot-whatsapp-peluquerias-citas-ia-gratis): an AI receptionist for hair salons and barbers in Spain: six sample chats, scheduling colour services and several stylists, chatbot vs booking software, setup steps, and the RGPD, LSSI and AI Act limits. Free to start with usage limits; bookings need a connected calendar.
+
+## Blog in Colombian Spanish
+
+- [Blog (Colombia)](/es-co/blog): WhatsApp guides for businesses in Colombia.
+- [Chatbot de WhatsApp para contraentrega](/es-co/blog/chatbot-whatsapp-contraentrega): selling cash on delivery in Colombia with an AI agent: what stores already pay for (Lucid Bot from US$44 a month, Dropi's AI confirmation), why taking an order differs from confirming one (Wapzen replies only, so it doesn't confirm form orders), the address details to collect, CSV export, the right of withdrawal under Ley 1480, Ley 1581, and a comparison with Dropi and Lucid Bot.
+
+## Blog in Chilean Spanish
+
+- [Blog (Chile)](/es-cl/blog): WhatsApp guides for businesses in Chile.
+- [Chatbot de WhatsApp para clínicas dentales](/es-cl/blog/chatbot-whatsapp-clinica-dental): an AI agent for dental clinics in Chile: answering administrative questions and taking appointment requests after hours, working alongside Dentalink or AgendaPro, three ways to book, Ley 20.584, the status of Ley 21.719 on 1 November 2026, and limits (no reminders, no diagnosis, no access to clinical records).
 
 ## Blog in Irish (for businesses in Ireland)
 

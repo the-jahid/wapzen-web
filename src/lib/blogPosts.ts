@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, CalendarCheck, Car, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -671,6 +671,66 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-01",
     readingMinutes: 5,
     locale: "de",
+  },
+  {
+    href: "/pt-br/blog/chatbot-para-delivery-whatsapp",
+    title: "Chatbot para delivery no WhatsApp: receba pedidos com IA",
+    name: "Chatbot para delivery no WhatsApp",
+    description: "Como usar um chatbot com IA no WhatsApp do seu delivery: atender no pico, anotar pedidos por texto, a conta da comissão do iFood e o que o robô não faz.",
+    tag: "Explainer",
+    icon: UtensilsCrossed,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 11,
+    locale: "pt-BR",
+  },
+  {
+    href: "/pt-br/blog/ia-para-imobiliaria-whatsapp",
+    title: "IA para imobiliária e corretor de imóveis no WhatsApp (2026)",
+    name: "IA para imobiliária e corretor de imóveis",
+    description: "Como usar IA no WhatsApp da imobiliária: responder leads na hora, qualificar comprador e inquilino, registrar pedidos de visita e o que a IA não deve fazer.",
+    tag: "Explainer",
+    icon: Building2,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 11,
+    locale: "pt-BR",
+  },
+  {
+    href: "/es-mx/blog/ia-para-inmobiliarias-whatsapp",
+    title: "IA para inmobiliarias en México: WhatsApp para asesores",
+    name: "IA para inmobiliarias en México",
+    description: "Cómo usar IA en el WhatsApp de tu inmobiliaria en México: contestar prospectos al momento, perfilar compra y renta, cuidar la NOM-247 y evitar fraudes.",
+    tag: "Explainer",
+    icon: Building2,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 11,
+    locale: "es-MX",
+  },
+  {
+    href: "/es-co/blog/chatbot-whatsapp-contraentrega",
+    title: "Chatbot de WhatsApp para contraentrega en Colombia (2026)",
+    name: "Chatbot de WhatsApp para contraentrega",
+    description: "Cómo vender contraentrega en Colombia con un chatbot de WhatsApp: tomar pedidos con IA, pedir bien la dirección y qué hacen Dropi y Lucid Bot que Wapzen no.",
+    tag: "Explainer",
+    icon: Truck,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 11,
+    locale: "es-CO",
+  },
+  {
+    href: "/es-cl/blog/chatbot-whatsapp-clinica-dental",
+    title: "Chatbot de WhatsApp para clínicas dentales en Chile (2026)",
+    name: "Chatbot de WhatsApp para clínicas dentales",
+    description: "Cómo usar un chatbot de WhatsApp en una clínica dental en Chile: responder fuera de horario, pedir hora, convivir con tu software y cuidar la Ley 21.719.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-11-01",
+    updated: "2026-11-01",
+    readingMinutes: 11,
+    locale: "es-CL",
   },
 ];
 
