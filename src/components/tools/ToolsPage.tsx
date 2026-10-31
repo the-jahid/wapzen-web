@@ -1,14 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
+import OrdersTab from "@/components/tools/OrdersTab";
 import {
   useWorkspaceMode,
   type WorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { listOrders } from "@/lib/orders";
 import { useCachedState } from "@/lib/pageCache";
 import {
   createTool as apiCreateTool,
@@ -63,12 +67,13 @@ type IconName =
   | "x"
   | "menu"
   | "chevron"
-  | "back";
+  | "back"
+  | "bag";
 
 
 // The tool types the server stores. There is no DTMF variant: WhatsApp calls
 // carry no keypad signalling, so there would be nothing to send.
-type ToolType = "api_request" | "transfer_call" | "end_call" | "send_text";
+type ToolType = "api_request" | "transfer_call" | "end_call" | "send_text" | "order";
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type ParamType = "string" | "number" | "boolean";
 
@@ -92,6 +97,9 @@ type Tool = {
   type: ToolType;
   name: string;
   description: string;
+  // Built in: shown with a Default badge, and can't be edited or deleted.
+  isSystem: boolean;
+  agentCount: number;
   // API Request
   method: HttpMethod;
   url: string;
@@ -151,6 +159,13 @@ const toolTypes: {
     blurb: "Send the caller a WhatsApp message while the call is running.",
     chatBlurb: "Send a link, address or reference as a WhatsApp message of its own.",
   },
+  {
+    id: "order",
+    label: "Take Order",
+    icon: "bag",
+    accent: "amber",
+    blurb: "Take orders from customers during a chat and save them under Orders.",
+  },
 ];
 
 // Only API requests can be created for calls; a chat can also send a text. The
@@ -192,6 +207,12 @@ function cardSummary(tool: Tool): { method: string | null; line: string; tail: s
       return { method: null, line: tool.textBody || "Message written by the agent", tail: null };
     case "end_call":
       return { method: null, line: tool.endMessage || "Hangs up when the call is done", tail: null };
+    case "order":
+      return {
+        method: null,
+        line: "Turned on per agent",
+        tail: `${tool.agentCount} agent${tool.agentCount === 1 ? "" : "s"}`,
+      };
   }
 }
 
@@ -202,6 +223,8 @@ function emptyTool(id: string, type: ToolType, name: string, description: string
     type,
     name,
     description,
+    isSystem: false,
+    agentCount: 0,
     method: defaults.method,
     url: defaults.url,
     timeoutSeconds: defaults.timeout_seconds,
@@ -228,6 +251,8 @@ function rowId(prefix: string) {
 // back to the empty defaults.
 function fromApi(tool: ApiTool): Tool {
   const base = emptyTool(tool.id, tool.type, tool.name, tool.description);
+  base.isSystem = tool.is_system ?? false;
+  base.agentCount = tool.chat_agent_ids?.length ?? 0;
   if (tool.api_request) {
     base.method = tool.api_request.method;
     base.url = tool.api_request.url;
@@ -311,7 +336,7 @@ function toUpdatePayload(tool: Tool): UpdateToolPayload {
 
 function toCreatePayload(tool: Tool): CreateToolPayload {
   return {
-    type: tool.type,
+    type: tool.type as CreateToolPayload["type"],
     name: tool.name.trim(),
     description: tool.description.trim(),
     ...toConfig(tool),
@@ -496,6 +521,14 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M10 6l-6 6 6 6" />
         </>
       );
+    case "bag":
+      return (
+        <>
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+          <path d="M3 6h18" />
+          <path d="M16 10a4 4 0 01-8 0" />
+        </>
+      );
     case "chevron":
       return <path d="M9 6l6 6-6 6" />;
     case "check":
@@ -590,6 +623,30 @@ const css = `
 }
 .tools-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 24px 32px 32px; }
 .tools-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.tools-tabs { border-bottom: 1px solid var(--border); display: flex; gap: 4px; }
+.tools-tab {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 7px;
+  margin-bottom: -1px;
+  padding: 8px 12px 10px;
+  transition: border-color .18s ease, color .18s ease;
+}
+.tools-tab:hover { color: var(--text); }
+.tools-tab.is-active { border-bottom-color: var(--primary); color: var(--text); }
+.tools-tab:focus-visible { border-radius: 8px; box-shadow: 0 0 0 3px var(--app-primary-ring); outline: none; }
+.tools-tab-badge { background: var(--primary); border-radius: 999px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 850; line-height: 1; padding: 3px 6px; }
+.tools-default-note { align-items: center; display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.tools-function-params { display: grid; gap: 8px; }
+.tools-function-param { align-items: baseline; display: grid; gap: 10px; grid-template-columns: 150px minmax(0, 1fr); }
+.tools-function-param span:last-child { color: var(--subtle); font-size: 12.5px; }
 .expandable-card-backdrop { background: var(--app-overlay); inset: 0; position: fixed; z-index: 80; }
 .expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
 .expandable-card-panel { pointer-events: auto; }
@@ -887,6 +944,7 @@ const css = `
   white-space: nowrap;
 }
 .tools-badge-neutral { background: var(--app-hover-2); border: 1px solid var(--border-strong); color: var(--subtle); }
+.tools-badge-default { background: var(--primary-soft); border: 1px solid var(--app-primary-ring); color: var(--app-primary-text); }
 .tools-card-head { border-bottom: 1px solid var(--border); padding: 14px 18px; }
 .tools-card-title { font-size: 13px; font-weight: 850; margin: 0; }
 .tools-card-copy { color: var(--subtle); font-size: 12px; margin-top: 2px; }
@@ -1109,7 +1167,7 @@ const css = `
   .tools-grid { grid-template-columns: 1fr; }
   .tools-card-item { min-height: 0; }
   .tools-card-item:hover { transform: none; }
-  .tools-grid-2, .tools-kv-row, .tools-param-row, .tools-type-grid { grid-template-columns: minmax(0, 1fr); }
+  .tools-grid-2, .tools-kv-row, .tools-param-row, .tools-type-grid, .tools-function-param { grid-template-columns: minmax(0, 1fr); }
   .tools-detail-head { grid-template-columns: minmax(0, 1fr); }
   .tools-row { gap: 8px 10px; grid-template-areas: "avatar identity type" "avatar summary summary"; grid-template-columns: 36px minmax(0, 1fr) auto; padding: 12px; }
   .tools-row-chevron { display: none; }
@@ -1132,9 +1190,17 @@ const css = `
 }
 `;
 
+// How often the Orders tab's badge re-reads the new-order count while the tab
+// itself is closed; once open, its own list keeps the count current.
+const newOrdersRefreshMs = 15000;
+
 export default function ToolsPage() {
   const { getToken } = useAuth();
   const { mode } = useWorkspaceMode();
+  const searchParams = useSearchParams();
+  // The tab lives in the URL so it survives a refresh and can be linked to.
+  const showOrders = searchParams.get("tab") === "orders";
+  const [newOrders, setNewOrders] = useCachedState<number>("tools-page:new-orders", 0);
   const [tools, setTools, hasCachedTools] = useCachedState<Tool[]>("tools-page:tools", []);
   const [isLoading, setIsLoading] = useState(true);
   // Tools cached from an earlier visit stay on screen while they refetch.
@@ -1192,6 +1258,24 @@ export default function ToolsPage() {
   }, [getToken, setTools]);
 
   useEffect(() => {
+    if (showOrders) return;
+    let cancelled = false;
+    const refresh = () => {
+      listOrders(getToken, { limit: 1 })
+        .then((result) => {
+          if (!cancelled) setNewOrders(result.newOrders);
+        })
+        .catch(() => undefined); // A missed count is retried on the next tick.
+    };
+    refresh();
+    const timer = window.setInterval(refresh, newOrdersRefreshMs);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [getToken, setNewOrders, showOrders]);
+
+  useEffect(() => {
     if (!isCreateOpen && !pendingDelete) return;
 
     function onKeyDown(event: KeyboardEvent) {
@@ -1220,6 +1304,14 @@ export default function ToolsPage() {
     );
   }, [tools, query]);
   const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
+
+  function openTab(orders: boolean) {
+    window.history.replaceState(null, "", orders ? "?tab=orders" : window.location.pathname);
+  }
+
+  const noticeFromOrders = useCallback((kind: Notice["kind"], text: string) => {
+    setNotice({ kind, text });
+  }, []);
 
   function openCreate() {
     setDraftName("");
@@ -1334,6 +1426,36 @@ export default function ToolsPage() {
       <main className="tools-main">
         <div className="tools-content">
             <div className="tools-browse">
+              <div aria-label="Tools sections" className="tools-tabs" role="tablist">
+                <button
+                  aria-selected={!showOrders}
+                  className={`tools-tab${showOrders ? "" : " is-active"}`}
+                  onClick={() => openTab(false)}
+                  role="tab"
+                  type="button"
+                >
+                  Tools
+                </button>
+                <button
+                  aria-selected={showOrders}
+                  className={`tools-tab${showOrders ? " is-active" : ""}`}
+                  onClick={() => openTab(true)}
+                  role="tab"
+                  type="button"
+                >
+                  Orders
+                  {newOrders > 0 ? (
+                    <span aria-label={`${newOrders} new`} className="tools-tab-badge">
+                      {newOrders}
+                    </span>
+                  ) : null}
+                </button>
+              </div>
+
+              {showOrders ? (
+                <OrdersTab onNewCount={setNewOrders} onNotice={noticeFromOrders} />
+              ) : (
+              <>
               <div className="tools-toolbar">
                 <div className="tools-search-wrap">
                   <span className="tools-search-icon">
@@ -1439,7 +1561,11 @@ export default function ToolsPage() {
                           <span className="tools-row-name">{tool.name}</span>
                           <span className="tools-row-desc">{tool.description || typeBlurb(tool.type, mode)}</span>
                         </span>
-                        <span className="tools-badge tools-badge-neutral tools-row-type">{meta.label}</span>
+                        {tool.isSystem ? (
+                          <span className="tools-badge tools-badge-default tools-row-type">Default</span>
+                        ) : (
+                          <span className="tools-badge tools-badge-neutral tools-row-type">{meta.label}</span>
+                        )}
                         <span className="tools-row-summary">
                           {summary.method ? (
                             <span className="tools-chip-method">{summary.method}</span>
@@ -1474,7 +1600,11 @@ export default function ToolsPage() {
                           <span className={`tools-tile tools-tile-lg tools-accent-${meta.accent}`}>
                             <Icon name={meta.icon} size={20} />
                           </span>
-                          <span className="tools-badge tools-badge-neutral">{meta.label}</span>
+                          {tool.isSystem ? (
+                            <span className="tools-badge tools-badge-default">Default</span>
+                          ) : (
+                            <span className="tools-badge tools-badge-neutral">{meta.label}</span>
+                          )}
                         </span>
                         <span className="tools-card-name">{tool.name}</span>
                         <span className="tools-card-desc">{tool.description || typeBlurb(tool.type, mode)}</span>
@@ -1504,6 +1634,8 @@ export default function ToolsPage() {
                   </button>
                 </div>
               )}
+              </>
+              )}
             </div>
           <ExpandableCardDemoStandard
             className="tools-expandable-card"
@@ -1512,7 +1644,9 @@ export default function ToolsPage() {
             onClose={() => setSelectedId(null)}
             open={Boolean(selected)}
           >
-            {selected ? (
+            {selected?.isSystem ? (
+              <SystemToolDetail onBack={() => setSelectedId(null)} tool={selected} />
+            ) : selected ? (
               <ToolDetail
                 key={`${selected.id}:${detailEpoch}`}
                 onBack={() => setSelectedId(null)}
@@ -1717,6 +1851,84 @@ export default function ToolsPage() {
           {notice.text}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+// What create_order collects, as the model sees it (order-tool.ts on the server).
+const orderFields: { name: string; note: string }[] = [
+  { name: "customer_name", note: "Required." },
+  { name: "phone", note: "Required. On WhatsApp the sender's number is used if none is given." },
+  { name: "description", note: "Required. What the customer wants, in full." },
+  { name: "email", note: "Optional." },
+  { name: "items", note: "Optional. Each with a name, quantity and note." },
+  { name: "delivery_address", note: "Optional." },
+];
+
+// SystemToolDetail shows a built-in tool, which has nothing to edit here: what
+// an owner controls about it is set per agent, in the agent's Tools section.
+function SystemToolDetail({ tool, onBack }: { tool: Tool; onBack: () => void }) {
+  const meta = toolMeta(tool.type);
+  return (
+    <div className="tools-detail">
+      <button className="tools-back" onClick={onBack} type="button">
+        <Icon name="back" size={16} sw={2.2} />
+        All tools
+      </button>
+
+      <section className="tools-card">
+        <div className="tools-detail-head">
+          <div className="tools-identity">
+            <span className={`tools-tile tools-tile-lg tools-accent-${meta.accent}`}>
+              <Icon name={meta.icon} size={20} />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <h2 className="tools-detail-name">{tool.name}</h2>
+              <div className="tools-detail-sub">
+                <span className="tools-badge tools-badge-default">Default</span>
+                <span className="tools-badge tools-badge-neutral">
+                  {tool.agentCount} agent{tool.agentCount === 1 ? "" : "s"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="tools-card">
+        <div className="tools-card-head">
+          <h3 className="tools-card-title">How it works</h3>
+          <div className="tools-card-copy">{tool.description}</div>
+        </div>
+        <div className="tools-card-body">
+          <p className="tools-field-hint tools-default-note">
+            This tool is built in, so it can&apos;t be edited or deleted. To use it, open a chat agent,
+            select Take Order under Tools, then turn on order taking and write your order instructions.
+          </p>
+          <div className="tools-default-note">
+            <Link className="tools-btn tools-btn-primary tools-btn-sm" href="/dashboard/chat">
+              Open chat agents
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="tools-card">
+        <div className="tools-card-head">
+          <h3 className="tools-card-title">What it collects</h3>
+          <div className="tools-card-copy">The details saved with each order.</div>
+        </div>
+        <div className="tools-card-body">
+          <div className="tools-function-params">
+            {orderFields.map((field) => (
+              <div className="tools-function-param" key={field.name}>
+                <span className="tools-mono">{field.name}</span>
+                <span>{field.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

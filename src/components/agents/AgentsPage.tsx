@@ -5966,12 +5966,13 @@ const toolTypeLabels: Record<ToolType, string> = {
   transfer_call: "Transfer Call",
   end_call: "End Call",
   send_text: "Send Text",
+  order: "Take Order",
 };
 
 // The tool types the create panel offers, with the one-line blurb it shows.
 // Only API requests can be created. Mirrors creatableToolTypes in
 // components/tools/ToolsPage.tsx.
-const toolTypeOptions: { id: ToolType; icon: IconName; blurb: string }[] = [
+const toolTypeOptions: { id: CreateToolPayload["type"]; icon: IconName; blurb: string }[] = [
   {
     id: "api_request",
     icon: "globe",
@@ -5981,7 +5982,7 @@ const toolTypeOptions: { id: ToolType; icon: IconName; blurb: string }[] = [
 
 // ToolDraft is the create panel's form state.
 type ToolDraft = {
-  type: ToolType;
+  type: CreateToolPayload["type"];
   name: string;
   description: string;
   method: HttpMethod;
@@ -6063,7 +6064,8 @@ function ToolsSectionModal({
     (async () => {
       try {
         const stored = await apiListTools(getToken);
-        if (!cancelled) setTools(stored);
+        // Take Order only runs in a chat, so a voice agent can't attach it.
+        if (!cancelled) setTools(stored.filter((tool) => tool.type !== "order"));
       } catch {
         if (!cancelled) setLoadError("Could not load your tools.");
       } finally {

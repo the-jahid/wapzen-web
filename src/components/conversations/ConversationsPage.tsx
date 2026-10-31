@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useCachedState } from "@/lib/pageCache";
 import { useAuth } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
@@ -12,10 +13,12 @@ import { listDashboardChatAgents } from "@/lib/chatAgents";
 // The account's whole chat inbox: every thread every chat agent has answered,
 // in one place. The chat-agent editor has the same workspace narrowed to one
 // agent; this page passes the agent list instead, which is what turns on the
-// agent filter and labels each thread with who answered it.
+// agent filter and labels each thread with who answered it. An order links here
+// with ?conversation=<id> to open the thread it came from.
 
 export default function ConversationsPage() {
   const { getToken } = useAuth();
+  const initialConversationId = useSearchParams().get("conversation") ?? undefined;
   const [agents, setAgents] = useCachedState<ConversationAgentOption[]>("conversations:agent-options", []);
   const [agentsError, setAgentsError] = useState("");
 
@@ -48,7 +51,7 @@ export default function ConversationsPage() {
         <div className="conv-content">
           <section className="conv-panel" aria-label="Conversations">
             {agentsError ? <div className="conv-warning">{agentsError}</div> : null}
-            <ChatConversationsWorkspace agents={agents} />
+            <ChatConversationsWorkspace agents={agents} initialConversationId={initialConversationId} />
           </section>
         </div>
       </main>

@@ -565,6 +565,14 @@ const css = `
 .chat-chip.is-on { background: var(--primary-soft); border-color: var(--app-primary-border); color: var(--app-primary-text); }
 .chat-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-chips-empty { color: var(--faint); font-size: 11.5px; }
+.chat-default-badge { background: var(--app-hover-2); border: 1px solid var(--app-border-strong); border-radius: 999px; color: var(--subtle); font-size: 10px; font-weight: 800; line-height: 1; padding: 3px 6px; }
+.chat-orders-on { background: var(--app-green-soft); border: 1px solid var(--app-green-border); border-radius: 999px; color: var(--green); font-weight: 800; line-height: 1; padding: 3px 7px; }
+.chat-order-settings { display: grid; gap: 12px; margin-top: 12px; }
+.chat-order-toggle { align-items: center; background: none; border: 0; color: var(--text); cursor: pointer; display: flex; font-size: 12.5px; font-weight: 750; gap: 10px; padding: 0; text-align: left; }
+.chat-order-track { background: var(--app-hover-3); border: 1px solid var(--app-border-strong); border-radius: 999px; flex-shrink: 0; height: 24px; padding: 2px; transition: background .18s ease, border-color .18s ease; width: 44px; }
+.chat-order-knob { background: var(--app-invert-bg); border-radius: 50%; display: block; height: 18px; transition: transform .18s ease, background .18s ease; width: 18px; }
+.chat-order-toggle.is-on .chat-order-track { background: var(--primary); border-color: transparent; }
+.chat-order-toggle.is-on .chat-order-knob { background: var(--app-on-accent); transform: translateX(20px); }
 .chat-editor { display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-y: auto; padding-right: 4px; }
 .chat-card {
   background: var(--surface);
@@ -1001,6 +1009,14 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
       ? { knowledge_base_ids: [...(agent.knowledge_base.knowledge_base_ids ?? [])] }
       : undefined,
     tools: agent.tools ? { tool_ids: [...(agent.tools.tool_ids ?? [])] } : undefined,
+    // Only a server that returned the section accepts it back: the API refuses
+    // a section it doesn't know, and orders_on is read-only.
+    order: agent.order
+      ? {
+          order_enabled: agent.order.order_enabled,
+          order_instructions: agent.order.order_instructions,
+        }
+      : undefined,
   };
 }
 
@@ -1618,6 +1634,9 @@ export default function ChatAgentsPage() {
                           <span className="chat-list-resources">
                             <span><Icon name="book" size={12} />{knowledgeCount} KB</span>
                             <span><Icon name="wrench" size={12} />{toolCount} tools</span>
+                            {agent.order?.orders_on ? (
+                              <span className="chat-orders-on">Orders on</span>
+                            ) : null}
                           </span>
                           <StatusPill status={agent.agent.status ?? "inactive"} />
                           <span className="chat-list-chevron">
@@ -2444,8 +2463,10 @@ function ConfigPanel({
   // end_call and transfer_call exist to release a phone call, so the server
   // ignores them in a chat. Offering them here would be offering nothing.
   const chatCapableTools = tools.filter(
-    (tool) => tool.type === "api_request" || tool.type === "send_text"
+    (tool) => tool.type === "api_request" || tool.type === "send_text" || tool.type === "order"
   );
+  const orderTool = chatCapableTools.find((tool) => tool.type === "order");
+  const orderEnabled = agent.order?.order_enabled ?? false;
 
   const toggleId = (list: string[], id: string) =>
     list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
@@ -2596,11 +2617,56 @@ function ConfigPanel({
                     >
                       {on ? <Icon name="check" size={13} sw={2.6} /> : <Icon name="wrench" size={13} />}
                       <span>{tool.name}</span>
+                      {tool.is_system ? <span className="chat-default-badge">Default</span> : null}
                     </button>
                   );
                 })}
               </div>
             )}
+            {orderTool && attachedTools.includes(orderTool.id) ? (
+              <div className="chat-order-settings">
+                <button
+                  aria-pressed={orderEnabled}
+                  className={`chat-order-toggle${orderEnabled ? " is-on" : ""}`}
+                  onClick={() =>
+                    onPatch((current) => ({
+                      ...current,
+                      order: { ...current.order, order_enabled: !orderEnabled },
+                    }))
+                  }
+                  type="button"
+                >
+                  <span className="chat-order-track">
+                    <span className="chat-order-knob" />
+                  </span>
+                  <span>Enable order taking</span>
+                </button>
+                <label className="chat-field">
+                  <span className="chat-control-label">Order instructions</span>
+                  <textarea
+                    className="chat-textarea"
+                    maxLength={4000}
+                    onChange={(event) =>
+                      onPatch((current) => ({
+                        ...current,
+                        order: { ...current.order, order_instructions: event.target.value },
+                      }))
+                    }
+                    placeholder="Only take orders for our menu items. Always ask for name, phone and delivery address. Email is optional. Read the order back and get a yes before placing it. Delivery only inside Dhaka."
+                    value={agent.order?.order_instructions ?? ""}
+                  />
+                  <span className="chat-field-hint">
+                    {orderEnabled ? (
+                      <>
+                        Orders appear under <Link href="/dashboard/tools?tab=orders">Tools → Orders</Link>.
+                      </>
+                    ) : (
+                      "Order taking is off, so this agent tells customers ordering isn't available."
+                    )}
+                  </span>
+                </label>
+              </div>
+            ) : null}
           </ConfigSection>
         </div>
       </div>

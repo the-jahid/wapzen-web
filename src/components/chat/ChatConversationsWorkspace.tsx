@@ -51,9 +51,12 @@ const avatarColors = ["#52525b", "#3f3f46", "#63636b", "#4a4a52", "#5a5a63", "#4
 export default function ChatConversationsWorkspace({
   agentId,
   agents,
+  initialConversationId,
 }: {
   agentId?: string;
   agents?: ConversationAgentOption[];
+  // A thread to open straight away, such as the one an order came from.
+  initialConversationId?: string;
 }) {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -68,7 +71,7 @@ export default function ChatConversationsWorkspace({
     agentId ? `chat-conversations:agent:${agentId}` : `chat-conversations:all:${agentFilter}`,
     []
   );
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(initialConversationId ?? "");
   const [thread, setThread] = useCachedState<ApiChatConversation | null>(
     `chat-conversation:${selectedId}`,
     null

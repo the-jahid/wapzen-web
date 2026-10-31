@@ -6,7 +6,9 @@ import { serverFetch, type AuthTokenGetter } from "./api";
 
 // The tool types the server stores (migration 00041). There is no DTMF variant:
 // WhatsApp calls carry no keypad signalling, so there would be nothing to send.
-export type ToolType = "api_request" | "transfer_call" | "end_call" | "send_text";
+// "order" is the built-in Take Order tool: every account has one and none can be
+// created, so CreateToolPayload leaves it out.
+export type ToolType = "api_request" | "transfer_call" | "end_call" | "send_text" | "order";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -62,6 +64,10 @@ export type ApiTool = {
   type: ToolType;
   name: string;
   description: string;
+  // Built in: can't be edited or deleted. Absent from older servers.
+  is_system?: boolean;
+  key?: string | null;
+  chat_agent_ids?: string[];
   api_request?: ToolApiRequestConfig | null;
   transfer_call?: ToolTransferCallConfig | null;
   send_text?: ToolSendTextConfig | null;
@@ -74,7 +80,7 @@ export type ApiTool = {
 // api_request and transfer_call also require their configuration block, while
 // send_text and end_call may omit theirs.
 export type CreateToolPayload = {
-  type: ToolType;
+  type: Exclude<ToolType, "order">;
   name: string;
   description: string;
   api_request?: ToolApiRequestConfig;
@@ -329,6 +335,8 @@ export function toolSummary(tool: ApiTool): string {
       return tool.send_text?.body ? "Sends a fixed message" : "Agent writes the message";
     case "end_call":
       return tool.end_call?.message ? "Says a set goodbye" : "Agent words the goodbye";
+    case "order":
+      return "Takes orders during a chat";
     default:
       return "";
   }
