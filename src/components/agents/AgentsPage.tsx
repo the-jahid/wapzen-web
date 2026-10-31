@@ -64,6 +64,7 @@ import {
   restartPhoneNumberLogin as apiRestartPhoneNumberLogin,
   startPhoneNumberCodeLogin as apiStartPhoneNumberCodeLogin,
   startPhoneNumberLogin as apiStartPhoneNumberLogin,
+  startPhoneNumberQrLogin as apiStartPhoneNumberQrLogin,
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
@@ -1690,6 +1691,7 @@ const css = `
 .number-setup-copy { color: var(--subtle); font-size: 12.5px; line-height: 1.55; margin: 0 0 14px; }
 /* 260px floor keeps the QR's modules big enough for a phone camera at 1x DPR. */
 .number-setup-grid { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
+.number-setup-grid.is-single { grid-template-columns: minmax(0, 1fr); }
 .number-setup-pane {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -1762,8 +1764,6 @@ const css = `
 .number-pick-detail { color: var(--subtle); font-size: 11.5px; }
 .number-pick-hint { color: var(--green); font-size: 11px; font-weight: 700; white-space: nowrap; }
 .number-pick-hint.is-blocked { color: var(--faint); }
-.number-pick-empty { color: var(--subtle); font-size: 12px; line-height: 1.55; }
-.number-pick-empty a { color: var(--primary-light); font-weight: 700; }
 .icon-button {
   align-items: center;
   background: var(--panel);
@@ -4042,25 +4042,28 @@ export default function AgentsPage() {
     }
   }
 
-  // Starts a login linked by a typed pairing code instead of a scan. It replaces
-  // whatever QR login the agent had, so that one leaves the list. Throws for
-  // WhatsAppLinkHelp to show the message.
-  async function startNumberCodeLogin(phone: string) {
+  // Swaps the agent's login for a new one: a typed pairing code instead of a
+  // scan, or a scan instead of a code. The login it replaces leaves the list.
+  // Throws for WhatsAppLinkHelp to show the message.
+  async function replaceNumberLogin(
+    start: (payload: { label?: string; agent_id: string }) => Promise<ApiPhoneNumber>
+  ) {
     if (!selectedAgent) return;
     const agentId = selectedAgent.id;
     const replacedId = numberLogin?.phone.id;
     const label = numberLoginLabel.trim();
     setNumberLoginError("");
-    const started = await apiStartPhoneNumberCodeLogin(
-      { phone_number: phone, ...(label ? { label } : {}), agent_id: agentId },
-      getToken
-    );
+    const started = await start({ ...(label ? { label } : {}), agent_id: agentId });
     setNumberLogin({ agentId, phone: started });
     setPhoneNumbers((current) =>
       upsertPhoneNumber(current.filter((entry) => entry.id !== replacedId), started)
     );
     setNumberLoginLabel("");
   }
+
+  const startNumberCodeLogin = (phone: string) =>
+    replaceNumberLogin((payload) => apiStartPhoneNumberCodeLogin({ ...payload, phone_number: phone }, getToken));
+  const startNumberQrLogin = () => replaceNumberLogin((payload) => apiStartPhoneNumberQrLogin(payload, getToken));
 
   // upsertKnowledgeBase folds a knowledge base created or indexed from the
   // attach modal back into the catalogue, so its row shows the new source count
@@ -4373,6 +4376,7 @@ export default function AgentsPage() {
                   numbers={assignableNumbers}
                   onLabelChange={setNumberLoginLabel}
                   onRequestCode={startNumberCodeLogin}
+                  onRequestQr={startNumberQrLogin}
                   onSelectNumber={(phoneNumberId) => void assignSelectedNumber(phoneNumberId)}
                   onStartLogin={startNumberLogin}
                 />
@@ -4780,6 +4784,7 @@ function PhoneNumberSetupCard({
   numbers,
   onLabelChange,
   onRequestCode,
+  onRequestQr,
   onSelectNumber,
   onStartLogin,
 }: {
@@ -4791,6 +4796,7 @@ function PhoneNumberSetupCard({
   numbers: AssignableNumber[];
   onLabelChange: (value: string) => void;
   onRequestCode: (phone: string) => Promise<void>;
+  onRequestQr: () => Promise<void>;
   onSelectNumber: (phoneNumberId: string) => void;
   onStartLogin: (restart: boolean) => void;
 }) {
@@ -4813,42 +4819,55 @@ function PhoneNumberSetupCard({
         <span className="number-setup-flag">Required to go live</span>
       </div>
       <p className="number-setup-copy">
-        &ldquo;{agentName}&rdquo; has no WhatsApp number. Scan a QR code to link a new one, or pick a
-        number you have already connected — either way works.
+        &ldquo;{agentName}&rdquo; has no WhatsApp number.{" "}
+        {numbers.length > 0
+          ? "Link a new one with a QR code or a pairing code, or pick a number you have already connected."
+          : "Link one with a QR code or a pairing code — either way works."}
       </p>
 
-      <div className="number-setup-grid">
+      <div className={`number-setup-grid${numbers.length > 0 ? "" : " is-single"}`}>
         <section className="number-setup-pane" aria-label="Link a new WhatsApp number">
           <div className="number-setup-pane-head">
-            <span className="number-setup-pane-title">Scan a new number</span>
+            <span className="number-setup-pane-title">Link a new number</span>
             <span className="number-setup-pane-note">WhatsApp › Linked devices</span>
           </div>
 
-          {showsCode || !offersQr ? null : <div className="number-qr-frame">
-            {isPending && login?.qr_code ? (
-              <Image
-                alt="WhatsApp login QR code"
-                className="number-qr-image"
-                height={220}
-                src={login.qr_code}
-                unoptimized
-                width={220}
-              />
-            ) : (
-              <div className="number-qr-placeholder">
-                <Icon name="phone" size={22} />
-                <span>
-                  {isPending
-                    ? "Generating QR code…"
-                    : login
-                      ? phoneStatusLabels[login.status]
-                      : "Start a login to get a QR code"}
-                </span>
-              </div>
-            )}
-          </div>}
-
-          <WhatsAppLinkHelp disabled={isStarting} login={login} onRequestCode={onRequestCode} />
+          <WhatsAppLinkHelp
+            disabled={isStarting}
+            login={login}
+            onRequestCode={onRequestCode}
+            onRequestQr={async () => {
+              await onRequestQr();
+              setWantsQr(true);
+            }}
+            qr={
+              offersQr ? (
+                <div className="number-qr-frame">
+                  {isPending && login?.qr_code ? (
+                    <Image
+                      alt="WhatsApp login QR code"
+                      className="number-qr-image"
+                      height={220}
+                      src={login.qr_code}
+                      unoptimized
+                      width={220}
+                    />
+                  ) : (
+                    <div className="number-qr-placeholder">
+                      <Icon name="phone" size={22} />
+                      <span>
+                        {isPending
+                          ? "Generating QR code…"
+                          : login
+                            ? phoneStatusLabels[login.status]
+                            : "Start a login to get a QR code"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : null
+            }
+          />
 
           <div className="number-setup-status">
             {isPending
@@ -4870,7 +4889,7 @@ function PhoneNumberSetupCard({
             />
           ) : null}
 
-          {offersQr ? (
+          {showsCode ? null : offersQr ? (
             <button
               className="agents-btn agents-btn-primary agents-btn-sm"
               disabled={isStarting}
@@ -4880,7 +4899,7 @@ function PhoneNumberSetupCard({
               <Icon name={canRestart ? "refresh" : "plus"} size={15} stroke="#fff" sw={2.2} />
               {isStarting ? "Starting…" : canRestart ? "New QR code" : "Start WhatsApp login"}
             </button>
-          ) : showsCode ? null : (
+          ) : (
             <button
               className="wa-link-text-btn"
               disabled={isStarting}
@@ -4897,20 +4916,15 @@ function PhoneNumberSetupCard({
           {error ? <div className="number-setup-error">{error}</div> : null}
         </section>
 
-        <section className="number-setup-pane" aria-label="Use a connected number">
-          <div className="number-setup-pane-head">
-            <span className="number-setup-pane-title">Use a connected number</span>
-            <span className="number-setup-pane-note">
-              {numbers.length === 1 ? "1 number" : `${numbers.length} numbers`}
-            </span>
-          </div>
-
-          {numbers.length === 0 ? (
-            <div className="number-pick-empty">
-              No connected numbers yet. Scan the QR code to link your first one, or manage numbers on the{" "}
-              <Link href="/dashboard/phone-numbers">Phone Numbers</Link> page.
+        {numbers.length > 0 ? (
+          <section className="number-setup-pane" aria-label="Use a connected number">
+            <div className="number-setup-pane-head">
+              <span className="number-setup-pane-title">Use a connected number</span>
+              <span className="number-setup-pane-note">
+                {numbers.length === 1 ? "1 number" : `${numbers.length} numbers`}
+              </span>
             </div>
-          ) : (
+
             <ul className="number-pick-list">
               {numbers.map((number) => (
                 <li key={number.id}>
@@ -4937,8 +4951,8 @@ function PhoneNumberSetupCard({
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </section>
+        ) : null}
       </div>
     </div>
   );

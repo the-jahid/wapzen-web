@@ -31,6 +31,7 @@ import {
   restartPhoneNumberLogin as apiRestartPhoneNumberLogin,
   startPhoneNumberCodeLogin as apiStartPhoneNumberCodeLogin,
   startPhoneNumberLogin as apiStartPhoneNumberLogin,
+  startPhoneNumberQrLogin as apiStartPhoneNumberQrLogin,
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
@@ -1472,17 +1473,15 @@ export default function PhoneNumbersPage() {
     }
   }
 
-  // Swaps the selected login, QR or an earlier code, for one linked by a typed
-  // pairing code. The server ends the old login, so it leaves the list and the
-  // new one takes its place. Throws for WhatsAppLinkHelp to show the message.
-  async function startCodeLogin(phone: string) {
+  // Swaps the selected login for a new one: a typed pairing code in place of a
+  // QR login or an earlier code, or a QR login in place of a code. The server
+  // ends the old login, so it leaves the list and the new one takes its place.
+  // Throws for WhatsAppLinkHelp to show the message.
+  async function replaceLogin(start: (payload: { label?: string }) => Promise<ApiPhoneNumber>) {
     const replaced = selectedPhoneNumber?.status === "pending_qr" ? selectedPhoneNumber : null;
     setIsRestarting(true);
     try {
-      const started = await apiStartPhoneNumberCodeLogin(
-        { phone_number: phone, ...(replaced?.label ? { label: replaced.label } : {}) },
-        getToken
-      );
+      const started = await start(replaced?.label ? { label: replaced.label } : {});
       setActiveLogin(started);
       setPhoneNumbers((current) =>
         upsertPhoneNumber(current.filter((entry) => entry.id !== replaced?.id), started)
@@ -1492,6 +1491,10 @@ export default function PhoneNumbersPage() {
       setIsRestarting(false);
     }
   }
+
+  const startCodeLogin = (phone: string) =>
+    replaceLogin((payload) => apiStartPhoneNumberCodeLogin({ ...payload, phone_number: phone }, getToken));
+  const startQrLogin = () => replaceLogin((payload) => apiStartPhoneNumberQrLogin(payload, getToken));
 
   async function disconnect(phone: ApiPhoneNumber) {
     if (disconnectingId) return;
@@ -1627,6 +1630,10 @@ export default function PhoneNumbersPage() {
       }
       return;
     }
+    if (selectedPhoneNumber?.status === "pending_qr" && selectedPhoneNumber.qr_code) {
+      setNotice({ kind: "success", text: "This QR code renews by itself. Scan it when you're ready." });
+      return;
+    }
 
     // For a number whose login ended (expired/failed/disconnected), Refresh
     // restarts the login session so a fresh QR code is issued. Otherwise it
@@ -1730,6 +1737,7 @@ export default function PhoneNumbersPage() {
               onDisconnect={disconnect}
               onRePair={rePair}
               onRequestCode={startCodeLogin}
+              onRequestQr={startQrLogin}
               onRefresh={refresh}
               phoneNumber={selectedPhoneNumber}
             />
@@ -1773,6 +1781,7 @@ function PhoneNumberExpandableCard({
   onDisconnect,
   onRePair,
   onRequestCode,
+  onRequestQr,
   onRefresh,
   phoneNumber,
 }: {
@@ -1791,6 +1800,7 @@ function PhoneNumberExpandableCard({
   onDisconnect: (phoneNumber: ApiPhoneNumber) => void;
   onRePair: () => void;
   onRequestCode: (phone: string) => Promise<void>;
+  onRequestQr: () => Promise<void>;
   onRefresh: () => void;
   phoneNumber: ApiPhoneNumber | null;
 }) {
@@ -1830,6 +1840,7 @@ function PhoneNumberExpandableCard({
               onAssignAgent={onAssignAgent}
               onCreate={onCreate}
               onRequestCode={onRequestCode}
+              onRequestQr={onRequestQr}
               onRetry={onRefresh}
               phoneNumber={phoneNumber}
             />
@@ -2181,6 +2192,7 @@ function PhoneNumberDetail({
   onAssignAgent,
   onCreate,
   onRequestCode,
+  onRequestQr,
   onRetry,
   phoneNumber,
 }: {
@@ -2195,6 +2207,7 @@ function PhoneNumberDetail({
   onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
   onCreate: () => void;
   onRequestCode: (phone: string) => Promise<void>;
+  onRequestQr: () => Promise<void>;
   onRetry: () => void;
   phoneNumber: ApiPhoneNumber | null;
 }) {
@@ -2293,30 +2306,32 @@ function PhoneNumberDetail({
             </div>
           </div>
           <div className="phone-qr-column">
-            {phoneNumber.status === "pending_qr" && phoneNumber.pairing_code ? null : phoneNumber.qr_code &&
-              phoneNumber.status === "pending_qr" ? (
-              <div className="phone-qr-frame">
-                <Image
-                  alt="WhatsApp login QR code"
-                  className="phone-qr-image"
-                  height={280}
-                  src={phoneNumber.qr_code}
-                  unoptimized
-                  width={280}
-                />
-              </div>
-            ) : (
-              <div className="phone-qr-placeholder">
-                {phoneNumber.status === "pending_qr" ? "Waiting for QR code..." : statusLabels[phoneNumber.status]}
-              </div>
-            )}
             {phoneNumber.status === "pending_qr" ? (
               <WhatsAppLinkHelp
                 disabled={!isAuthenticated || isRestarting}
                 login={phoneNumber}
                 onRequestCode={onRequestCode}
+                onRequestQr={onRequestQr}
+                qr={
+                  phoneNumber.qr_code ? (
+                    <div className="phone-qr-frame">
+                      <Image
+                        alt="WhatsApp login QR code"
+                        className="phone-qr-image"
+                        height={280}
+                        src={phoneNumber.qr_code}
+                        unoptimized
+                        width={280}
+                      />
+                    </div>
+                  ) : (
+                    <div className="phone-qr-placeholder">Waiting for QR code...</div>
+                  )
+                }
               />
-            ) : null}
+            ) : (
+              <div className="phone-qr-placeholder">{statusLabels[phoneNumber.status]}</div>
+            )}
           </div>
         </div>
       </section>

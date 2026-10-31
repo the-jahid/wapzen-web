@@ -107,6 +107,20 @@ export function startPhoneNumberCodeLogin(
   }, getToken);
 }
 
+// startPhoneNumberQrLogin is the way back from a pairing code. Plain
+// startPhoneNumberLogin hands back any login already running, a code included;
+// this ends the code and returns a QR login, so the caller must swap it in.
+export function startPhoneNumberQrLogin(
+  payload: { label?: string; agent_id?: string },
+  getToken: AuthTokenGetter
+): Promise<ApiPhoneNumber> {
+  return request<ApiPhoneNumber>("/v1/phone-number/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, pairing_method: "qr" }),
+  }, getToken);
+}
+
 // restartPhoneNumberLogin reissues a QR code for a session that expired or
 // failed. agentId carries the same meaning as in startPhoneNumberLogin: the
 // agent whose editor asked for the new code still gets the number.

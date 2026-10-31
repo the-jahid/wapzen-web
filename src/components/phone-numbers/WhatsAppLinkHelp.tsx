@@ -1,7 +1,7 @@
 "use client";
 
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
-import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useEffect, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import type { ApiPhoneNumber } from "@/lib/phoneNumbers";
 
 // WhatsApp closes a login's socket when its QR codes run out — 60s, then five
@@ -67,26 +67,32 @@ function formatCountdown(ms: number) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-// WhatsAppLinkHelp sits under a login's QR code. It says where to scan in
-// WhatsApp, and offers the way in for anyone who can't scan: an 8-character
-// code typed into WhatsApp › Linked devices › Link with phone number instead.
+// WhatsAppLinkHelp lays out the two ways to link a number, side by side where
+// there's room: scan the page's QR code (qr, left out when the screen can't use
+// one), or get an 8-character code to type into WhatsApp › Linked devices › Link
+// with phone number instead. Once a code is out it shows that code alone.
 //
 // onRequestCode starts that login (it replaces the QR login, so the page must
 // swap in the login it returns) and throws with a message to show on failure.
+// onRequestQr is the same in the other direction, from a code back to a scan.
 export function WhatsAppLinkHelp({
   disabled = false,
   login,
   onRequestCode,
+  onRequestQr,
+  qr,
 }: {
   disabled?: boolean;
   login: ApiPhoneNumber | null;
   onRequestCode: (phone: string) => Promise<void>;
+  onRequestQr: () => Promise<void>;
+  qr: ReactNode;
 }) {
   const isPhone = useIsPhone();
-  const [formOpen, setFormOpen] = useState<boolean | null>(null);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isRequestingQr, setIsRequestingQr] = useState(false);
   // When this page last got a code: the countdown's fallback for a server that
   // doesn't say how long the code has left.
   const [issuedAt, setIssuedAt] = useState<number | null>(null);
@@ -155,6 +161,21 @@ export function WhatsAppLinkHelp({
     }
   }
 
+  async function requestQr() {
+    setError("");
+    setResent(false);
+    setIsRequestingQr(true);
+    try {
+      await onRequestQr();
+      // Waiting in the number form, to correct it or come back to a code.
+      setPhone(login?.phone_number || phone);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Could not get a QR code. Try again.");
+    } finally {
+      setIsRequestingQr(false);
+    }
+  }
+
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!isRequesting && !disabled) void requestCode(phone);
@@ -164,7 +185,8 @@ export function WhatsAppLinkHelp({
     const remaining = codeDeadlineKnown ? codeLeft : null;
     const expired = remaining !== null && remaining <= 0;
     const number = login?.phone_number || phone;
-    const canRenew = !disabled && !isRequesting && Boolean(number);
+    const canSwitch = !disabled && !isRequesting && !isRequestingQr;
+    const canRenew = canSwitch && Boolean(number);
     const renew = () => void requestCode(number);
     return (
       <div className="wa-link">
@@ -193,6 +215,14 @@ export function WhatsAppLinkHelp({
           type="button"
         >
           {isRequesting ? "Sending a new code…" : "Send a new code"}
+        </button>
+        <button
+          className="wa-link-btn wa-link-btn-wide wa-link-btn-quiet"
+          disabled={!canSwitch}
+          onClick={() => void requestQr()}
+          type="button"
+        >
+          {isRequestingQr ? "Getting a QR code…" : "Scan a QR code instead"}
         </button>
         {resent ? (
           <div className="wa-link-sent" role="status">
@@ -224,36 +254,80 @@ export function WhatsAppLinkHelp({
     );
   }
 
-  const showForm = formOpen ?? (isPhone || isRetry);
   // Only the first code outlives 20s, so a reading above that is the first.
   const qrLifetime = qrExpiresIn !== null && qrExpiresIn > 20_000 ? 60_000 : 20_000;
 
   return (
     <div className="wa-link">
-      {qrExpiresIn !== null && qrLeft !== null ? (
-        <div className={`wa-link-timer${qrLeft <= 5_000 ? " is-ending" : ""}`} role="timer">
-          <span>{qrLeft > 0 ? `New code in ${formatCountdown(qrLeft)}` : "Getting a new code…"}</span>
-          <span className="wa-link-timer-track" aria-hidden="true">
-            <span style={{ transform: `scaleX(${Math.min(1, qrLeft / qrLifetime)})` }} />
-          </span>
-        </div>
-      ) : null}
-      {isPhone ? (
-        <p className="wa-link-note">
-          <b>On your phone?</b> It can&rsquo;t scan its own screen. Enter the number below and WhatsApp
-          gives you a code to type in — no scan needed.
-        </p>
-      ) : (
-        <ol className="wa-link-steps">
-          <li>Open WhatsApp on your phone.</li>
-          <li>
-            Tap <b>Settings</b> (iPhone) or <b>⋮ Menu</b> (Android) › <b>Linked devices</b> ›{" "}
-            <b>Link a device</b>.
-          </li>
-          <li>Point the phone&rsquo;s camera at this QR code.</li>
-        </ol>
-      )}
-      {isPhone ? null : (
+      <div className="wa-link-options">
+        {qr ? (
+          <section aria-label="Scan a QR code" className="wa-link-option">
+            <div className="wa-link-option-head">
+              <span className="wa-link-option-num">1</span>
+              Scan a QR code
+            </div>
+            <div className="wa-link-qr">{qr}</div>
+            {qrExpiresIn !== null && qrLeft !== null ? (
+              <div className={`wa-link-timer${qrLeft <= 5_000 ? " is-ending" : ""}`} role="timer">
+                <span>{qrLeft > 0 ? `New code in ${formatCountdown(qrLeft)}` : "Getting a new code…"}</span>
+                <span className="wa-link-timer-track" aria-hidden="true">
+                  <span style={{ transform: `scaleX(${Math.min(1, qrLeft / qrLifetime)})` }} />
+                </span>
+              </div>
+            ) : null}
+            <ol className="wa-link-steps">
+              <li>Open WhatsApp on your phone.</li>
+              <li>
+                Tap <b>Settings</b> (iPhone) or <b>⋮ Menu</b> (Android) › <b>Linked devices</b> ›{" "}
+                <b>Link a device</b>.
+              </li>
+              <li>Point the phone&rsquo;s camera at this QR code.</li>
+            </ol>
+          </section>
+        ) : null}
+
+        <section aria-label="Use a pairing code" className="wa-link-option">
+          <div className="wa-link-option-head">
+            {qr ? <span className="wa-link-option-num">2</span> : null}
+            Use a pairing code
+          </div>
+          {isPhone ? (
+            <p className="wa-link-note">
+              <b>On your phone?</b> It can&rsquo;t scan its own screen. Enter the number below and WhatsApp
+              gives you a code to type in — no scan needed.
+            </p>
+          ) : (
+            <p className="wa-link-note">
+              No camera needed. Enter the number and WhatsApp gives you an 8-character code to type on your
+              phone.
+            </p>
+          )}
+          <form className="wa-link-form" noValidate onSubmit={onSubmit}>
+            <label className="wa-link-label" htmlFor="wa-link-phone">
+              WhatsApp number, with country code
+            </label>
+            <div className="wa-link-row">
+              <input
+                autoComplete="tel"
+                className="wa-link-input"
+                disabled={disabled || isRequesting}
+                id="wa-link-phone"
+                inputMode="tel"
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="+880 1XXX XXXXXX"
+                type="tel"
+                value={phone}
+              />
+              <button className="wa-link-btn" disabled={disabled || isRequesting} type="submit">
+                {isRequesting ? "Getting…" : "Get code"}
+              </button>
+            </div>
+            {error ? <div className="wa-link-error">{error}</div> : null}
+          </form>
+        </section>
+      </div>
+
+      {qr && !isPhone ? (
         <details className="wa-link-trouble" open={isRetry}>
           <summary>Scan not working?</summary>
           <ul>
@@ -263,39 +337,9 @@ export function WhatsAppLinkHelp({
             </li>
             <li>Update WhatsApp on the phone — an old version can refuse new links.</li>
             <li>Camera won&rsquo;t read it? Make this window bigger, or hold the phone a little further back.</li>
-            <li>Still stuck? Link with your phone number instead — no scan needed.</li>
           </ul>
         </details>
-      )}
-
-      {showForm ? (
-        <form className="wa-link-form" noValidate onSubmit={onSubmit}>
-          <label className="wa-link-label" htmlFor="wa-link-phone">
-            WhatsApp number, with country code
-          </label>
-          <div className="wa-link-row">
-            <input
-              autoComplete="tel"
-              className="wa-link-input"
-              disabled={disabled || isRequesting}
-              id="wa-link-phone"
-              inputMode="tel"
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="+880 1XXX XXXXXX"
-              type="tel"
-              value={phone}
-            />
-            <button className="wa-link-btn" disabled={disabled || isRequesting} type="submit">
-              {isRequesting ? "Getting…" : "Get code"}
-            </button>
-          </div>
-          {error ? <div className="wa-link-error">{error}</div> : null}
-        </form>
-      ) : (
-        <button className="wa-link-text-btn" disabled={disabled} onClick={() => setFormOpen(true)} type="button">
-          Can&rsquo;t scan? Link with phone number instead
-        </button>
-      )}
+      ) : null}
       <style dangerouslySetInnerHTML={{ __html: css }} />
     </div>
   );
@@ -303,6 +347,31 @@ export function WhatsAppLinkHelp({
 
 const css = `
 .wa-link { display: grid; gap: 10px; min-width: 0; text-align: left; }
+/* Side by side when the pane is wide enough for both, stacked when not. */
+.wa-link-options { align-items: start; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); }
+.wa-link-option { display: grid; gap: 10px; min-width: 0; }
+.wa-link-option-head {
+  align-items: center;
+  color: var(--app-text);
+  display: flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+}
+.wa-link-option-num {
+  align-items: center;
+  background: var(--app-primary);
+  border-radius: 999px;
+  color: var(--app-on-accent);
+  display: inline-flex;
+  flex: none;
+  font-size: 11px;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+.wa-link-qr { display: grid; justify-items: center; }
+.wa-link-qr > * { max-width: 300px; width: 100%; }
 .wa-link-steps {
   color: var(--app-muted);
   display: grid;

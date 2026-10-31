@@ -16,6 +16,7 @@ import {
   restartPhoneNumberLogin as apiRestartPhoneNumberLogin,
   startPhoneNumberCodeLogin as apiStartPhoneNumberCodeLogin,
   startPhoneNumberLogin as apiStartPhoneNumberLogin,
+  startPhoneNumberQrLogin as apiStartPhoneNumberQrLogin,
   PhoneNumberError,
   type ApiPhoneNumber,
   type PhoneNumberStatus,
@@ -759,6 +760,7 @@ const css = `
 .chat-number-copy { color: var(--subtle); font-size: 12.5px; line-height: 1.55; margin: 0 0 14px; }
 /* 260px floor keeps the QR's modules big enough for a phone camera at 1x DPR. */
 .chat-number-grid { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
+.chat-number-grid.is-single { grid-template-columns: minmax(0, 1fr); }
 .chat-number-pane {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -851,8 +853,6 @@ const css = `
 .chat-number-detail { color: var(--subtle); font-size: 11.5px; }
 .chat-number-hint { color: var(--green); font-size: 11px; font-weight: 700; white-space: nowrap; }
 .chat-number-hint.is-blocked { color: var(--faint); }
-.chat-number-empty { color: var(--subtle); font-size: 12px; line-height: 1.55; }
-.chat-number-empty a { color: var(--primary-light); font-weight: 700; }
 /* The top bar and drawer backdrop only exist below the tablet breakpoint. */
 /* Large desktops: the list is capped at 1320px, so give the wide screen a
    little more breathing room rather than stretching the rows. */
@@ -1269,6 +1269,9 @@ export default function ChatAgentsPage() {
           // first, and drop the dead login so a fresh code is issued.
           console.warn("[wa-login] login no longer exists on the server; issuing a new QR code");
           setNumberLogin((current) => (current && current.id === numberLoginId ? null : current));
+          // With no login the key matches the editor's first run, which would
+          // otherwise stop the reissue and leave the QR frame empty for good.
+          autoLoginKey.current = "";
           try {
             setPhoneNumbers(await apiListPhoneNumbers(getToken));
           } catch {
@@ -1345,6 +1348,19 @@ export default function ChatAgentsPage() {
     },
     [getToken]
   );
+
+  // The way back from a pairing code to a scan. Throws for WhatsAppLinkHelp to
+  // show the message.
+  const startNumberQrLogin = useCallback(async () => {
+    setNumberLoginError("");
+    setIsStartingLogin(true);
+    try {
+      const started = await apiStartPhoneNumberQrLogin({}, getToken);
+      setNumberLogin(started);
+    } finally {
+      setIsStartingLogin(false);
+    }
+  }, [getToken]);
 
   // A chat agent with no number gets its QR code without being asked: opening
   // the editor starts the login, and a session that runs out of codes is
@@ -1642,6 +1658,7 @@ export default function ChatAgentsPage() {
                       onPatch={patchSelected}
                       onRefreshNumbers={refreshPhoneNumbers}
                       onRequestCode={startNumberCodeLogin}
+                      onRequestQr={startNumberQrLogin}
                       onStartLogin={startNumberLogin}
                     />
                     <ConfigPanel
@@ -2067,6 +2084,7 @@ function Editor({
   onPatch,
   onRefreshNumbers,
   onRequestCode,
+  onRequestQr,
   onStartLogin,
 }: {
   agent: ApiChatAgent;
@@ -2078,6 +2096,7 @@ function Editor({
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
   onRefreshNumbers: () => void;
   onRequestCode: (phone: string) => Promise<void>;
+  onRequestQr: () => Promise<void>;
   onStartLogin: () => void;
 }) {
   // Which half of the editor is on screen: the agent's own settings, or the
@@ -2157,6 +2176,7 @@ function Editor({
               }
               onRefreshNumbers={onRefreshNumbers}
               onRequestCode={onRequestCode}
+              onRequestQr={onRequestQr}
               onStartLogin={onStartLogin}
             />
           )}
@@ -2217,6 +2237,7 @@ function PhoneNumberSetupCard({
   onSelectNumber,
   onRefreshNumbers,
   onRequestCode,
+  onRequestQr,
   onStartLogin,
 }: {
   agentName: string;
@@ -2228,6 +2249,7 @@ function PhoneNumberSetupCard({
   onSelectNumber: (phoneNumberId: string) => void;
   onRefreshNumbers: () => void;
   onRequestCode: (phone: string) => Promise<void>;
+  onRequestQr: () => Promise<void>;
   onStartLogin: () => void;
 }) {
   // `login` is the unfinished session for this agent; a connected one is never
@@ -2249,44 +2271,57 @@ function PhoneNumberSetupCard({
         <span className="chat-number-flag">Required to reply</span>
       </div>
       <p className="chat-number-copy">
-        &ldquo;{agentName}&rdquo; has no WhatsApp number, so no message reaches it. Scan the QR code
-        to link a new one, or pick a number you have already connected — either way works.
+        &ldquo;{agentName}&rdquo; has no WhatsApp number, so no message reaches it.{" "}
+        {numbers.length > 0
+          ? "Link a new one with a QR code or a pairing code, or pick a number you have already connected."
+          : "Link one with a QR code or a pairing code — either way works."}
       </p>
 
-      <div className="chat-number-grid">
+      <div className={`chat-number-grid${numbers.length > 0 ? "" : " is-single"}`}>
         <section className="chat-number-pane" aria-label="Link a new WhatsApp number">
           <div className="chat-number-pane-head">
-            <span className="chat-number-pane-title">Scan a new number</span>
+            <span className="chat-number-pane-title">Link a new number</span>
             <span className="chat-number-pane-note">WhatsApp › Linked devices</span>
           </div>
 
-          {showsCode || !offersQr ? null : <div className="chat-qr-frame">
-            {isPending && login?.qr_code ? (
-              <Image
-                alt="WhatsApp login QR code"
-                className="chat-qr-image"
-                height={220}
-                src={login.qr_code}
-                unoptimized
-                width={220}
-              />
-            ) : (
-              <div className="chat-qr-placeholder">
-                <Icon name="phone" size={22} />
-                <span>
-                  {isStarting
-                    ? "Getting a QR code…"
-                    : isPending
-                      ? "Generating QR code…"
-                      : login
-                        ? phoneStatusLabels[login.status]
-                        : "A QR code appears here in a moment"}
-                </span>
-              </div>
-            )}
-          </div>}
-
-          <WhatsAppLinkHelp disabled={isStarting} login={login} onRequestCode={onRequestCode} />
+          <WhatsAppLinkHelp
+            disabled={isStarting}
+            login={login}
+            onRequestCode={onRequestCode}
+            onRequestQr={async () => {
+              await onRequestQr();
+              setWantsQr(true);
+            }}
+            qr={
+              offersQr ? (
+                <div className="chat-qr-frame">
+                  {isPending && login?.qr_code ? (
+                    <Image
+                      alt="WhatsApp login QR code"
+                      className="chat-qr-image"
+                      height={220}
+                      src={login.qr_code}
+                      unoptimized
+                      width={220}
+                    />
+                  ) : (
+                    <div className="chat-qr-placeholder">
+                      <Icon name="phone" size={22} />
+                      <span>
+                        {isStarting
+                          ? "Getting a QR code…"
+                          : isPending
+                            ? "Generating QR code…"
+                            : login
+                              ? phoneStatusLabels[login.status]
+                              : "A QR code appears here in a moment"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : null
+            }
+          />
 
           <div className="chat-number-status">
             {isStarting
@@ -2335,33 +2370,28 @@ function PhoneNumberSetupCard({
           {error ? <div className="chat-number-error">{error}</div> : null}
         </section>
 
-        <section className="chat-number-pane" aria-label="Use a connected number">
-          <div className="chat-number-pane-head">
-            <span className="chat-number-pane-title">Use a connected number</span>
-            <span className="chat-number-pane-actions">
-              <span className="chat-number-pane-note">
-                {numbers.length === 1 ? "1 number" : `${numbers.length} numbers`}
+        {numbers.length > 0 ? (
+          <section className="chat-number-pane" aria-label="Use a connected number">
+            <div className="chat-number-pane-head">
+              <span className="chat-number-pane-title">Use a connected number</span>
+              <span className="chat-number-pane-actions">
+                <span className="chat-number-pane-note">
+                  {numbers.length === 1 ? "1 number" : `${numbers.length} numbers`}
+                </span>
+                <button
+                  aria-label="Refresh connected phone numbers"
+                  className={`chat-number-refresh${isRefreshingNumbers ? " is-refreshing" : ""}`}
+                  disabled={isRefreshingNumbers}
+                  onClick={onRefreshNumbers}
+                  title="Refresh connected phone numbers"
+                  type="button"
+                >
+                  <Icon name="refresh" size={13} sw={2.2} />
+                  {isRefreshingNumbers ? "Refreshing…" : "Refresh"}
+                </button>
               </span>
-              <button
-                aria-label="Refresh connected phone numbers"
-                className={`chat-number-refresh${isRefreshingNumbers ? " is-refreshing" : ""}`}
-                disabled={isRefreshingNumbers}
-                onClick={onRefreshNumbers}
-                title="Refresh connected phone numbers"
-                type="button"
-              >
-                <Icon name="refresh" size={13} sw={2.2} />
-                {isRefreshingNumbers ? "Refreshing…" : "Refresh"}
-              </button>
-            </span>
-          </div>
-
-          {numbers.length === 0 ? (
-            <div className="chat-number-empty">
-              No connected numbers yet. Scan the QR code to link your first one, or manage numbers on
-              the <Link href="/dashboard/phone-numbers">Phone Numbers</Link> page.
             </div>
-          ) : (
+
             <ul className="chat-number-list">
               {numbers.map((number) => (
                 <li key={number.id}>
@@ -2386,8 +2416,8 @@ function PhoneNumberSetupCard({
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </section>
+        ) : null}
       </div>
     </div>
   );
