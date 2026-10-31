@@ -139,6 +139,7 @@ const sections = [
       <ul>
         <li><strong>Answer in one message, not three.</strong> Service replies are now charged per message, so one complete answer is cheaper than a string of short ones. Tell your chatbot to reply in a single message.</li>
         <li><strong>Start conversations from ads.</strong> Chats opened from Click to WhatsApp ads are free for up to 7 days.</li>
+        <li><strong>Let customers start the chat.</strong> When a customer messages you, you can reply without paying for a marketing template. A free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code generator</Link> puts that one-scan start on packaging, receipts, and shop windows.</li>
         <li><strong>Don’t blast cold lists.</strong> Marketing is the most expensive category, and low-quality campaigns can also hurt your messaging limits.</li>
         <li><strong>Send utility, not marketing, where it’s honest.</strong> An order update is utility; a discount is marketing. Meta reviews template categories, so don’t disguise offers.</li>
         <li><strong>Compare providers on the per-message rate,</strong> not just the plan price.</li>

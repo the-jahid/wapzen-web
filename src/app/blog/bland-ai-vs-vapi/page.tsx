@@ -84,6 +84,7 @@ const sections = [
       <p>Bland and Vapi are built for phone lines. Neither lists WhatsApp as a calling channel, so reaching customers who live in WhatsApp means bridging Meta’s WhatsApp Business Calling API yourself.</p>
       <p>In countries where WhatsApp is the default app, such as India, Brazil, and Indonesia, many customers would rather take a WhatsApp call from a business they know than answer an unknown phone number. That’s where <Link href="/free-ai-calling-agent">Wapzen’s AI calling agent</Link> fits. It answers incoming WhatsApp calls around the clock and calls people from outbound campaigns, such as lead call-backs, reminders, or <Link href="/blog/whatsapp-cod-order-confirmation">COD order confirmations</Link>, with a transcript of every call. It’s free right now, and voice agents speak dozens of languages, including Hindi and Bengali.</p>
       <p>The trade-off: Wapzen can’t dial regular phone numbers, and it calls from your own WhatsApp number, so it isn’t built for high-volume cold-calling campaigns the way phone platforms are.</p>
+      <p>Either way, customers have to reach your WhatsApp number first. A free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code generator</Link> turns a flyer, shop window, or invoice into a one-scan way to start that chat.</p>
     </>,
   },
   {

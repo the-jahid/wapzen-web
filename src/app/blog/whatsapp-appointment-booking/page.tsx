@@ -108,6 +108,7 @@ const sections = [
         <li>Connect your number by QR code and pick the agent for it.</li>
       </ol>
       <p>The scheduler shows only free slots, sends its own confirmation, and blocks double bookings. The downside is the extra step: some customers won’t leave the chat to fill in a form.</p>
+      <p>To bring in bookings from the real world, print a <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code</Link> for your reception desk or appointment cards, with a pre-filled message like “Hi, I’d like to book an appointment.”</p>
     </>,
   },
   {

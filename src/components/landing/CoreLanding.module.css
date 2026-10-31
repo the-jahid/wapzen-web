@@ -278,6 +278,7 @@
 .footerTop nav a:hover { color: var(--landing-green); }
 .footerContact > a { display: flex; align-items: center; gap: 16px; font-size: 23px; letter-spacing: -.04em; }
 .footerContact > small { color: var(--site-text-muted); font-size: 10px; }
+.footerContact > nav { margin-top: 22px; }
 .footerBottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 53px; padding-top: 23px; border-top: 1px solid var(--site-border); font-size: 9px; color: var(--site-text-muted); }
 .footerLangs { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .footerLangs a:hover, .footerLangs [aria-current] { color: var(--landing-green); }

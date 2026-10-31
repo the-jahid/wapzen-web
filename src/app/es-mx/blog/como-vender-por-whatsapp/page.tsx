@@ -59,6 +59,7 @@ const sections = [
       <p>Vender por WhatsApp funciona porque tus clientes ya están ahí. Pero un WhatsApp personal con fotos sueltas y precios en notas de voz se queda corto. Estos cuatro pasos convierten tu número en una tienda:</p>
       <Steps items={setup} />
       <p>Para crear tu enlace con un mensaje ya escrito (por ejemplo, “Hola, quiero hacer un pedido”), usa nuestro <Link href="/tools/whatsapp-link-generator">generador de enlaces de WhatsApp</Link>. Si todavía dudas entre la app normal y la de negocios, mira primero <Link href="/es-mx/blog/whatsapp-business-precio">qué cuesta WhatsApp Business</Link>: la app es gratis.</p>
+      <p>Para tu mostrador, tus empaques o tus volantes, convierte ese enlace en un <Link href="/tools/whatsapp-qr-code-generator">código QR de WhatsApp con tu logo</Link>: es gratis, y la herramienta está en inglés.</p>
     </>,
   },
   {

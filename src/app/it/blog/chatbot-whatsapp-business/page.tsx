@@ -103,6 +103,7 @@ const sections = [
       <Steps items={steps} />
       <InlineCta title="Crea il tuo chatbot WhatsApp" body="Un agente AI che risponde ai clienti con le informazioni della tua attività, sul tuo numero di sempre. Al momento è gratis, senza carta di credito." label="Inizia gratis" />
       <p>Tutte le conversazioni restano salvate nella dashboard. Se metti in pausa l’agente, smette di rispondere e torni a gestire tu le chat. Trovi tutte le funzioni nella pagina del <Link href="/it/chatbot-whatsapp-gratis">chatbot WhatsApp gratis</Link>.</p>
+      <p>Quando il chatbot è attivo, fallo conoscere ai clienti: con il nostro <Link href="/tools/whatsapp-qr-code-generator">generatore di codici QR per WhatsApp</Link>, gratuito e in inglese, crei un codice da stampare che apre la chat con il tuo numero.</p>
     </>,
   },
   {

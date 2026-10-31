@@ -59,6 +59,9 @@ type Ui = {
     solutions: string;
     connect: string;
     sayHello: string;
+    company: string;
+    about: string;
+    privacy: string;
     rights: string;
     backToTop: string;
     languages: string;
@@ -110,6 +113,9 @@ export const locales: Record<Locale, {
         solutions: "SOLUTIONS",
         connect: "LET'S CONNECT",
         sayHello: "Say hello",
+        company: "COMPANY",
+        about: "About us",
+        privacy: "Privacy policy",
         rights: "All rights reserved.",
         backToTop: "Back to top ↑",
         languages: "Languages",
@@ -170,6 +176,9 @@ export const locales: Record<Locale, {
         solutions: "SOLUÇÕES",
         connect: "FALE CONOSCO",
         sayHello: "Diga olá",
+        company: "EMPRESA",
+        about: "Sobre nós",
+        privacy: "Política de privacidade",
         rights: "Todos os direitos reservados.",
         backToTop: "Voltar ao topo ↑",
         languages: "Idiomas",
@@ -230,6 +239,9 @@ export const locales: Record<Locale, {
         solutions: "SOLUCIONES",
         connect: "HABLEMOS",
         sayHello: "Saluda",
+        company: "EMPRESA",
+        about: "Sobre nosotros",
+        privacy: "Política de privacidad",
         rights: "Todos los derechos reservados.",
         backToTop: "Volver arriba ↑",
         languages: "Idiomas",
@@ -271,6 +283,9 @@ export const locales: Record<Locale, {
         solutions: "SOLUCIONES",
         connect: "HABLEMOS",
         sayHello: "Escríbenos",
+        company: "EMPRESA",
+        about: "Sobre nosotros",
+        privacy: "Política de privacidad",
         rights: "Todos los derechos reservados.",
         backToTop: "Volver arriba ↑",
         languages: "Idiomas",
@@ -331,6 +346,9 @@ export const locales: Record<Locale, {
         solutions: "SOLUZIONI",
         connect: "CONTATTACI",
         sayHello: "Scrivici",
+        company: "AZIENDA",
+        about: "Chi siamo",
+        privacy: "Informativa sulla privacy",
         rights: "Tutti i diritti riservati.",
         backToTop: "Torna su ↑",
         languages: "Lingue",

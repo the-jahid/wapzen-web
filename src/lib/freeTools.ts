@@ -20,6 +20,7 @@ export const freeTools = [
     name: "WhatsApp QR Code Generator",
     description: "Design a QR code that opens a WhatsApp chat: pick colours, add your logo and a caption, then download a PNG or SVG.",
     icon: QrCode,
+    updated: "2026-10-31",
   },
   {
     href: "/tools/whatsapp-country-code-finder",

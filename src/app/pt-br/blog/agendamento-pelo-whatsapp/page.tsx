@@ -75,6 +75,7 @@ const sections = [
     body: <>
       <p>Se você já usa um sistema de agendamento, ou as <strong>páginas de agendamento do Google Agenda</strong>, mande o link na mensagem de saudação ou numa resposta rápida. O cliente vê só os horários livres, escolhe um e recebe a confirmação. O sistema bloqueia o horário e evita duplicidade.</p>
       <p>A desvantagem é o passo a mais: tem cliente que não sai da conversa para preencher formulário e prefere perguntar “tem horário na quinta?”. É aí que a IA ajuda.</p>
+      <p>Para quem já está no consultório ou na loja, imprima um <Link href="/tools/whatsapp-qr-code-generator">QR Code do WhatsApp</Link> com uma mensagem pronta, como “Oi, quero agendar um horário”. É grátis, e a ferramenta está em inglês.</p>
     </>,
   },
   {

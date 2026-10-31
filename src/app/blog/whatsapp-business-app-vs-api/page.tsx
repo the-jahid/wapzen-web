@@ -64,6 +64,7 @@ const sections = [
         <li><strong>Labels</strong> to sort chats (new order, paid, follow up).</li>
         <li><strong>Quick replies</strong>: saved answers you send with a shortcut.</li>
         <li><strong>Greeting and away messages</strong>: fixed texts sent automatically. See <Link href="/whatsapp-auto-reply">auto reply samples</Link>.</li>
+        <li>A <strong>short link and QR code</strong> that open a chat with you. To add your logo, use a free <Link href="/tools/whatsapp-qr-code-generator#business">WhatsApp Business QR code generator</Link>.</li>
         <li><strong>Broadcast lists</strong> of up to 256 contacts, which only reach people who saved your number.</li>
       </ul>
       <p>Its limits show up as you grow. Every real answer is typed by a person, and the only automation is a fixed greeting or away text that can’t answer a question. It runs on one phone plus up to four linked devices, so a team shares one account. And broadcasts are small by design.</p>

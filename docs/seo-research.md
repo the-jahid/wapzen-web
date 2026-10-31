@@ -297,6 +297,46 @@ Facts that age (recheck each quarter, 1 Jan/Apr/Jul/Oct):
 - [FAQ rich results are limited to government and health sites](https://developers.google.com/search/blog/2023/08/howto-faq-changes). The FAQ JSON-LD is for answer engines and entity clarity, not for stars or dropdowns in results.
 - Google ignores the meta keywords tag. `siteConfig.keywords` feeds only the descriptive schema `keywords` field.
 
+## WhatsApp QR code page (Oct 31)
+
+Goal: make `/tools/whatsapp-qr-code-generator` the best page on the topic. Search Console had it at 41.5 for "whatsapp qr code logo" and 55.0 for "whatsapp qr generator", on 668 words. It's now about 4,000 words.
+
+[`seo-qr-research.mjs`](seo-qr-research.mjs) scores 8 clusters with the same five sources and rank weighting as the other harvests:
+
+| Phrase | Score | Sources | Section |
+| --- | --- | --- | --- |
+| qr code for whatsapp business | 204 | 5/5 | WhatsApp Business |
+| whatsapp qr code generator with logo free | 203 | 4/5 | Title, H1, logo |
+| whatsapp business qr code generator | 159 | 5/5 | WhatsApp Business |
+| does whatsapp have qr code | 138 | 3/5 | Which code you need |
+| whatsapp qr code generator with logo | 131 | 4/5 | Title, H1, logo |
+| whatsapp qr code not working | 122 | 5/5 | Fix a code |
+| whatsapp business qr code | 100 | 5/5 | WhatsApp Business |
+| qr code generator with whatsapp logo | 92 | 4/5 | Logo: Meta's brand rules |
+| add logo to qr code | 71 | 5/5 | Logo |
+| whatsapp group qr code | 70 | 5/5 | Which code you need, FAQ |
+| qr code minimum size for print | 59 | 4/5 | Print sizes |
+| does whatsapp qr code expire | 57 | 3/5 | FAQ |
+
+"does whatsapp have qr code" and "whatsapp qr code not working" weren't in the original brief. Both got sections because the scores justified them.
+
+**Competitor check (5 pages reading 150 to 1,100 words):** all mention logos, but only one gives a number and none mentions error correction or the quiet zone. PNG and SVG are listed, never explained. None shows finished example codes, and none covers real troubleshooting or Meta's brand rules.
+
+**Scan tests (Oct 31).** The generator's real builder, patched only to vary logo share, margin and error correction, rendered through sharp, then read by jsQR, ZXing (zxing-wasm) and ZBar (@undecaf/zbar-wasm). The harness lived in a session scratchpad and isn't in the repo. Rerun it before changing the numbers on the page.
+
+- Matrix: 8 phone numbers × 3 message lengths × 2 dot styles × 4 copies (clean, blur, 11° tilt, skew) = 192 images per row. A pass means all three decoders read it.
+- Logo width, level H: 15–24% 99.5%, 30% 99%, 35% 67%, 40% 32%, 45% 3%, 50% 0%. Level M: 15–20% 100%, 24% 64%, 30% 33%.
+- Above 30% the result follows the message, not the logo size: at 35%, every no-message and short-message image passed and every long-message image failed.
+- Logo style at 24% (2,688 images): solid shapes and the chat icon 99.5%, thin line art 79%, white line art on a solid circle 47%. jsQR and ZXing read everything; the whole drop is ZBar. The solid-circle fix was a guess and it made things worse.
+- 48 images per check: #25D366 on white, jsQR 24; #075E54 on white, jsQR 48. Inverted: jsQR 48, ZXing 48, ZBar 0. No quiet zone on a dark flyer: ZXing 0, jsQR 7, ZBar 32.
+- These are software decoders, not phones. The page says so.
+
+**Example images** are served by `app/tools/whatsapp-qr-code-generator/examples/[file]/route.ts`, built from `components/free-tools/qrExamples.ts` by the generator itself, so they can't drift from its output. Each passing example read 63 of 63 times across 7 sizes and 3 copies; the 35% and 45% failure demos read 0 of 63. Examples use solid marks because the first line-art versions failed ZBar. Any new example has to be decoded the same way before the page's "all three decoders" line stays true.
+
+**Not confirmed from a primary source:** the WhatsApp Business app's menu path comes from recent third-party guides, because the WhatsApp Help pages didn't load for the fetcher. Check it on a real phone, and check the live sample in the app. The link format for the Business app is left out of the page for the same reason.
+
+**Internal links:** all 37 blog posts link here from the body text (22 English, 15 translated), with 17 anchor variations. Translated anchors are local-language and say the tool is in English. `updated` was left alone on those posts: only a link was added, and that date tells readers when the facts were checked.
+
 ## After deployment
 
 1. Set `NEXT_PUBLIC_SITE_URL` to the production origin (default `https://wapzen.io`). Keep staging private or noindexed.

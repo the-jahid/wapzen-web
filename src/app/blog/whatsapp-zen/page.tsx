@@ -81,6 +81,7 @@ const sections = [
     body: <>
       <p>Wapzen fits a small business whose customers already use WhatsApp and whose team keeps answering the same questions: prices, availability, opening hours, delivery, returns, appointments, or order status.</p>
       <p>It is especially useful when missed calls and slow replies cost you leads. A clinic can answer questions after hours, a property agent can call a new enquiry back, and an online store can handle routine delivery questions while a person takes over the unusual cases.</p>
+      <p>It works for walk-in customers too: print a free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code with your logo</Link> for the counter or a flyer, and anyone who scans it lands in a chat your agent can answer.</p>
       <p>If that sounds like the WhatsApp Zen you were searching for, start with the <Link href="/free-whatsapp-chatbot">free WhatsApp chatbot</Link> or the <Link href="/free-ai-calling-agent">free AI calling agent</Link>.</p>
     </>,
   },

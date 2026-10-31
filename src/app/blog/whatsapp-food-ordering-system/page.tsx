@@ -115,6 +115,7 @@ const sections = [
         <li><strong>You confirm the order</strong> in the chat, with the total, delivery time, and how to pay. WhatsApp says an order isn’t final until the seller confirms it.</li>
       </ol>
       <p>Quick replies save typing the same confirmation every time, and labels (New order, Paid, Out for delivery) help you keep track. The catch: you still answer every question and confirm every order by hand, which is the part that breaks at 8 pm on a Friday.</p>
+      <p>To get diners into that chat, print a <Link href="/tools/whatsapp-qr-code-generator#examples">WhatsApp QR code for your tables or menus</Link>. One scan opens a chat with you, and the code can carry a pre-filled message such as a table number.</p>
     </>,
   },
   {

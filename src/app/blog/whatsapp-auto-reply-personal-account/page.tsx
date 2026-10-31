@@ -116,6 +116,7 @@ const sections = [
         <li><strong>Your phone can be off.</strong> Replies come from the cloud, not your phone. Open WhatsApp on your phone at least every couple of weeks, because WhatsApp signs out linked devices on a phone that hasn’t been used for a while.</li>
         <li><strong>Wapzen isn’t made by WhatsApp.</strong> It links your number as a linked device, like WhatsApp Web. Use it to answer people who contact you, not to send bulk messages, which breaks WhatsApp’s terms on any account.</li>
       </ul>
+      <p>Once auto reply is running, new chats are less work. A free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code</Link> lets people message you without saving your number, and the AI answers them straight away.</p>
       <Note>Want the agent to answer WhatsApp calls too? The same number can have a voice agent. See the <Link href="/ai-receptionist">AI receptionist</Link> page.</Note>
     </>,
   },

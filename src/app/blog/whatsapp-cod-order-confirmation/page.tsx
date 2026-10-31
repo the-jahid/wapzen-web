@@ -134,6 +134,7 @@ const sections = [
       </ul>
       <Screenshot src={img("call-transcript.webp")} width={2000} height={1174} alt="Transcript of an AI COD confirmation call on WhatsApp where the buyer confirms the order" caption="A confirmed order in under a minute. The buyer also received the WhatsApp confirmation message during the call." />
       <p>The download button in the Leads tab exports every lead and status as a CSV, if you’d rather reconcile in a spreadsheet.</p>
+      <p>To cut down on calls after delivery, print a free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code</Link> on the delivery slip, so buyers can reach you about their order in one scan.</p>
     </>,
   },
   {

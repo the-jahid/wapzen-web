@@ -73,7 +73,7 @@ const sections = [
         <li><strong>Mensagens automáticas.</strong> Saudação no primeiro contato e ausência fora do horário. Separamos <Link href="/pt-br/blog/mensagem-de-saudacao-whatsapp-business">40 exemplos para copiar</Link>.</li>
         <li><strong>Respostas rápidas.</strong> Respostas salvas que você chama digitando “/”.</li>
         <li><strong>Etiquetas.</strong> Para organizar as conversas: novo cliente, pedido em andamento, pago, retornar.</li>
-        <li><strong>Link e QR Code.</strong> Um link wa.me e um QR Code que abrem a conversa com você, para colocar no Instagram, no site ou no balcão.</li>
+        <li><strong>Link e QR Code.</strong> Um link wa.me e um QR Code que abrem a conversa com você, para colocar no Instagram, no site ou no balcão. Para um QR Code com a sua logo, use o nosso <Link href="/tools/whatsapp-qr-code-generator">gerador de QR Code para WhatsApp</Link> grátis (em inglês).</li>
       </ul>
     </>,
   },

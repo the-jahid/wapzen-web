@@ -141,6 +141,7 @@ const sections = [
       <p>If the goal is an AI agent that answers your WhatsApp from your own information, and not the workflow itself, Wapzen gives you that without a Meta app, webhooks, or a vector database. You create an agent, upload your documents, choose a GPT or Claude model, and scan a QR code with the number you already use.</p>
       <Comparison caption="Building a WhatsApp AI agent in n8n compared with Wapzen" columns={["Build it in n8n", "Wapzen"]} rows={compared} />
       <p>You can also use both. A Wapzen <strong>API tool</strong> can call an n8n webhook mid-conversation, so n8n handles the back office (checking an order, adding a row to a sheet, notifying your team) while Wapzen handles WhatsApp.</p>
+      <p>Whichever route you build, customers still need a way in. A free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR generator</Link> gives you a printable code that opens a chat with your agent’s number.</p>
       <InlineCta title="Skip the build" body="Your AI agent on WhatsApp in about 15 minutes, with knowledge base, memory, and calls built in. Free right now." />
       <Note>Wapzen is an independent product, not made by Meta or WhatsApp, and isn’t Meta’s official API route: it links your number as a device. Use it to answer people who contact you, never to message people who didn’t.</Note>
     </>,

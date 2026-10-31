@@ -73,7 +73,7 @@ const sections = [
         <li><strong>Messaggi automatici.</strong> Un messaggio di benvenuto al primo contatto e un messaggio di assenza fuori orario. Abbiamo raccolto <Link href="/it/blog/messaggi-automatici-whatsapp-business">40 esempi da copiare</Link>.</li>
         <li><strong>Risposte rapide.</strong> Risposte salvate che richiami digitando “/”, per le domande che ricevi ogni giorno.</li>
         <li><strong>Etichette.</strong> Per ordinare le chat per stato: nuovo cliente, ordine in corso, pagato, da richiamare.</li>
-        <li><strong>Link e codice QR.</strong> Un link wa.me e un codice QR che aprono la chat con te, da mettere su sito, vetrina o biglietti da visita.</li>
+        <li><strong>Link e codice QR.</strong> Un link wa.me e un codice QR che aprono la chat con te, da mettere su sito, vetrina o biglietti da visita. Per un codice con il tuo logo c’è il nostro <Link href="/tools/whatsapp-qr-code-generator">generatore di codici QR per WhatsApp</Link> gratuito (in inglese).</li>
       </ul>
     </>,
   },

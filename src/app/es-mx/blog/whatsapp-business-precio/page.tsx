@@ -144,6 +144,7 @@ const sections = [
       <ul>
         <li><strong>Contesta en un mensaje, no en tres.</strong> En la API cada respuesta por encima de los gratis se cobra.</li>
         <li><strong>Aprovecha los anuncios.</strong> Las conversaciones que empiezan desde un anuncio de clic a WhatsApp tienen una ventana gratis.</li>
+        <li><strong>Deja que el cliente escriba primero.</strong> Un <Link href="/tools/whatsapp-qr-code-generator">código QR de WhatsApp</Link> en tu local o tus empaques abre el chat con un escaneo, gratis y sin pagar anuncios. La herramienta está en inglés.</li>
         <li><strong>No pagues la API si no haces envíos masivos.</strong> Si casi todo tu trabajo es contestar a quien te escribe, la app gratis basta. El problema es el tiempo, no el costo.</li>
         <li><strong>Automatiza en la app, no en la API.</strong> Un agente con IA conectado a tu número con un código QR contesta sin tarifas de Meta por mensaje.</li>
       </ul>

@@ -3,6 +3,7 @@ export const siteConfig = {
   // Use the public production origin consistently, even if configured with
   // a trailing slash. See docs/seo-research.md for deployment and research.
   url: new URL(process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://wapzen.io").origin,
+  whatsapp: { href: "https://wa.me/8801701750469", label: "+880 1701 750469" },
   title: "Free WhatsApp AI Chatbot & AI Calling Agent for Business | Wapzen",
   description:
     "Free WhatsApp AI agent for business. An AI chatbot auto-replies to messages and an AI voice agent answers and makes WhatsApp calls. No code, no Business API.",

@@ -58,10 +58,12 @@
 - [WhatsApp Business API alternative](/whatsapp-business-api-alternative): what the Business API involves and costs, and running an AI chatbot without it.
 - [AI answering service (USA)](/ai-answering-service): a free AI answering service for US small businesses on WhatsApp calls and messages, in English or Spanish.
 - [WhatsApp for business in the USA](/whatsapp-for-business-usa): why US businesses add WhatsApp and how to set up an AI chatbot and voice agent for it.
+- [About us](/about): what Wapzen is, how it works, and what it can't do.
+- [Privacy policy](/privacy): what Wapzen collects, how AI agents handle messages and calls, which providers process them, and how to delete data.
 - [Free WhatsApp tools](/tools): free browser tools, no sign-up.
 - [Send WhatsApp Without Saving Number](/tools/send-whatsapp-without-saving-number)
 - [WhatsApp Chat Link Generator](/tools/whatsapp-link-generator)
-- [WhatsApp QR Code Generator](/tools/whatsapp-qr-code-generator)
+- [WhatsApp QR Code Generator](/tools/whatsapp-qr-code-generator): free QR codes with your logo, plus tested guidance on logo size and style, WhatsApp Business codes, print sizes, PNG vs SVG, troubleshooting and example designs.
 - [WhatsApp Country Code Finder](/tools/whatsapp-country-code-finder)
 - [WhatsApp Text Formatter](/tools/whatsapp-text-formatter): bold, italic, strikethrough, monospace, inline code, lists and quotes with a live WhatsApp preview, plus Unicode fancy fonts.
 

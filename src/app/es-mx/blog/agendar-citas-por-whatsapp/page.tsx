@@ -75,6 +75,7 @@ const sections = [
     body: <>
       <p>Si ya usas un sistema de citas, o las <strong>agendas de citas de Google Calendar</strong>, manda el enlace en tu mensaje de bienvenida o como respuesta rápida. El cliente ve solo los horarios libres, elige uno y recibe la confirmación. El sistema bloquea el horario y evita empalmes.</p>
       <p>La desventaja es el paso extra: hay clientes que no salen del chat para llenar un formulario y prefieren preguntar “¿tienes lugar el jueves?”. Ahí es donde una IA ayuda.</p>
+      <p>Para quienes ya están en tu consultorio o tu local, imprime un <Link href="/tools/whatsapp-qr-code-generator">código QR de WhatsApp</Link> con un mensaje ya escrito, como “Hola, quiero agendar una cita”. Es gratis, y la herramienta está en inglés.</p>
     </>,
   },
   {

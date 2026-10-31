@@ -144,6 +144,7 @@ const sections = [
         <li><strong>Use a lista de transmissão comum</strong> para quem já salvou o seu número, e deixe a transmissão comercial para promoções que valem o custo.</li>
         <li><strong>Responda em uma mensagem, não em três.</strong> Na API, cada resposta acima das grátis é cobrada.</li>
         <li><strong>Não contrate a API se você não faz disparos em escala.</strong> Se o trabalho é responder quem te procura, o app grátis basta. O problema é o tempo, não o custo.</li>
+        <li><strong>Deixe o cliente chamar primeiro.</strong> Um <Link href="/tools/whatsapp-qr-code-generator">QR Code do WhatsApp</Link> na loja ou na embalagem abre a conversa com uma leitura, de graça e sem pagar anúncio. A ferramenta está em inglês.</li>
         <li><strong>Automatize no app, não na API.</strong> Um agente com IA conectado ao número por QR Code responde sem tarifa da Meta por mensagem.</li>
       </ul>
       <InlineCta title="Respostas com IA sem tarifa por mensagem" body="A Wapzen conecta seu número com um QR Code e responde seus clientes com as informações da sua empresa, 24 horas por dia. Grátis por enquanto." label="Comece grátis" />

@@ -127,6 +127,7 @@ const sections = [
         <li><strong>Must you keep your number in the app?</strong> Wapzen and Periskope work on numbers that stay in WhatsApp or WhatsApp Business on your phone.</li>
       </ol>
       <p>If you’re choosing between the big three Indian platforms, read <Link href="/blog/wati-vs-aisensy-vs-interakt">WATI vs AiSensy vs Interakt</Link>. If AI on your existing number is what you’re after, Wapzen’s <Link href="/free-whatsapp-chatbot">free chatbot</Link> takes a few minutes to set up.</p>
+      <p>Whichever platform you choose, your printed materials keep working: a <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code with your logo</Link> points at your number, not at the platform, so it survives a switch as long as the number stays the same.</p>
     </>,
   },
 ];

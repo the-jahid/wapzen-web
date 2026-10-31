@@ -97,6 +97,7 @@ const sections = [
         <li><strong>Go live:</strong> the agent starts replying to messages and answering calls.</li>
       </ol>
       <p>The trade-off is the one in the table: the Business API is Meta’s official route and suits high-volume messaging, while a QR-linked number gets you going in minutes, with no approval or fees, on a product that isn’t an official Meta platform.</p>
+      <p>Don’t confuse that QR code with the one customers scan. The first links your number to Wapzen. The second opens a chat with you, and you can make one with the free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code generator</Link> for either platform.</p>
     </>,
   },
   {

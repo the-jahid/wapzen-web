@@ -18,8 +18,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       // Rebuilding the app does not mean the landing page changed.
     },
     ...marketingPages.map((page) => withAlternates(page.href)),
+    { url: `${siteConfig.url}/about` },
+    { url: `${siteConfig.url}/privacy` },
     { url: `${siteConfig.url}/tools` },
-    ...freeTools.map((tool) => ({ url: `${siteConfig.url}${tool.href}` })),
+    ...freeTools.map((tool) => ({ url: `${siteConfig.url}${tool.href}`, ...("updated" in tool && { lastModified: tool.updated }) })),
     // Posts carry a real revision date, so they can state lastModified.
     ...(Object.keys(locales) as Locale[]).flatMap((locale) => {
       const href = locales[locale].ui.blog?.href;
