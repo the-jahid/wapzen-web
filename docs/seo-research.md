@@ -271,6 +271,48 @@ Facts that age (recheck each quarter, 1 Jan/Apr/Jul/Oct):
 - UK National Living Wage £12.71 from April 2026 (GOV.UK). EU AI Act Article 50 (tell people they're talking to an AI) applies from 2 August 2026, untouched by the Digital Omnibus.
 - Copy rule: chat agents have hidden reply caps, so these posts say "free to start" and "message us for high volume", and never list Wapzen at €0 a month as if it had no limits.
 
+## European WhatsApp AI agent pages (Oct 31, twelfth harvest)
+
+Goal: be found by ChatGPT and Claude in Italy, Germany and the rest of Europe for WhatsApp automation, chat and voice, without disturbing what already ranks. Everything here is additive: no existing URL, title, description or body text changed.
+
+**What the research says about ChatGPT** (mostly vendor studies, so read the numbers as direction, not fact):
+
+- [Peec AI](https://peec.ai/blog/chatgpt-searches-in-english-even-when-you-don-t), 10M+ searches: ChatGPT starts in the user's language, then adds English searches. 43% of fan-out queries for non-English prompts ran in English, and nearly 78% of those sessions added English research. So a country needs an English page as well as a native one. This is probably why the English India page travels.
+- [Ahrefs](https://ahrefs.com/blog/why-chatgpt-cites-pages/), 1.4M prompts: titles matching the fan-out query are cited more (0.656 similarity for cited titles against 0.484 for non-cited), and natural-language URL slugs are cited more (89.78% against 81.11%). Hence plain slugs and titles that repeat the phrase.
+- Third-party "best X" lists correlate with being recommended (r = +0.64 in one study of 95 brands). We can't write those ourselves.
+- **Don't publish a "best X" list that ranks Wapzen first.** Sites doing this lost 29-49% of visibility in January and May 2026, sometimes across the whole domain ([Lily Ray](https://lilyraynyc.substack.com/p/why-calling-yourself-the-best-could)). Google hasn't confirmed an update aimed at it, but the risk lands on the pages that already rank. Use one-to-one comparisons that say where the rival wins. `/blog/wati-alternatives` is the old pattern: leave it alone, don't copy it.
+- [OpenAI's crawler docs](https://developers.openai.com/api/docs/bots): OAI-SearchBot decides search inclusion, GPTBot doesn't. Both are allowed in `robots.ts`. The docs don't mention Bing; that ChatGPT draws on Bing is widely reported, not confirmed there.
+
+**Demand** ([`seo-europe-ai-research.mjs`](seo-europe-ai-research.mjs), Google, YouTube and DuckDuckGo with hl/gl). "WhatsApp + agent" is the strongest phrase in every market, which is why it's the hub in each language. Compare scores within a market, not across markets.
+
+| Market | Strongest phrases (score, 3/3 sources unless noted) | Page |
+| --- | --- | --- |
+| Germany | whatsapp business automatische antwort 39, whatsapp ki agent 35, whatsapp ki chatbot 34, whatsapp chatbot erstellen 30, ki voice agent 30, ki anrufe 30, whatsapp automatisierung 29, superchat alternative 20 (2/3), superchat kosten 20 (2/3) | `/de/whatsapp-ki-agent` and three more, `/de/blog/superchat-alternative` |
+| Italy | chatbot ai whatsapp 30, centralino ai 30, agente ai whatsapp 29, chatbot ai whatsapp gratis 29 (2/3), spoki prezzi 28 (2/3), agente vocale ai 20 (2/3) | `/it/agente-ai-whatsapp`, `/it/blog/spoki-prezzi-alternative` |
+| France | agent ia whatsapp 38, réponse automatique whatsapp business 38 (2/3), agent vocal ia 30, automatisation whatsapp 30, démarchage téléphonique ia 30 | `/fr/agent-ia-whatsapp` |
+| Spain | agente de voz ia 40, agente ia whatsapp 39, agente ia whatsapp business 32, automatización whatsapp 30 | `/es/agente-ia-whatsapp` |
+| Netherlands | whatsapp ai chatbot 51, whatsapp ai agent 50, ai voice agent 30, ai receptionist 30 | `/nl/whatsapp-ai-agent` |
+| UK | whatsapp ai agent free 47, whatsapp automation 39, ai agent for whatsapp 39, best whatsapp automation tool 30, ai receptionist uk 30 | `/whatsapp-ai-agent-uk` |
+
+**What was built:** a hub (`/whatsapp-ai-agent-europe`), six English country pages, five native agent pages paired to them by hreflang (new clusters, so existing heads didn't change), three more German pages twinned to `/free-whatsapp-chatbot`, `/free-ai-calling-agent` and `/whatsapp-auto-reply`, two comparisons, and `/de`, `/fr`, `/nl` and `/es` blogs holding the four posts restored from 9f3869c. Only the hub is in the English footer: the country pages carry `footer: false`, so the footers of the ranking pages grow by one link plus three languages.
+
+**Doorway check:** each country page has its own Meta rates, vendors, sectors and calling law. Word 5-gram overlap between English country pages peaked at 30%, nearly all of it shared product facts. Keep it that way: a new country needs real local facts, or it isn't worth a page.
+
+**Other changes:** `Content-Language` headers on translated paths, because the root `<html lang="en">` can't change per route and Bing is reported to weigh that signal above hreflang. `public/llms.txt` was only appended to. IndexNow: run `node docs/indexnow-submit.mjs` after a deploy.
+
+**Bing, 31 Oct 2026:** scripted queries for `site:wapzen.io`, the brand and the exact home title returned no wapzen.io result in the US, India or Italy. Scripted results can differ from what people see, so check in Bing Webmaster Tools. No `msvalidate.01` tag is live. Brave's `site:` query returned none either.
+
+**Facts that age** (recheck each quarter, 1 Jan/Apr/Jul/Oct, then bump `updated` on the page and in the registry):
+
+- Meta from 1 October 2026, marketing / utility, authentication and paid service: DE €0.1131 / €0.0456; IT €0.0658 / €0.0248; FR €0.0712 / €0.0248; ES €0.0585 / €0.0166; NL €0.1323 / €0.0414; UK £0.0458 / £0.0159. The "5,000 replies" examples are 4,000 × the second rate: €182.40, €99.20, €99.20, €66.40, €165.60, £63.60.
+- Vendors, own pages, 31 Oct 2026: Superchat Free, €89, €149, €299 net, 12-month minimum, 1 AI agent from Professional, 3 on Advanced, extra €49, EU servers, Frankfurt. Lime Connect (formerly Userlike) Free, Pro from €87 yearly or €105 monthly, 3 seats minimum, AI add-on from €99, official API via its FAQ. Spoki Free, Service/Marketing/Sales from €39/€79/€119 excl. VAT with 900 conversations (the same page also quotes lower entry prices), AI from prepaid credits, AI voice €0.030/min in and out, Meta Business Partner. Callbell €14/€18 per agent, bot builder add-on €59, ChatGPT on Enterprise, campaigns €0.02 per contact. Trengo Boost €299 yearly or €349 monthly, Pro €499 or €599, AI surcharge €0.25-0.30 per conversation, phone AI agent. Landbot Professional WA €160 yearly, 500 AI chats then €0.10. respond.io $79/$159/$279 yearly-billed ($99/$199/$349 monthly), AI from Growth. Wati $39/$79/$199 annual, Astra AI add-on.
+- From the 30 Oct check, not rechecked: Kanal €89 and Scale €149, 360dialog €49/€99/€500, Recepcionista.com €99/€199/€299. Chatarmin's and ManyChat's pricing pages couldn't be read, so they aren't compared.
+- Law, from the statute or regulator: § 7, § 7a (five years), § 20 UWG (€300,000 and €50,000); AI Act Art. 50(1) and 99(4), up to €15M or 3%, the lower for SMEs; Spain's Ley 11/2022 art. 66.1 a) and b); the ACM's telemarketing page, which also covers sole traders, VOFs and maatschappen; the Registro pubblico delle opposizioni and the Garante. The ICO's call guide says it's under review for the Data (Use and Access) Act, so no UK fine figure is quoted.
+- France rests on agreeing secondary sources (Club des Juristes, Blog du Modérateur, Selectra) because economie.gouv.fr refused the fetcher. Check the exceptions in article L223-1 before relying on them. Spain's "atención personal directa" comes from Consumo Responde's summary of Ley 10/2025, not the law's text.
+- Article 50(1) binds **providers**. Wapzen doesn't add an AI notice itself: the pages tell businesses to write it into the greeting.
+
+**Unknown:** we can't see ChatGPT's own answers from here. Measure by asking it the page FAQs in each language, and check Search Console and Bing Webmaster Tools after 4-6 weeks. Off-site mentions are the part these pages can't supply: comparison sites, review sites and Reddit.
+
 ## What the landing page now targets
 
 - **Title:** `Free WhatsApp AI Chatbot & AI Calling Agent for Business | Wapzen` (65 chars; Google may cut the brand, and the keywords come first).
