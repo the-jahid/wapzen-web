@@ -2457,7 +2457,7 @@ function ConfigPanel({
   phoneNumbers: ApiPhoneNumber[];
   tools: ApiTool[];
 }) {
-  const [openSection, setOpenSection] = useState<ConfigSectionId | null>("knowledge-base");
+  const [openSection, setOpenSection] = useState<ConfigSectionId | null>("tools");
   const attachedKbs = agent.knowledge_base?.knowledge_base_ids ?? [];
   const attachedTools = agent.tools?.tool_ids ?? [];
   // end_call and transfer_call exist to release a phone call, so the server
