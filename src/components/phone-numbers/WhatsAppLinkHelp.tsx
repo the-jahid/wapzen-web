@@ -90,6 +90,8 @@ export function WhatsAppLinkHelp({
   // When this page last got a code: the countdown's fallback for a server that
   // doesn't say how long the code has left.
   const [issuedAt, setIssuedAt] = useState<number | null>(null);
+  // The code on screen replaced an earlier one, which no longer works.
+  const [resent, setResent] = useState(false);
 
   // How many logins this card has shown. A second one means the first ran out
   // unscanned — or the phone refused it — so the help leads with what to try.
@@ -140,10 +142,12 @@ export function WhatsAppLinkHelp({
     }
     setPhone(normalized.phone);
     setError("");
+    setResent(false);
     setIsRequesting(true);
     try {
       await onRequestCode(normalized.phone);
       setIssuedAt(Date.now());
+      setResent(Boolean(pairingCode));
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Could not get a code. Try again.");
     } finally {
@@ -182,11 +186,20 @@ export function WhatsAppLinkHelp({
         >
           {pairingCode}
         </div>
-        {expired ? (
-          <button className="wa-link-btn wa-link-btn-wide" disabled={!canRenew} onClick={renew} type="button">
-            {isRequesting ? "Getting a code…" : "Get a new code"}
-          </button>
+        <button
+          className={`wa-link-btn wa-link-btn-wide${expired ? "" : " wa-link-btn-quiet"}`}
+          disabled={!canRenew}
+          onClick={renew}
+          type="button"
+        >
+          {isRequesting ? "Sending a new code…" : "Send a new code"}
+        </button>
+        {resent ? (
+          <div className="wa-link-sent" role="status">
+            New code sent. Type this one — the last code no longer works.
+          </div>
         ) : null}
+        {error ? <div className="wa-link-error">{error}</div> : null}
         <ol className="wa-link-steps">
           <li>
             Open <b>WhatsApp</b> on the phone with {number || "this number"}. If you see the
@@ -206,12 +219,6 @@ export function WhatsAppLinkHelp({
           Nothing on your phone, or it says the code is wrong? This code only works for{" "}
           {number || "the number you entered"}, so check that is the WhatsApp number on the phone.
         </p>
-        {expired ? null : (
-          <button className="wa-link-text-btn" disabled={!canRenew} onClick={renew} type="button">
-            {isRequesting ? "Getting a code…" : "Get a new code"}
-          </button>
-        )}
-        {error ? <div className="wa-link-error">{error}</div> : null}
         <style dangerouslySetInnerHTML={{ __html: css }} />
       </div>
     );
@@ -367,6 +374,12 @@ const css = `
 }
 .wa-link-code.is-expired { color: var(--app-muted); text-decoration: line-through; }
 .wa-link-btn-wide { justify-self: stretch; padding: 10px 14px; }
+.wa-link-btn-quiet {
+  background: none;
+  border: 1px solid var(--app-border-strong);
+  color: var(--app-text);
+}
+.wa-link-sent { color: var(--app-primary-text); font-size: 12.5px; line-height: 1.4; }
 .wa-link-timer {
   color: var(--app-text-soft);
   display: grid;

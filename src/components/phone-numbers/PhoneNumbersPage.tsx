@@ -1472,20 +1472,25 @@ export default function PhoneNumbersPage() {
     }
   }
 
-  // Swaps the selected QR login for one linked by a typed pairing code. The
-  // server ends the QR login, so it leaves the list and the new one takes its
-  // place. Throws for WhatsAppLinkHelp to show the message.
+  // Swaps the selected login, QR or an earlier code, for one linked by a typed
+  // pairing code. The server ends the old login, so it leaves the list and the
+  // new one takes its place. Throws for WhatsAppLinkHelp to show the message.
   async function startCodeLogin(phone: string) {
     const replaced = selectedPhoneNumber?.status === "pending_qr" ? selectedPhoneNumber : null;
-    const started = await apiStartPhoneNumberCodeLogin(
-      { phone_number: phone, ...(replaced?.label ? { label: replaced.label } : {}) },
-      getToken
-    );
-    setActiveLogin(started);
-    setPhoneNumbers((current) =>
-      upsertPhoneNumber(current.filter((entry) => entry.id !== replaced?.id), started)
-    );
-    setSelectedId(started.id);
+    setIsRestarting(true);
+    try {
+      const started = await apiStartPhoneNumberCodeLogin(
+        { phone_number: phone, ...(replaced?.label ? { label: replaced.label } : {}) },
+        getToken
+      );
+      setActiveLogin(started);
+      setPhoneNumbers((current) =>
+        upsertPhoneNumber(current.filter((entry) => entry.id !== replaced?.id), started)
+      );
+      setSelectedId(started.id);
+    } finally {
+      setIsRestarting(false);
+    }
   }
 
   async function disconnect(phone: ApiPhoneNumber) {
@@ -1602,6 +1607,26 @@ export default function PhoneNumbersPage() {
 
   async function refresh() {
     if (!isAuthenticated) return;
+
+    // The server won't restart a login that is still running, so while a
+    // pairing code is on screen Refresh asks for a new one.
+    const codeNumber =
+      selectedPhoneNumber?.status === "pending_qr" && selectedPhoneNumber.pairing_code
+        ? selectedPhoneNumber.phone_number
+        : null;
+    if (codeNumber) {
+      if (isRestarting) return;
+      try {
+        await startCodeLogin(codeNumber);
+        setNotice({ kind: "success", text: "New code sent. The last code no longer works." });
+      } catch (error) {
+        setNotice({
+          kind: "error",
+          text: error instanceof Error ? error.message : "Could not get a code. Try again.",
+        });
+      }
+      return;
+    }
 
     // For a number whose login ended (expired/failed/disconnected), Refresh
     // restarts the login session so a fresh QR code is issued. Otherwise it
@@ -1800,6 +1825,7 @@ function PhoneNumberExpandableCard({
               effectiveLoadError={effectiveLoadError}
               effectiveLoadState={effectiveLoadState}
               isAuthenticated={isAuthenticated}
+              isRestarting={isRestarting}
               mode={mode}
               onAssignAgent={onAssignAgent}
               onCreate={onCreate}
@@ -2150,6 +2176,7 @@ function PhoneNumberDetail({
   effectiveLoadError,
   effectiveLoadState,
   isAuthenticated,
+  isRestarting,
   mode,
   onAssignAgent,
   onCreate,
@@ -2163,6 +2190,7 @@ function PhoneNumberDetail({
   effectiveLoadError: string;
   effectiveLoadState: "loading" | "ready" | "error";
   isAuthenticated: boolean;
+  isRestarting: boolean;
   mode: WorkspaceMode;
   onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
   onCreate: () => void;
@@ -2283,7 +2311,11 @@ function PhoneNumberDetail({
               </div>
             )}
             {phoneNumber.status === "pending_qr" ? (
-              <WhatsAppLinkHelp disabled={!isAuthenticated} login={phoneNumber} onRequestCode={onRequestCode} />
+              <WhatsAppLinkHelp
+                disabled={!isAuthenticated || isRestarting}
+                login={phoneNumber}
+                onRequestCode={onRequestCode}
+              />
             ) : null}
           </div>
         </div>
