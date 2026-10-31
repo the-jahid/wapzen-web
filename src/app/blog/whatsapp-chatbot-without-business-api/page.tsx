@@ -98,7 +98,6 @@ const sections = [
     body: <>
       <p>In the agent, click <strong>Activate</strong>. Then message your number from another phone and ask the questions your customers ask most. Every thread is saved under <strong>Conversations</strong>, so you can check each answer, and reply yourself from the dashboard when a customer needs a person.</p>
       <Screenshot src={img("conversation.webp")} width={1832} height={1472} alt="A WhatsApp conversation in Wapzen where the AI chatbot answers questions about cash on delivery, a product and returns" caption="Three questions, three answers, all taken from the knowledge base: COD limits, which serum suits oily skin, and the return window." />
-      <p>When your tests pass, start sending customers to it: a free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code generator</Link> makes a printable code for your counter, packaging, or flyers that opens a chat with your number.</p>
     </>,
   },
   {

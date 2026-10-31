@@ -136,7 +136,6 @@ const sections = [
     body: <>
       <Steps items={setupSteps} />
       <p>Para as <strong>respostas rápidas</strong>, vá em Ferramentas comerciais &gt; Respostas rápidas, toque em + e escreva a mensagem e o atalho (por exemplo <em>horario</em>). Na conversa, é só digitar “/” para ver a lista.</p>
-      <p>A saudação é a primeira coisa que vê quem chega por um <Link href="/tools/whatsapp-qr-code-generator">QR Code do WhatsApp</Link> impresso no cardápio, na vitrine ou na embalagem. Você pode criar o seu de graça, com a sua logo; a ferramenta está em inglês.</p>
       <Note>Para testar a saudação, use um celular que não falou com você nos últimos 14 dias, senão ela não chega. Mais modelos no guia de <Link href="/pt-br/resposta-automatica-whatsapp">resposta automática no WhatsApp</Link>.</Note>
     </>,
   },

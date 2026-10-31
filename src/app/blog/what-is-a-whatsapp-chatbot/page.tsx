@@ -138,7 +138,6 @@ const sections = [
       </ol>
       <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt, a Claude model and an attached knowledge base" caption="A chat agent: instructions, model, and knowledge base on one screen. Wapzen dashboard, demo data." />
       <p>The step-by-step version with every screen is <Link href="/blog/whatsapp-chatbot-without-business-api">How to create a WhatsApp chatbot without the Business API</Link>. If you’d rather build it yourself, <Link href="/blog/n8n-whatsapp-ai-agent">the n8n guide</Link> shows that route.</p>
-      <p>Once it’s live, tell customers it’s there. A free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code generator</Link> makes a printable code for your shop, menu, or packaging that opens a chat with your new chatbot.</p>
     </>,
   },
   {

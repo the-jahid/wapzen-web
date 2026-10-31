@@ -100,7 +100,6 @@ const sections = [
       <Steps items={steps} />
       <InlineCta title="Crie o seu robô de WhatsApp" body="Um agente com IA que responde seus clientes com as informações da sua empresa, no seu número de sempre. Grátis por enquanto, sem cartão de crédito." label="Comece grátis" />
       <p>Todas as conversas ficam salvas no painel. Se você pausar o agente, ele para de responder e você volta a atender. Veja todos os recursos do <Link href="/pt-br/chatbot-whatsapp-com-ia">chatbot WhatsApp com IA</Link>.</p>
-      <p>Com o robô no ar, avise seus clientes: no nosso <Link href="/tools/whatsapp-qr-code-generator">gerador de QR Code para WhatsApp</Link>, grátis e em inglês, você cria um código para imprimir que abre a conversa com o seu número.</p>
     </>,
   },
   {

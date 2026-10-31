@@ -78,7 +78,6 @@ const sections = [
       <p>Connect your number by scanning the Wapzen QR code from WhatsApp&apos;s <strong>Linked devices</strong> screen. Assign the chat agent, activate it, and message the number from another phone.</p>
       <p>Do not test only the easy FAQ. Ask a vague question, misspell a product, request a refund, ask for an unavailable date, and ask about something that is not in the knowledge base. A good test proves the agent can say &ldquo;I don&apos;t know&rdquo; and hand the conversation over cleanly.</p>
       <p>The full setup is in the <Link href="/blog/whatsapp-chatbot-without-business-api">WhatsApp chatbot without the Business API guide</Link>.</p>
-      <p>Scanning that code links your number. The code customers scan is a different one: a free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code generator</Link> makes it, and a pre-filled message like &ldquo;Hi, I want to book&rdquo; tells the agent what they want from the first line.</p>
     </>,
   },
   {

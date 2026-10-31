@@ -120,7 +120,6 @@ const sections = [
         { name: "Meta Business Agent", points: ["You want an official tool inside the app", "Your questions are mostly about catalog products", "Text replies are enough", "You can wait for it to reach your account"] },
         { name: "Wapzen", points: ["You want AI to answer calls as well as chats", "You use a personal WhatsApp number", "Your AI needs to look things up in your systems", "You want to choose GPT or Claude and write the instructions"] },
       ]} />
-      <p>Whichever agent you pick, a <Link href="/tools/whatsapp-qr-code-generator">WhatsApp Business QR code</Link> on your counter or packaging sends customers straight to it. The generator is free and adds your logo.</p>
       <InlineCta title="AI for your WhatsApp chats and calls" body="Free right now: a chat agent and a voice agent on your existing number, set up in about 15 minutes." />
       <Note>Don’t run two AI agents on one number, or customers will get two answers to every message. Wapzen is an independent product, not made by Meta or WhatsApp. For how a chatbot works in general, see <Link href="/blog/what-is-a-whatsapp-chatbot">What is a WhatsApp chatbot?</Link></Note>
     </>,

@@ -136,7 +136,6 @@ const sections = [
     body: <>
       <Steps items={setupSteps} />
       <p>Per le <strong>risposte rapide</strong> vai in Strumenti di lavoro &gt; Risposte rapide, tocca + e scrivi il messaggio e la scorciatoia (per esempio <em>orari</em>). In chat ti basta digitare “/” per vedere l’elenco.</p>
-      <p>Il messaggio di benvenuto è la prima cosa che vede chi ti scrive da un <Link href="/tools/whatsapp-qr-code-generator">codice QR per WhatsApp</Link> stampato su menu, vetrina o confezioni. Puoi crearne uno gratis con il tuo logo; lo strumento è in inglese.</p>
       <Note>Per provare il messaggio di benvenuto usa un telefono che non ti ha scritto negli ultimi 14 giorni, altrimenti non arriva. Più dettagli e altri esempi nella guida alla <Link href="/it/risposta-automatica-whatsapp">risposta automatica su WhatsApp</Link>.</Note>
     </>,
   },

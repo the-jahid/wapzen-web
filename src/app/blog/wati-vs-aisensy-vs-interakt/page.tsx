@@ -100,7 +100,6 @@ const sections = [
         <li><strong>Interakt</strong> has one-time and ongoing campaigns with click and conversion tracking from Growth, and campaign fallbacks on Advanced.</li>
       </ul>
       <p>Wapzen doesn’t do broadcasts. It answers the customers who message and call you, and calls the leads you add to a campaign. If marketing campaigns are central to your plans, choose one of the three.</p>
-      <p>All of these work better when customers message you first. A <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code with a pre-filled message</Link> on a flyer or counter starts that chat in one scan, though you should still ask for marketing opt-in once you’re talking.</p>
     </>,
   },
   {

@@ -138,7 +138,7 @@ export function WhatsAppQrGenerator() {
           {logoChoice === "image" && (logoImage
             ? <div className={styles.fileRow}><ImagePlus size={15} /><span>{logoImage.name}</span><button type="button" onClick={() => fileInput.current?.click()}>Change</button><button type="button" onClick={removeLogo} aria-label="Remove logo"><X size={15} /></button></div>
             : <button type="button" className={`${styles.btn} ${styles.btnSecondary} ${styles.btnSmall}`} onClick={() => fileInput.current?.click()}><ImagePlus size={15} />Upload logo</button>)}
-          <p className={logoError ? styles.error : styles.hint}>{logoError || "PNG, JPG, WebP or SVG up to 1 MB. Bold, square logos on a transparent background scan best."}</p>
+          <p className={logoError ? styles.error : styles.hint}>{logoError || "PNG, JPG, WebP or SVG up to 1 MB. Square logos on a transparent background look best."}</p>
         </div>
         <div className={styles.field}>
           <div className={styles.labelRow}><label htmlFor={`${id}-caption`}>Caption <span>(optional)</span></label><span className={styles.counter}>{caption.length}/{MAX_CAPTION}</span></div>

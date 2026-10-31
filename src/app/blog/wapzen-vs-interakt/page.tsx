@@ -100,7 +100,6 @@ const sections = [
       ]} />
       <p>The short version: <strong>Interakt is a WhatsApp commerce platform with AI as an add-on; Wapzen is an AI agent for WhatsApp chats and calls.</strong> If selling features are the core of your WhatsApp, Interakt earns its price. If you want every customer who messages or calls to get an instant answer, Wapzen does that for free.</p>
       <p>Comparing more options? Read <Link href="/blog/wati-vs-aisensy-vs-interakt">WATI vs AiSensy vs Interakt</Link> or <Link href="/blog/wapzen-vs-aisensy">Wapzen vs AiSensy</Link>.</p>
-      <p>Selling offline too? A <Link href="/tools/whatsapp-qr-code-generator">free WhatsApp QR code generator</Link> puts your logo on a code that opens a chat from packaging, delivery slips, or a shop counter, on either platform.</p>
       <Note>Wapzen links your number like WhatsApp Web, so it’s for answering people who contact you and calling people who expect your call. Bulk messaging to people who didn’t opt in breaks WhatsApp’s terms on any account.</Note>
     </>,
   },

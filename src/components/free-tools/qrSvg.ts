@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 
 export type QrStyle = "square" | "rounded";
 export type QrLogo = { kind: "none" } | { kind: "chat" } | { kind: "image"; href: string };
-export type QrDesign = { fg: string; bg: string; style: QrStyle; logo: QrLogo; caption: string; logoShare?: number };
+export type QrDesign = { fg: string; bg: string; style: QrStyle; logo: QrLogo; caption: string };
 export type QrImage = { svg: string; width: number; height: number };
 
 export const defaultQrDesign: QrDesign = { fg: "#10131a", bg: "#ffffff", style: "square", logo: { kind: "none" }, caption: "" };
@@ -50,7 +50,7 @@ export function buildQrSvg(text: string, design: QrDesign): QrImage | null {
   // A square hole in the middle for the logo, centred on whole modules (n is odd, so the hole is too).
   let hole: { start: number; size: number } | null = null;
   if (hasLogo) {
-    let size = Math.round(n * (design.logoShare ?? LOGO_SHARE));
+    let size = Math.round(n * LOGO_SHARE);
     if ((n - size) % 2) size += 1;
     hole = { start: (n - size) / 2, size };
   }

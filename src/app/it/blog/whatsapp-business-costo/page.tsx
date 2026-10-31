@@ -76,7 +76,6 @@ const sections = [
         <li>un <strong>catalogo</strong> di prodotti o servizi con foto e prezzi;</li>
         <li><strong>messaggi automatici</strong> di benvenuto e di assenza e <strong>risposte rapide</strong> (trovi <Link href="/it/blog/messaggi-automatici-whatsapp-business">40 esempi da copiare</Link>);</li>
         <li><strong>etichette</strong> per ordinare le chat (nuovo ordine, pagato, da richiamare);</li>
-        <li>un <strong>link e un codice QR</strong> che aprono la chat con te; se lo vuoi con il tuo logo, usa il nostro <Link href="/tools/whatsapp-qr-code-generator">generatore di codici QR per WhatsApp</Link> gratuito (in inglese);</li>
         <li><strong>liste broadcast</strong> fino a 256 contatti, che arrivano solo a chi ha salvato il tuo numero.</li>
       </ul>
       <p>Non ci sono costi nascosti per i messaggi né per le chiamate. Paghi solo se scegli di farlo: per esempio gli annunci Facebook e Instagram che aprono una chat WhatsApp si pagano come qualsiasi altra pubblicità di Meta.</p>

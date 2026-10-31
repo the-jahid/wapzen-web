@@ -6,7 +6,6 @@ import { ThemeToggleButton } from "@/components/theme/ThemeToggle";
 import { freeTools } from "@/lib/freeTools";
 import { locales, type Locale } from "@/lib/locales";
 import { localeHome, solutionsFor } from "@/lib/marketingPages";
-import { siteConfig } from "@/lib/site";
 import { ResizableNavbar } from "./ResizableNavbar";
 import styles from "./CoreLanding.module.css";
 
@@ -41,7 +40,7 @@ export function SiteFooter({ brandHref, locale = "en" }: { brandHref?: string; l
       <nav aria-label={t.product}><span>{t.product}</span><Link href="/#capabilities">{t.features}</Link><Link href="/#chat-agent">{t.chatbot}</Link><Link href="/#voice-agent">{t.voiceAgent}</Link><Link href="/#use-cases">{t.useCases}</Link><Link href="/#industries">{t.industries}</Link><Link href="/#workflow">{t.howItWorks}</Link><Link href="/#faq">{t.faq}</Link>{blog && <Link href={blog.href}>{blog.label}</Link>}</nav>
       <nav aria-label={t.freeTools}><span>{t.freeTools}</span>{freeTools.map((tool) => <Link key={tool.href} href={tool.href}>{tool.name}</Link>)}<Link href="/tools">{t.allTools}</Link></nav>
       <nav aria-label={t.solutions}><span>{t.solutions}</span>{solutionsFor(locale).map((page) => <Link key={page.href} href={page.href}>{page.name}</Link>)}</nav>
-      <div className={styles.footerContact}><span>{t.connect}</span><a href={siteConfig.whatsapp.href} target="_blank" rel="noopener noreferrer">{t.sayHello}<ArrowUpRight size={19} /></a><small>{siteConfig.whatsapp.label}</small><nav aria-label={t.company}><span>{t.company}</span><Link href="/about">{t.about}</Link><Link href="/privacy">{t.privacy}</Link></nav></div>
+      <div className={styles.footerContact}><span>{t.connect}</span><a href="https://wa.me/8801701750469" target="_blank" rel="noopener noreferrer">{t.sayHello}<ArrowUpRight size={19} /></a><small>+880 1701 750469</small></div>
     </div>
     <div className={styles.footerBottom}><span>© {new Date().getFullYear()} Wapzen. {t.rights}</span><nav aria-label={t.languages} className={styles.footerLangs}>{(Object.keys(locales) as Locale[]).map((code) => <Link key={code} href={localeHome[code]} hrefLang={locales[code].hreflang} lang={locales[code].htmlLang} aria-current={code === locale ? "true" : undefined}>{locales[code].label}</Link>)}</nav><a href="#top">{t.backToTop}</a></div>
   </footer>;

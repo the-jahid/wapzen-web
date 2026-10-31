@@ -106,7 +106,6 @@ const sections = [
       ]} />
       <p>The short version: <strong>respond.io is an omnichannel platform for customer teams; Wapzen is an AI agent for WhatsApp chats and calls.</strong> If you’re a growing team living in a shared inbox, respond.io is worth evaluating with its 7-day trial. If you mostly want WhatsApp questions and calls answered instantly, Wapzen does that for free.</p>
       <p>Comparing more WhatsApp platforms? See <Link href="/blog/wati-alternatives">the 7 best WATI alternatives</Link>.</p>
-      <p>With either tool, customers in your shop or holding your flyer can reach you through a <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code</Link>: one scan opens a chat with your number, so nobody has to save it first.</p>
       <Note>Wapzen links your number like WhatsApp Web and isn’t an official Meta product. Use it to answer people who contact you and call people who expect your call, never for bulk messaging.</Note>
     </>,
   },

@@ -23,17 +23,9 @@ type ToolPageProps = {
   cards: { heading: ReactNode; intro?: string; items: Array<{ icon: LucideIcon; title: string; body: string }> };
   faq: { heading: ReactNode; items: Faq[] };
   cta: { heading: ReactNode; body: string };
-  /** Jump links shown under the tool, for pages with a long guide. */
-  contents?: Array<{ href: string; label: string }>;
-  /** Long-form sections between the steps and the cards. */
-  guide?: ReactNode;
-  /** Shown after the FAQ, e.g. sources and how claims were tested. */
-  notes?: ReactNode;
-  /** ISO date the page's content was last revised. */
-  updated?: string;
 };
 
-function toolJsonLd({ path, name, description, faq, updated }: Pick<ToolPageProps, "path" | "name" | "description" | "faq" | "updated">) {
+function toolJsonLd({ path, name, description, faq }: Pick<ToolPageProps, "path" | "name" | "description" | "faq">) {
   const url = `${siteConfig.url}${path}`;
   return {
     "@context": "https://schema.org",
@@ -49,7 +41,6 @@ function toolJsonLd({ path, name, description, faq, updated }: Pick<ToolPageProp
         isAccessibleForFree: true,
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         publisher: { "@id": `${siteConfig.url}/#organization` },
-        ...(updated && { dateModified: updated }),
       },
       {
         "@type": "BreadcrumbList",
@@ -69,7 +60,7 @@ function toolJsonLd({ path, name, description, faq, updated }: Pick<ToolPageProp
 }
 
 export function ToolPage(props: ToolPageProps) {
-  const { name, heading, lead, perks, tool, steps, cards, faq, cta, contents, guide, notes } = props;
+  const { name, heading, lead, perks, tool, steps, cards, faq, cta } = props;
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolJsonLd(props)).replace(/</g, "\\u003c") }} />
     <header className={styles.hero}>
@@ -82,14 +73,10 @@ export function ToolPage(props: ToolPageProps) {
 
     <div className={styles.tool}>{tool}</div>
 
-    {contents && <nav className={styles.contents} aria-label="On this page"><ul>{contents.map((item) => <li key={item.href}><a href={item.href}>{item.label}</a></li>)}</ul></nav>}
-
     <section className={styles.section} aria-labelledby="how-title">
       <div className={styles.sectionHead}><h2 id="how-title" className={styles.sectionTitle}>{steps.heading}</h2></div>
       <div className={styles.grid3}>{steps.items.map((step, i) => <article key={step.title} className={styles.card}><span className={styles.stepNum}>STEP {String(i + 1).padStart(2, "0")}</span><h3>{step.title}</h3><p>{step.body}</p></article>)}</div>
     </section>
-
-    {guide}
 
     <section className={styles.section} aria-labelledby="cards-title">
       <div className={styles.sectionHead}><h2 id="cards-title" className={styles.sectionTitle}>{cards.heading}</h2>{cards.intro && <p>{cards.intro}</p>}</div>
@@ -100,8 +87,6 @@ export function ToolPage(props: ToolPageProps) {
       <div className={styles.sectionHead}><h2 id="faq-title" className={styles.sectionTitle}>{faq.heading}</h2></div>
       <div className={styles.faqList}>{faq.items.map((item) => <details key={item.q} className={styles.faqItem}><summary>{item.q}<Plus size={18} /></summary><p>{item.a}</p></details>)}</div>
     </section>
-
-    {notes}
 
     <section className={styles.cta} aria-labelledby="cta-title">
       <div className={styles.ctaInner}>

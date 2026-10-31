@@ -157,7 +157,6 @@ const sections = [
         <li>Tap <strong>Save</strong>, then test it by messaging your business number from a phone that hasn’t messaged it in the last 14 days.</li>
       </ol>
       <p>“Everyone not in your address book” is a good default: new customers get the welcome, while friends and suppliers you’ve saved don’t.</p>
-      <p>It’s also the first reply a new customer gets after scanning a <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code</Link> on your menu, shop window, or packaging, so it’s worth getting right. You can make that code for free, with your logo.</p>
     </>,
   },
   {

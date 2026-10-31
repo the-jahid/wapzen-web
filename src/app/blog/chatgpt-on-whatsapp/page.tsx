@@ -100,7 +100,6 @@ const sections = [
       </ul>
       <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt, a model picker and an attached knowledge base" caption="Each agent has its own model: an OpenAI GPT or an Anthropic Claude. This demo agent uses Claude. Wapzen dashboard, demo data." />
       <p>Unlike a general chatbot, your agent answers from your <strong>knowledge base</strong>, your prices, delivery rules, and FAQ, so it says what’s true for your business instead of what’s true in general. The full setup is in <Link href="/blog/whatsapp-chatbot-without-business-api">this step-by-step guide</Link>.</p>
-      <p>Once it’s live, make the assistant easy to find: a <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code with your logo</Link> on your packaging or counter opens a chat with it in one scan.</p>
       <InlineCta title="Give your customers a GPT-powered assistant" body="Free right now, with the AI models included. Set it up on your existing WhatsApp number in about 15 minutes." />
       <Note>Wapzen is an independent product, not made by Meta, WhatsApp, or OpenAI. It links your number as a device, not through the Business API.</Note>
     </>,

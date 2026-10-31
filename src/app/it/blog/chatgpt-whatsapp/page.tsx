@@ -110,7 +110,6 @@ const sections = [
       <p>Se vuoi che un’AI come GPT risponda ai clienti sul <strong>tuo</strong> numero WhatsApp, ti serve un agente AI collegato al tuo account. Con Wapzen scegli il modello (GPT di OpenAI o Claude di Anthropic, entrambi inclusi), gli dai le informazioni della tua attività e colleghi il tuo WhatsApp con un codice QR.</p>
       <InlineCta title="Un’AI che risponde ai tuoi clienti" body="Crea un agente con GPT o Claude, insegnagli come funziona la tua attività e collegalo al tuo WhatsApp con un codice QR. Al momento è gratis." label="Inizia gratis" />
       <p>Funziona con WhatsApp Business o con il WhatsApp normale, senza l’API ufficiale. Trovi i passaggi nella guida al <Link href="/it/blog/chatbot-whatsapp-business">chatbot WhatsApp Business</Link>, e se vuoi che l’AI risponda anche alle chiamate c’è il <Link href="/it/centralino-ai">centralino AI</Link>.</p>
-      <p>Poi fatti trovare: un <Link href="/tools/whatsapp-qr-code-generator">codice QR per WhatsApp con il tuo logo</Link> in vetrina o sul biglietto da visita apre la chat con una scansione. Lo strumento è gratuito e in inglese.</p>
     </>,
   },
 ];

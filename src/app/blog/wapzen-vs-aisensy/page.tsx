@@ -114,7 +114,6 @@ const sections = [
       ]} />
       <p>The short version: <strong>AiSensy is a WhatsApp marketing platform with AI as an add-on; Wapzen is an AI agent for WhatsApp chats and calls.</strong> You can also use both: AiSensy for campaigns on an API number, and Wapzen to answer and call on the number customers already message.</p>
       <p>Comparing more options? Read <Link href="/blog/wati-vs-aisensy-vs-interakt">WATI vs AiSensy vs Interakt</Link> or <Link href="/blog/wapzen-vs-interakt">Wapzen vs Interakt</Link>.</p>
-      <p>Whichever you pick, make it easy for customers to message you first. A free <Link href="/tools/whatsapp-qr-code-generator">WhatsApp Business QR code</Link> on your shop window, packaging, or receipts opens a chat in one scan.</p>
       <Note>Wapzen links your number like WhatsApp Web, so it’s for answering people who contact you and calling people who expect your call. Bulk messages to people who didn’t opt in break WhatsApp’s terms on any account; use an official API platform for broadcasts.</Note>
     </>,
   },

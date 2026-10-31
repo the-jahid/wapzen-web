@@ -85,7 +85,6 @@ const sections = [
         <li><strong>Some business numbers can’t call out.</strong> Business-initiated calls work wherever the Cloud API works, except for business numbers from the <strong>United States, Canada, Egypt, Vietnam, and Nigeria</strong>. The customer’s number can be from any supported country.</li>
       </ul>
       <p>The rules exist to stop WhatsApp turning into a robocall channel, and they shape what the API is good for: answering customers who call you, and calling back people who asked for it.</p>
-      <p>That makes customer-started contact valuable. A <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code</Link> on your site, ads, or packaging lets people open a chat with you in one scan, and a call permission request can follow from there.</p>
     </>,
   },
   {
