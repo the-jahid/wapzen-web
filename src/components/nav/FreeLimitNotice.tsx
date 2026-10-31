@@ -11,7 +11,8 @@ import { LIMIT_WHATSAPP_URL, WhatsAppGlyph } from "./supportWhatsApp";
 
 // Shown on every dashboard page once the account has used its free replies.
 // The limit is checked again on each navigation, so the notice appears when it
-// is reached and goes away once a paid plan lifts it.
+// is reached and goes away once a paid plan lifts it. The chat agents page says
+// the same thing in a bigger card of its own, so it doesn't show this one too.
 export function FreeLimitNotice() {
   const { getToken, isSignedIn } = useAuth();
   const pathname = usePathname();
@@ -32,7 +33,7 @@ export function FreeLimitNotice() {
     };
   }, [getToken, isSignedIn, pathname]);
 
-  if (!reached || dismissed) return null;
+  if (!reached || dismissed || pathname === "/dashboard/chat") return null;
 
   return (
     <aside className={styles.notice} role="alert">

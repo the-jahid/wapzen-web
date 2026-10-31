@@ -518,6 +518,20 @@ const css = `
 .chat-runtime-alert-time { color: var(--subtle); font-weight: 600; }
 .chat-runtime-alert-copy { color: var(--text); font-size: 12.5px; line-height: 1.5; margin: 4px 0 0; overflow-wrap: anywhere; }
 .chat-limit-alert .chat-btn-whatsapp { margin-top: 10px; }
+.chat-card.chat-paid-plan { align-items: center; background: var(--app-amber-soft); border-color: var(--app-amber-border); border-radius: 20px; display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr) minmax(240px, auto); margin-bottom: 16px; padding: 36px; }
+.chat-paid-plan-title { color: var(--app-amber-text); font-size: 30px; font-weight: 850; letter-spacing: -.6px; line-height: 1.15; margin: 0; }
+.chat-paid-plan-copy { color: var(--text); font-size: 15.5px; line-height: 1.6; margin: 12px 0 0; max-width: 56ch; }
+.chat-paid-plan .chat-btn-whatsapp { font-size: 15px; margin-top: 22px; min-height: 48px; padding: 0 22px; }
+.chat-paid-plan-price { background: var(--surface); border: 1px solid var(--app-amber-border); border-radius: 16px; display: grid; gap: 4px; justify-items: center; padding: 28px 32px; text-align: center; }
+.chat-paid-plan-amount { color: var(--text); font-size: 56px; font-weight: 850; font-variant-numeric: tabular-nums; letter-spacing: -2px; line-height: 1; }
+.chat-paid-plan-period { color: var(--subtle); font-size: 14px; font-weight: 700; }
+.chat-paid-plan-feature { color: var(--text); font-size: 15px; font-weight: 800; margin-top: 10px; }
+@media (max-width: 760px) {
+  .chat-card.chat-paid-plan { gap: 20px; grid-template-columns: minmax(0, 1fr); padding: 22px; }
+  .chat-paid-plan-title { font-size: 24px; }
+  .chat-paid-plan-copy { font-size: 14.5px; }
+  .chat-paid-plan .chat-btn-whatsapp { justify-content: center; width: 100%; }
+}
 .chat-btn-sm { font-size: 12px; min-height: 32px; padding: 0 10px; }
 .chat-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
 .chat-section:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
@@ -1515,6 +1529,7 @@ export default function ChatAgentsPage() {
                 </div>
               </div>
               <div className="chat-panel-body">
+                {chatAgents.some((agent) => agent.reply_limit_reached) ? <PaidPlanCard /> : null}
                 <div className="chat-search">
                   <span className="chat-search-icon">
                     <Icon name="search" size={15} sw={2.2} />
@@ -1997,6 +2012,36 @@ function LimitReachedAlert({ children, title }: { children: ReactNode; title: st
           <WhatsAppGlyph size={15} />
           Message us on WhatsApp
         </a>
+      </div>
+    </div>
+  );
+}
+
+// The agent list's version of the message the owner gets on WhatsApp when the
+// account runs out of replies (LIMIT_REACHED_MESSAGE on the Node server).
+function PaidPlanCard() {
+  return (
+    <div className="chat-card chat-paid-plan" role="alert">
+      <div style={{ minWidth: 0 }}>
+        <h3 className="chat-paid-plan-title">You have reached your free limit</h3>
+        <p className="chat-paid-plan-copy">
+          Your AI agent has stopped replying. You need a paid plan to keep your agent replying. To
+          buy one, message us on WhatsApp.
+        </p>
+        <a
+          className="chat-btn chat-btn-whatsapp"
+          href={LIMIT_WHATSAPP_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <WhatsAppGlyph size={18} />
+          Message us on WhatsApp
+        </a>
+      </div>
+      <div className="chat-paid-plan-price">
+        <span className="chat-paid-plan-amount">$20</span>
+        <span className="chat-paid-plan-period">per month</span>
+        <span className="chat-paid-plan-feature">Unlimited messages</span>
       </div>
     </div>
   );
