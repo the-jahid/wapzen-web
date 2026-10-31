@@ -1327,11 +1327,20 @@ export default function ChatAgentsPage() {
   // Swaps the QR login for one linked by a typed pairing code. The server ends
   // the QR login, and the poll picks up the new one by its id. Throws for
   // WhatsAppLinkHelp to show the message.
+  //
+  // The old login is gone from the server before the new one comes back, and
+  // the poll can see that in between. Marked as starting, the 404 doesn't make
+  // the editor reissue a QR login that would land on top of this one.
   const startNumberCodeLogin = useCallback(
     async (phone: string) => {
       setNumberLoginError("");
-      const started = await apiStartPhoneNumberCodeLogin({ phone_number: phone }, getToken);
-      setNumberLogin(started);
+      setIsStartingLogin(true);
+      try {
+        const started = await apiStartPhoneNumberCodeLogin({ phone_number: phone }, getToken);
+        setNumberLogin(started);
+      } finally {
+        setIsStartingLogin(false);
+      }
     },
     [getToken]
   );

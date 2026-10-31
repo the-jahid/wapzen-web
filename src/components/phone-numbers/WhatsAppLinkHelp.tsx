@@ -1,5 +1,6 @@
 "use client";
 
+import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import type { ApiPhoneNumber } from "@/lib/phoneNumbers";
 
@@ -54,7 +55,11 @@ export function normalizePhone(value: string): { phone: string } | { error: stri
   if (!/^\d+$/.test(digits)) return { error: "Use digits only, starting with your country code." };
   if (digits.startsWith("0")) return { error: "Add your country code first, for example +880 or +1." };
   if (digits.length < 7 || digits.length > 15) return { error: "That number looks too short or too long." };
-  return { phone: `+${digits}` };
+  // A local 0 kept after the country code (+880 01639…) is a different number,
+  // and WhatsApp gives out a code for it that no phone can use. This only ever
+  // corrects: it calls some working numbers invalid, so those go through as typed.
+  const parsed = parsePhoneNumberFromString(`+${digits}`);
+  return { phone: parsed?.isValid() ? parsed.number : `+${digits}` };
 }
 
 function formatCountdown(ms: number) {
@@ -154,8 +159,9 @@ export function WhatsAppLinkHelp({
   if (pairingCode) {
     const remaining = codeDeadlineKnown ? codeLeft : null;
     const expired = remaining !== null && remaining <= 0;
-    const canRenew = !disabled && !isRequesting && Boolean(login?.phone_number);
-    const renew = () => login?.phone_number && void requestCode(login.phone_number);
+    const number = login?.phone_number || phone;
+    const canRenew = !disabled && !isRequesting && Boolean(number);
+    const renew = () => void requestCode(number);
     return (
       <div className="wa-link">
         {remaining === null ? (
@@ -183,7 +189,7 @@ export function WhatsAppLinkHelp({
         ) : null}
         <ol className="wa-link-steps">
           <li>
-            Open <b>WhatsApp</b> on the phone with {login?.phone_number || "this number"}. If you see the
+            Open <b>WhatsApp</b> on the phone with {number || "this number"}. If you see the
             notification <b>&ldquo;Enter code to link new device&rdquo;</b>, tap it and skip to step 4.
           </li>
           <li>
@@ -197,7 +203,8 @@ export function WhatsAppLinkHelp({
           <li>Type the 8 characters above. The number connects by itself — keep this page open.</li>
         </ol>
         <p className="wa-link-note">
-          Nothing on your phone? Check that {login?.phone_number || "the number"} is the WhatsApp number on it.
+          Nothing on your phone, or it says the code is wrong? This code only works for{" "}
+          {number || "the number you entered"}, so check that is the WhatsApp number on the phone.
         </p>
         {expired ? null : (
           <button className="wa-link-text-btn" disabled={!canRenew} onClick={renew} type="button">
