@@ -409,3 +409,23 @@ Goal: make `/tools/whatsapp-qr-code-generator` the best page on the topic. Searc
 5. After 4–6 weeks, compare non-branded queries in Search Console against the table above, and re-run the script to spot new phrasing.
 
 Google references: [title links](https://developers.google.com/search/docs/appearance/title-link), [supported meta tags](https://developers.google.com/search/docs/crawling-indexing/special-tags), [sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap), [organization data](https://developers.google.com/search/docs/appearance/structured-data/organization).
+
+## Voice agent posts (2026-11-01)
+
+The user asked for 5 SEO posts to find voice-agent customers in Brazil, Mexico, Germany, the UAE and India, targeting ChatGPT most, all about a free WhatsApp voice agent. Harvest: `node docs/seo-blog-voice-research.mjs br|mx|de|ae|in` (Google + YouTube + DuckDuckGo autocomplete, rank-weighted). The ae/in runs were stopped by the user, so those two posts use the English free-calling phrases from the September research ("free ai phone agent" 277, "free ai calling agent" 261) plus the "ai telecaller" angle from the brief.
+
+| Market | Top phrases (score, sources/3) | Post |
+|---|---|---|
+| BR | agente de voz ia (40, 3), ia que faz ligação (40, 2), ligação com ia (30, 3), ura com ia (30, 3), quanto custa um agente de ia (30, 3), secretaria virtual ia (28, 3), agente de voz ia gratis (21, 1), robo de cobrança (20, 2) | /pt-br/blog/agente-de-voz-ia-whatsapp-gratis |
+| MX | agente de voz ia (40, 3), call center con ia (39, 3), agente de ia gratis (37, 3), llamadas con ia (30, 3), bot de llamadas (30, 3), ia para prospectar clientes (30, 3), desactivar llamadas whatsapp business (28, 3), agente de voz ia gratis (26, 1) | /es-mx/blog/agente-de-voz-ia-whatsapp-gratis |
+| DE | ki telefonassistent kostenlos (81, 3), ki telefonassistent arztpraxis (38, 2), ki telefonassistent (30, 3), ki anrufe (30, 3), ki rezeptionist (30, 3), whatsapp ki agent (30, 3), ki telefonassistent handwerk (28, 3), ki telefonassistent kosten (27, 2), ki telefonassistent dsgvo (25, 2) | /de/blog/ki-telefonassistent-whatsapp-kostenlos |
+| AE | not harvested | /blog/ai-voice-agent-whatsapp-uae |
+| IN | not harvested | /blog/ai-voice-agent-whatsapp-india |
+
+Facts that decided the shape:
+- **Voice is in early access** (dashboard VoiceUpdateNote): every post's CTA opens WhatsApp with a prefilled, per-market early-access message instead of sign-up (`BlogPost` `action`, `InlineCta` `href`).
+- **UAE:** WhatsApp voice/video calls are still restricted on UAE networks (Khaleej Times, May 2026; TDRA approval pending). The user chose to keep the UAE, scoped to callers abroad, saying plainly that local calls are blocked, that a UAE number is untested, and that licensing is for the business's adviser.
+- **Germany:** "KI Telefonassistent" searchers usually want their landline answered; the post opens by saying Wapzen answers WhatsApp calls only. § 7 Abs. 2 Nr. 2 UWG (automatic calling machine) may need express consent even B2B for AI calls. Prices: IONOS 39/69/99 € incl. VAT (30/100/all calls), fonio Solo 99 € / Team 299 € / Scale 539 € net on annual billing.
+- **India:** /ai-calling-agent-india already ranks for "ai calling agent india", so the post takes the telecalling-team angle. Bolna lists ₹5.52/min pay-as-you-go (6¢), ~₹4.15 with larger top-ups. TRAI 140 (promo) / 1600 (service) series since Feb 2025. DPDP Rules: consent managers Nov 2026, most obligations 13 May 2027.
+- **Brazil:** Panorama Mobile Time/Opinion Box Jan 2025 (n=2,099): 77% of WhatsApp users make more voice calls on the app than with carrier minutes; 60% call daily or almost.
+- **Mexico:** Asociación de Internet MX 2024 study: 101.9 million internet users, 88% send messages via messaging apps. Senate passed a phone-harassment reform on 8 Oct 2026, pending the Chamber of Deputies: recheck.

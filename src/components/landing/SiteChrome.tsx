@@ -25,6 +25,11 @@ export function GetStarted({ label = "Create your agent", dark = false }: { labe
   </>;
 }
 
+/** Styled like GetStarted, but opens a chat with us on WhatsApp (e.g. voice early access). */
+export function WhatsAppButton({ href, label }: { href: string; label: string }) {
+  return <a href={href} target="_blank" rel="noopener noreferrer" className={`${styles.button} ${styles.greenButton}`}>{label}<ArrowUpRight size={17} /></a>;
+}
+
 export function SiteHeader({ links, brandHref, locale = "en" }: { links: Array<{ href: string; label: string }>; brandHref?: string; locale?: Locale }) {
   const { ui } = locales[locale];
   return <ResizableNavbar brand={<Brand href={brandHref} />} links={links} actions={<><ThemeToggleButton /><Show when="signed-out"><SignInButton mode="modal" forceRedirectUrl="/dashboard" signUpForceRedirectUrl="/dashboard"><button className={styles.login} type="button">{ui.login}<ArrowUpRight size={14} /></button></SignInButton></Show><Show when="signed-in"><a href="/dashboard" className={styles.login}>{ui.dashboard}</a><UserButton /></Show></>} />;

@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/site";
 import { blogPost, blogUi, formatPostDate, postsIn, type BlogPostEntry } from "@/lib/blogPosts";
 import { locales, type Locale } from "@/lib/locales";
 import { marketingPages } from "@/lib/marketingPages";
-import { GetStarted } from "@/components/landing/SiteChrome";
+import { GetStarted, WhatsAppButton } from "@/components/landing/SiteChrome";
 import { Section } from "@/components/marketing/MarketingPage";
 import { TracingBeam } from "@/components/ui/tracing-beam";
 import tools from "@/components/free-tools/FreeTools.module.css";
@@ -37,6 +37,8 @@ type BlogPostProps = {
   /** A marketing page shown beside the other posts in "keep reading". */
   product: string;
   cta: { heading: ReactNode; body: string };
+  /** Replaces the sign-up button in the closing CTA, e.g. a WhatsApp chat for voice early access. */
+  action?: { href: string; label: string };
 };
 
 export function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
@@ -108,7 +110,7 @@ export function PostMeta({ post }: { post: BlogPostEntry }) {
   </p>;
 }
 
-export function BlogPost({ href, heading, lead, summary, sections, faq, sources = [], related, product, cta }: BlogPostProps) {
+export function BlogPost({ href, heading, lead, summary, sections, faq, sources = [], related, product, cta, action }: BlogPostProps) {
   const post = blogPost(href);
   const locale = post.locale ?? "en";
   const { ui } = locales[locale];
@@ -166,7 +168,7 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
     <section className={tools.cta} aria-labelledby="cta-title">
       <div className={tools.ctaInner}>
         <div><h2 id="cta-title">{cta.heading}</h2><p>{cta.body}</p></div>
-        <div><GetStarted label={ui.startFree} /></div>
+        <div>{action ? <WhatsAppButton href={action.href} label={action.label} /> : <GetStarted label={ui.startFree} />}</div>
       </div>
     </section>
   </>;
@@ -235,10 +237,10 @@ export function Screenshot({ src, width, height, alt, caption }: { src: string; 
 }
 
 /** A sign-up prompt inside a section, placed where the post has just made the case. */
-export function InlineCta({ title, body, label = "Start free" }: { title: string; body: string; label?: string }) {
+export function InlineCta({ title, body, label = "Start free", href }: { title: string; body: string; label?: string; /** Opens this WhatsApp chat instead of sign-up. */ href?: string }) {
   return <aside className={styles.inlineCta} aria-label={title}>
     <div><p className={styles.inlineCtaTitle}>{title}</p><p>{body}</p></div>
-    <div><GetStarted label={label} /></div>
+    <div>{href ? <WhatsAppButton href={href} label={label} /> : <GetStarted label={label} />}</div>
   </aside>;
 }
 
