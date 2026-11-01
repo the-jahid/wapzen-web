@@ -8,6 +8,11 @@ export const LIMIT_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIC
   "Hi, I've reached my free limit on Wapzen and would like to buy a paid plan.",
 )}`;
 
+/** Opens a WhatsApp chat with support to ask for early access to voice agents. */
+export const VOICE_EARLY_ACCESS_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
+  "Hi, I'd like early access to Wapzen voice agents.",
+)}`;
+
 export function WhatsAppGlyph({ size }: { size: number }) {
   return (
     <svg aria-hidden="true" fill="currentColor" height={size} viewBox="0 0 24 24" width={size}>

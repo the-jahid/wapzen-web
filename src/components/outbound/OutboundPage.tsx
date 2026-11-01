@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
 import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
@@ -109,7 +110,7 @@ export default function OutboundPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<OutboundCampaign | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
-  const [loadError, setLoadError] = useState("");
+  const [, setLoadError] = useState("");
   const [detailState, setDetailState] = useState<LoadState>("loading");
   const [detailError, setDetailError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -214,7 +215,6 @@ export default function OutboundPage() {
   // Campaigns cached from an earlier visit stay on screen while they refetch.
   const pendingLoadState: LoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadState: LoadState = pendingLoadState === "loading" && hasCachedCampaigns ? "ready" : pendingLoadState;
-  const effectiveLoadError = authError ?? loadError;
   const updateSelectedLeadCount = useCallback((count: number) => {
     if (!selectedCampaignId) return;
     setCampaigns((current) => current.map((campaign) => campaign.campaign_id === selectedCampaignId ? { ...campaign, leads_count: count } : campaign));
@@ -274,9 +274,8 @@ export default function OutboundPage() {
             {effectiveLoadState === "loading" ? (
               <div className="ob-list-message"><p>Loading campaigns…</p></div>
             ) : effectiveLoadState === "error" ? (
-              <div className="ob-list-message error">
-                <p>{effectiveLoadError}</p>
-                {authError ? null : <button className="ob-secondary-btn" onClick={() => setReloadKey((key) => key + 1)} type="button"><Icon name="refresh" size={15} />Try again</button>}
+              <div className="ob-list-message">
+                <VoiceUpdateNote />
               </div>
             ) : campaigns.length === 0 ? (
               <div className="ob-list-message">

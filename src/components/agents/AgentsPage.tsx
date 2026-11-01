@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
 import Image from "next/image";
 import Link from "next/link";
 import { createPortal } from "react-dom";
@@ -3751,8 +3752,8 @@ export default function AgentsPage() {
   const [agents, setAgents, hasCachedAgents] = useCachedState<Agent[]>("agents-page:agents", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
-  const [loadError, setLoadError] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
+  const [, setLoadError] = useState("");
+  const [reloadKey] = useState(0);
   const [phoneNumbers, setPhoneNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
   const [query, setQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -3845,7 +3846,6 @@ export default function AgentsPage() {
   // Agents cached from an earlier visit stay on screen while they refetch.
   const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadState = pendingLoadState === "loading" && hasCachedAgents ? "ready" : pendingLoadState;
-  const effectiveLoadError = authError ?? loadError;
 
   useEffect(() => {
     if (!notice) return;
@@ -4283,22 +4283,7 @@ export default function AgentsPage() {
             <div className="workspace-message">Loading agents…</div>
           ) : effectiveLoadState === "error" ? (
             <div className="workspace-message">
-              <p>{effectiveLoadError}</p>
-              <div className="agent-key-actions">
-                <button
-                  className="agents-btn agents-btn-secondary"
-                  onClick={() => {
-                    setLoadState("loading");
-                    setReloadKey((key) => key + 1);
-                  }}
-                  type="button"
-                >
-                  Try again
-                </button>
-                <Link className="agents-btn agents-btn-secondary" href="/dashboard/api-keys">
-                  Manage API keys
-                </Link>
-              </div>
+              <VoiceUpdateNote />
             </div>
           ) : agents.length === 0 ? (
             <div className="workspace-message">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
 import Link from "next/link";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
@@ -692,7 +693,7 @@ export default function DemoCallPage() {
   const [agents, setAgents, hasCachedAgents] = useCachedState<ApiAgentResource[]>("voice-agents", []);
   const [phoneNumbers, setPhoneNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
-  const [loadError, setLoadError] = useState("");
+  const [, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
   const [selectedAgentId, setSelectedAgentId] = useState("");
@@ -724,7 +725,6 @@ export default function DemoCallPage() {
   // Agents cached from an earlier visit stay on screen while they refetch.
   const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadState = pendingLoadState === "loading" && hasCachedAgents ? "ready" : pendingLoadState;
-  const effectiveLoadError = authError ?? loadError;
 
   useEffect(() => {
     if (!isUserLoaded || !isAuthLoaded) return;
@@ -932,7 +932,7 @@ export default function DemoCallPage() {
                 </div>
 
                 {effectiveLoadState === "error" ? (
-                  <div className="demo-inline-error">{effectiveLoadError}</div>
+                  <VoiceUpdateNote />
                 ) : null}
 
                 <div className="demo-field">

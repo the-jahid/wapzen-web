@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
+import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
 import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
@@ -653,7 +653,7 @@ export default function ApiKeysPage() {
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
   const [apiKeys, setApiKeys, hasCachedKeys] = useCachedState<ApiKey[]>("api-keys-page:keys", []);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
-  const [loadError, setLoadError] = useState("");
+  const [, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [name, setName] = useState("");
   const [createdKey, setCreatedKey] = useState<CreatedApiKey | null>(null);
@@ -719,7 +719,6 @@ export default function ApiKeysPage() {
         : null;
   // Keys cached from an earlier visit stay on screen while they refetch.
   const effectiveLoadState = authError ? "error" : loadState === "loading" && hasCachedKeys ? "ready" : loadState;
-  const effectiveLoadError = authError ?? loadError;
 
   const selectedKey = selectedId
     ? apiKeys.find((key) => key.id === selectedId) ?? null
@@ -913,14 +912,7 @@ export default function ApiKeysPage() {
             <div className="api-message">Loading API keys...</div>
           ) : effectiveLoadState === "error" ? (
             <div className="api-message">
-              <p>{effectiveLoadError}</p>
-              {isAuthenticated ? (
-                <button className="api-btn api-btn-secondary" onClick={() => setReloadKey((key) => key + 1)} type="button">
-                  Try again
-                </button>
-              ) : (
-                <Link className="api-btn api-btn-secondary" href="/">Go to sign in</Link>
-              )}
+              <VoiceUpdateNote />
             </div>
           ) : filteredKeys.length === 0 ? (
             <div className="api-message">

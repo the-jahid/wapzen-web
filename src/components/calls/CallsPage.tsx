@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
 import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
@@ -812,7 +813,7 @@ export default function CallsPage() {
   const [calls, setCalls, hasCachedCalls] = useCachedState<ApiCall[]>("calls-page:calls", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
-  const [loadError, setLoadError] = useState("");
+  const [, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -837,7 +838,6 @@ export default function CallsPage() {
   // Calls cached from an earlier visit stay on screen while they refetch.
   const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadState = pendingLoadState === "loading" && hasCachedCalls ? "ready" : pendingLoadState;
-  const effectiveLoadError = authError ?? loadError;
 
   const filteredCalls = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -1011,7 +1011,6 @@ export default function CallsPage() {
           <CallList
             calls={calls}
             deletingId={deletingId}
-            effectiveLoadError={effectiveLoadError}
             effectiveLoadState={effectiveLoadState}
             filteredCalls={filteredCalls}
             isAuthenticated={isAuthenticated}
@@ -1066,7 +1065,6 @@ export default function CallsPage() {
 function CallList({
   calls,
   deletingId,
-  effectiveLoadError,
   effectiveLoadState,
   filteredCalls,
   isAuthenticated,
@@ -1080,7 +1078,6 @@ function CallList({
 }: {
   calls: ApiCall[];
   deletingId: string | null;
-  effectiveLoadError: string;
   effectiveLoadState: "loading" | "ready" | "error";
   filteredCalls: ApiCall[];
   isAuthenticated: boolean;
@@ -1147,13 +1144,7 @@ function CallList({
         <div className="calls-list-message">Loading calls...</div>
       ) : effectiveLoadState === "error" ? (
         <div className="calls-list-message">
-          <p>{effectiveLoadError}</p>
-          {isAuthenticated ? (
-            <button className="calls-ghost-btn" onClick={onRefresh} type="button">
-              <Icon name="refresh" size={15} sw={2.2} />
-              Try again
-            </button>
-          ) : null}
+          <VoiceUpdateNote />
         </div>
       ) : filteredCalls.length === 0 ? (
         <div className="calls-list-message">
