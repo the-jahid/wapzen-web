@@ -2181,7 +2181,6 @@ function Editor({
         <>
           {agent.agent.phone_number_id ? null : (
             <PhoneNumberSetupCard
-              agentName={agent.agent.name}
               error={loginError}
               isStarting={isStartingLogin}
               isRefreshingNumbers={isRefreshingNumbers}
@@ -2247,7 +2246,6 @@ function PromptCounter({ value }: { value: string }) {
 // offered side by side — link a brand-new WhatsApp number by scanning a QR code,
 // or claim one of the numbers already connected to the account.
 function PhoneNumberSetupCard({
-  agentName,
   error,
   isRefreshingNumbers,
   isStarting,
@@ -2259,7 +2257,6 @@ function PhoneNumberSetupCard({
   onRequestQr,
   onStartLogin,
 }: {
-  agentName: string;
   error: string;
   isRefreshingNumbers: boolean;
   isStarting: boolean;
@@ -2289,12 +2286,6 @@ function PhoneNumberSetupCard({
         <h3 className="chat-card-title">Connect a phone number</h3>
         <span className="chat-number-flag">Required to reply</span>
       </div>
-      <p className="chat-number-copy">
-        &ldquo;{agentName}&rdquo; has no WhatsApp number, so no message reaches it.{" "}
-        {numbers.length > 0
-          ? "Link a new one with a QR code or a pairing code, or pick a number you have already connected."
-          : "Link one with a QR code or a pairing code — either way works."}
-      </p>
 
       <div className={`chat-number-grid${numbers.length > 0 ? "" : " is-single"}`}>
         <section className="chat-number-pane" aria-label="Link a new WhatsApp number">

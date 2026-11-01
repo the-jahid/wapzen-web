@@ -190,6 +190,24 @@ export function WhatsAppLinkHelp({
     const renew = () => void requestCode(number);
     return (
       <div className="wa-link">
+        <div className="wa-link-btn-pair">
+          <button
+            className={`wa-link-btn wa-link-btn-wide${expired ? "" : " wa-link-btn-quiet"}`}
+            disabled={!canRenew}
+            onClick={renew}
+            type="button"
+          >
+            {isRequesting ? "Sending a new code…" : "Send a new code"}
+          </button>
+          <button
+            className="wa-link-btn wa-link-btn-wide wa-link-btn-quiet"
+            disabled={!canSwitch}
+            onClick={() => void requestQr()}
+            type="button"
+          >
+            {isRequestingQr ? "Getting a QR code…" : "Scan a QR code instead"}
+          </button>
+        </div>
         {remaining === null ? (
           <div className="wa-link-timer" role="timer">
             <span>The code works for about 2 minutes — enter it right away.</span>
@@ -208,42 +226,32 @@ export function WhatsAppLinkHelp({
         >
           {pairingCode}
         </div>
-        <button
-          className={`wa-link-btn wa-link-btn-wide${expired ? "" : " wa-link-btn-quiet"}`}
-          disabled={!canRenew}
-          onClick={renew}
-          type="button"
-        >
-          {isRequesting ? "Sending a new code…" : "Send a new code"}
-        </button>
-        <button
-          className="wa-link-btn wa-link-btn-wide wa-link-btn-quiet"
-          disabled={!canSwitch}
-          onClick={() => void requestQr()}
-          type="button"
-        >
-          {isRequestingQr ? "Getting a QR code…" : "Scan a QR code instead"}
-        </button>
         {resent ? (
           <div className="wa-link-sent" role="status">
             New code sent. Type this one — the last code no longer works.
           </div>
         ) : null}
         {error ? <div className="wa-link-error">{error}</div> : null}
-        <ol className="wa-link-steps">
+        <div className="wa-link-steps-title">Do this on your phone</div>
+        <ol className="wa-link-steps wa-link-steps-big">
           <li>
-            Open <b>WhatsApp</b> on the phone with {number || "this number"}. If you see the
-            notification <b>&ldquo;Enter code to link new device&rdquo;</b>, tap it and skip to step 4.
+            Open <b>WhatsApp</b> on the phone with <b>{number || "this number"}</b>.
+            <span className="wa-link-step-hint">
+              See the notification <b>&ldquo;Enter code to link new device&rdquo;</b>? Tap it and skip to step 4.
+            </span>
           </li>
           <li>
             Tap <b>⋮ Menu</b> (Android) or <b>Settings</b> (iPhone) › <b>Linked devices</b> ›{" "}
             <b>Link a device</b>.
           </li>
           <li>
-            The camera opens. Don&rsquo;t scan — tap <b>Link with phone number instead</b> at the bottom of
-            the screen.
+            Tap <b>Link with phone number instead</b>.
+            <span className="wa-link-step-hint">It&rsquo;s at the bottom of the camera screen — don&rsquo;t scan.</span>
           </li>
-          <li>Type the 8 characters above. The number connects by itself — keep this page open.</li>
+          <li>
+            Type the code <b className="wa-link-step-code">{pairingCode}</b>.
+            <span className="wa-link-step-hint">The number connects by itself — keep this page open.</span>
+          </li>
         </ol>
         <p className="wa-link-note">
           Nothing on your phone, or it says the code is wrong? This code only works for{" "}
@@ -275,14 +283,6 @@ export function WhatsAppLinkHelp({
                 </span>
               </div>
             ) : null}
-            <ol className="wa-link-steps">
-              <li>Open WhatsApp on your phone.</li>
-              <li>
-                Tap <b>Settings</b> (iPhone) or <b>⋮ Menu</b> (Android) › <b>Linked devices</b> ›{" "}
-                <b>Link a device</b>.
-              </li>
-              <li>Point the phone&rsquo;s camera at this QR code.</li>
-            </ol>
           </section>
         ) : null}
 
@@ -324,6 +324,24 @@ export function WhatsAppLinkHelp({
             </div>
             {error ? <div className="wa-link-error">{error}</div> : null}
           </form>
+          {/* The QR's steps fill the space this short form leaves beside the tall QR. */}
+          {qr ? (
+            <>
+              <div className="wa-link-steps-title">How to scan the QR code</div>
+              <ol className="wa-link-steps wa-link-steps-big">
+                <li>
+                  Open <b>WhatsApp</b> on your phone.
+                </li>
+                <li>
+                  Tap <b>Settings</b> (iPhone) or <b>⋮ Menu</b> (Android) › <b>Linked devices</b> ›{" "}
+                  <b>Link a device</b>.
+                </li>
+                <li>
+                  Point the phone&rsquo;s camera at the <b>QR code</b>.
+                </li>
+              </ol>
+            </>
+          ) : null}
         </section>
       </div>
 
@@ -382,6 +400,43 @@ const css = `
   padding-left: 18px;
 }
 .wa-link-steps b, .wa-link-note b { color: var(--app-text); font-weight: 700; }
+.wa-link-btn-pair { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+@media (max-width: 380px) { .wa-link-btn-pair { grid-template-columns: 1fr; } }
+.wa-link-steps-title { color: var(--app-text); font-size: 13px; font-weight: 800; margin-top: 4px; }
+.wa-link-steps-big {
+  color: var(--app-text-soft);
+  counter-reset: wa-step;
+  font-size: 14px;
+  gap: 8px;
+  list-style: none;
+  padding-left: 0;
+}
+.wa-link-steps-big > li {
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  counter-increment: wa-step;
+  padding: 10px 12px 10px 46px;
+  position: relative;
+}
+.wa-link-steps-big > li::before {
+  align-items: center;
+  background: var(--app-primary);
+  border-radius: 999px;
+  color: var(--app-on-accent);
+  content: counter(wa-step);
+  display: flex;
+  font-size: 13px;
+  font-weight: 800;
+  height: 24px;
+  justify-content: center;
+  left: 12px;
+  position: absolute;
+  top: 9px;
+  width: 24px;
+}
+.wa-link-steps-big b { font-weight: 800; }
+.wa-link-step-hint { color: var(--app-muted); display: block; font-size: 12.5px; margin-top: 2px; }
+.wa-link-step-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; white-space: nowrap; }
 .wa-link-note { color: var(--app-muted); font-size: 12.5px; line-height: 1.45; margin: 0; }
 .wa-link-trouble { color: var(--app-muted); font-size: 12.5px; line-height: 1.45; }
 .wa-link-trouble summary { color: var(--app-text-soft); cursor: pointer; font-weight: 700; }
