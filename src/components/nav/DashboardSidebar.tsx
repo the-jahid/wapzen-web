@@ -15,6 +15,7 @@ import {
   MessagesSquare,
   Phone,
   PlayCircle,
+  Send,
   Settings,
   Target,
   Wrench,
@@ -48,6 +49,7 @@ const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
   message: MessagesSquare,
   calendar: CalendarDays,
   chart: BarChart3,
+  send: Send,
   settings: Settings,
 };
 
