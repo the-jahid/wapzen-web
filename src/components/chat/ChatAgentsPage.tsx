@@ -2063,8 +2063,8 @@ function LimitReachedAlert({ children, title }: { children: ReactNode; title: st
   );
 }
 
-// The agent list's version of the message the owner gets on WhatsApp when the
-// account runs out of replies (LIMIT_REACHED_MESSAGE on the Node server).
+// The only notice the owner gets when the account runs out of replies: the
+// Node server stops the agents but sends no WhatsApp message about it.
 function PaidPlanCard() {
   return (
     <div className="chat-card chat-paid-plan" role="alert">
@@ -2602,6 +2602,11 @@ function ConfigPanel({
                         onPatch((current) => ({
                           ...current,
                           tools: { tool_ids: toggleId(current.tools?.tool_ids ?? [], tool.id) },
+                          // Attaching Take Order switches ordering on (the
+                          // server does the same); the toggle below can turn it off.
+                          ...(tool.type === "order" && !on
+                            ? { order: { ...current.order, order_enabled: true } }
+                            : {}),
                         }))
                       }
                       type="button"
