@@ -43,10 +43,47 @@ async function resolveAuthToken(
     }
 
     const token = await authTokenGetter(skipCache ? { skipCache: true } : undefined);
-    if (token) return token;
+    if (!token) continue;
+    if (skipCache) {
+      noteClockSkew(token);
+      return token;
+    }
+    if (!expiredByServerClock(token)) return token;
+    const freshToken = await authTokenGetter({ skipCache: true });
+    if (freshToken) noteClockSkew(freshToken);
+    return freshToken ?? token;
   }
 
   return null;
+}
+
+// Clerk judges a cached token fresh by this computer's clock, so a clock that
+// runs slow keeps sending tokens the server already sees as expired (one
+// dashboard user's ran over a minute behind). A token minted on request was
+// issued "now" by Clerk's clock, which tells us how far behind this one is.
+let clockBehindSeconds = 0;
+
+function noteClockSkew(freshToken: string) {
+  const iat = tokenClaim(freshToken, "iat");
+  if (iat === null) return;
+  clockBehindSeconds = Math.max(0, iat - Date.now() / 1000);
+}
+
+// Only once a slow clock has been seen; otherwise Clerk's own check is right.
+function expiredByServerClock(token: string): boolean {
+  if (clockBehindSeconds < 5) return false;
+  const exp = tokenClaim(token, "exp");
+  return exp !== null && exp - (Date.now() / 1000 + clockBehindSeconds) <= 5;
+}
+
+function tokenClaim(token: string, claim: "iat" | "exp"): number | null {
+  try {
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const value = JSON.parse(atob(payload))[claim];
+    return typeof value === "number" ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function serverFetch(
