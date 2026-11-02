@@ -30,6 +30,18 @@ export type ToolHeader = {
   value: string;
 };
 
+// How a POST, PUT or PATCH body is encoded: JSON, or an HTML-style form.
+export type ToolBodyType = "json" | "form";
+
+// A value the owner fixes on every request, beside what the model fills in.
+// It goes where the parameters go: the body on POST, PUT and PATCH, the query
+// string on GET and DELETE. The value is text; type says how it is sent.
+export type ToolBodyField = {
+  key: string;
+  value: string;
+  type: ToolParamType;
+};
+
 export type ToolApiRequestConfig = {
   method: HttpMethod;
   url: string;
@@ -39,6 +51,9 @@ export type ToolApiRequestConfig = {
   async: boolean;
   headers: ToolHeader[];
   parameters: ToolParameter[];
+  // Absent from servers that predate them.
+  body_type?: ToolBodyType;
+  body_fields?: ToolBodyField[];
 };
 
 // WhatsApp calling cannot bridge a second leg onto a live call, so a transfer

@@ -29,6 +29,7 @@ import {
   type ApiTool,
   type CreateToolPayload,
   type OrderField,
+  type ToolBodyType,
   type ToolTestResult,
   type UpdateToolPayload,
 } from "@/lib/tools";
@@ -90,6 +91,7 @@ type ParamRow = {
   description: string;
   required: boolean;
 };
+type BodyFieldRow = { id: string; key: string; value: string; type: ParamType };
 
 // Tool is one stored tool flattened for editing: every variant's fields on one
 // object, so a form field does not have to reach through an optional block. Only
@@ -111,6 +113,8 @@ type Tool = {
   async: boolean;
   headers: HeaderRow[];
   parameters: ParamRow[];
+  bodyType: ToolBodyType;
+  bodyFields: BodyFieldRow[];
   // Transfer Call
   destination: string;
   transferMessage: string;
@@ -187,6 +191,52 @@ function typeBlurb(type: ToolType, mode: WorkspaceMode) {
 const httpMethods: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 const paramTypes: ParamType[] = ["string", "number", "boolean"];
 
+// GET and DELETE carry no body: their parameters and fixed fields go in the
+// query string instead, which is what the server's request builder does.
+function sendsBody(method: HttpMethod) {
+  return method !== "GET" && method !== "DELETE";
+}
+
+// fixedPreviewValue is a fixed field as the server sends it: a number as a
+// number and a boolean as one, so the preview matches the real request.
+function fixedPreviewValue(field: BodyFieldRow): unknown {
+  const trimmed = field.value.trim();
+  if (field.type === "number") {
+    const parsed = Number(trimmed);
+    return trimmed !== "" && Number.isFinite(parsed) ? parsed : field.value;
+  }
+  if (field.type === "boolean") return trimmed === "true";
+  return field.value;
+}
+
+// requestPreview shows the shape of what goes out, with each parameter as a
+// placeholder for what the model fills in. It mirrors buildRequest in the
+// server's tools/runner.ts.
+function requestPreview(tool: Tool): string {
+  const entries: [string, unknown][] = [];
+  for (const param of tool.parameters) {
+    const name = param.name.trim();
+    if (name) entries.push([name, `<${name}>`]);
+  }
+  for (const field of tool.bodyFields) {
+    const key = field.key.trim();
+    if (key) entries.push([key, fixedPreviewValue(field)]);
+  }
+  const pairs = entries
+    .map(([key, value]) => `${key}=${typeof value === "string" ? value : JSON.stringify(value)}`)
+    .join("&");
+
+  if (!sendsBody(tool.method)) {
+    const base = tool.url.trim() || "https://api.example.com/endpoint";
+    if (!pairs) return `${tool.method} ${base}`;
+    return `${tool.method} ${base}${base.includes("?") ? "&" : "?"}${pairs}`;
+  }
+  if (tool.bodyType === "form") {
+    return `Content-Type: application/x-www-form-urlencoded\n\n${pairs || "(empty)"}`;
+  }
+  return `Content-Type: application/json\n\n${JSON.stringify(Object.fromEntries(entries), null, 2)}`;
+}
+
 const nameLimit = toolBounds.nameLength;
 
 function toolMeta(type: ToolType) {
@@ -235,6 +285,8 @@ function emptyTool(id: string, type: ToolType, name: string, description: string
     async: defaults.async,
     headers: [],
     parameters: [],
+    bodyType: "json",
+    bodyFields: [],
     destination: "",
     transferMessage: "Connecting you to a teammate now, one moment.",
     textBody: "",
@@ -275,6 +327,13 @@ function fromApi(tool: ApiTool): Tool {
       description: param.description,
       required: param.required,
     }));
+    base.bodyType = tool.api_request.body_type === "form" ? "form" : "json";
+    base.bodyFields = (tool.api_request.body_fields ?? []).map((field) => ({
+      id: rowId("b"),
+      key: field.key,
+      value: field.value,
+      type: field.type,
+    }));
   }
   if (tool.transfer_call) {
     base.destination = tool.transfer_call.destination;
@@ -312,6 +371,12 @@ function toConfig(tool: Tool): Pick<
             type: param.type,
             description: param.description.trim(),
             required: param.required,
+          })),
+          body_type: tool.bodyType,
+          body_fields: tool.bodyFields.map((field) => ({
+            key: field.key.trim(),
+            value: field.value,
+            type: field.type,
           })),
         },
       };
@@ -967,6 +1032,8 @@ const css = `
 .tools-grid-2 { display: grid; gap: 14px; grid-template-columns: 140px minmax(0, 1fr); }
 .tools-kv-row { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) 36px; }
 .tools-param-row { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1.5fr) auto 36px; }
+.tools-body-row { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) 110px minmax(0, 1.4fr) 36px; }
+.tools-body-format { max-width: 280px; }
 .tools-rows { display: grid; gap: 10px; }
 .tools-row-head { color: var(--faint); font-size: 10.5px; font-weight: 850; letter-spacing: .8px; text-transform: uppercase; }
 .tools-icon-button {
@@ -1085,6 +1152,7 @@ const css = `
   width: 100%;
 }
 .tools-modal-sm { max-width: 420px; }
+.tools-modal-lg { max-width: 760px; }
 .tools-modal-title { font-size: 17px; font-weight: 850; letter-spacing: -.2px; margin: 0; }
 .tools-modal-copy { color: var(--muted); font-size: 13px; line-height: 1.55; margin: 8px 0 0; }
 .tools-modal-copy strong { color: var(--text); font-weight: 800; }
@@ -1179,7 +1247,7 @@ const css = `
   .tools-grid { grid-template-columns: 1fr; }
   .tools-card-item { min-height: 0; }
   .tools-card-item:hover { transform: none; }
-  .tools-grid-2, .tools-kv-row, .tools-param-row, .tools-type-grid, .tools-function-param { grid-template-columns: minmax(0, 1fr); }
+  .tools-grid-2, .tools-kv-row, .tools-param-row, .tools-body-row, .tools-type-grid, .tools-function-param { grid-template-columns: minmax(0, 1fr); }
   .tools-detail-head { grid-template-columns: minmax(0, 1fr); }
   .tools-row { gap: 8px 10px; grid-template-areas: "avatar identity type" "avatar summary summary"; grid-template-columns: 36px minmax(0, 1fr) auto; padding: 12px; }
   .tools-row-chevron { display: none; }
@@ -1187,7 +1255,7 @@ const css = `
   .tools-expandable-card { border: 0; border-radius: 0; height: 100dvh; max-height: 100dvh; max-width: none; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
   .tools-modal-overlay { align-items: flex-end; padding: 0; }
   .tools-modal { border-radius: 18px 18px 0 0; max-height: calc(100dvh - 24px); max-width: none; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); }
-  .tools-modal-sm { max-width: none; }
+  .tools-modal-sm, .tools-modal-lg { max-width: none; }
   .tools-modal-actions { flex-direction: column-reverse; }
   .tools-modal-actions .tools-btn { width: 100%; }
   .tools-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
@@ -1222,11 +1290,14 @@ export default function ToolsPage() {
   const [draftName, setDraftName] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
   const [draftType, setDraftType] = useState<ToolType>("api_request");
-  // The rest of a tool is filled in from the detail pane, but the server refuses
-  // an api_request with no endpoint, so that is asked for here instead of
-  // failing the create.
-  const [draftMethod, setDraftMethod] = useState<HttpMethod>("POST");
-  const [draftUrl, setDraftUrl] = useState("");
+  // The whole request is set up here, so a POST tool is created with its body,
+  // headers and parameters rather than as an empty shell to finish later.
+  const [draftRequest, setDraftRequest] = useState<Tool>(() =>
+    emptyTool("", "api_request", "", "")
+  );
+  const patchDraftRequest = useCallback((patch: Partial<Tool>) => {
+    setDraftRequest((current) => ({ ...current, ...patch }));
+  }, []);
   const [isCreating, setIsCreating] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Tool | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1308,15 +1379,12 @@ export default function ToolsPage() {
     setDraftName("");
     setDraftDescription("");
     setDraftType("api_request");
-    setDraftMethod(emptyApiRequestConfig().method);
-    setDraftUrl("");
+    setDraftRequest(emptyTool("", "api_request", "", ""));
     setIsCreateOpen(true);
   }
 
-  // createTool posts the new tool and selects it. Beyond the name, description
-  // and type, only the configuration the server insists on at create time is
-  // sent — an API request's endpoint. Headers, parameters and a text's message
-  // are filled in from the detail pane.
+  // createTool posts the new tool, with the request as set up in the dialog,
+  // and selects it.
   async function createTool() {
     if (isCreating) return;
 
@@ -1344,20 +1412,18 @@ export default function ToolsPage() {
     // This mirrors what the server enforces, so a mistyped value is named here
     // rather than coming back as a validation error on the whole request.
     const isApiRequest = draftType === "api_request";
-    if (isApiRequest && !isAbsoluteHttpUrl(draftUrl)) {
+    if (isApiRequest && !isAbsoluteHttpUrl(draftRequest.url)) {
       setNotice({
         kind: "error",
-        text: draftUrl.trim()
+        text: draftRequest.url.trim()
           ? "The endpoint must be a full http:// or https:// URL."
           : "An API request tool needs an endpoint URL.",
       });
       return;
     }
-    const draft = emptyTool("", draftType, name, draftDescription.trim());
-    if (isApiRequest) {
-      draft.method = draftMethod;
-      draft.url = draftUrl.trim();
-    }
+    const draft = isApiRequest
+      ? { ...draftRequest, name, description: draftDescription.trim() }
+      : emptyTool("", draftType, name, draftDescription.trim());
     const payload = toCreatePayload(draft);
 
     setIsCreating(true);
@@ -1679,7 +1745,7 @@ export default function ToolsPage() {
           <div
             aria-labelledby="create-tool-title"
             aria-modal="true"
-            className="tools-modal"
+            className={`tools-modal${draftType === "api_request" ? " tools-modal-lg" : ""}`}
             role="dialog"
           >
             <h2 className="tools-modal-title" id="create-tool-title">
@@ -1745,8 +1811,10 @@ export default function ToolsPage() {
                       <span className="tools-field-label">Method</span>
                       <select
                         className="tools-select"
-                        onChange={(event) => setDraftMethod(event.target.value as HttpMethod)}
-                        value={draftMethod}
+                        onChange={(event) =>
+                          patchDraftRequest({ method: event.target.value as HttpMethod })
+                        }
+                        value={draftRequest.method}
                       >
                         {httpMethods.map((method) => (
                           <option key={method} value={method}>
@@ -1760,16 +1828,13 @@ export default function ToolsPage() {
                       <input
                         className="tools-input tools-mono"
                         maxLength={toolBounds.urlLength}
-                        onChange={(event) => setDraftUrl(event.target.value)}
+                        onChange={(event) => patchDraftRequest({ url: event.target.value })}
                         placeholder="https://api.example.com/v1/availability"
-                        value={draftUrl}
+                        value={draftRequest.url}
                       />
                     </label>
                   </div>
-                  <span className="tools-field-hint">
-                    Headers, the timeout and the parameters the model fills in are set next, in the
-                    tool&apos;s own panel.
-                  </span>
+                  <HeadersEditor onPatch={patchDraftRequest} tool={draftRequest} />
                 </>
               ) : (
                 <span className="tools-field-hint">
@@ -1778,6 +1843,24 @@ export default function ToolsPage() {
                 </span>
               )}
             </div>
+
+            {draftType === "api_request" ? (
+              <>
+                <div className="tools-modal-section">
+                  <span className="tools-field-label">Parameters</span>
+                  <span className="tools-field-hint">
+                    What the model fills in from the conversation before the request goes out.
+                  </span>
+                  <ParametersEditor onPatch={patchDraftRequest} tool={draftRequest} />
+                </div>
+                <div className="tools-modal-section">
+                  <span className="tools-field-label">
+                    {sendsBody(draftRequest.method) ? "Request body" : "Query string"}
+                  </span>
+                  <BodyEditor onPatch={patchDraftRequest} tool={draftRequest} />
+                </div>
+              </>
+            ) : null}
 
             <div className="tools-modal-actions">
               <button
@@ -2052,6 +2135,302 @@ function SystemToolDetail({
 //
 // The parent keys this component on the tool id and the save epoch, so the draft
 // below always starts from stored values.
+// The request editors below are shared by the create dialog and the tool's
+// own panel, so a POST tool can be set up in full before it is first saved.
+type RequestEditorProps = { tool: Tool; onPatch: (patch: Partial<Tool>) => void };
+
+function HeadersEditor({ tool, onPatch }: RequestEditorProps) {
+  function addHeader() {
+    onPatch({ headers: [...tool.headers, { id: rowId("h"), key: "", value: "" }] });
+  }
+
+  function patchHeader(id: string, patch: Partial<HeaderRow>) {
+    onPatch({ headers: tool.headers.map((row) => (row.id === id ? { ...row, ...patch } : row)) });
+  }
+
+  function removeHeader(id: string) {
+    onPatch({ headers: tool.headers.filter((row) => row.id !== id) });
+  }
+
+  return (
+    <div className="tools-field">
+      <div className="tools-panel-title-row">
+        <span className="tools-field-label">Headers</span>
+        <button
+          className="tools-btn tools-btn-secondary tools-btn-sm"
+          disabled={tool.headers.length >= toolBounds.maxHeaders}
+          onClick={addHeader}
+          type="button"
+        >
+          <Icon name="plus" size={14} sw={2.4} />
+          Add header
+        </button>
+      </div>
+      {tool.headers.length === 0 ? (
+        <span className="tools-field-hint">
+          No headers set. A value is sent exactly as typed, so a key put here is stored
+          on the tool — prefer one scoped to what this tool needs.
+        </span>
+      ) : (
+        <div className="tools-rows">
+          {tool.headers.map((header) => (
+            <div className="tools-kv-row" key={header.id}>
+              <input
+                aria-label="Header name"
+                className="tools-input tools-mono"
+                onChange={(event) => patchHeader(header.id, { key: event.target.value })}
+                placeholder="Authorization"
+                value={header.key}
+              />
+              <input
+                aria-label="Header value"
+                className="tools-input tools-mono"
+                onChange={(event) => patchHeader(header.id, { value: event.target.value })}
+                placeholder="Bearer sk-live-..."
+                value={header.value}
+              />
+              <button
+                aria-label="Remove header"
+                className="tools-icon-button"
+                onClick={() => removeHeader(header.id)}
+                type="button"
+              >
+                <Icon name="x" size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ParametersEditor({ tool, onPatch }: RequestEditorProps) {
+  function addParam() {
+    onPatch({
+      parameters: [
+        ...tool.parameters,
+        { id: rowId("p"), name: "", type: "string", description: "", required: false },
+      ],
+    });
+  }
+
+  function patchParam(id: string, patch: Partial<ParamRow>) {
+    onPatch({
+      parameters: tool.parameters.map((row) => (row.id === id ? { ...row, ...patch } : row)),
+    });
+  }
+
+  function removeParam(id: string) {
+    onPatch({ parameters: tool.parameters.filter((row) => row.id !== id) });
+  }
+
+  return (
+    <>
+      <div className="tools-panel-title-row">
+        <span className="tools-row-head">Function arguments</span>
+        <button
+          className="tools-btn tools-btn-secondary tools-btn-sm"
+          disabled={tool.parameters.length >= toolBounds.maxParameters}
+          onClick={addParam}
+          type="button"
+        >
+          <Icon name="plus" size={14} sw={2.4} />
+          Add parameter
+        </button>
+      </div>
+      {tool.parameters.length === 0 ? (
+        <span className="tools-field-hint">
+          No parameters — the model calls this tool with an empty payload.
+        </span>
+      ) : (
+        <div className="tools-rows">
+          {tool.parameters.map((param) => (
+            <div className="tools-param-row" key={param.id}>
+              <input
+                aria-label="Parameter name"
+                className="tools-input tools-mono"
+                onChange={(event) => patchParam(param.id, { name: event.target.value })}
+                placeholder="date"
+                value={param.name}
+              />
+              <select
+                aria-label="Parameter type"
+                className="tools-select"
+                onChange={(event) => patchParam(param.id, { type: event.target.value as ParamType })}
+                value={param.type}
+              >
+                {paramTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <input
+                aria-label="Parameter description"
+                className="tools-input"
+                onChange={(event) => patchParam(param.id, { description: event.target.value })}
+                placeholder="Requested day in YYYY-MM-DD form."
+                value={param.description}
+              />
+              <label className="tools-required">
+                <input
+                  checked={param.required}
+                  onChange={(event) => patchParam(param.id, { required: event.target.checked })}
+                  type="checkbox"
+                />
+                Required
+              </label>
+              <button
+                aria-label="Remove parameter"
+                className="tools-icon-button"
+                onClick={() => removeParam(param.id)}
+                type="button"
+              >
+                <Icon name="x" size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// BodyEditor is the body format and fixed fields on a POST, PUT or PATCH, and
+// the fixed query values on a GET or DELETE, with a preview of what goes out.
+function BodyEditor({ tool, onPatch }: RequestEditorProps) {
+  function addBodyField() {
+    onPatch({
+      bodyFields: [...tool.bodyFields, { id: rowId("b"), key: "", value: "", type: "string" }],
+    });
+  }
+
+  function patchBodyField(id: string, patch: Partial<BodyFieldRow>) {
+    onPatch({
+      bodyFields: tool.bodyFields.map((row) => (row.id === id ? { ...row, ...patch } : row)),
+    });
+  }
+
+  function removeBodyField(id: string) {
+    onPatch({ bodyFields: tool.bodyFields.filter((row) => row.id !== id) });
+  }
+
+  return (
+    <>
+      {sendsBody(tool.method) ? (
+        <label className="tools-field tools-body-format">
+          <span className="tools-field-label">Body format</span>
+          <select
+            className="tools-select"
+            onChange={(event) => onPatch({ bodyType: event.target.value as ToolBodyType })}
+            value={tool.bodyType}
+          >
+            <option value="json">JSON (application/json)</option>
+            <option value="form">Form (x-www-form-urlencoded)</option>
+          </select>
+          <span className="tools-field-hint">
+            JSON suits most APIs and webhooks (Make, Zapier, n8n). Pick Form when the
+            endpoint expects form fields.
+          </span>
+        </label>
+      ) : null}
+
+      <div className="tools-field">
+        <div className="tools-panel-title-row">
+          <span className="tools-field-label">
+            {sendsBody(tool.method) ? "Fixed body fields" : "Fixed query values"}
+          </span>
+          <button
+            className="tools-btn tools-btn-secondary tools-btn-sm"
+            disabled={tool.bodyFields.length >= toolBounds.maxParameters}
+            onClick={addBodyField}
+            type="button"
+          >
+            <Icon name="plus" size={14} sw={2.4} />
+            Add field
+          </button>
+        </div>
+        {tool.bodyFields.length === 0 ? (
+          <span className="tools-field-hint">
+            None. Add a field for a value the endpoint needs on every request that the
+            model shouldn&apos;t choose — a form id, an action name, a store id.
+          </span>
+        ) : (
+          <div className="tools-rows">
+            {tool.bodyFields.map((field) => (
+              <div className="tools-body-row" key={field.id}>
+                <input
+                  aria-label="Field name"
+                  className="tools-input tools-mono"
+                  onChange={(event) => patchBodyField(field.id, { key: event.target.value })}
+                  placeholder="source"
+                  value={field.key}
+                />
+                <select
+                  aria-label="Field type"
+                  className="tools-select"
+                  onChange={(event) =>
+                    patchBodyField(field.id, {
+                      type: event.target.value as ParamType,
+                      value: event.target.value === "boolean" ? "true" : field.value,
+                    })
+                  }
+                  value={field.type}
+                >
+                  {paramTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                {field.type === "boolean" ? (
+                  <select
+                    aria-label="Field value"
+                    className="tools-select"
+                    onChange={(event) => patchBodyField(field.id, { value: event.target.value })}
+                    value={field.value === "false" ? "false" : "true"}
+                  >
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                  </select>
+                ) : (
+                  <input
+                    aria-label="Field value"
+                    className="tools-input tools-mono"
+                    inputMode={field.type === "number" ? "decimal" : undefined}
+                    onChange={(event) => patchBodyField(field.id, { value: event.target.value })}
+                    placeholder={field.type === "number" ? "1" : "whatsapp"}
+                    value={field.value}
+                  />
+                )}
+                <button
+                  aria-label="Remove field"
+                  className="tools-icon-button"
+                  onClick={() => removeBodyField(field.id)}
+                  type="button"
+                >
+                  <Icon name="x" size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="tools-field">
+        <span className="tools-field-label">What is sent</span>
+        <pre className="tools-test-pre">{requestPreview(tool)}</pre>
+        <span className="tools-field-hint">
+          {tool.parameters.some((param) => param.name.trim())
+            ? "Values in <angle brackets> are filled in by the agent from the conversation."
+            : "Add parameters above for the values the agent should fill in."}
+        </span>
+      </div>
+    </>
+  );
+}
+
 function ToolDetail({
   tool,
   onSave,
@@ -2075,39 +2454,6 @@ function ToolDetail({
 
   function patchTool(patch: Partial<Tool>) {
     setDraft((current) => ({ ...current, ...patch }));
-  }
-
-  function addHeader() {
-    patchTool({ headers: [...draft.headers, { id: rowId("h"), key: "", value: "" }] });
-  }
-
-  function patchHeader(id: string, patch: Partial<HeaderRow>) {
-    patchTool({
-      headers: draft.headers.map((row) => (row.id === id ? { ...row, ...patch } : row)),
-    });
-  }
-
-  function removeHeader(id: string) {
-    patchTool({ headers: draft.headers.filter((row) => row.id !== id) });
-  }
-
-  function addParam() {
-    patchTool({
-      parameters: [
-        ...draft.parameters,
-        { id: rowId("p"), name: "", type: "string", description: "", required: false },
-      ],
-    });
-  }
-
-  function patchParam(id: string, patch: Partial<ParamRow>) {
-    patchTool({
-      parameters: draft.parameters.map((row) => (row.id === id ? { ...row, ...patch } : row)),
-    });
-  }
-
-  function removeParam(id: string) {
-    patchTool({ parameters: draft.parameters.filter((row) => row.id !== id) });
   }
 
   async function save() {
@@ -2256,10 +2602,11 @@ function ToolDetail({
                     max={toolBounds.timeoutMax}
                     min={toolBounds.timeoutMin}
                     onChange={(event) =>
-                      patchTool({ timeoutSeconds: Number(event.target.value) || 1 })
+                      patchTool({ timeoutSeconds: Math.trunc(Number(event.target.value)) || 0 })
                     }
+                    placeholder={String(toolBounds.timeoutDefault)}
                     type="number"
-                    value={draft.timeoutSeconds}
+                    value={draft.timeoutSeconds || ""}
                   />
                 </label>
                 <div className="tools-field">
@@ -2282,56 +2629,7 @@ function ToolDetail({
                 </div>
               </div>
 
-              <div className="tools-field">
-                <div className="tools-panel-title-row">
-                  <span className="tools-field-label">Headers</span>
-                  <button
-                    className="tools-btn tools-btn-secondary tools-btn-sm"
-                    onClick={addHeader}
-                    type="button"
-                  >
-                    <Icon name="plus" size={14} sw={2.4} />
-                    Add header
-                  </button>
-                </div>
-                {draft.headers.length === 0 ? (
-                  <span className="tools-field-hint">
-                    No headers set. A value is sent exactly as typed, so a key put here is stored
-                    on the tool — prefer one scoped to what this tool needs.
-                  </span>
-                ) : (
-                  <div className="tools-rows">
-                    {draft.headers.map((header) => (
-                      <div className="tools-kv-row" key={header.id}>
-                        <input
-                          aria-label="Header name"
-                          className="tools-input tools-mono"
-                          onChange={(event) => patchHeader(header.id, { key: event.target.value })}
-                          placeholder="Authorization"
-                          value={header.key}
-                        />
-                        <input
-                          aria-label="Header value"
-                          className="tools-input tools-mono"
-                          onChange={(event) =>
-                            patchHeader(header.id, { value: event.target.value })
-                          }
-                          placeholder="Bearer sk-live-..."
-                          value={header.value}
-                        />
-                        <button
-                          aria-label="Remove header"
-                          className="tools-icon-button"
-                          onClick={() => removeHeader(header.id)}
-                          type="button"
-                        >
-                          <Icon name="x" size={15} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <HeadersEditor onPatch={patchTool} tool={draft} />
             </div>
           </section>
 
@@ -2343,77 +2641,23 @@ function ToolDetail({
               </div>
             </div>
             <div className="tools-card-body">
-              <div className="tools-panel-title-row">
-                <span className="tools-row-head">Function arguments</span>
-                <button
-                  className="tools-btn tools-btn-secondary tools-btn-sm"
-                  onClick={addParam}
-                  type="button"
-                >
-                  <Icon name="plus" size={14} sw={2.4} />
-                  Add parameter
-                </button>
+              <ParametersEditor onPatch={patchTool} tool={draft} />
+            </div>
+          </section>
+
+          <section className="tools-card">
+            <div className="tools-card-head">
+              <h3 className="tools-card-title">
+                {sendsBody(draft.method) ? "Request body" : "Query string"}
+              </h3>
+              <div className="tools-card-copy">
+                {sendsBody(draft.method)
+                  ? `A ${draft.method} sends the parameters above in its body, together with any fixed fields set here.`
+                  : `A ${draft.method} has no body, so the parameters above and any fixed values set here go in the URL.`}
               </div>
-              {draft.parameters.length === 0 ? (
-                <span className="tools-field-hint">
-                  No parameters — the model calls this tool with an empty payload.
-                </span>
-              ) : (
-                <div className="tools-rows">
-                  {draft.parameters.map((param) => (
-                    <div className="tools-param-row" key={param.id}>
-                      <input
-                        aria-label="Parameter name"
-                        className="tools-input tools-mono"
-                        onChange={(event) => patchParam(param.id, { name: event.target.value })}
-                        placeholder="date"
-                        value={param.name}
-                      />
-                      <select
-                        aria-label="Parameter type"
-                        className="tools-select"
-                        onChange={(event) =>
-                          patchParam(param.id, { type: event.target.value as ParamType })
-                        }
-                        value={param.type}
-                      >
-                        {paramTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        aria-label="Parameter description"
-                        className="tools-input"
-                        onChange={(event) =>
-                          patchParam(param.id, { description: event.target.value })
-                        }
-                        placeholder="Requested day in YYYY-MM-DD form."
-                        value={param.description}
-                      />
-                      <label className="tools-required">
-                        <input
-                          checked={param.required}
-                          onChange={(event) =>
-                            patchParam(param.id, { required: event.target.checked })
-                          }
-                          type="checkbox"
-                        />
-                        Required
-                      </label>
-                      <button
-                        aria-label="Remove parameter"
-                        className="tools-icon-button"
-                        onClick={() => removeParam(param.id)}
-                        type="button"
-                      >
-                        <Icon name="x" size={15} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            </div>
+            <div className="tools-card-body">
+              <BodyEditor onPatch={patchTool} tool={draft} />
             </div>
           </section>
 
@@ -2584,7 +2828,9 @@ function ToolTestPanel({ draft, isDirty }: { draft: Tool; isDirty: boolean }) {
       <div className="tools-card-body">
         {namedParams.length === 0 ? (
           <span className="tools-field-hint">
-            This tool has no parameters, so it is called with an empty payload.
+            {draft.bodyFields.some((field) => field.key.trim())
+              ? "This tool has no parameters, so only its fixed fields are sent."
+              : "This tool has no parameters, so it is called with an empty payload."}
           </span>
         ) : (
           <div className="tools-test-args">
