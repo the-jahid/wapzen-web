@@ -64,6 +64,9 @@ export type ApiChatAgent = {
   // True once the account has sent every reply it is allowed; the agent stays
   // silent until the limit is lifted. Read-only.
   reply_limit_reached?: boolean;
+  // Only present while the agent has sent its replies for the hour: when it
+  // starts answering again. Read-only.
+  hourly_limit_resets_at?: string;
   runtime?: ChatRuntimeSection;
 };
 

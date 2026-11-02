@@ -519,6 +519,14 @@ const css = `
 .chat-runtime-alert-time { color: var(--subtle); font-weight: 600; }
 .chat-runtime-alert-copy { color: var(--text); font-size: 12.5px; line-height: 1.5; margin: 4px 0 0; overflow-wrap: anywhere; }
 .chat-limit-alert .chat-btn-whatsapp { margin-top: 10px; }
+/* An agent that has sent its replies for the hour, counting down to when it answers again. */
+.chat-limit-list { display: grid; gap: 10px; margin: 0 auto 16px; max-width: 1320px; width: 100%; }
+.chat-limit-card { align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.chat-limit-card-text { flex: 1 1 240px; min-width: 0; }
+.chat-limit-timer { color: var(--app-amber-text); flex: none; text-align: right; }
+.chat-limit-timer-value { display: block; font-size: 24px; font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
+.chat-limit-timer-label { color: var(--subtle); display: block; font-size: 11.5px; font-weight: 600; margin-top: 2px; }
+@media (max-width: 420px) { .chat-limit-timer { text-align: left; } }
 .chat-btn-sm { font-size: 12px; min-height: 32px; padding: 0 10px; }
 .chat-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
 .chat-section:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
@@ -1126,7 +1134,12 @@ export default function ChatAgentsPage() {
         setChatAgents((current) =>
           current.map((item) =>
             item.id === fresh.id
-              ? { ...item, reply_limit_reached: fresh.reply_limit_reached, runtime: fresh.runtime }
+              ? {
+                  ...item,
+                  reply_limit_reached: fresh.reply_limit_reached,
+                  hourly_limit_resets_at: fresh.hourly_limit_resets_at,
+                  runtime: fresh.runtime,
+                }
               : item
           )
         );
@@ -1519,6 +1532,19 @@ export default function ChatAgentsPage() {
 
       <main className="chat-main">
         <div className="chat-content">
+          {chatAgents.some((agent) => agent.hourly_limit_resets_at) ? (
+            <div className="chat-limit-list">
+              {chatAgents.map((agent) =>
+                agent.hourly_limit_resets_at ? (
+                  <HourlyLimitCard
+                    agentName={agent.agent.name}
+                    key={agent.id}
+                    resetsAt={agent.hourly_limit_resets_at}
+                  />
+                ) : null
+              )}
+            </div>
+          ) : null}
           <section className="chat-workspace" aria-label="Chat agents workspace">
             <div className="chat-panel chat-agent-browser">
               <div className="chat-panel-head chat-list-head">
@@ -2081,6 +2107,9 @@ function Editor({
 
   return (
     <div className="chat-editor">
+      {agent.hourly_limit_resets_at ? (
+        <HourlyLimitCard agentName={agent.agent.name} resetsAt={agent.hourly_limit_resets_at} />
+      ) : null}
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
           <span className="chat-runtime-alert-icon">!</span>
@@ -2179,6 +2208,48 @@ const SYSTEM_PROMPT_MAX_CHARS = 8000;
 // PromptCounter counts code points, as the servers do, so an emoji is one
 // character here and there. It warns from 90% and turns red past the cap,
 // which only a prompt saved before the cap existed can be.
+// Shown only while the agent is at its hourly reply limit, counting down to
+// when it starts answering again. It goes away by itself when the time is up.
+function HourlyLimitCard({ agentName, resetsAt }: { agentName: string; resetsAt: string }) {
+  const resetsAtMs = Date.parse(resetsAt);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const tick = Date.now();
+      setNow(tick);
+      if (tick >= resetsAtMs) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resetsAtMs]);
+  const remaining = resetsAtMs - now;
+  if (!(remaining > 0)) return null;
+
+  const seconds = Math.ceil(remaining / 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const countdown =
+    seconds >= 3600
+      ? `${Math.floor(seconds / 3600)}:${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`
+      : `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`;
+  const at = new Date(resetsAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  return (
+    <div className="chat-card chat-runtime-alert chat-limit-card" role="status">
+      <span className="chat-runtime-alert-icon">!</span>
+      <div className="chat-limit-card-text">
+        <p className="chat-runtime-alert-title">Your 1-hour message limit is reached</p>
+        <p className="chat-runtime-alert-copy">
+          {agentName} has sent 100 AI replies this hour, so it is paused. It turns back on by itself when the
+          timer ends. Messages that arrive meanwhile are still saved in Conversations.
+        </p>
+      </div>
+      <div className="chat-limit-timer" aria-label={`Active again in ${countdown}, at ${at}`}>
+        <span className="chat-limit-timer-value">{countdown}</span>
+        <span className="chat-limit-timer-label">Active again at {at}</span>
+      </div>
+    </div>
+  );
+}
+
 function PromptCounter({ value }: { value: string }) {
   const count = Array.from(value).length;
   const state =
