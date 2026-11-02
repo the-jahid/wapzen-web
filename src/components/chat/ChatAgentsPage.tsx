@@ -33,6 +33,7 @@ import {
   listDashboardChatAgents,
   updateDashboardChatAgent,
   type ApiChatAgent,
+  type ChatMediaSection,
   type CreateChatAgentPayload,
 } from "@/lib/chatAgents";
 
@@ -567,6 +568,9 @@ const css = `
 .chat-order-knob { background: var(--app-invert-bg); border-radius: 50%; display: block; height: 18px; transition: transform .18s ease, background .18s ease; width: 18px; }
 .chat-order-toggle.is-on .chat-order-track { background: var(--primary); border-color: transparent; }
 .chat-order-toggle.is-on .chat-order-knob { background: var(--app-on-accent); transform: translateX(20px); }
+.chat-media-settings { display: grid; gap: 16px 24px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.chat-media-option { align-content: start; display: grid; gap: 6px; }
+.chat-media-option .chat-field-hint { padding-left: 54px; }
 .chat-editor { display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-y: auto; padding-right: 4px; }
 .chat-card {
   background: var(--surface);
@@ -1011,6 +1015,7 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
           order_instructions: agent.order.order_instructions,
         }
       : undefined,
+    media: agent.media ? { ...agent.media } : undefined,
   };
 }
 
@@ -2195,6 +2200,47 @@ function Editor({
               value={agent.prompt?.system_prompt ?? ""}
             />
           </div>
+
+          {/* Only offered by a server that reports the section, since an older
+              one refuses it on save. */}
+          {agent.media ? (
+            <div className="chat-card">
+              <div className="chat-card-head">
+                <h3 className="chat-card-title">Voice &amp; Photos</h3>
+                <span className="chat-accordion-meta">{mediaMeta(agent.media)}</span>
+              </div>
+              <div className="chat-media-settings">
+                <MediaToggle
+                  hint="Voice messages are turned into text and the agent replies in text. Off: voice messages go unanswered."
+                  label="Reply to voice messages"
+                  on={agent.media.voice_messages_enabled}
+                  onToggle={() =>
+                    onPatch((current) => ({
+                      ...current,
+                      media: {
+                        images_enabled: current.media?.images_enabled ?? false,
+                        voice_messages_enabled: !current.media?.voice_messages_enabled,
+                      },
+                    }))
+                  }
+                />
+                <MediaToggle
+                  hint="The agent looks at photos customers send, such as a product or a payment screenshot. Off: only a photo's caption is read."
+                  label="Read photos"
+                  on={agent.media.images_enabled}
+                  onToggle={() =>
+                    onPatch((current) => ({
+                      ...current,
+                      media: {
+                        voice_messages_enabled: current.media?.voice_messages_enabled ?? false,
+                        images_enabled: !current.media?.images_enabled,
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          ) : null}
         </>
       )}
     </div>
@@ -2687,6 +2733,40 @@ function ConfigPanel({
         </div>
       </div>
     </aside>
+  );
+}
+
+function mediaMeta(media: ChatMediaSection): string {
+  const on = [media.voice_messages_enabled && "Voice", media.images_enabled && "Photos"].filter(Boolean);
+  return on.length ? on.join(" + ") : "Off";
+}
+
+function MediaToggle({
+  hint,
+  label,
+  on,
+  onToggle,
+}: {
+  hint: string;
+  label: string;
+  on: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="chat-media-option">
+      <button
+        aria-pressed={on}
+        className={`chat-order-toggle${on ? " is-on" : ""}`}
+        onClick={onToggle}
+        type="button"
+      >
+        <span className="chat-order-track">
+          <span className="chat-order-knob" />
+        </span>
+        <span>{label}</span>
+      </button>
+      <span className="chat-field-hint">{hint}</span>
+    </div>
   );
 }
 

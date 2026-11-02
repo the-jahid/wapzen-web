@@ -42,6 +42,14 @@ export type ChatOrderSection = {
   orders_on?: boolean;
 };
 
+// What the agent does with voice messages (transcribed, answered in text) and
+// photos (read by the model). Absent from servers that predate it, which refuse
+// the section on save, so it is only sent back when the server returned it.
+export type ChatMediaSection = {
+  voice_messages_enabled: boolean;
+  images_enabled: boolean;
+};
+
 // What the running server reports about serving the agent. Never saved: it is
 // read-only and absent from older servers.
 export type ChatRuntimeSection = {
@@ -61,6 +69,7 @@ export type ApiChatAgent = {
   knowledge_base?: ChatKnowledgeBaseSection;
   tools?: ChatToolsSection;
   order?: ChatOrderSection;
+  media?: ChatMediaSection;
   // True once the account has sent every reply it is allowed; the agent stays
   // silent until the limit is lifted. Read-only.
   reply_limit_reached?: boolean;
@@ -77,6 +86,7 @@ export type CreateChatAgentPayload = {
   knowledge_base?: ChatKnowledgeBaseSection;
   tools?: ChatToolsSection;
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
+  media?: ChatMediaSection;
 };
 
 // Every section and every field inside a supplied section is optional on
@@ -89,6 +99,7 @@ export type UpdateChatAgentPayload = {
   knowledge_base?: Partial<ChatKnowledgeBaseSection>;
   tools?: Partial<ChatToolsSection>;
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
+  media?: Partial<ChatMediaSection>;
 };
 
 // The defaults the OpenAPI document declares for a new chat agent, so the
