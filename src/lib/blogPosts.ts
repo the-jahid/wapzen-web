@@ -768,6 +768,18 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-02",
     readingMinutes: 9,
   },
+  {
+    href: "/es-cl/blog/chatbot-whatsapp-gratis",
+    title: "Chatbot de WhatsApp gratis con IA ilimitada en Chile (2026)",
+    name: "Chatbot de WhatsApp gratis en Chile",
+    description: "¿Hay un chatbot de WhatsApp con IA gratis en Chile? Sí: respuestas ilimitadas, sin tarifas de Meta y con agente de voz. Precios comparados y cómo activarlo.",
+    tag: "Explainer",
+    icon: BotMessageSquare,
+    published: "2026-11-02",
+    updated: "2026-11-02",
+    readingMinutes: 10,
+    locale: "es-CL",
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);

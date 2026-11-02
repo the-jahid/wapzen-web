@@ -159,6 +159,7 @@ The Wapzen dashboard itself is in English.
 
 - [Blog (Chile)](/es-cl/blog): WhatsApp guides for businesses in Chile.
 - [Chatbot de WhatsApp para clínicas dentales](/es-cl/blog/chatbot-whatsapp-clinica-dental): an AI agent for dental clinics in Chile: answering administrative questions and taking appointment requests after hours, working alongside Dentalink or AgendaPro, three ways to book, Ley 20.584, the status of Ley 21.719 on 1 November 2026, and limits (no reminders, no diagnosis, no access to clinical records).
+- [Chatbot de WhatsApp gratis en Chile](/es-cl/blog/chatbot-whatsapp-gratis): a question-and-answer guide for Chilean businesses: is there a free AI WhatsApp chatbot in Chile (yes, Wapzen: no cap on AI replies, no Meta message fees because it links as a device, AI voice agent for WhatsApp calls), what unlimited covers (1 chat agent per account, one-to-one text), costs compared (Superpyme from CLP 29.990 for 500 AI replies, WATI Growth US$49 with 250 AI credits, Meta API US$0.02 per reply in Chile after 1,000 free), setup, ban risk, when not to use it, and Ley 21.719.
 
 
 ## Blog in German (for businesses in Germany)

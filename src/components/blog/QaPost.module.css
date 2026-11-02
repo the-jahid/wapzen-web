@@ -1,0 +1,33 @@
+/* QaPost: question-and-answer posts. Shares Blog.module.css for the column, prose and sources. */
+
+/* The verdict: the post's one-paragraph answer plus key facts; dark in both themes, like the CTAs */
+.verdict { padding: 30px 30px 26px; border-radius: 24px; background: #10281f; color: #fff; }
+.verdict .verdictTitle { font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; line-height: 1.4; color: #6ee7a8; }
+.verdictBody { margin-top: 12px; font-size: 18px; line-height: 1.65; letter-spacing: -.01em; color: #e6f0eb; }
+.verdictBody strong { font-weight: 650; color: #fff; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 24px; overflow: hidden; border-radius: 16px; background: rgba(255, 255, 255, .12); }
+.facts > div { padding: 14px 16px; background: #143326; }
+.facts dt { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #9db8ab; }
+.facts dd { margin-top: 6px; font-size: 16px; font-weight: 650; line-height: 1.35; color: #fff; }
+
+/* Numbered list of the questions, in place of a sidebar table of contents */
+.index { margin-top: 36px; padding: 24px 26px; border: 1px solid var(--site-border); border-radius: 20px; background: var(--site-panel); }
+.index .indexTitle { font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; line-height: 1.4; color: var(--site-text-muted); }
+.index ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 20px; margin-top: 14px; }
+.index a { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px; padding: 8px 0; font-size: 14px; line-height: 1.5; color: var(--site-text-soft); transition: color .15s; }
+.index a:hover { color: var(--landing-green); }
+.index a > span { padding-top: 2px; font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--landing-green); }
+
+/* One question: big number, the question as the heading, then the short answer */
+.question { position: relative; }
+.number { display: block; margin-bottom: 8px; font-family: var(--font-geist-mono), monospace; font-size: 13px; font-weight: 600; letter-spacing: .06em; color: var(--landing-green); }
+.answer { margin-bottom: 22px; padding: 18px 20px; border: 1px solid color-mix(in srgb, var(--landing-green) 32%, var(--site-border)); border-radius: 16px; background: color-mix(in srgb, var(--landing-green) 7%, var(--site-panel)); font-size: 16px; font-weight: 500; line-height: 1.7; color: var(--site-text); }
+.answer > span { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 11px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--landing-green); }
+
+@media (max-width: 680px) {
+  .verdict { padding: 24px 20px 20px; }
+  .verdictBody { font-size: 16px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .index { padding: 20px; }
+  .index ol { grid-template-columns: minmax(0, 1fr); }
+}
