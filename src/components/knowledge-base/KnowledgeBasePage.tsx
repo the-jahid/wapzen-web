@@ -9,7 +9,6 @@ import {
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
-  knowledgeBaseChunkBounds as chunkBounds,
   knowledgeBaseNameLimit as nameLimit,
   knowledgeBaseStatusLabels as statusLabels,
   type KnowledgeBaseStatus,
@@ -24,13 +23,11 @@ import {
   knowledgeBaseFileExtensions as fileExtensions,
   knowledgeBaseSourceBounds as sourceBounds,
   sourceTitleFromFilename,
-  updateKnowledgeBase as apiUpdateKnowledgeBase,
   KnowledgeBaseError,
   type ApiKnowledgeBase,
   type FieldError,
   type KnowledgeBase,
   type KnowledgeBaseSource,
-  type UpdateKnowledgeBasePayload,
 } from "@/lib/knowledgeBases";
 import type { AuthTokenGetter } from "@/lib/api";
 import { useCachedState } from "@/lib/pageCache";
@@ -451,7 +448,7 @@ const css = `
 .kb-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
 .kb-expandable-card .kb-detail-layout { max-width: none; }
 .kb-detail-layout { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 1320px; width: 100%; }
-.kb-detail-grid { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 320px; }
+.kb-detail-grid { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
 .kb-back {
   align-items: center;
   background: none;
@@ -967,9 +964,6 @@ export default function KnowledgeBasePage() {
   const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newMaxChunkSize, setNewMaxChunkSize] = useState(2000);
-  const [newMinChunkSize, setNewMinChunkSize] = useState(400);
-  const [newAutoRefresh, setNewAutoRefresh] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [createError, setCreateError] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -1152,9 +1146,6 @@ export default function KnowledgeBasePage() {
 
   function openCreate() {
     setNewName("");
-    setNewMaxChunkSize(2000);
-    setNewMinChunkSize(400);
-    setNewAutoRefresh(false);
     setCreateError("");
     setIsCreating(true);
   }
@@ -1168,10 +1159,6 @@ export default function KnowledgeBasePage() {
   async function createBase() {
     const name = newName.trim();
     if (!name || isSaving) return;
-    if (newMinChunkSize > newMaxChunkSize) {
-      setCreateError("Min chunk size must not be greater than max chunk size.");
-      return;
-    }
     if (isAuthLoaded && !isSignedIn) {
       setCreateError("Sign in to create a knowledge base.");
       return;
@@ -1183,9 +1170,9 @@ export default function KnowledgeBasePage() {
       const created = await apiCreateKnowledgeBase(
         {
           knowledge_base_name: name,
-          enable_auto_refresh: newAutoRefresh,
-          max_chunk_size: newMaxChunkSize,
-          min_chunk_size: newMinChunkSize,
+          enable_auto_refresh: false,
+          max_chunk_size: 2000,
+          min_chunk_size: 400,
         },
         getToken
       );
@@ -1357,14 +1344,6 @@ export default function KnowledgeBasePage() {
                   )}
                 </section>
               </div>
-
-              <ConfigPanel
-                base={selected}
-                getToken={getToken}
-                key={selected.knowledge_base_id}
-                onNotice={flash}
-                onSaved={applyUpdatedBase}
-              />
               </div>
             </div>
             </ExpandableCardDemoStandard>
@@ -1589,55 +1568,6 @@ export default function KnowledgeBasePage() {
                   {newName.length}/{nameLimit} characters
                 </span>
               </label>
-              <label className="kb-field">
-                <span className="kb-field-label">Max chunk size · {newMaxChunkSize}</span>
-                <input
-                  className="kb-range"
-                  disabled={isSaving}
-                  max={chunkBounds.maxUpper}
-                  min={chunkBounds.maxLower}
-                  onChange={(event) => setNewMaxChunkSize(Number(event.target.value))}
-                  step={100}
-                  type="range"
-                  value={newMaxChunkSize}
-                />
-                <span className="kb-field-hint">
-                  {chunkBounds.maxLower}–{chunkBounds.maxUpper} characters. Larger chunks keep more
-                  context together.
-                </span>
-              </label>
-              <label className="kb-field">
-                <span className="kb-field-label">Min chunk size · {newMinChunkSize}</span>
-                <input
-                  className="kb-range"
-                  disabled={isSaving}
-                  max={chunkBounds.minUpper}
-                  min={chunkBounds.minLower}
-                  onChange={(event) => setNewMinChunkSize(Number(event.target.value))}
-                  step={50}
-                  type="range"
-                  value={newMinChunkSize}
-                />
-                <span className="kb-field-hint">
-                  {chunkBounds.minLower}–{chunkBounds.minUpper} characters, and never above the max.
-                </span>
-              </label>
-              <div className="kb-toggle-row">
-                <span>
-                  <div className="kb-field-label">Auto refresh</div>
-                  <div className="kb-field-hint">Re-scrape URL sources every 12 hours.</div>
-                </span>
-                <button
-                  aria-label="Toggle auto refresh for the new knowledge base"
-                  aria-pressed={newAutoRefresh}
-                  className={`kb-switch${newAutoRefresh ? " is-on" : ""}`}
-                  disabled={isSaving}
-                  onClick={() => setNewAutoRefresh((current) => !current)}
-                  type="button"
-                >
-                  <span />
-                </button>
-              </div>
               {createError ? (
                 <div className="kb-form-error" role="alert">
                   {createError}
@@ -1837,7 +1767,7 @@ function AddSourcesModal({
   onAdded: (updated: KnowledgeBase, addedCount: number) => void;
   onClose: () => void;
 }) {
-  const [mode, setMode] = useState<"text" | "file">("text");
+  const [mode, setMode] = useState<"text" | "file">("file");
   const [drafts, setDrafts] = useState<SourceDraft[]>([{ key: 0, title: "", text: "" }]);
   const [draftErrors, setDraftErrors] = useState<Record<number, string>>({});
   const [files, setFiles] = useState<FileDraft[]>([]);
@@ -2117,19 +2047,6 @@ function AddSourcesModal({
 
         <div className="kb-tabs" role="tablist">
           <button
-            aria-selected={mode === "text"}
-            className={`kb-tab${mode === "text" ? " is-active" : ""}`}
-            disabled={isSaving}
-            onClick={() => {
-              setMode("text");
-              setError("");
-            }}
-            role="tab"
-            type="button"
-          >
-            Raw text
-          </button>
-          <button
             aria-selected={mode === "file"}
             className={`kb-tab${mode === "file" ? " is-active" : ""}`}
             disabled={isSaving}
@@ -2141,6 +2058,19 @@ function AddSourcesModal({
             type="button"
           >
             Upload files
+          </button>
+          <button
+            aria-selected={mode === "text"}
+            className={`kb-tab${mode === "text" ? " is-active" : ""}`}
+            disabled={isSaving}
+            onClick={() => {
+              setMode("text");
+              setError("");
+            }}
+            role="tab"
+            type="button"
+          >
+            Raw text
           </button>
         </div>
 
@@ -2367,172 +2297,6 @@ function AddSourcesModal({
         </div>
       </div>
     </div>
-  );
-}
-
-// ConfigPanel edits the indexing settings of one knowledge base through PATCH
-// /v1/dashboard/knowledge-base/{id}. It is mounted with the base id as its key,
-// so selecting another knowledge base remounts it with that row's values instead
-// of carrying an unsaved draft across.
-function ConfigPanel({
-  base,
-  getToken,
-  onSaved,
-  onNotice,
-}: {
-  base: KnowledgeBase;
-  getToken: AuthTokenGetter;
-  onSaved: (updated: KnowledgeBase) => void;
-  onNotice: (kind: Notice["kind"], text: string) => void;
-}) {
-  const [maxChunkSize, setMaxChunkSize] = useState(base.max_chunk_size);
-  const [minChunkSize, setMinChunkSize] = useState(base.min_chunk_size);
-  const [autoRefresh, setAutoRefresh] = useState(base.enable_auto_refresh);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const isDirty =
-    maxChunkSize !== base.max_chunk_size ||
-    minChunkSize !== base.min_chunk_size ||
-    autoRefresh !== base.enable_auto_refresh;
-
-  function reset() {
-    setMaxChunkSize(base.max_chunk_size);
-    setMinChunkSize(base.min_chunk_size);
-    setAutoRefresh(base.enable_auto_refresh);
-    setError("");
-  }
-
-  async function save() {
-    if (!isDirty || isSaving) return;
-    if (minChunkSize > maxChunkSize) {
-      setError("Min chunk size must not be greater than max chunk size.");
-      return;
-    }
-
-    // Only the changed settings are sent: the endpoint is a partial update, and
-    // leaving a field out keeps whatever the server has.
-    const payload: UpdateKnowledgeBasePayload = {};
-    if (maxChunkSize !== base.max_chunk_size) payload.max_chunk_size = maxChunkSize;
-    if (minChunkSize !== base.min_chunk_size) payload.min_chunk_size = minChunkSize;
-    if (autoRefresh !== base.enable_auto_refresh) payload.enable_auto_refresh = autoRefresh;
-
-    setIsSaving(true);
-    setError("");
-    try {
-      const updated = await apiUpdateKnowledgeBase(base.knowledge_base_id, payload, getToken);
-      onSaved(fromApi(updated));
-      onNotice("success", "Indexing configuration saved");
-    } catch (err) {
-      const fieldMessage =
-        err instanceof KnowledgeBaseError && err.fieldErrors.length > 0
-          ? err.fieldErrors.map((item) => `${item.field}: ${item.message}`).join(" · ")
-          : "";
-      setError(
-        fieldMessage || (err instanceof Error ? err.message : "Failed to save configuration")
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  return (
-    <aside className="kb-card kb-config-column" aria-label="Indexing configuration">
-      <div className="kb-config-head">
-        <h3 className="kb-config-title">Indexing configuration</h3>
-        <div className="kb-config-copy">
-          Chunking controls how documents are split before retrieval. Changes apply to sources
-          indexed from here on; anything already indexed keeps its current chunks.
-        </div>
-      </div>
-      <div className="kb-config-body">
-        <label className="kb-field">
-          <span className="kb-field-label">Max chunk size · {maxChunkSize}</span>
-          <input
-            className="kb-range"
-            disabled={isSaving}
-            max={chunkBounds.maxUpper}
-            min={chunkBounds.maxLower}
-            onChange={(event) => setMaxChunkSize(Number(event.target.value))}
-            step={100}
-            type="range"
-            value={maxChunkSize}
-          />
-          <span className="kb-field-hint">
-            {chunkBounds.maxLower}–{chunkBounds.maxUpper} characters. Larger chunks keep more
-            context together.
-          </span>
-        </label>
-        <label className="kb-field">
-          <span className="kb-field-label">Min chunk size · {minChunkSize}</span>
-          <input
-            className="kb-range"
-            disabled={isSaving}
-            max={chunkBounds.minUpper}
-            min={chunkBounds.minLower}
-            onChange={(event) => setMinChunkSize(Number(event.target.value))}
-            step={50}
-            type="range"
-            value={minChunkSize}
-          />
-          <span className="kb-field-hint">
-            {chunkBounds.minLower}–{chunkBounds.minUpper} characters, and never above the max.
-          </span>
-        </label>
-        <div className="kb-toggle-row">
-          <span>
-            <div className="kb-field-label">Auto refresh</div>
-            <div className="kb-field-hint">Re-scrape URL sources every 12 hours.</div>
-          </span>
-          <button
-            aria-label="Toggle auto refresh"
-            aria-pressed={autoRefresh}
-            className={`kb-switch${autoRefresh ? " is-on" : ""}`}
-            disabled={isSaving}
-            onClick={() => setAutoRefresh((current) => !current)}
-            type="button"
-          >
-            <span />
-          </button>
-        </div>
-        {error ? (
-          <div className="kb-form-error" role="alert">
-            {error}
-          </div>
-        ) : null}
-        <div className="kb-config-actions">
-          <button
-            className="kb-btn"
-            disabled={!isDirty || isSaving}
-            onClick={reset}
-            type="button"
-          >
-            Reset
-          </button>
-          <button
-            className="kb-btn kb-btn-primary"
-            disabled={!isDirty || isSaving}
-            onClick={save}
-            type="button"
-          >
-            {isSaving ? "Saving…" : "Save changes"}
-          </button>
-        </div>
-        <div className="kb-field">
-          <span className="kb-field-label">Attached agents</span>
-          <div className="kb-source-meta" style={{ marginTop: 0 }}>
-            <span className="kb-pill kb-pill-neutral">
-              <Icon name="agents" size={13} />
-              rio
-            </span>
-            <span className="kb-pill kb-pill-neutral">+ Attach agent</span>
-          </div>
-          <span className="kb-field-hint">
-            Agents with this knowledge base attached can quote it during calls.
-          </span>
-        </div>
-      </div>
-    </aside>
   );
 }
 

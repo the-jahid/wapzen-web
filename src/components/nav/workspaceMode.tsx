@@ -64,11 +64,11 @@ const chatNavItems: WorkspaceNavItem[] = [
   // and the same threads are also readable per agent in the editor's
   // Conversation tab.
   { label: "Conversations", icon: "message", href: "/dashboard/conversations" },
-  // One message to a whole contact list, sent from a connected number.
-  { label: "Bulk Messages", icon: "send", href: "/dashboard/bulk-messages" },
   { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
   { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
   { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
+  // One message to a whole contact list, sent from a connected number.
+  { label: "Bulk Messages", icon: "send", href: "/dashboard/bulk-messages" },
 ];
 
 export function navItemsForMode(mode: WorkspaceMode): WorkspaceNavItem[] {

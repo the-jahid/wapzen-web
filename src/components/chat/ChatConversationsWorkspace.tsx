@@ -875,9 +875,11 @@ const workspaceCSS = `
 /* Phone: one pane at a time — the list, then the thread with a way back. */
 @media(max-width:760px){
   .cv-toolbar{align-items:stretch;flex-direction:column}
-  .cv-search{max-width:none}
-  .cv-toolbar-right{justify-content:space-between}
-  .cv-filter{flex:1 1 120px;max-width:none}
+  /* In the stacked toolbar the desktop 200px flex-basis would become height. */
+  .cv-search{flex:0 0 auto;max-width:none}
+  .cv-toolbar-right{flex-wrap:nowrap;justify-content:space-between}
+  .cv-icon-button{flex:0 0 auto}
+  .cv-filter{flex:1 1 120px;max-width:none;min-width:0}
   .cv-count{display:none}
   .cv-body{grid-template-columns:minmax(0,1fr)}
   .cv-row{gap:10px;grid-template-areas:"avatar identity status chevron" "avatar meta meta meta";grid-template-columns:36px minmax(0,1fr) auto 18px;padding:12px}

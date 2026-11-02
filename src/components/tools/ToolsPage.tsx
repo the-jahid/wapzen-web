@@ -172,11 +172,10 @@ const toolTypes: {
   },
 ];
 
-// Only API requests can be created for calls; a chat can also send a text. The
-// other types stay in toolTypes so tools made before still show their own label
-// and icon.
-function creatableToolTypes(mode: WorkspaceMode) {
-  const ids: ToolType[] = mode === "chat" ? ["api_request", "send_text"] : ["api_request"];
+// Only API requests can be created, for calls and chats alike. The other types
+// stay in toolTypes so tools made before still show their own label and icon.
+function creatableToolTypes() {
+  const ids: ToolType[] = ["api_request"];
   return toolTypes.filter((type) => ids.includes(type.id));
 }
 
@@ -1693,7 +1692,7 @@ export default function ToolsPage() {
             <div className="tools-modal-section">
               <span className="tools-field-label">Tool type</span>
               <div className="tools-type-grid">
-                {creatableToolTypes(mode).map((type) => (
+                {creatableToolTypes().map((type) => (
                   <button
                     aria-pressed={draftType === type.id}
                     className={`tools-type-card${draftType === type.id ? " is-selected" : ""}`}
