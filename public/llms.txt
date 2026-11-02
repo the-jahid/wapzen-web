@@ -58,6 +58,7 @@
 - [WhatsApp Business API alternative](/whatsapp-business-api-alternative): what the Business API involves and costs, and running an AI chatbot without it.
 - [AI answering service (USA)](/ai-answering-service): a free AI answering service for US small businesses on WhatsApp calls and messages, in English or Spanish.
 - [WhatsApp for business in the USA](/whatsapp-for-business-usa): why US businesses add WhatsApp and how to set up an AI chatbot and voice agent for it.
+- [WhatsApp chatbot for healthcare](/industries/healthcare): a WhatsApp AI agent for clinics and doctors that answers patient questions 24/7, takes appointment requests and sends reminders, with voice calls too. Front-desk work only: it says plainly that WhatsApp and Wapzen are not HIPAA compliant, and includes copyable agent instructions.
 - [Free WhatsApp tools](/tools): free browser tools, no sign-up.
 - [Send WhatsApp Without Saving Number](/tools/send-whatsapp-without-saving-number)
 - [WhatsApp Chat Link Generator](/tools/whatsapp-link-generator)

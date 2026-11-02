@@ -1,4 +1,4 @@
-import { Building2, ConciergeBell, Globe, Headset, LifeBuoy, MapPin, MessageCircle, MessageSquareReply, PhoneCall, QrCode, Tag, type LucideIcon } from "lucide-react";
+import { Building2, ConciergeBell, Globe, Headset, LifeBuoy, MapPin, MessageCircle, MessageSquareReply, PhoneCall, QrCode, Stethoscope, Tag, type LucideIcon } from "lucide-react";
 import { blogPosts } from "./blogPosts";
 import { locales, type Locale } from "./locales";
 import { siteConfig } from "./site";
@@ -84,6 +84,12 @@ export const marketingPages: MarketingPageEntry[] = [
     name: "WhatsApp for business in the USA",
     description: "Serve US customers who prefer WhatsApp with a free AI chatbot and voice agent that answers in English or Spanish.",
     icon: Globe,
+  },
+  {
+    href: "/industries/healthcare",
+    name: "WhatsApp for healthcare",
+    description: "A free WhatsApp AI agent for clinics and doctors: patient questions, appointment requests and reminders, plus WhatsApp calls.",
+    icon: Stethoscope,
   },
   // Brazil
   {

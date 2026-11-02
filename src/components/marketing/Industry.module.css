@@ -1,0 +1,74 @@
+/* Industry pages (IndustryBlocks.tsx). Sections, cards and FAQ come from
+ * FreeTools.module.css and Marketing.module.css; these are the extra pieces. */
+
+/* Jump tags under the hero */
+.tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 820px; margin: -12px auto 0; padding: 0 24px; }
+.tags a { padding: 9px 16px; border: 1px solid var(--site-border); border-radius: 999px; background: var(--site-panel); font-size: 13px; font-weight: 550; transition: border-color .2s, color .2s; }
+.tags a:hover { border-color: var(--landing-green); color: var(--landing-green); }
+
+/* Sourced stats strip */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: 1100px; margin: 64px auto 0; padding: 0 24px; }
+.stat { padding: 28px; border: 1px solid var(--site-border); border-radius: 22px; background: var(--site-panel); }
+.statValue { display: block; font-family: var(--font-manrope), sans-serif; font-size: 52px; font-weight: 650; line-height: 1; letter-spacing: -.055em; color: var(--landing-green); }
+.statLabel { margin-top: 16px; font-size: 14px; line-height: 1.65; }
+.statSource { margin-top: 10px; font-size: 12px; line-height: 1.5; color: var(--site-text-muted); }
+.statsNote { max-width: 1100px; margin: 14px auto 0; padding: 0 24px; font-size: 12px; color: var(--site-text-muted); }
+
+/* Example chat: the thread, and notes on how each answer was produced */
+.example { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 40px; align-items: start; }
+.thread { border: 1px solid var(--site-border); border-radius: 26px; background: var(--site-panel); overflow: clip; }
+.threadHead { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--site-border); }
+.threadHead > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--landing-green); color: #fff; font-weight: 650; }
+.threadHead strong { display: block; font-size: 14px; }
+.threadHead small { font-size: 12px; color: var(--site-text-muted); }
+.turns { display: flex; flex-direction: column; gap: 10px; padding: 22px 20px; background: color-mix(in srgb, var(--landing-green) 4%, var(--site-panel)); }
+.turns > li { max-width: 86%; padding: 10px 14px; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.patient { align-self: flex-start; border: 1px solid var(--site-border); border-radius: 4px 16px 16px 16px; background: var(--site-panel); }
+.agent { align-self: flex-end; border-radius: 16px 4px 16px 16px; background: color-mix(in srgb, var(--landing-green) 15%, var(--site-panel)); }
+.threadCaption { padding: 14px 20px 18px; border-top: 1px solid var(--site-border); font-size: 12px; line-height: 1.6; color: var(--site-text-muted); }
+.points { display: grid; gap: 0; }
+.points > div { padding: 20px 0; border-top: 1px solid var(--site-border); }
+.points > div:last-child { border-bottom: 1px solid var(--site-border); }
+.points dt { font-size: 15px; font-weight: 600; letter-spacing: -.02em; }
+.points dd { margin-top: 6px; font-size: 13px; line-height: 1.75; color: var(--site-text-muted); }
+
+/* Callout under a section */
+.note { margin-top: 20px; padding: 16px 20px; border: 1px solid color-mix(in srgb, var(--landing-green) 22%, var(--site-border)); border-left: 3px solid var(--landing-green); border-radius: 14px; background: color-mix(in srgb, var(--landing-green) 5%, var(--site-panel)); font-size: 13px; line-height: 1.75; color: var(--site-text-soft); }
+.note a, .more a { color: var(--landing-green); }
+.note a { text-decoration: underline; text-underline-offset: 3px; }
+.more { margin-top: 22px; }
+.more a { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; transition: gap .2s; }
+.more a:hover { gap: 12px; }
+
+/* Sign-up band between sections */
+.inlineWrap { max-width: 1100px; margin: 72px auto 0; padding: 0 24px; }
+.inlineCta { display: flex; align-items: center; justify-content: space-between; gap: 24px 40px; padding: 32px 36px; border: 1px solid var(--site-border); border-radius: 24px; background: var(--site-panel); }
+.inlineCta > div { max-width: 620px; }
+.inlineTitle { font-size: 20px; font-weight: 600; line-height: 1.35; letter-spacing: -.035em; }
+.inlineTitle + p { margin-top: 8px; font-size: 14px; line-height: 1.7; color: var(--site-text-muted); }
+.inlineCta > :last-child { flex-shrink: 0; }
+
+/* Sources */
+.sources { max-width: 760px; }
+.sources .sourcesTitle { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.22; letter-spacing: -.04em; }
+.sources > p { margin-top: 12px; font-size: 13px; line-height: 1.7; color: var(--site-text-muted); }
+.sources ul { display: grid; gap: 10px; margin-top: 18px; padding-left: 20px; list-style: disc; }
+.sources li { font-size: 13px; line-height: 1.6; }
+.sources li::marker { color: var(--landing-green); }
+.sources a { display: inline; }
+.sources a:hover { color: var(--landing-green); }
+.sources a svg { display: inline; margin-left: 4px; vertical-align: -1px; }
+
+@media (max-width: 860px) {
+  .stats { grid-template-columns: 1fr; }
+  .example { grid-template-columns: 1fr; }
+  .inlineCta { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+  .tags, .stats, .statsNote, .inlineWrap { padding-inline: 16px; }
+  .inlineCta { padding: 26px 22px; }
+  .stat { padding: 24px; }
+  .statValue { font-size: 44px; }
+  .turns { padding: 18px 14px; }
+  .turns > li { max-width: 92%; }
+}

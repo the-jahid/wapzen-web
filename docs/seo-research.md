@@ -429,3 +429,22 @@ Facts that decided the shape:
 - **India:** /ai-calling-agent-india already ranks for "ai calling agent india", so the post takes the telecalling-team angle. Bolna lists ₹5.52/min pay-as-you-go (6¢), ~₹4.15 with larger top-ups. TRAI 140 (promo) / 1600 (service) series since Feb 2025. DPDP Rules: consent managers Nov 2026, most obligations 13 May 2027.
 - **Brazil:** Panorama Mobile Time/Opinion Box Jan 2025 (n=2,099): 77% of WhatsApp users make more voice calls on the app than with carrier minutes; 60% call daily or almost.
 - **Mexico:** Asociación de Internet MX 2024 study: 101.9 million internet users, 88% send messages via messaging apps. Senate passed a phone-harassment reform on 8 Oct 2026, pending the Chamber of Deputies: recheck.
+
+## Healthcare industry page (2026-11-02)
+
+The user asked for a page shaped like vapi.ai/industries/healthcare (hero with use-case tags, outcome stats, one section per use case with three cards, trust and compliance, integrations, FAQ, closing CTA), about WhatsApp chat, saying voice is also available. Harvest: `node docs/seo-healthcare-research.mjs` (same five sources and scoring as the industry blogs), six clusters.
+
+| Cluster | Top phrases (score, sources/5) | Where on the page |
+|---|---|---|
+| AI agent | ai agent for healthcare (116, 5), ai voice agent for healthcare (85, 4), ai agents in healthcare examples (51, 4), ai chatbot for healthcare (50, 5), medical chatbot (50, 5) | FAQ 1, FAQ heading, description |
+| Receptionist | ai receptionist for medical office (86, 4), ai front desk for medical office (69, 3), ai receptionist for medical practice (65, 4), ai receptionist for dental office (64, 4) | Not targeted: /ai-receptionist already covers it; linked from the voice section |
+| WhatsApp | whatsapp automation for clinics (80, 4), whatsapp business for doctors (68, 4), whatsapp chatbot for healthcare (57, 3), whatsapp chatbot for hospital (57, 3), whatsapp for healthcare (40, 4) | Title, setup H2, comparison H2 |
+| Trust | is whatsapp hipaa compliant 2026 (54, 4), whatsapp hipaa compliant (40, 4), ai hipaa compliant (40, 4), whatsapp patient information (30, 3) | HIPAA H2 and FAQ |
+| Scheduling | whatsapp appointment booking (50, 5), patient appointment reminders (40, 4), patient no show (35, 4), patient appointment reminder template (33, 4) | Appointments and reminders H2s, reminder sample; links /blog/whatsapp-appointment-booking |
+| Specialties | ai receptionist for dental clinics (55, 4), whatsapp for pharmacy (30, 3); the rest is lab-report phone numbers | Practice pills only. Pharmacies left out: WhatsApp's commerce policy restricts drugs |
+
+Page: `/industries/healthcare` (`app/(marketing)/industries/healthcare`, blocks in `components/marketing/IndustryBlocks.tsx`). Facts that decided the shape:
+- **HIPAA:** Meta Terms for WhatsApp Business Platform §4.2 say Meta is not a Business Associate and the platform is not HIPAA compliant. The WhatsApp Business Messaging Policy (§3, updated 23 Sep 2026) says not to use WhatsApp for telemedicine or to send or request health information where regulations require compliant systems; §1 requires opt-in. So the page is front-desk work only, says Wapzen signs no BAA, and keeps symptoms out of the sample prompt.
+- **Stats are research, not results:** WhatsApp 3B+ monthly users (Meta Q1 2025, TechCrunch), 23% average no-show rate over 105 studies (Dantas 2018), text reminders RR 1.14 vs none (Cochrane CD007458, 2013, SMS not WhatsApp). The page says so under the strip.
+- **Product claims follow whiskey-bailey-server:** knowledge base files, date in the number's time zone, API request tool to public HTTPS only (SSRF guard), dashboard replies, Bulk Messages with `{{column}}` placeholders, 30 s default gap, pause/cancel. No EHR integrations claimed.
+- **Voice:** the user said to say voice is also available. The live dashboard still shows "Voice agents are coming in our next update", so the page keeps voice to one short section and one FAQ.
