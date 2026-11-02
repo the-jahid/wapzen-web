@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, Receipt, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, Hand, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -23,7 +23,7 @@ export type BlogPostEntry = {
   locale?: Locale;
   /** For a post in another language: the English post it covers (hreflang). */
   alternateOf?: string;
-  /** BCP 47 language of a post written in another language than its blog (Irish posts in /blog). */
+  /** BCP 47 language of a post written in another language than its blog. */
   language?: string;
 };
 
@@ -296,19 +296,8 @@ export const blogPosts: BlogPostEntry[] = [
     tag: "Explainer",
     icon: ShoppingCart,
     published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 6,
-  },
-  {
-    href: "/blog/whatsapp-order-tracking-bot",
-    title: "WhatsApp Order Tracking Bot: Automate Delivery Updates",
-    name: "WhatsApp order tracking bot",
-    description: "Discover how a WhatsApp order tracking bot checks order status, answers delivery questions and reduces repetitive customer support.",
-    tag: "Explainer",
-    icon: Truck,
-    published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 6,
+    updated: "2026-11-02",
+    readingMinutes: 8,
   },
   {
     href: "/blog/whatsapp-order-confirmation-messages",
@@ -321,40 +310,7 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-01",
     readingMinutes: 7,
   },
-  {
-    href: "/blog/reduce-missed-whatsapp-orders",
-    title: "How to Reduce Missed WhatsApp Orders with AI Automation",
-    name: "Reduce missed WhatsApp orders",
-    description: "Losing customer orders in busy WhatsApp chats? Learn practical ways to reduce missed orders, improve response times and automate with AI.",
-    tag: "Explainer",
-    icon: Inbox,
-    published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 6,
-  },
-  {
-    href: "/blog/whatsapp-order-changes-cancellations",
-    title: "WhatsApp Order Changes & Cancellations: AI Automation Guide",
-    name: "WhatsApp order changes and cancellations",
-    description: "Learn how to manage WhatsApp order changes, cancellations and refund requests safely using AI chatbots, automation and human support.",
-    tag: "Explainer",
-    icon: RefreshCcw,
-    published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 7,
-  },
-  // Free chatbot and auto-reply guides, after the older posts for the same reason.
-  {
-    href: "/blog/best-free-whatsapp-ai-chatbot-guide",
-    title: "Free WhatsApp AI Chatbot: How to Choose the Best One in 2026",
-    name: "How to choose a free WhatsApp AI chatbot",
-    description: "Looking for a free WhatsApp AI chatbot? Compare free chatbot options, hidden costs, features, and a 7-day testing plan before choosing one.",
-    tag: "Explainer",
-    icon: Gift,
-    published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 10,
-  },
+  // AI auto-reply examples, after the older posts for the same reason.
   {
     href: "/blog/whatsapp-ai-auto-reply-customer-conversations",
     title: "WhatsApp AI Auto Reply: 12 Customer Chats You Can Automate",
@@ -599,42 +555,6 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-01",
     readingMinutes: 14,
     locale: "es",
-  },
-  {
-    href: "/blog/whatsapp-chatbot-ecommerce-ireland",
-    title: "Comhrábot WhatsApp Saor in Aisce do Ghnólachtaí Ríomhthráchtála in Éirinn",
-    name: "Comhrábot WhatsApp saor in aisce do shiopaí ar líne in Éirinn",
-    description: "Faigh comhrábot WhatsApp AI saor in aisce do do shiopa ar líne in Éirinn. Freagair ceisteanna custaiméirí, cabhraigh le horduithe agus cuir seirbhís ar fáil 24/7.",
-    tag: "Explainer",
-    icon: ShoppingBag,
-    published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 3,
-    language: "ga-IE",
-  },
-  {
-    href: "/blog/whatsapp-chatbot-travel-agencies-hotels-ireland",
-    title: "Comhrábot WhatsApp do Ghníomhaireachtaí Taistil agus d'Óstáin in Éirinn",
-    name: "Comhrábot WhatsApp do ghníomhaireachtaí taistil agus d'óstáin in Éirinn",
-    description: "Uathoibrigh fiosrúcháin faoi áirithintí, seomraí agus turais le comhrábot WhatsApp AI saor in aisce do ghníomhaireachtaí taistil agus d'óstáin in Éirinn.",
-    tag: "Explainer",
-    icon: BedDouble,
-    published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 3,
-    language: "ga-IE",
-  },
-  {
-    href: "/blog/whatsapp-booking-chatbot-salons-gyms-ireland",
-    title: "Comhrábot WhatsApp le haghaidh Áirithintí Salon in Éirinn",
-    name: "Comhrábot WhatsApp le haghaidh áirithintí salon, spá agus giomnáisiam in Éirinn",
-    description: "Bain úsáid as comhrábot WhatsApp AI saor in aisce chun ceisteanna faoi choinní, phraghsanna agus ranganna a fhreagairt do salons, spánna agus giomnáisiamaí in Éirinn.",
-    tag: "Explainer",
-    icon: Scissors,
-    published: "2026-11-01",
-    updated: "2026-11-01",
-    readingMinutes: 4,
-    language: "ga-IE",
   },
   {
     href: "/de/blog/whatsapp-chatbot-handwerker-kostenlos",

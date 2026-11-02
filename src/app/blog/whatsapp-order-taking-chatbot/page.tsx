@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { pageMetadata } from "@/lib/pageMetadata";
 import { blogPost } from "@/lib/blogPosts";
-import { Samples } from "@/components/marketing/MarketingPage";
+import { Comparison, Samples } from "@/components/marketing/MarketingPage";
 import { BlogPost, InlineCta, Note } from "@/components/blog/BlogPost";
 
 // Targets "whatsapp order taking chatbot". Describes what the product does
 // today, so keep it in step with whiskey-bailey-server: Take Order is a chat
-// feature that saves to Tools › Orders, chat agents answer one-to-one text, and
-// voice is left out until it has a backend again.
+// feature that saves to Tools › Orders, create_order is the agent's only order
+// tool (it can't read saved orders back), chat agents answer one-to-one text,
+// and voice is left out until it has a backend again. The missed-orders section
+// replaced /blog/reduce-missed-whatsapp-orders (redirected here, 2026-11-02);
+// there is no per-chat AI pause, so if a takeover feature ships, rewrite it.
 const href = "/blog/whatsapp-order-taking-chatbot";
 const post = blogPost(href);
 
@@ -18,11 +21,20 @@ const orderSummary = [
   { title: "Order summary", text: "Order summary\n- 2 × Black T-shirts, size M\n- Subtotal: $40\n- Delivery: $5\n- Total: $45\n- Payment: Cash on delivery\n\nIs everything correct? Reply CONFIRM to place your order or tell me what you would like to change." },
 ];
 
+const metrics = [
+  ["First response time", "How quickly customers receive an initial answer"],
+  ["Order completion rate", "How many started order conversations result in confirmed orders"],
+  ["Incomplete orders", "How often necessary customer details are missing"],
+  ["Failed order submissions", "How often an automation cannot save an order"],
+  ["Human escalation rate", "How often customers require staff assistance"],
+];
+
 const faqs = [
   { q: "Can a WhatsApp chatbot take orders automatically?", a: "Yes. An AI chatbot can collect product selections, quantities, delivery details and customer confirmation. Saving the order automatically requires a supported order-handling workflow or integration, such as Wapzen's built-in Take Order tool or an API request to your own system." },
   { q: "Do I need coding skills to create one?", a: "Not necessarily. Wapzen provides a no-code interface for creating the chatbot. More advanced integrations may require API configuration or an automation service." },
   { q: "Can an AI chatbot manage multiple customer conversations?", a: "Yes. Chatbot software can process conversations from different customers without requiring a person to answer each one manually. Actual throughput and reliability depend on the platform and connection." },
   { q: "Can the chatbot handle cash-on-delivery orders?", a: "It can collect the preferred payment method and the information needed for a COD order, provided the workflow is configured appropriately." },
+  { q: "Can AI prevent missed WhatsApp orders?", a: "AI can help reduce missed enquiries by answering routine messages promptly and guiding customers through order collection. Reliable order submission and monitoring are also necessary." },
 ];
 
 const sources = [
@@ -67,7 +79,7 @@ const sections = [
       <p>The assistant must not tell the customer that an order has been placed unless the system confirms it.</p>
       <h3>5. Answer follow-up questions</h3>
       <p>Customers often return to WhatsApp to ask whether their order has shipped or when it will arrive.</p>
-      <p>If the chatbot has access to current order information through an API, it can retrieve the latest recorded status and explain it. Our <Link href="/blog/whatsapp-order-tracking-bot">WhatsApp order tracking bot guide</Link> covers that step in detail.</p>
+      <p>If the chatbot has access to current order information through an API, it can retrieve the latest recorded status and explain it. The customer should be verified before any order details are shared.</p>
     </>,
   },
   {
@@ -100,7 +112,31 @@ const sections = [
         <li><strong>API request tools.</strong> These connect the assistant with external systems for order-related actions. For example, a business could configure an order-saving workflow that sends customer-confirmed information to its order database. Wapzen then acts as the conversational interface while the connected system stores the official order record.</li>
       </ul>
       <p>The basic chatbot setup does not require the WhatsApp Business API. External order integrations still need to be configured and tested, and any order flow should be tried in real conversations before customers use it, including a customer who changes their mind halfway through.</p>
+      <p>Orders saved by Take Order stay in your dashboard. The agent can’t read them back to a customer, so answering “where is my order?” needs an API request tool connected to the system that holds the status.</p>
       <Note>Wapzen’s chat agent answers text messages, not voice notes or images, and it doesn’t take payments itself. Wapzen is an independent product, not made by Meta or WhatsApp. Use it to answer customers who message you, never to send bulk messages.</Note>
+    </>,
+  },
+  {
+    id: "missed-orders",
+    title: "Why WhatsApp orders get missed, and how to fix it",
+    body: <>
+      <p>Most missed orders are caused by problems in the process rather than a lack of customer interest. Four causes come up again and again:</p>
+      <ul>
+        <li><strong>Slow first replies.</strong> If your team is busy with existing orders, new enquiries wait too long.</li>
+        <li><strong>Repeated questions.</strong> Answering the same questions about hours, sizes, delivery charges and payment methods leaves less time for actual orders.</li>
+        <li><strong>Incomplete details.</strong> A product name with no quantity, or an address with no phone number, means more back and forth.</li>
+        <li><strong>No central order record.</strong> If orders live only inside chats, someone has to scroll back to work out what each customer bought.</li>
+      </ul>
+      <p>To fix them, start by reviewing recent conversations: look for late replies, orders that needed repeated clarification, and customers who asked the same question twice. Then:</p>
+      <ol>
+        <li>Let the chatbot answer the common product questions from an accurate, up-to-date knowledge base.</li>
+        <li>Collect the same essential fields for every order, and show a summary before saving it. Our <Link href="/blog/whatsapp-order-confirmation-messages">25 order confirmation messages</Link> are a starting point for that wording.</li>
+        <li>Save confirmed orders somewhere reliable, with a unique order number and protection against duplicates.</li>
+        <li>Send exceptions to a person: unusual discounts, payment disputes, damaged products and anything outside your normal rules. In Wapzen, an API request tool can alert your team. This is not the same as a team inbox where you pause the AI for one chat.</li>
+      </ol>
+      <p>You don’t need a complicated analytics system to see whether this is working. Track these five numbers:</p>
+      <Comparison caption="Five numbers to track for WhatsApp order automation" columns={["What it tells you"]} rows={metrics} />
+      <p>For example, if customers reply quickly but often drop out while giving their delivery details, your order flow may be asking too many questions.</p>
     </>,
   },
   {
@@ -121,7 +157,7 @@ const sections = [
     body: <>
       <p>Every order begins with a conversation. The easier you make that conversation, the easier it becomes for customers to buy from you.</p>
       <p>With Wapzen, businesses can build AI-powered WhatsApp conversations, connect their business information and configure order-handling tools without creating a chatbot from scratch.</p>
-      <p>For a restaurant-specific example, read our <Link href="/blog/whatsapp-food-ordering-system">WhatsApp food ordering guide</Link>. If orders are already getting lost in busy chats, start with <Link href="/blog/reduce-missed-whatsapp-orders">how to reduce missed WhatsApp orders</Link>.</p>
+      <p>For a restaurant-specific example, read our <Link href="/blog/whatsapp-food-ordering-system">WhatsApp food ordering guide</Link>. For the wording of the summary and confirmation, copy from our <Link href="/blog/whatsapp-order-confirmation-messages">25 WhatsApp order confirmation messages</Link>.</p>
     </>,
   },
 ];
@@ -142,7 +178,7 @@ export default function WhatsAppOrderTakingChatbotPage() {
     sections={sections}
     faq={faqs}
     sources={sources}
-    related={["/blog/whatsapp-order-tracking-bot", "/blog/whatsapp-food-ordering-system"]}
+    related={["/blog/whatsapp-order-confirmation-messages", "/blog/whatsapp-food-ordering-system"]}
     product="/free-whatsapp-chatbot"
     cta={{ heading: <>Every order starts with a conversation.<br /><span>Let AI handle it.</span></>, body: "Create an AI chat agent, add your products, and connect your WhatsApp number. It’s free to start." }}
   />;

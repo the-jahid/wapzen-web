@@ -105,7 +105,7 @@ const sections = [
       <p>After securely verifying the customer and receiving an order-system response:</p>
       <blockquote>“Your order is currently marked as dispatched. The tracking information available in our system is [verified tracking information].”</blockquote>
       <p><strong>Why it works:</strong> The chatbot uses the customer’s actual order information rather than providing a generic message.</p>
-      <p><strong>Important rule:</strong> Don’t expose account or order details without the necessary verification. If the order system is unavailable, the agent should explain that it cannot check the current status. Our <Link href="/blog/whatsapp-order-tracking-bot">WhatsApp order tracking guide</Link> covers this flow in detail.</p>
+      <p><strong>Important rule:</strong> Don’t expose account or order details without the necessary verification. If the order system is unavailable, the agent should explain that it cannot check the current status. Our <Link href="/blog/whatsapp-order-taking-chatbot">WhatsApp order taking chatbot guide</Link> covers the order flow from first question to confirmation.</p>
 
       <h3>7. Explaining refund policies</h3>
       <p><strong>Customer:</strong> “I bought something last week and want to return it. Can I get my money back?”</p>
@@ -235,7 +235,7 @@ const sections = [
       <p>That’s why an effective WhatsApp AI auto-reply system should do more than acknowledge messages.</p>
       <p>It should understand the question, use correct business information, explain what it can and cannot do, and guide the customer toward the next appropriate step.</p>
       <p>Start with a few common conversations. Test them carefully. Then expand.</p>
-      <p>Still choosing a platform? Our guide to <Link href="/blog/best-free-whatsapp-ai-chatbot-guide">choosing a free WhatsApp AI chatbot</Link> has a checklist and a seven-day test. Otherwise, <Link href="/free-whatsapp-chatbot">try Wapzen’s free WhatsApp AI chatbot</Link> and run these scenarios with your own business information.</p>
+      <p>Ready to test it? <Link href="/free-whatsapp-chatbot">Try Wapzen’s free WhatsApp AI chatbot</Link> and run these scenarios with your own business information.</p>
     </>,
   },
 ];
@@ -256,7 +256,7 @@ export default function WhatsAppAiAutoReplyCustomerConversationsPage() {
     sections={sections}
     faq={faqs}
     sources={sources}
-    related={["/blog/best-free-whatsapp-ai-chatbot-guide", "/blog/whatsapp-auto-reply-personal-account"]}
+    related={["/blog/what-is-a-whatsapp-chatbot", "/blog/whatsapp-auto-reply-personal-account"]}
     product="/whatsapp-auto-reply"
     cta={{ heading: <>Don’t just acknowledge the message.<br /><span>Answer it.</span></>, body: "Create an AI chat agent, add your business information, and connect your WhatsApp number. It’s free to start." }}
   />;
