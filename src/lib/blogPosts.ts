@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Gift, GitCompareArrows, Hand, Inbox, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, Receipt, RefreshCcw, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -789,6 +789,64 @@ export const blogPosts: BlogPostEntry[] = [
     published: "2026-11-01",
     updated: "2026-11-01",
     readingMinutes: 11,
+  },
+  // Picked from Search Console (2026-11-02) and autocomplete: free-intent and
+  // competitor-price searches where the site had impressions but ranked low.
+  // Last in the list for the same reason as the order series.
+  {
+    href: "/blog/free-whatsapp-ai-agent",
+    title: "Free WhatsApp AI Agent for Business: No Reply Limit (2026)",
+    name: "Free WhatsApp AI agent",
+    description: "A free AI agent for your WhatsApp number: it answers chats and calls 24/7, with no cap on AI replies, no Business API and no per-message fees.",
+    tag: "Explainer",
+    icon: Bot,
+    published: "2026-11-02",
+    updated: "2026-11-02",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/is-whatsapp-business-api-free",
+    title: "Is WhatsApp Business API Free? What It Costs in 2026",
+    name: "Is WhatsApp Business API free?",
+    description: "The WhatsApp Business API is free to access, not to use: what's free in 2026 (1,000 service replies, ad chats), what's charged, and free alternatives.",
+    tag: "Explainer",
+    icon: CircleDollarSign,
+    published: "2026-11-02",
+    updated: "2026-11-02",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/aisensy-vs-interakt",
+    title: "AiSensy vs Interakt (2026): Pricing, AI Agents & Which to Pick",
+    name: "AiSensy vs Interakt",
+    description: "AiSensy vs Interakt compared on plan prices, AI agent add-ons, chatbots, team seats, WhatsApp calling and Shopify, with a worked monthly bill and a free option.",
+    tag: "Comparison",
+    icon: Scale,
+    published: "2026-11-02",
+    updated: "2026-11-02",
+    readingMinutes: 9,
+  },
+  {
+    href: "/blog/wati-pricing",
+    title: "WATI Pricing 2026: Plans, Hidden Costs & a Free Alternative",
+    name: "WATI pricing",
+    description: "WATI's 2026 plans (Growth $49, Pro $99, Business $249 a month), what's charged on top, three real monthly bills, and a free alternative for AI replies.",
+    tag: "Explainer",
+    icon: Receipt,
+    published: "2026-11-02",
+    updated: "2026-11-02",
+    readingMinutes: 7,
+  },
+  {
+    href: "/blog/whatsapp-bulk-message-sender-free",
+    title: "Free WhatsApp Bulk Message Sender: Send Safely in 2026",
+    name: "Free WhatsApp bulk message sender",
+    description: "Send bulk WhatsApp messages free: broadcast lists, extensions, the API and Wapzen compared, how to avoid a ban, and 8 message templates to copy.",
+    tag: "Explainer",
+    icon: Megaphone,
+    published: "2026-11-02",
+    updated: "2026-11-02",
+    readingMinutes: 9,
   },
 ];
 
