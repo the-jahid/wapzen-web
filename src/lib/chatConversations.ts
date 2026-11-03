@@ -192,11 +192,6 @@ export async function countChatConversationsNeedingAttention(getToken: AuthToken
   return envelope.meta?.pagination?.total_items ?? envelope.data?.length ?? 0;
 }
 
-// What a send returns: the saved turn, plus whether the AI is still on for the
-// contact afterwards. It stays on when the agent has human handover off; a
-// server that predates the switch leaves the field out and always turns it off.
-export type ApiSentChatMessage = ApiChatMessage & { ai_reply_enabled?: boolean };
-
 // sendChatConversationMessage writes on the thread as the agent: the message
 // goes out on the number the thread runs on and comes back as the turn it was
 // saved as, so the transcript can be extended without re-reading it.
@@ -204,8 +199,8 @@ export async function sendChatConversationMessage(
   id: string,
   content: string,
   getToken: AuthTokenGetter
-): Promise<ApiSentChatMessage> {
-  const envelope = await request<ApiSentChatMessage>(
+): Promise<ApiChatMessage> {
+  const envelope = await request<ApiChatMessage>(
     `${dashboardPath}/${encodeURIComponent(id)}/messages`,
     { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content }) },
     getToken

@@ -234,22 +234,13 @@ export default function ChatConversationsWorkspace({
     setSending(true);
     setThreadError("");
     try {
-      const { ai_reply_enabled: aiStillOn, ...message } = await sendChatConversationMessage(summary.id, body, getToken);
+      const message = await sendChatConversationMessage(summary.id, body, getToken);
       setDraft("");
       if (composerRef.current) composerRef.current.style.height = "auto";
-      // Answering by hand takes the chat over: the server switches the AI off
-      // for this contact (which turns it red if the AI was on), and the switch
-      // shows it straight away. An agent with human handover off keeps the AI on.
-      const handedOver =
-        aiStillOn === true
-          ? {}
-          : {
-              ai_reply_enabled: false,
-              needs_attention: summary.ai_reply_enabled !== false || summary.needs_attention,
-            };
+      // Replying leaves the AI as it is: only the switch turns it off.
       setThread((current) =>
         current && current.id === summary.id
-          ? { ...current, ...handedOver, messages: [...(current.messages ?? []), message] }
+          ? { ...current, messages: [...(current.messages ?? []), message] }
           : current
       );
       setConversations((current) =>
@@ -257,7 +248,6 @@ export default function ChatConversationsWorkspace({
           conversation.id === summary.id
             ? {
                 ...conversation,
-                ...handedOver,
                 message_count: conversation.message_count + 1,
                 last_message_role: message.role,
                 last_message_at: message.created_at,
@@ -265,7 +255,6 @@ export default function ChatConversationsWorkspace({
             : conversation
         )
       );
-      refreshConversationsAttention();
       // After the bubble has been painted, not before it exists.
       requestAnimationFrame(() => {
         const pane = messagesRef.current;
@@ -601,9 +590,9 @@ export default function ChatConversationsWorkspace({
                   )}
                 </div>
 
-                {/* Writing here takes the conversation over from the agent: the
-                    message leaves on the same number and joins the transcript
-                    beside the agent's own replies. A thread whose number was
+                {/* Writing here replies as the business: the message leaves on
+                    the same number and joins the transcript beside the agent's
+                    own replies. The AI stays as it is. A thread whose number was
                     unpaired keeps its history but can no longer be written to. */}
                 <div className="cv-composer">
                   <textarea
