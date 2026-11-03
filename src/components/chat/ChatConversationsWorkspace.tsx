@@ -233,9 +233,11 @@ export default function ChatConversationsWorkspace({
       const message = await sendChatConversationMessage(summary.id, body, getToken);
       setDraft("");
       if (composerRef.current) composerRef.current.style.height = "auto";
+      // Answering by hand takes the chat over: the server switches the AI off
+      // for this contact, and the switch shows it straight away.
       setThread((current) =>
         current && current.id === summary.id
-          ? { ...current, messages: [...(current.messages ?? []), message] }
+          ? { ...current, ai_reply_enabled: false, messages: [...(current.messages ?? []), message] }
           : current
       );
       setConversations((current) =>
@@ -243,6 +245,7 @@ export default function ChatConversationsWorkspace({
           conversation.id === summary.id
             ? {
                 ...conversation,
+                ai_reply_enabled: false,
                 message_count: conversation.message_count + 1,
                 last_message_role: message.role,
                 last_message_at: message.created_at,
@@ -506,6 +509,7 @@ export default function ChatConversationsWorkspace({
                 {summary?.ai_reply_enabled === false ? (
                   <div className="cv-ai-off-note">
                     AI replies are off for this contact. Their messages still arrive here; answer them from the box below.
+                    The AI also goes off by itself when you write to them from your phone or here.
                   </div>
                 ) : null}
 
