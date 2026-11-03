@@ -3,11 +3,6 @@ export const SUPPORT_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeUR
   "Hi, I need help connecting my WhatsApp number on Wapzen.",
 )}`;
 
-/** Opens a WhatsApp chat with support to buy a paid plan once a free limit is reached. */
-export const LIMIT_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
-  "Hi, I've reached my free limit on Wapzen and would like to buy a paid plan.",
-)}`;
-
 /** Opens a WhatsApp chat with support to ask for early access to voice agents. */
 export const VOICE_EARLY_ACCESS_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
   "Hi, I'd like early access to Wapzen voice agents.",

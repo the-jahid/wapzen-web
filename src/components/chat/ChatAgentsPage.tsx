@@ -7,7 +7,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
-import { LIMIT_WHATSAPP_URL, SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
+import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
 import {
@@ -519,7 +519,6 @@ const css = `
 .chat-runtime-alert-title { color: var(--app-amber-text); font-size: 13px; font-weight: 800; margin: 0; }
 .chat-runtime-alert-time { color: var(--subtle); font-weight: 600; }
 .chat-runtime-alert-copy { color: var(--text); font-size: 12.5px; line-height: 1.5; margin: 4px 0 0; overflow-wrap: anywhere; }
-.chat-limit-alert .chat-btn-whatsapp { margin-top: 10px; }
 /* An agent that has sent its replies for the hour, counting down to when it answers again. */
 .chat-limit-list { display: grid; gap: 10px; margin: 0 auto 16px; max-width: 1320px; width: 100%; }
 .chat-limit-card { align-items: center; flex-wrap: wrap; justify-content: space-between; }
@@ -1038,7 +1037,6 @@ export default function ChatAgentsPage() {
   const [notice, setNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [createForm, setCreateForm] = useState<CreateForm | null>(null);
   const [createError, setCreateError] = useState("");
-  const [createLimitReached, setCreateLimitReached] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   // The delete button only asks; the agent goes once the modal is confirmed.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -1458,14 +1456,12 @@ export default function ChatAgentsPage() {
 
   const openCreateModal = useCallback(() => {
     setCreateError("");
-    setCreateLimitReached(false);
     setCreateForm(newCreateForm(chatAgents.length + 1));
   }, [chatAgents.length]);
 
   const closeCreateModal = useCallback(() => {
     setCreateForm(null);
     setCreateError("");
-    setCreateLimitReached(false);
   }, []);
 
   const createAgent = useCallback(async () => {
@@ -1484,7 +1480,7 @@ export default function ChatAgentsPage() {
       setNotice({ kind: "success", text: `Created "${created.agent.name}"` });
     } catch (error) {
       if (isChatAgentLimitError(error)) {
-        setCreateLimitReached(true);
+        setCreateError("Your account already has a chat agent. Edit that agent instead of creating a new one.");
       } else {
         setCreateError(error instanceof Error ? error.message : "Could not create chat agent");
       }
@@ -1766,7 +1762,6 @@ export default function ChatAgentsPage() {
           error={createError}
           form={createForm}
           isSubmitting={isCreating}
-          limitReached={createLimitReached}
           onCancel={closeCreateModal}
           onCreate={createAgent}
           phoneNumbers={phoneNumbers}
@@ -1794,7 +1789,6 @@ function CreateChatAgentModal({
   error,
   form,
   isSubmitting,
-  limitReached,
   onCancel,
   onCreate,
   phoneNumbers,
@@ -1803,7 +1797,6 @@ function CreateChatAgentModal({
   error: string;
   form: CreateForm;
   isSubmitting: boolean;
-  limitReached: boolean;
   onCancel: () => void;
   onCreate: () => void;
   phoneNumbers: ApiPhoneNumber[];
@@ -1864,12 +1857,6 @@ function CreateChatAgentModal({
         </div>
 
         <div className="chat-modal-body">
-          {limitReached ? (
-            <LimitReachedAlert title="You have reached your free limit">
-              Your free plan includes one chat agent. To add more, you need a paid plan: message
-              us on WhatsApp to buy one.
-            </LimitReachedAlert>
-          ) : null}
           {error ? <div className="chat-modal-error">{error}</div> : null}
 
           <div className="chat-modal-section">
@@ -2052,29 +2039,6 @@ function AgentHeader({
       >
         <Icon name="x" size={16} sw={2.4} />
       </button>
-    </div>
-  );
-}
-
-// Shown only once a limit has been hit — the limits themselves are never
-// advertised — with a way to reach us on WhatsApp to lift it.
-function LimitReachedAlert({ children, title }: { children: ReactNode; title: string }) {
-  return (
-    <div className="chat-card chat-runtime-alert chat-limit-alert" role="alert">
-      <span className="chat-runtime-alert-icon">!</span>
-      <div style={{ minWidth: 0 }}>
-        <p className="chat-runtime-alert-title">{title}</p>
-        <p className="chat-runtime-alert-copy">{children}</p>
-        <a
-          className="chat-btn chat-btn-whatsapp chat-btn-sm"
-          href={LIMIT_WHATSAPP_URL}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <WhatsAppGlyph size={15} />
-          Message us on WhatsApp
-        </a>
-      </div>
     </div>
   );
 }
