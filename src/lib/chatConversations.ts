@@ -19,6 +19,9 @@ export type ApiChatConversation = {
   status: ChatConversationStatus;
   // Off: the agent stays quiet for this contact and a person answers.
   ai_reply_enabled: boolean;
+  // Red until a person marks it done: the AI went off for this contact, or
+  // they wrote while it was off.
+  needs_attention: boolean;
   message_count: number;
   last_message_role: ChatMessageRole | null;
   last_message_at: string | null;
@@ -158,6 +161,35 @@ export async function setChatConversationAiReply(
     getToken
   );
   return envelope.data;
+}
+
+// markChatConversationDone clears a conversation's red flag. The AI stays as
+// it is; a customer who writes again while it is off turns it red again.
+export async function markChatConversationDone(
+  id: string,
+  getToken: AuthTokenGetter
+): Promise<ApiChatConversation> {
+  const envelope = await request<ApiChatConversation>(
+    `${dashboardPath}/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ needs_attention: false }),
+    },
+    getToken
+  );
+  return envelope.data;
+}
+
+// countChatConversationsNeedingAttention is the sidebar's red number: one row
+// is asked for, the total comes from the pagination.
+export async function countChatConversationsNeedingAttention(getToken: AuthTokenGetter): Promise<number> {
+  const envelope = await request<ApiChatConversation[]>(
+    `${dashboardPath}?needs_attention=true&limit=1`,
+    undefined,
+    getToken
+  );
+  return envelope.meta?.pagination?.total_items ?? envelope.data?.length ?? 0;
 }
 
 // sendChatConversationMessage writes on the thread as the agent: the message

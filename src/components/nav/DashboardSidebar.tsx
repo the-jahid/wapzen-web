@@ -34,6 +34,7 @@ import {
 } from "@/components/nav/workspaceMode";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import { useNewOrders } from "@/components/nav/useNewOrders";
+import { useConversationsAttention } from "@/components/nav/useConversationsAttention";
 import styles from "./DashboardSidebar.module.css";
 
 const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
@@ -74,6 +75,7 @@ type DashboardSidebarProps = {
 export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const newOrders = useNewOrders();
+  const needsPerson = useConversationsAttention();
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -88,7 +90,7 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
     <div className={styles.root} data-stack={stackBelow}>
       <aside aria-label="Dashboard" className={styles.rail}>
         <div className={styles.panel}>
-          <SidebarBody activeLabel={activeLabel} badges={badges} newOrders={newOrders} />
+          <SidebarBody activeLabel={activeLabel} badges={badges} needsPerson={needsPerson} newOrders={newOrders} />
         </div>
       </aside>
 
@@ -113,16 +115,22 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
             aria-label={
               drawerOpen
                 ? "Close menu"
-                : newOrders > 0
-                  ? `Open menu, ${newOrders} new order${newOrders === 1 ? "" : "s"}`
-                  : "Open menu"
+                : needsPerson > 0
+                  ? `Open menu, ${needsPerson} conversation${needsPerson === 1 ? "" : "s"} need${needsPerson === 1 ? "s" : ""} a person`
+                  : newOrders > 0
+                    ? `Open menu, ${newOrders} new order${newOrders === 1 ? "" : "s"}`
+                    : "Open menu"
             }
             className={`${styles.iconButton} ${styles.menuButton}`}
             onClick={() => setDrawerOpen((open) => !open)}
             type="button"
           >
             {drawerOpen ? <X size={18} /> : <Menu size={18} />}
-            {newOrders > 0 && !drawerOpen ? <span className={styles.menuDot} /> : null}
+            {needsPerson > 0 && !drawerOpen ? (
+              <span className={`${styles.menuDot} ${styles.menuDotAlert}`} />
+            ) : newOrders > 0 && !drawerOpen ? (
+              <span className={styles.menuDot} />
+            ) : null}
           </button>
         </span>
       </header>
@@ -151,6 +159,7 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
           <SidebarBody
             activeLabel={activeLabel}
             badges={badges}
+            needsPerson={needsPerson}
             newOrders={newOrders}
             onNavigate={() => setDrawerOpen(false)}
           />
@@ -163,11 +172,14 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
 function SidebarBody({
   activeLabel,
   badges,
+  needsPerson,
   newOrders,
   onNavigate,
 }: {
   activeLabel: string;
   badges?: Partial<Record<string, number>>;
+  // Conversations the AI went off for that nobody has marked done: red.
+  needsPerson: number;
   newOrders: number;
   onNavigate?: () => void;
 }) {
@@ -206,7 +218,15 @@ function SidebarBody({
                 <Icon size={18} strokeWidth={1.9} />
               </span>
               <span className={styles.navLabel}>{item.label}</span>
-              {ordersWaiting ? (
+              {item.label === "Conversations" && needsPerson > 0 ? (
+                <span
+                  aria-label={`${needsPerson} need${needsPerson === 1 ? "s" : ""} a person`}
+                  className={`${styles.badge} ${styles.badgeAlert}`}
+                  title="The AI is off for these customers. Open each one and mark it done."
+                >
+                  {needsPerson}
+                </span>
+              ) : ordersWaiting ? (
                 <span className={styles.badge}>{newOrders} new</span>
               ) : count ? (
                 <span className={styles.badge}>{count}</span>
