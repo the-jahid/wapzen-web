@@ -256,3 +256,6 @@
   .toolbar > button { width: 32px; }
   .toolbarDivider { display: none; }
 }
+
+/* Right-to-left pages (Arabic): "read post" arrows point the way the text runs. */
+:global([dir="rtl"]) .toolTile > span:last-child svg { transform: scaleX(-1); }

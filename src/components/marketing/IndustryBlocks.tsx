@@ -28,13 +28,13 @@ export function Stats({ items, note }: { items: Array<{ value: string; label: st
 
 type ChatTurn = { from: "patient" | "agent"; text: string };
 
-/** An example WhatsApp thread beside the notes on how each answer was produced. */
-export function ChatExample({ business, turns, points, caption }: { business: string; turns: ChatTurn[]; points: Array<{ title: string; body: string }>; caption: string }) {
+/** An example WhatsApp thread beside the notes on how each answer was produced. Pages in other languages pass `labels`. */
+export function ChatExample({ business, turns, points, caption, labels = { subtitle: "WhatsApp · AI agent", agent: "Agent: ", patient: "Patient: " } }: { business: string; turns: ChatTurn[]; points: Array<{ title: string; body: string }>; caption: string; labels?: { subtitle: string; agent: string; patient: string } }) {
   return <div className={styles.example}>
     <figure className={styles.thread}>
-      <div className={styles.threadHead}><span aria-hidden="true">{business.charAt(0)}</span><div><strong>{business}</strong><small>WhatsApp · AI agent</small></div></div>
+      <div className={styles.threadHead}><span aria-hidden="true">{business.charAt(0)}</span><div><strong>{business}</strong><small>{labels.subtitle}</small></div></div>
       <ol className={styles.turns}>{turns.map((turn, i) => <li key={i} className={turn.from === "agent" ? styles.agent : styles.patient}>
-        <span className={tools.srOnly}>{turn.from === "agent" ? "Agent: " : "Patient: "}</span>{turn.text}
+        <span className={tools.srOnly}>{turn.from === "agent" ? labels.agent : labels.patient}</span>{turn.text}
       </li>)}</ol>
       <figcaption className={styles.threadCaption}>{caption}</figcaption>
     </figure>

@@ -96,3 +96,6 @@
   .compare td::before { content: attr(data-label); font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--site-text-muted); }
   .compare tr > :last-child::before { color: var(--landing-green); }
 }
+
+/* Right-to-left pages (Arabic). */
+:global([dir="rtl"]) .compare th, :global([dir="rtl"]) .compare td { text-align: right; }

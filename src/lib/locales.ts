@@ -1,10 +1,11 @@
 // Languages of the public marketing pages. English pages live at the root;
-// the others under /pt-br, /es, /es-mx, /es-co, /es-cl, /it and /de (see app/<prefix>/layout.tsx). Each
+// the others under /pt-br, /es, /es-mx, /es-co, /es-cl, /es-pe, /it, /de, /ar-sa, /ar-eg
+// and /id (see app/<prefix>/layout.tsx). Each
 // localized page names its English equivalent in lib/marketingPages.ts (blog
 // posts in lib/blogPosts.ts), which drives the hreflang alternates. The
 // dashboard itself is English-only.
 
-export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "es-CO" | "es-CL" | "it" | "de";
+export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "es-CO" | "es-CL" | "es-PE" | "it" | "de" | "ar-SA" | "ar-EG" | "id";
 
 /** The blog index and the fixed text of its posts, in one language. */
 export type BlogUi = {
@@ -67,6 +68,63 @@ type Ui = {
   blog?: BlogUi;
 };
 
+// Saudi Arabia and Egypt share Modern Standard Arabic chrome; only the blog path
+// differs. Dates are Gregorian with Latin digits, like the prices in the posts.
+const arabicUi = (blogHref: string): Ui => ({
+  nav: { features: "المزايا", pricing: "الأسعار", tools: "أدوات مجانية", faq: "الأسئلة", faqHref: "#faq" },
+  login: "تسجيل الدخول",
+  dashboard: "لوحة التحكم",
+  home: "الرئيسية",
+  breadcrumb: "مسار التنقل",
+  startFree: "ابدأ مجانًا",
+  explore: ["تابع الاستكشاف.", "Wapzen مجانًا."],
+  readMore: "اقرأ المزيد",
+  openTools: "افتح الأدوات",
+  toolsTitle: "أدوات واتساب مجانية",
+  toolsBody: "مولّد روابط ورموز QR، ورموز الدول، والمزيد. بالإنجليزية، بدون تسجيل.",
+  copy: "نسخ",
+  copied: "تم النسخ",
+  footer: {
+    tagline: ["روبوتات محادثة ووكلاء صوت بالذكاء الاصطناعي لواتساب.", "بمعلومات نشاطك التجاري."],
+    product: "المنتج",
+    features: "المزايا",
+    chatbot: "شات بوت بالذكاء الاصطناعي",
+    voiceAgent: "وكيل صوتي بالذكاء الاصطناعي",
+    useCases: "حالات الاستخدام",
+    industries: "القطاعات",
+    howItWorks: "طريقة العمل",
+    faq: "الأسئلة الشائعة",
+    freeTools: "أدوات مجانية",
+    allTools: "كل الأدوات",
+    solutions: "الحلول",
+    connect: "تواصل معنا",
+    sayHello: "راسلنا",
+    rights: "جميع الحقوق محفوظة.",
+    backToTop: "العودة للأعلى ↑",
+    languages: "اللغات",
+  },
+  blog: {
+    href: blogHref,
+    label: "المدونة",
+    dateLocale: "ar-u-ca-gregory-nu-latn",
+    author: "فريق Wapzen",
+    updated: "آخر تحديث",
+    minRead: (minutes) => `القراءة: ${minutes} دقيقة`,
+    tags: { Comparison: "مقارنة", Alternatives: "بدائل", Guide: "دليل", Explainer: "شرح" },
+    onThisPage: "في هذه الصفحة",
+    faqTitle: "الأسئلة الشائعة",
+    sourcesTitle: "المصادر",
+    guideTitle: "عن هذا الدليل",
+    guideNote: (date) => `الخطوات واللقطات من لوحة تحكم Wapzen بتاريخ ${date}، ببيانات تجريبية: الأنشطة والأشخاص وأرقام الهواتف فيها غير حقيقية.`,
+    explainerNote: (date) => `المعلومات والأسعار في هذا المقال من المصادر أدناه، وتمت مراجعتها في ${date}. تغيّر Meta والجهات الأخرى أسعارها وأنظمتها كثيرًا، فتحقق منها في مصدرها قبل الاعتماد عليها.`,
+    comparisonNote: (date) => `الأسعار والمزايا من صفحات كل مزوّد، وتمت مراجعتها في ${date}. تتغير كثيرًا، فتحقق منها في موقع المزوّد قبل الشراء.`,
+    keepReading: ["تابع القراءة.", "المزيد من المدونة."],
+    readPost: "اقرأ المقال",
+    learnMore: "اعرف المزيد",
+    choose: (name) => `اختر ${name} إذا…`,
+  },
+});
+
 export const locales: Record<Locale, {
   hreflang: string;
   htmlLang: string;
@@ -74,6 +132,8 @@ export const locales: Record<Locale, {
   label: string;
   /** A language whose marketing pages stand in where this one has none (es-MX uses Spain's). */
   fallback?: Locale;
+  /** Right-to-left scripts (Arabic): PublicShell sets dir on the page. */
+  dir?: "rtl";
   ui: Ui;
 }> = {
   en: {
@@ -439,6 +499,67 @@ export const locales: Record<Locale, {
       },
     },
   },
+  "es-PE": {
+    hreflang: "es-PE",
+    htmlLang: "es-PE",
+    ogLocale: "es_PE",
+    label: "Español (Perú)",
+    fallback: "es",
+    ui: {
+      nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
+      login: "Iniciar sesión",
+      dashboard: "Panel",
+      home: "Inicio",
+      breadcrumb: "Ruta de navegación",
+      startFree: "Empieza gratis",
+      explore: ["Sigue explorando.", "Wapzen, gratis."],
+      readMore: "Leer más",
+      openTools: "Abrir herramientas",
+      toolsTitle: "Herramientas gratis para WhatsApp",
+      toolsBody: "Generadores de enlaces y códigos QR, códigos de país y más. En inglés, sin registro.",
+      copy: "Copiar",
+      copied: "Copiado",
+      footer: {
+        tagline: ["Chatbots y agentes de voz con IA para WhatsApp.", "Con la información de tu negocio."],
+        product: "PRODUCTO",
+        features: "Funciones",
+        chatbot: "Chatbot con IA",
+        voiceAgent: "Agente de voz con IA",
+        useCases: "Casos de uso",
+        industries: "Sectores",
+        howItWorks: "Cómo funciona",
+        faq: "Preguntas frecuentes",
+        freeTools: "HERRAMIENTAS GRATIS",
+        allTools: "Todas las herramientas",
+        solutions: "SOLUCIONES",
+        connect: "HABLEMOS",
+        sayHello: "Escríbenos",
+        rights: "Todos los derechos reservados.",
+        backToTop: "Volver arriba ↑",
+        languages: "Idiomas",
+      },
+      blog: {
+        href: "/es-pe/blog",
+        label: "Blog",
+        dateLocale: "es-PE",
+        author: "Equipo Wapzen",
+        updated: "Actualizado el",
+        minRead: (minutes) => `${minutes} min de lectura`,
+        tags: { Comparison: "Comparativa", Alternatives: "Alternativas", Guide: "Guía", Explainer: "A fondo" },
+        onThisPage: "En esta página",
+        faqTitle: "Preguntas frecuentes",
+        sourcesTitle: "Fuentes",
+        guideTitle: "Sobre esta guía",
+        guideNote: (date) => `Los pasos y las pantallas vienen del panel de Wapzen del ${date}, con datos de demostración: negocios, personas y números de teléfono son ficticios.`,
+        explainerNote: (date) => `Los datos y precios de este artículo vienen de las fuentes de abajo, revisadas el ${date}. Meta, otros proveedores y la ley cambian con frecuencia: confírmalos en la fuente antes de tomar decisiones.`,
+        comparisonNote: (date) => `Precios y funciones vienen de la página de cada proveedor, revisadas el ${date}. Cambian con frecuencia: confírmalos en el sitio del proveedor antes de contratar.`,
+        keepReading: ["Sigue leyendo.", "Más del blog."],
+        readPost: "Leer artículo",
+        learnMore: "Conoce más",
+        choose: (name) => `Elige ${name} si…`,
+      },
+    },
+  },
   it: {
     hreflang: "it",
     htmlLang: "it",
@@ -557,6 +678,85 @@ export const locales: Record<Locale, {
         readPost: "Artikel lesen",
         learnMore: "Mehr erfahren",
         choose: (name) => `Wählen Sie ${name}, wenn…`,
+      },
+    },
+  },
+  "ar-SA": {
+    hreflang: "ar-SA",
+    htmlLang: "ar-SA",
+    ogLocale: "ar_SA",
+    label: "العربية (السعودية)",
+    fallback: "en",
+    dir: "rtl",
+    ui: arabicUi("/ar-sa/blog"),
+  },
+  "ar-EG": {
+    hreflang: "ar-EG",
+    htmlLang: "ar-EG",
+    ogLocale: "ar_EG",
+    label: "العربية (مصر)",
+    fallback: "en",
+    dir: "rtl",
+    ui: arabicUi("/ar-eg/blog"),
+  },
+  id: {
+    hreflang: "id",
+    htmlLang: "id",
+    ogLocale: "id_ID",
+    label: "Bahasa Indonesia",
+    fallback: "en",
+    ui: {
+      nav: { features: "Fitur", pricing: "Harga", tools: "Tools gratis", faq: "FAQ", faqHref: "#faq" },
+      login: "Masuk",
+      dashboard: "Dasbor",
+      home: "Beranda",
+      breadcrumb: "Navigasi",
+      startFree: "Mulai gratis",
+      explore: ["Jelajahi lagi.", "Wapzen, gratis."],
+      readMore: "Selengkapnya",
+      openTools: "Buka tools",
+      toolsTitle: "Tools WhatsApp gratis",
+      toolsBody: "Pembuat link dan kode QR, kode negara, dan lainnya. Dalam bahasa Inggris, tanpa daftar.",
+      copy: "Salin",
+      copied: "Tersalin",
+      footer: {
+        tagline: ["Chatbot dan agen suara AI untuk WhatsApp.", "Dengan informasi bisnis Anda."],
+        product: "PRODUK",
+        features: "Fitur",
+        chatbot: "Chatbot AI",
+        voiceAgent: "Agen suara AI",
+        useCases: "Contoh penggunaan",
+        industries: "Industri",
+        howItWorks: "Cara kerja",
+        faq: "Pertanyaan umum",
+        freeTools: "TOOLS GRATIS",
+        allTools: "Semua tools",
+        solutions: "SOLUSI",
+        connect: "HUBUNGI KAMI",
+        sayHello: "Kirim pesan",
+        rights: "Hak cipta dilindungi.",
+        backToTop: "Kembali ke atas ↑",
+        languages: "Bahasa",
+      },
+      blog: {
+        href: "/id/blog",
+        label: "Blog",
+        dateLocale: "id-ID",
+        author: "Tim Wapzen",
+        updated: "Diperbarui",
+        minRead: (minutes) => `${minutes} menit baca`,
+        tags: { Comparison: "Perbandingan", Alternatives: "Alternatif", Guide: "Panduan", Explainer: "Penjelasan" },
+        onThisPage: "Di halaman ini",
+        faqTitle: "Pertanyaan yang sering diajukan",
+        sourcesTitle: "Sumber",
+        guideTitle: "Tentang panduan ini",
+        guideNote: (date) => `Langkah dan tangkapan layar diambil dari dasbor Wapzen pada ${date}, dengan data contoh: bisnis, orang, dan nomor telepon di dalamnya fiktif.`,
+        explainerNote: (date) => `Fakta dan harga di artikel ini berasal dari sumber di bawah, dicek pada ${date}. Meta, vendor lain, dan aturan pemerintah sering berubah: cek lagi di sumbernya sebelum Anda mengandalkannya.`,
+        comparisonNote: (date) => `Harga dan fitur diambil dari halaman tiap vendor, dicek pada ${date}. Sering berubah: cek di situs vendor sebelum membeli.`,
+        keepReading: ["Baca juga.", "Artikel lain di blog."],
+        readPost: "Baca artikel",
+        learnMore: "Pelajari",
+        choose: (name) => `Pilih ${name} jika…`,
       },
     },
   },

@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, Hand, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, GraduationCap, Hand, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -779,6 +779,69 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-02",
     readingMinutes: 10,
     locale: "es-CL",
+  },
+  // Saudi Arabia, Egypt, Indonesia and Peru (2026-11-03), picked by
+  // docs/seo-blog-mena-asia-research.mjs: one buyer vertical per market plus Umrah
+  // travel agencies, which no other post covers. Question-and-answer format.
+  {
+    href: "/ar-sa/blog/whatsapp-bot-dental-clinic",
+    title: "بوت واتساب لعيادة الأسنان مجانًا: رد آلي وحجز مواعيد ووكيل صوتي (2026)",
+    name: "بوت واتساب لعيادات الأسنان في السعودية",
+    description: "بوت واتساب مجاني لعيادات الأسنان في السعودية: يرد على المرضى على مدار الساعة، يجمع طلبات المواعيد، ويرد على مكالمات واتساب، مع ما يقوله نظام حماية البيانات.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-11-03",
+    updated: "2026-11-03",
+    readingMinutes: 11,
+    locale: "ar-SA",
+  },
+  {
+    href: "/ar-eg/blog/whatsapp-chatbot-real-estate",
+    title: "شات بوت واتساب للعقارات مجانًا: رد فوري وفرز العملاء الجادين (مصر 2026)",
+    name: "شات بوت واتساب للعقارات في مصر",
+    description: "شات بوت واتساب مجاني لشركات ومكاتب العقارات في مصر: يرد على أسئلة الأسعار والأقساط في ثوانٍ، يفرز العملاء الجادين، ويرد على المكالمات بوكيل صوتي.",
+    tag: "Explainer",
+    icon: Building2,
+    published: "2026-11-03",
+    updated: "2026-11-03",
+    readingMinutes: 11,
+    locale: "ar-EG",
+  },
+  {
+    href: "/id/blog/chatbot-whatsapp-sekolah-gratis",
+    title: "Chatbot WhatsApp Sekolah Gratis untuk SPMB dan Pendaftaran Siswa (2026)",
+    name: "Chatbot WhatsApp untuk sekolah",
+    description: "Chatbot WhatsApp gratis untuk sekolah swasta, bimbel, dan kampus: jawab pertanyaan SPMB, biaya, dan jadwal 24 jam, plus agen suara untuk telepon WhatsApp.",
+    tag: "Explainer",
+    icon: GraduationCap,
+    published: "2026-11-03",
+    updated: "2026-11-03",
+    readingMinutes: 11,
+    locale: "id",
+  },
+  {
+    href: "/id/blog/chatbot-whatsapp-travel-umroh",
+    title: "Chatbot WhatsApp Travel Umroh Gratis: Admin AI 24 Jam (2026)",
+    name: "Chatbot WhatsApp untuk travel umroh",
+    description: "Admin AI gratis untuk travel umroh di WhatsApp: jawab pertanyaan paket, jadwal, dan izin PPIU 24 jam, catat calon jemaah, dan jawab telepon WhatsApp.",
+    tag: "Explainer",
+    icon: Plane,
+    published: "2026-11-03",
+    updated: "2026-11-03",
+    readingMinutes: 10,
+    locale: "id",
+  },
+  {
+    href: "/es-pe/blog/chatbot-whatsapp-para-clinicas",
+    title: "Chatbot de WhatsApp para clínicas en Perú: gratis y con IA (2026)",
+    name: "Chatbot de WhatsApp para clínicas en Perú",
+    description: "Chatbot de WhatsApp con IA gratis para clínicas y consultorios en Perú: responde a pacientes 24 horas, toma pedidos de cita y contesta llamadas por voz.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-11-03",
+    updated: "2026-11-03",
+    readingMinutes: 11,
+    locale: "es-PE",
   },
 ];
 

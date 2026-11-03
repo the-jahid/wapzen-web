@@ -170,3 +170,24 @@ The Wapzen dashboard itself is in English.
 - [WhatsApp KI Chatbot für Autohäuser und Kfz-Werkstätten](/de/blog/whatsapp-ki-chatbot-autohaus-kfz-werkstatt): a WhatsApp AI chatbot for car dealerships and garages in Germany: service appointments, vehicle questions, repair status, test drives and after-hours replies.
 - [WhatsApp Chatbot für Solarfirmen und Wärmepumpen](/de/blog/whatsapp-chatbot-solarfirma-waermepumpe): a WhatsApp AI chatbot for solar and heat pump companies in Germany: pre-qualifying leads, general product questions, preparing consultations and multilingual replies.
 - [KI-Telefonassistent für WhatsApp-Anrufe](/de/blog/ki-telefonassistent-whatsapp-kostenlos): whether a free AI phone assistant exists in Germany (IONOS from €39 a month incl. VAT, fonio from €99 net), why Wapzen answers WhatsApp calls but not landlines, uses for trades, garages, tax advisers and hotels, § 7 and § 7a UWG (consent; AI calls may count as automated calling machines), GDPR data location, and AI Act Art. 50 disclosure. Voice is in early access, free to start.
+
+## Blog in Peruvian Spanish
+
+- [Blog (Perú)](/es-pe/blog): WhatsApp guides for businesses in Peru.
+- [Chatbot de WhatsApp para clínicas en Perú](/es-pe/blog/chatbot-whatsapp-para-clinicas): a question-and-answer guide for clinics and medical practices in Peru: a free AI WhatsApp chatbot (everything in Wapzen is free right now) that answers patients 24/7 about specialties, prices, EPS and hours, takes appointment requests that the front desk confirms, and an AI voice agent for WhatsApp calls; Meta API cost in Peru (US$0.030 per reply after 1,000 free, worked example), clinic software vs chatbot, voice notes and photos, Ley 29733 and DS 016-2024-JUS (health data is sensitive), and limits (1 chat agent per account, 100 AI replies an hour per agent, no diagnosis).
+
+## Blog in Arabic (Saudi Arabia)
+
+- [مدونة السعودية](/ar-sa/blog): WhatsApp guides in Arabic for businesses in Saudi Arabia.
+- [بوت واتساب لعيادات الأسنان في السعودية](/ar-sa/blog/whatsapp-bot-dental-clinic): a question-and-answer guide in Arabic for dental clinics in Saudi Arabia: a free AI WhatsApp bot (everything in Wapzen is free right now) that answers patients about prices, insurance and hours, collects appointment requests, and an AI voice agent that answers WhatsApp calls in Arabic; why it doesn't replace dental clinic software, Meta API cost in Saudi Arabia (US$0.0107 per reply after 1,000 free, worked example in SAR), the PDPL (health data is sensitive, in force since 14 September 2023), and limits.
+
+## Blog in Arabic (Egypt)
+
+- [مدونة مصر](/ar-eg/blog): WhatsApp guides in Arabic for businesses in Egypt.
+- [شات بوت واتساب للعقارات في مصر](/ar-eg/blog/whatsapp-chatbot-real-estate): a question-and-answer guide in Arabic for real estate developers and brokers in Egypt: a free AI WhatsApp chatbot (everything in Wapzen is free right now) that answers price and installment questions, qualifies buyers with six questions, and an AI voice agent for WhatsApp calls; chatbot vs real estate CRM, Meta API cost in Egypt (marketing US$0.0644 a message), Law 151 of 2020 (executive regulations 1 November 2025, consent and opt-out for direct electronic marketing), and limits.
+
+## Blog in Indonesian
+
+- [Blog (Indonesia)](/id/blog): WhatsApp guides in Indonesian for businesses in Indonesia.
+- [Chatbot WhatsApp untuk sekolah](/id/blog/chatbot-whatsapp-sekolah-gratis): a question-and-answer guide in Indonesian for private schools, tutoring centres and campuses: a free AI WhatsApp chatbot (everything in Wapzen is free right now) for SPMB and new-student admission questions, fees and requirements, an AI voice agent for WhatsApp calls, Meta API cost in Indonesia (US$0.025 per reply after 1,000 free), parent groups and bulk announcements, UU PDP Pasal 25 (parental consent for children's data), and limits.
+- [Chatbot WhatsApp untuk travel umroh](/id/blog/chatbot-whatsapp-travel-umroh): a question-and-answer guide in Indonesian for Umrah travel agencies (PPIU): a free AI admin on WhatsApp (everything in Wapzen is free right now) that answers package, schedule, hotel and licence questions, answers the "5 Pasti Umrah" checks, and an AI voice agent for WhatsApp calls; chatbot vs Umrah management apps, Meta API cost, passport data under UU PDP, and limits.

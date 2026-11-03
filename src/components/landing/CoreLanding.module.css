@@ -408,3 +408,6 @@
   .page [data-pending] { opacity: 1; transform: none; }
   .stepCard { position: relative; top: auto; }
 }
+
+/* Right-to-left pages (Arabic): keep the phone number in reading order. */
+:global([dir="rtl"]) .footerContact > small { direction: ltr; unicode-bidi: isolate; text-align: right; }

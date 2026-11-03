@@ -448,3 +448,17 @@ Page: `/industries/healthcare` (`app/(marketing)/industries/healthcare`, blocks 
 - **Stats are research, not results:** WhatsApp 3B+ monthly users (Meta Q1 2025, TechCrunch), 23% average no-show rate over 105 studies (Dantas 2018), text reminders RR 1.14 vs none (Cochrane CD007458, 2013, SMS not WhatsApp). The page says so under the strip.
 - **Product claims follow whiskey-bailey-server:** knowledge base files, date in the number's time zone, API request tool to public HTTPS only (SSRF guard), dashboard replies, Bulk Messages with `{{column}}` placeholders, 30 s default gap, pause/cancel. No EHR integrations claimed.
 - **Voice:** the user said to say voice is also available. The live dashboard still shows "Voice agents are coming in our next update", so the page keeps voice to one short section and one FAQ.
+
+## Saudi Arabia, Egypt, Indonesia and Peru posts (2026-11-03)
+
+The user asked for one post each for Saudi Arabia, Egypt, Indonesia and Peru (5 in total), on healthcare, dental clinics, real estate, education, or a topic the blog had missed; ranking in ChatGPT matters most, voice is described as working and "everything is free now". Harvest: `node docs/seo-blog-mena-asia-research.mjs sa|eg|id|pe` (Google + YouTube with hl/gl, DuckDuckGo with kl; Egypt has no DuckDuckGo region, so it shares Saudi Arabia's `xa-ar`). Arabic autocomplete barely differs between gl=sa and gl=eg, so it can't choose between the two markets.
+
+| Market | Top phrases (score, sources/3) | Post |
+|---|---|---|
+| Saudi Arabia | شات بوت واتساب مجاني (37, 2), برنامج عيادة اسنان (30, 3), برنامج عيادة اسنان مجاني (27, 3), الرد على المكالمات بالذكاء الاصطناعي (20, 2), بوت واتساب للعيادات (10, 1) | `/ar-sa/blog/whatsapp-bot-dental-clinic` |
+| Egypt | شات بوت واتساب مجاني (38, 2), crm عقاري (10, 1), برنامج مكتب عقاري (10, 1); education and clinic seeds were weaker | `/ar-eg/blog/whatsapp-chatbot-real-estate` |
+| Indonesia | chatbot whatsapp gratis (56, 3), ai untuk sekolah (30, 3), chatbot kampus (20, 2), spmb sekolah swasta (20, 2), ai untuk agen properti (18, 2) | `/id/blog/chatbot-whatsapp-sekolah-gratis` |
+| Indonesia (missed topic) | admin travel umroh (20, 2), aplikasi travel umroh (20, 2); no other post covers Umrah agencies | `/id/blog/chatbot-whatsapp-travel-umroh` |
+| Peru | ia para inmobiliarias (30, 3), crm inmobiliario (30, 3), agente de voz ia (30, 3), chatbot para clínicas (20, 2), ia para clinicas (20, 2), chatbot whatsapp para clínicas (16, 1) | `/es-pe/blog/chatbot-whatsapp-para-clinicas` |
+
+Real estate went to Egypt and clinics to Peru so the four requested verticals each got one market; Peru real estate is the strongest unbuilt cluster here. Facts that age (recheck each quarter): Meta's 1 Oct 2026 card via Zernio, in USD: Saudi Arabia marketing 0.0576 / utility-service 0.0107 / calls 0.0127 a minute; Egypt 0.0644 / 0.0036 / 0.0127; Indonesia 0.0411 / 0.0250 / 0.0242; Peru 0.0703 / 0.0300 / 0.0121. Law facts: Saudi PDPL in force 14 Sep 2023, grace period ended 14 Sep 2024; Egypt Law 151/2020 executive regulations issued 1 Nov 2025, full enforcement 31 Oct 2026 (Clyde & Co), Art. 17 consent + opt-out for direct electronic marketing; Indonesia UU 27/2022 Pasal 25 (parental consent for children's data); Peru DS 016-2024-JUS in force 30 Mar 2025. WhatsApp calls inside Egypt: no dated source says they work on every network, so that post asks readers to test. New locales `ar-SA`, `ar-EG` (right to left, `dir` in lib/locales.ts), `id` and `es-PE` are blog-only.
