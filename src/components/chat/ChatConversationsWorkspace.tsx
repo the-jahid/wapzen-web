@@ -5,7 +5,6 @@ import { useAuth } from "@clerk/nextjs";
 import { useCachedState } from "@/lib/pageCache";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import { refreshConversationsAttention } from "@/components/nav/useConversationsAttention";
 import {
   conversationPhone,
   conversationTitle,
@@ -14,7 +13,6 @@ import {
   listChatAgentConversations,
   listChatConversations,
   sendChatConversationMessage,
-  markChatConversationDone,
   setChatConversationAiReply,
   setChatConversationStatus,
   type ApiChatConversation,
@@ -202,24 +200,20 @@ export default function ChatConversationsWorkspace({
       const id = conversation.id;
       if (aiSaving.includes(id)) return;
       const next = conversation.ai_reply_enabled === false;
-      const before = { ai_reply_enabled: !next, needs_attention: conversation.needs_attention };
-      // Switching the AI off turns the conversation red, as the server does.
-      const after = { ai_reply_enabled: next, needs_attention: next ? conversation.needs_attention : true };
-      const apply = (fields: Pick<ApiChatConversation, "ai_reply_enabled" | "needs_attention">) => {
-        setConversations((current) => current.map((item) => (item.id === id ? { ...item, ...fields } : item)));
-        setThread((current) => (current && current.id === id ? { ...current, ...fields } : current));
+      const apply = (ai_reply_enabled: boolean) => {
+        setConversations((current) => current.map((item) => (item.id === id ? { ...item, ai_reply_enabled } : item)));
+        setThread((current) => (current && current.id === id ? { ...current, ai_reply_enabled } : current));
       };
       setAiSaving((current) => [...current, id]);
       setListError("");
-      apply(after);
+      apply(next);
       try {
         await setChatConversationAiReply(id, next, getToken);
       } catch (updateError) {
-        apply(before);
+        apply(!next);
         setListError(updateError instanceof Error ? updateError.message : "Failed to switch the AI for this contact");
       } finally {
         setAiSaving((current) => current.filter((item) => item !== id));
-        refreshConversationsAttention();
       }
     },
     [aiSaving, getToken, setConversations, setThread]
@@ -266,25 +260,6 @@ export default function ChatConversationsWorkspace({
       setSending(false);
     }
   }, [draft, getToken, sending, setConversations, setThread, summary]);
-
-  // Clears the red flag. The AI stays as it is.
-  const markDone = useCallback(async () => {
-    if (!summary) return;
-    setBusy(true);
-    setThreadError("");
-    try {
-      const updated = await markChatConversationDone(summary.id, getToken);
-      setConversations((current) =>
-        current.map((conversation) => (conversation.id === updated.id ? { ...conversation, ...updated } : conversation))
-      );
-      setThread((current) => (current && current.id === updated.id ? { ...current, ...updated } : current));
-      refreshConversationsAttention();
-    } catch (updateError) {
-      setThreadError(updateError instanceof Error ? updateError.message : "Failed to mark this conversation done");
-    } finally {
-      setBusy(false);
-    }
-  }, [getToken, setConversations, setThread, summary]);
 
   const removeThread = useCallback(async () => {
     if (!summary) return;
@@ -419,9 +394,7 @@ export default function ChatConversationsWorkspace({
                   // is a button of its own and buttons can't nest.
                   <motion.div
                     aria-pressed={conversation.id === selectedId}
-                    className={`cv-row${conversation.id === selectedId ? " is-active" : ""}${
-                      conversation.needs_attention ? " needs-attention" : ""
-                    }`}
+                    className={`cv-row${conversation.id === selectedId ? " is-active" : ""}`}
                     key={conversation.id}
                     layoutId={`conversation-${conversation.id}`}
                     onClick={() => openThread(conversation.id)}
@@ -442,11 +415,6 @@ export default function ChatConversationsWorkspace({
                       <span className="cv-row-phone">{conversationPhone(conversation)}</span>
                     </span>
                     <span className="cv-row-meta">
-                      {conversation.needs_attention ? (
-                        <span className="cv-row-attention" title="The AI is off for this customer. Open it and mark it done.">
-                          Needs you
-                        </span>
-                      ) : null}
                       <span className="cv-row-count">{conversation.message_count} messages</span>
                       {/* Only the account-wide inbox needs to say who answered:
                           inside one agent's tab, every thread is that agent's. */}
@@ -517,12 +485,6 @@ export default function ChatConversationsWorkspace({
                         on={summary.ai_reply_enabled !== false}
                       />
                     ) : null}
-                    {summary?.needs_attention ? (
-                      <button className="cv-mark-done" disabled={busy} onClick={() => void markDone()} type="button">
-                        <DoneIcon />
-                        Mark as done
-                      </button>
-                    ) : null}
                     <button disabled={busy || !summary} onClick={toggleStatus} type="button">
                       {summary?.status === "closed" ? <ReopenIcon /> : <CloseThreadIcon />}
                       {summary?.status === "closed" ? "Reopen" : "Close"}
@@ -543,8 +505,6 @@ export default function ChatConversationsWorkspace({
                 {summary?.ai_reply_enabled === false ? (
                   <div className="cv-ai-off-note">
                     AI replies are off for this contact. Their messages still arrive here; answer them from the box below.
-                    The AI also goes off by itself when you write to them from your phone or here.
-                    {summary.needs_attention ? " Press Mark as done once they're looked after; it turns red again if they write." : ""}
                   </div>
                 ) : null}
 
@@ -791,14 +751,6 @@ function AiReplySwitch({
   );
 }
 
-function DoneIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="14" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="14">
-      <path d="m5 12 5 5L20 7" />
-    </svg>
-  );
-}
-
 function SearchIcon() {
   return (
     <svg aria-hidden="true" fill="none" height="15" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" width="15">
@@ -957,11 +909,6 @@ const workspaceCSS = `
 .cv-ai-off-note{background:var(--app-slate-soft);border-bottom:1px solid var(--app-line);color:var(--app-text-soft);flex:0 0 auto;font-size:11.5px;line-height:1.5;padding:8px 14px}
 @media(prefers-reduced-motion:reduce){.cv-ai-track,.cv-ai-knob{transition:none}}
 /* Red until a person marks it done. */
-.cv-row.needs-attention{background:var(--app-rose-soft);border-color:var(--app-rose-border);box-shadow:inset 3px 0 0 var(--app-rose)}
-.cv-row.needs-attention:hover{border-color:var(--app-rose)}
-.cv-row-attention{background:var(--app-rose);border-radius:999px;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.3px;padding:2px 8px;text-transform:uppercase;white-space:nowrap}
-.cv-thread-actions button.cv-mark-done{background:var(--app-rose);color:#fff}
-.cv-thread-actions button.cv-mark-done:hover{background:var(--app-rose);filter:brightness(1.08)}
 .cv-row:hover .cv-row-chevron{color:var(--app-primary-text);transform:translateX(2px)}
 
 .cv-thread{display:contents}

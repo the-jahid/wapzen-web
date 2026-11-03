@@ -8,7 +8,6 @@ import {
   BookOpen,
   Bot,
   CalendarDays,
-  ChevronRight,
   KeyRound,
   LayoutGrid,
   Menu,
@@ -35,8 +34,6 @@ import {
 } from "@/components/nav/workspaceMode";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import { useNewOrders } from "@/components/nav/useNewOrders";
-import { useConversationsAttention } from "@/components/nav/useConversationsAttention";
-import { useCachedState } from "@/lib/pageCache";
 import styles from "./DashboardSidebar.module.css";
 
 const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
@@ -77,19 +74,6 @@ type DashboardSidebarProps = {
 export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const newOrders = useNewOrders();
-  const needsPerson = useConversationsAttention();
-  // How many were waiting when the phone card was last closed: it comes back
-  // only once more customers need a person. Every page mounts its own sidebar,
-  // so this lives in the page cache rather than in local state.
-  const [attentionClosedAt, setAttentionClosedAt] = useCachedState<number>("conversations:attention-closed", 0);
-  // The conversations page already shows which rows are red.
-  const showAttentionCard = needsPerson > attentionClosedAt && activeLabel !== "Conversations";
-
-  // Some were marked done since: count from the lower number, so the next new
-  // one brings the card back.
-  useEffect(() => {
-    if (needsPerson < attentionClosedAt) setAttentionClosedAt(needsPerson);
-  }, [attentionClosedAt, needsPerson, setAttentionClosedAt]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -104,7 +88,7 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
     <div className={styles.root} data-stack={stackBelow}>
       <aside aria-label="Dashboard" className={styles.rail}>
         <div className={styles.panel}>
-          <SidebarBody activeLabel={activeLabel} badges={badges} needsPerson={needsPerson} newOrders={newOrders} />
+          <SidebarBody activeLabel={activeLabel} badges={badges} newOrders={newOrders} />
         </div>
       </aside>
 
@@ -129,51 +113,19 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
             aria-label={
               drawerOpen
                 ? "Close menu"
-                : needsPerson > 0
-                  ? `Open menu, ${needsPerson} conversation${needsPerson === 1 ? "" : "s"} need${needsPerson === 1 ? "s" : ""} a person`
-                  : newOrders > 0
-                    ? `Open menu, ${newOrders} new order${newOrders === 1 ? "" : "s"}`
-                    : "Open menu"
+                : newOrders > 0
+                  ? `Open menu, ${newOrders} new order${newOrders === 1 ? "" : "s"}`
+                  : "Open menu"
             }
             className={`${styles.iconButton} ${styles.menuButton}`}
             onClick={() => setDrawerOpen((open) => !open)}
             type="button"
           >
             {drawerOpen ? <X size={18} /> : <Menu size={18} />}
-            {needsPerson > 0 && !drawerOpen ? (
-              <span className={`${styles.menuDot} ${styles.menuDotAlert}`} />
-            ) : newOrders > 0 && !drawerOpen ? (
-              <span className={styles.menuDot} />
-            ) : null}
+            {newOrders > 0 && !drawerOpen ? <span className={styles.menuDot} /> : null}
           </button>
         </span>
       </header>
-      {showAttentionCard ? (
-        <div className={styles.attentionCard} role="status">
-          <Link className={styles.attentionLink} href="/dashboard/conversations">
-            <span className={styles.attentionIcon}><MessagesSquare size={17} /></span>
-            <span className={styles.attentionText}>
-              <span className={styles.attentionTitle}>
-                {needsPerson} conversation{needsPerson === 1 ? " needs" : "s need"} you
-              </span>
-              <span className={styles.attentionHint}>
-                {needsPerson === 1
-                  ? "The AI is off for this customer. Reply, then mark it done."
-                  : "The AI is off for these customers. Reply, then mark them done."}
-              </span>
-            </span>
-            <ChevronRight className={styles.attentionChevron} size={17} />
-          </Link>
-          <button
-            aria-label="Hide this message"
-            className={styles.attentionClose}
-            onClick={() => setAttentionClosedAt(needsPerson)}
-            type="button"
-          >
-            <X size={15} />
-          </button>
-        </div>
-      ) : null}
       <div
         aria-hidden="true"
         className={styles.backdrop}
@@ -199,7 +151,6 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
           <SidebarBody
             activeLabel={activeLabel}
             badges={badges}
-            needsPerson={needsPerson}
             newOrders={newOrders}
             onNavigate={() => setDrawerOpen(false)}
           />
@@ -212,14 +163,11 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
 function SidebarBody({
   activeLabel,
   badges,
-  needsPerson,
   newOrders,
   onNavigate,
 }: {
   activeLabel: string;
   badges?: Partial<Record<string, number>>;
-  // Conversations the AI went off for that nobody has marked done: red.
-  needsPerson: number;
   newOrders: number;
   onNavigate?: () => void;
 }) {
@@ -258,15 +206,7 @@ function SidebarBody({
                 <Icon size={18} strokeWidth={1.9} />
               </span>
               <span className={styles.navLabel}>{item.label}</span>
-              {item.label === "Conversations" && needsPerson > 0 ? (
-                <span
-                  aria-label={`${needsPerson} need${needsPerson === 1 ? "s" : ""} a person`}
-                  className={`${styles.badge} ${styles.badgeAlert}`}
-                  title="The AI is off for these customers. Open each one and mark it done."
-                >
-                  {needsPerson}
-                </span>
-              ) : ordersWaiting ? (
+              {ordersWaiting ? (
                 <span className={styles.badge}>{newOrders} new</span>
               ) : count ? (
                 <span className={styles.badge}>{count}</span>
