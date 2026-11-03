@@ -17,6 +17,8 @@ export type ApiChatConversation = {
   peer_phone: string | null;
   peer_name: string | null;
   status: ChatConversationStatus;
+  // Off: the agent stays quiet for this contact and a person answers.
+  ai_reply_enabled: boolean;
   message_count: number;
   last_message_role: ChatMessageRole | null;
   last_message_at: string | null;
@@ -134,6 +136,25 @@ export async function setChatConversationStatus(
   const envelope = await request<ApiChatConversation>(
     `${dashboardPath}/${encodeURIComponent(id)}`,
     { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) },
+    getToken
+  );
+  return envelope.data;
+}
+
+// setChatConversationAiReply switches the agent on or off for this one contact.
+// Their messages are still saved while it is off; nobody answers but a person.
+export async function setChatConversationAiReply(
+  id: string,
+  enabled: boolean,
+  getToken: AuthTokenGetter
+): Promise<ApiChatConversation> {
+  const envelope = await request<ApiChatConversation>(
+    `${dashboardPath}/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ai_reply_enabled: enabled }),
+    },
     getToken
   );
   return envelope.data;

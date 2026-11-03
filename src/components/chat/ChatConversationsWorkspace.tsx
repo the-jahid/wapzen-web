@@ -13,6 +13,7 @@ import {
   listChatAgentConversations,
   listChatConversations,
   sendChatConversationMessage,
+  setChatConversationAiReply,
   setChatConversationStatus,
   type ApiChatConversation,
   type ApiChatMessage,
@@ -79,6 +80,9 @@ export default function ChatConversationsWorkspace({
   const [threadError, setThreadError] = useState("");
   const [threadLoading, setThreadLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Threads whose AI switch is being saved, so a double click can't race itself.
+  const [aiSaving, setAiSaving] = useState<string[]>([]);
+  const [listError, setListError] = useState("");
   // The delete confirmation over the open thread. The thread card stays put
   // underneath it, so Escape and outside clicks answer the dialog, not the card.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -188,6 +192,34 @@ export default function ChatConversationsWorkspace({
       setBusy(false);
     }
   }, [getToken, setConversations, setThread, summary]);
+
+  // Flips the switch at once and puts it back if the server refuses, so the
+  // row answers the click without waiting on the round trip.
+  const toggleAiReply = useCallback(
+    async (conversation: ApiChatConversation) => {
+      const id = conversation.id;
+      if (aiSaving.includes(id)) return;
+      const next = conversation.ai_reply_enabled === false;
+      const apply = (enabled: boolean) => {
+        setConversations((current) =>
+          current.map((item) => (item.id === id ? { ...item, ai_reply_enabled: enabled } : item))
+        );
+        setThread((current) => (current && current.id === id ? { ...current, ai_reply_enabled: enabled } : current));
+      };
+      setAiSaving((current) => [...current, id]);
+      setListError("");
+      apply(next);
+      try {
+        await setChatConversationAiReply(id, next, getToken);
+      } catch (updateError) {
+        apply(!next);
+        setListError(updateError instanceof Error ? updateError.message : "Failed to switch the AI for this contact");
+      } finally {
+        setAiSaving((current) => current.filter((item) => item !== id));
+      }
+    },
+    [aiSaving, getToken, setConversations, setThread]
+  );
 
   // Sending writes on the thread as the agent, which is what the contact sees:
   // the message is appended to the open transcript and to the row's summary, so
@@ -324,6 +356,7 @@ export default function ChatConversationsWorkspace({
       </div>
 
       {error ? <div className="cv-error">{error}</div> : null}
+      {listError ? <div className="cv-error">{listError}</div> : null}
 
       {loading && !hasCachedList && conversations.length === 0 ? (
         <div className="cv-empty">
@@ -358,13 +391,22 @@ export default function ChatConversationsWorkspace({
               visible.map((conversation) => {
                 const title = conversationTitle(conversation);
                 return (
-                  <motion.button
+                  // A div acting as the button, because the AI switch inside it
+                  // is a button of its own and buttons can't nest.
+                  <motion.div
                     aria-pressed={conversation.id === selectedId}
                     className={`cv-row${conversation.id === selectedId ? " is-active" : ""}`}
                     key={conversation.id}
                     layoutId={`conversation-${conversation.id}`}
                     onClick={() => openThread(conversation.id)}
-                    type="button"
+                    onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) return;
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      openThread(conversation.id);
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <span className="cv-avatar" style={{ background: avatarColor(conversation.id) }}>
                       {title.slice(0, 1).toUpperCase()}
@@ -384,11 +426,17 @@ export default function ChatConversationsWorkspace({
                     <span className="cv-row-time">
                       {formatDate(conversation.last_message_at ?? conversation.created_at)}
                     </span>
+                    <AiReplySwitch
+                      busy={aiSaving.includes(conversation.id)}
+                      className="cv-row-ai"
+                      onToggle={() => void toggleAiReply(conversation)}
+                      on={conversation.ai_reply_enabled !== false}
+                    />
                     <span className={`cv-chip ${conversation.status === "closed" ? "cv-chip-closed" : "cv-chip-open"}`}>
                       {conversation.status}
                     </span>
                     <span className="cv-row-chevron"><ChevronIcon /></span>
-                  </motion.button>
+                  </motion.div>
                 );
               })
             )}
@@ -431,6 +479,13 @@ export default function ChatConversationsWorkspace({
                     </p>
                   </div>
                   <div className="cv-thread-actions">
+                    {summary ? (
+                      <AiReplySwitch
+                        busy={aiSaving.includes(summary.id)}
+                        onToggle={() => void toggleAiReply(summary)}
+                        on={summary.ai_reply_enabled !== false}
+                      />
+                    ) : null}
                     <button disabled={busy || !summary} onClick={toggleStatus} type="button">
                       {summary?.status === "closed" ? <ReopenIcon /> : <CloseThreadIcon />}
                       {summary?.status === "closed" ? "Reopen" : "Close"}
@@ -448,6 +503,11 @@ export default function ChatConversationsWorkspace({
                 </div>
 
                 {threadError ? <div className="cv-error cv-error-inline">{threadError}</div> : null}
+                {summary?.ai_reply_enabled === false ? (
+                  <div className="cv-ai-off-note">
+                    AI replies are off for this contact. Their messages still arrive here; answer them from the box below.
+                  </div>
+                ) : null}
 
                 <div className="cv-messages" ref={messagesRef}>
                   {threadLoading && !selected ? (
@@ -656,6 +716,42 @@ function formatTime(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? "" : timeFormatter.format(date);
 }
 
+// The per-contact AI switch, on a row and in the thread header. It stops the
+// click there, so switching it on a row doesn't also open the thread.
+function AiReplySwitch({
+  busy,
+  className,
+  on,
+  onToggle,
+}: {
+  busy: boolean;
+  className?: string;
+  on: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      aria-checked={on}
+      aria-label={on ? "AI replies on for this contact. Switch off" : "AI replies off for this contact. Switch on"}
+      className={`cv-ai-switch${on ? " is-on" : ""}${className ? ` ${className}` : ""}`}
+      disabled={busy}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+      onKeyDown={(event) => event.stopPropagation()}
+      role="switch"
+      title={on ? "The AI answers this contact" : "The AI stays quiet for this contact"}
+      type="button"
+    >
+      <span className="cv-ai-track">
+        <span className="cv-ai-knob" />
+      </span>
+      <span className="cv-ai-label">{on ? "AI on" : "AI off"}</span>
+    </button>
+  );
+}
+
 function SearchIcon() {
   return (
     <svg aria-hidden="true" fill="none" height="15" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" width="15">
@@ -780,7 +876,7 @@ const workspaceCSS = `
 
 .cv-list{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;padding-right:3px}
 .cv-list-empty{color:var(--app-muted);font-size:12px;padding:16px 6px;text-align:center}
-.cv-row{align-items:center;background:var(--app-elevated);border:1px solid var(--app-line);border-radius:14px;cursor:pointer;display:grid;flex:0 0 auto;gap:16px;grid-template-areas:"avatar identity meta time status chevron";grid-template-columns:36px minmax(180px,1.2fr) minmax(160px,.9fr) auto auto 18px;padding:13px 16px;text-align:left;transition:background .16s ease,border-color .16s ease,box-shadow .16s ease;width:100%}
+.cv-row{align-items:center;background:var(--app-elevated);border:1px solid var(--app-line);border-radius:14px;cursor:pointer;display:grid;flex:0 0 auto;gap:16px;grid-template-areas:"avatar identity meta time ai status chevron";grid-template-columns:36px minmax(180px,1.2fr) minmax(160px,.9fr) auto auto auto 18px;padding:13px 16px;text-align:left;transition:background .16s ease,border-color .16s ease,box-shadow .16s ease;width:100%}
 .cv-row:hover{background:var(--app-panel-hover);border-color:var(--app-primary-ring);box-shadow:0 6px 18px var(--app-shadow-soft)}
 .cv-row:focus-visible{border-color:var(--app-primary);box-shadow:0 0 0 3px var(--app-primary-soft);outline:none}
 .cv-row.is-active{background:var(--app-primary-soft);border-color:var(--app-primary-ring)}
@@ -799,6 +895,20 @@ const workspaceCSS = `
 .cv-chip-open{background:var(--app-green-soft);color:var(--app-green)}
 .cv-chip-closed{background:var(--app-slate-soft);color:var(--app-slate)}
 .cv-row-chevron{color:var(--app-faint);display:inline-flex;grid-area:chevron;transition:color .16s ease,transform .16s ease}
+.cv-ai-switch{align-items:center;background:none;border:0;border-radius:999px;color:var(--app-muted);cursor:pointer;display:inline-flex;font:inherit;font-size:10.5px;font-weight:800;gap:7px;padding:2px;white-space:nowrap}
+.cv-ai-switch:focus-visible{outline:2px solid var(--app-primary);outline-offset:2px}
+.cv-ai-switch:disabled{cursor:progress;opacity:.6}
+.cv-ai-switch.is-on{color:var(--app-text-strong)}
+.cv-row-ai{grid-area:ai}
+.cv-ai-track{background:var(--app-panel-hover);border:1px solid var(--app-line-strong);border-radius:999px;display:block;flex:0 0 auto;height:20px;padding:2px;transition:background .18s ease,border-color .18s ease;width:36px}
+.cv-ai-knob{background:var(--app-muted);border-radius:50%;display:block;height:14px;transition:transform .18s ease,background .18s ease;width:14px}
+.cv-ai-switch.is-on .cv-ai-track{background:var(--app-primary);border-color:transparent}
+.cv-ai-switch.is-on .cv-ai-knob{background:var(--app-on-accent);transform:translateX(16px)}
+.cv-ai-label{min-width:5ch}
+.cv-thread-actions .cv-ai-switch{color:var(--app-muted);margin-right:6px}
+.cv-thread-actions .cv-ai-switch.is-on{color:var(--app-text-strong)}
+.cv-ai-off-note{background:var(--app-slate-soft);border-bottom:1px solid var(--app-line);color:var(--app-text-soft);flex:0 0 auto;font-size:11.5px;line-height:1.5;padding:8px 14px}
+@media(prefers-reduced-motion:reduce){.cv-ai-track,.cv-ai-knob{transition:none}}
 .cv-row:hover .cv-row-chevron{color:var(--app-primary-text);transform:translateX(2px)}
 
 .cv-thread{display:contents}
@@ -867,7 +977,7 @@ const workspaceCSS = `
 
 /* Tablet: the list gives up its comfort before the transcript does. */
 @media(max-width:1100px){
-  .cv-row{grid-template-areas:"avatar identity meta status chevron";grid-template-columns:36px minmax(180px,1fr) minmax(140px,.8fr) auto 18px}
+  .cv-row{grid-template-areas:"avatar identity meta ai status chevron";grid-template-columns:36px minmax(180px,1fr) minmax(140px,.8fr) auto auto 18px}
   .cv-row-time{display:none}
   .cv-msg{max-width:86%}
 }
@@ -882,7 +992,9 @@ const workspaceCSS = `
   .cv-filter{flex:1 1 120px;max-width:none;min-width:0}
   .cv-count{display:none}
   .cv-body{grid-template-columns:minmax(0,1fr)}
-  .cv-row{gap:10px;grid-template-areas:"avatar identity status chevron" "avatar meta meta meta";grid-template-columns:36px minmax(0,1fr) auto 18px;padding:12px}
+  .cv-row{gap:10px;grid-template-areas:"avatar identity ai status chevron" "avatar meta meta meta meta";grid-template-columns:36px minmax(0,1fr) auto auto 18px;padding:12px}
+  /* The thread header is tight on a phone; the track says on or off by itself. */
+  .cv-thread-actions .cv-ai-label{display:none}
   .cv-back{display:flex}
   .cv-modal-actions{flex-direction:column-reverse}
   .cv-modal-btn{width:100%}
@@ -905,7 +1017,8 @@ const workspaceCSS = `
   .cv-avatar-lg{display:none}
   .cv-thread-head{gap:8px;padding:10px}
   .cv-messages{padding:11px}
-  .cv-row{gap:6px 10px;grid-template-areas:"avatar identity status" "avatar meta meta";grid-template-columns:32px minmax(0,1fr) auto;padding:11px}
+  .cv-row{gap:6px 10px;grid-template-areas:"avatar identity ai" "avatar meta status";grid-template-columns:32px minmax(0,1fr) auto;padding:11px}
+  .cv-row-ai .cv-ai-label{display:none}
   .cv-avatar{height:32px;width:32px}
   .cv-row-chevron{display:none}
   .cv-row-agent{max-width:18ch}
