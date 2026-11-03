@@ -50,8 +50,8 @@ function statusMeta(status: OrderStatus) {
   return orderStatuses.find((item) => item.id === status) ?? orderStatuses[0];
 }
 
-// The owner can delete Description from Take Order, so the list falls back on
-// what was collected instead.
+// The agent may leave the description out, so the list falls back on what was
+// collected instead: the details the order instructions asked for.
 function orderSummary(order: ApiOrder) {
   return (
     order.description ||

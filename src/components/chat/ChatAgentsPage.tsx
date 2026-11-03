@@ -2713,7 +2713,7 @@ function ConfigPanel({
                         Orders appear under <Link href="/dashboard/tools?tab=orders">Tools → Orders</Link>.
                       </>
                     ) : (
-                      "Order taking is off, so this agent tells customers ordering isn't available."
+                      "Order taking is off, so this agent can't place orders and these instructions aren't used."
                     )}
                   </span>
                 </label>
