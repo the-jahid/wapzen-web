@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { motion } from "motion/react";
-import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
@@ -59,6 +58,7 @@ type IconName =
   | "chevron"
   | "check"
   | "menu"
+  | "back"
   | "x";
 
 // The collapsible parts of the configuration panel, one per section of the
@@ -217,6 +217,8 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M5 12.5l4 4 10-10" />;
     case "menu":
       return <path d="M4 6h16M4 12h16M4 18h16" />;
+    case "back":
+      return <path d="M15 18l-6-6 6-6" />;
     case "x":
       return <path d="M6 6l12 12M18 6L6 18" />;
   }
@@ -298,20 +300,30 @@ const css = `
 }
 .chat-workspace > * { min-height: 0; max-height: 100%; }
 .chat-agent-browser { margin: 0 auto; max-width: 1320px; width: 100%; }
-.expandable-card-backdrop { background: var(--app-overlay); inset: 0; position: fixed; z-index: 80; }
-.expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
-.expandable-card-panel { pointer-events: auto; }
-.chat-agent-expandable {
+.chat-agent-page {
   background: var(--bg);
   border: 1px solid var(--border-strong);
   border-radius: 20px;
-  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
-  height: min(820px, calc(100vh - 48px));
-  max-width: 1180px;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin: 0 auto;
+  max-width: 1320px;
+  min-height: 0;
   overflow: hidden;
   width: 100%;
 }
-.chat-agent-expanded-shell { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.chat-agent-page-empty {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+  padding: 48px 16px;
+  text-align: center;
+}
 .chat-agent-expanded-topline {
   align-items: center;
   border-bottom: 1px solid var(--border);
@@ -321,8 +333,8 @@ const css = `
   padding: 14px 16px;
 }
 .chat-agent-expanded-topline > .chat-detail-head { flex: 1 1 auto; min-width: 0; }
-.chat-agent-expanded-close { flex: 0 0 auto; }
-.chat-agent-expanded-close {
+.chat-agent-back {
+  flex: 0 0 auto;
   align-items: center;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -334,7 +346,7 @@ const css = `
   justify-content: center;
   width: 32px;
 }
-.chat-agent-expanded-close:hover { background: var(--panel-hover); color: var(--text); }
+.chat-agent-back:hover { background: var(--panel-hover); color: var(--text); }
 .chat-agent-expanded-grid {
   display: grid;
   flex: 1 1 auto;
@@ -412,6 +424,7 @@ const css = `
   grid-template-columns: 36px minmax(0, 1fr) auto;
   padding: 16px;
   text-align: left;
+  text-decoration: none;
   transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
   width: 100%;
 }
@@ -871,8 +884,6 @@ const css = `
 /* Small laptops / landscape tablets: a slimmer sidebar keeps the list usable. */
 @media (max-width: 1100px) {
   .chat-content { padding: 18px 20px; }
-  .chat-agent-expandable { height: min(820px, calc(100dvh - 32px)); }
-  .expandable-card-stage { padding: 16px; }
 }
 /* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar,
    and the page scrolls as a whole instead of each pane on its own. */
@@ -886,7 +897,8 @@ const css = `
   .chat-agent-browser > .chat-panel-body { overflow: visible; }
   .chat-number-grid { grid-template-columns: 1fr; }
   .chat-qr-frame { justify-self: center; max-width: 260px; width: 100%; }
-  .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr); overflow: auto; }
+  .chat-agent-page { overflow: visible; }
+  .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr); overflow: visible; }
   .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
   .chat-agent-expanded-grid > .chat-config-panel { overflow: visible; }
 }
@@ -905,8 +917,7 @@ const css = `
   .chat-modal-footer { flex-direction: column-reverse; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
   .chat-modal-footer .chat-btn { width: 100%; }
   .chat-input, .chat-select { font-size: 16px; } /* stops iOS zooming on focus */
-  .expandable-card-stage { align-items: stretch; padding: 0; }
-  .chat-agent-expandable { border: 0; border-radius: 0; height: 100dvh; max-width: none; }
+  .chat-agent-page { border-radius: 16px; }
   .chat-agent-expanded-grid { gap: 12px; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
   .chat-agent-expanded-topline { align-items: flex-start; padding: 12px; }
   .chat-detail-head { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -1018,7 +1029,10 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
   };
 }
 
-export default function ChatAgentsPage() {
+// The list lives at /dashboard/chat and each agent on its own page at
+// /dashboard/chat/<agentId>; both are this component, told which agent to show.
+export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
+  const router = useRouter();
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
@@ -1029,7 +1043,7 @@ export default function ChatAgentsPage() {
   // A list cached from an earlier visit is shown at once while it refetches;
   // only a first-ever load waits behind the skeleton.
   const showSkeleton = isLoading && !hasCachedAgents;
-  const [selectedId, setSelectedId] = useState<string>("");
+  const selectedId = agentId;
   const [query, setQuery] = useState("");
   const [knowledgeBases, setKnowledgeBases] = useCachedState<ApiKnowledgeBase[]>("knowledge-bases", []);
   const [tools, setTools] = useCachedState<ApiTool[]>("tools", []);
@@ -1054,7 +1068,11 @@ export default function ChatAgentsPage() {
   const autoLoginKey = useRef("");
   // Automatic reissues so far, per agent, against maxAutoLogins.
   const autoLoginRuns = useRef({ agentId: "", count: 0 });
-  const saveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // Saves waiting out their debounce, with the save itself so leaving the page
+  // can send it at once instead of dropping it.
+  const saveTimers = useRef<
+    Map<string, { timer: ReturnType<typeof setTimeout>; run: () => void }>
+  >(new Map());
   // Every edit bumps its agent.s revision. A save only adopts the server echo
   // when the revision it was issued with is still current, so a PATCH that is
   // answered mid-sentence can never overwrite the keystrokes typed since.
@@ -1075,7 +1093,6 @@ export default function ChatAgentsPage() {
     if (!isAuthenticated) return;
 
     let cancelled = false;
-    const pendingSaves = saveTimers.current;
     // Each list lands on its own, so the agent list is not held back by the
     // slowest of the lookups the editor needs.
     listDashboardChatAgents(getToken)
@@ -1101,10 +1118,21 @@ export default function ChatAgentsPage() {
 
     return () => {
       cancelled = true;
-      for (const timer of pendingSaves.values()) clearTimeout(timer);
-      pendingSaves.clear();
     };
   }, [getToken, isAuthenticated, setChatAgents, setKnowledgeBases, setPhoneNumbers, setTools]);
+
+  // Going back to the list, or on to another agent, unmounts this page. An
+  // edit still inside its debounce is sent then rather than lost; its answer
+  // lands in the shared page cache the next page reads.
+  useEffect(() => {
+    const pending = saveTimers.current;
+    return () => {
+      for (const { timer, run } of [...pending.values()]) {
+        clearTimeout(timer);
+        run();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!notice) return;
@@ -1159,9 +1187,9 @@ export default function ChatAgentsPage() {
   const queueSave = useCallback(
     (agent: ApiChatAgent, delay = 500) => {
       const previous = saveTimers.current.get(agent.id);
-      if (previous) clearTimeout(previous);
+      if (previous) clearTimeout(previous.timer);
       const revision = editRevisions.current.get(agent.id) ?? 0;
-      const timer = setTimeout(async () => {
+      const run = async () => {
         saveTimers.current.delete(agent.id);
         try {
           const payload = toChatAgentPayload(agent);
@@ -1186,8 +1214,8 @@ export default function ChatAgentsPage() {
             text: error instanceof Error ? error.message : "Could not save chat agent",
           });
         }
-      }, delay);
-      saveTimers.current.set(agent.id, timer);
+      };
+      saveTimers.current.set(agent.id, { timer: setTimeout(run, delay), run });
     },
     [getToken, setChatAgents]
   );
@@ -1475,9 +1503,10 @@ export default function ChatAgentsPage() {
     try {
       const created = await createDashboardChatAgent(createFormToPayload(createForm), getToken);
       setChatAgents((current) => [created, ...current]);
-      setSelectedId(created.id);
       setCreateForm(null);
-      setNotice({ kind: "success", text: `Created "${created.agent.name}"` });
+      // Opening the new agent's page is the confirmation; a toast here would
+      // unmount with the list before anyone read it.
+      router.push(`/dashboard/chat/${created.id}`);
     } catch (error) {
       if (isChatAgentLimitError(error)) {
         setCreateError("Your account already has a chat agent. Edit that agent instead of creating a new one.");
@@ -1487,20 +1516,20 @@ export default function ChatAgentsPage() {
     } finally {
       setIsCreating(false);
     }
-  }, [createForm, getToken, isCreating, setChatAgents]);
+  }, [createForm, getToken, isCreating, router, setChatAgents]);
 
   const deleteSelected = useCallback(async () => {
     if (!selected) return;
-    const name = selected.agent.name;
     setIsDeleting(true);
     try {
-      const timer = saveTimers.current.get(selected.id);
-      if (timer) clearTimeout(timer);
+      const pending = saveTimers.current.get(selected.id);
+      if (pending) clearTimeout(pending.timer);
       saveTimers.current.delete(selected.id);
       await deleteDashboardChatAgent(selected.id, getToken);
       setChatAgents((current) => current.filter((agent) => agent.id !== selected.id));
-      setSelectedId("");
-      setNotice({ kind: "success", text: `Deleted "${name}"` });
+      // Back to the list, where the agent is gone; replace, so Back does not
+      // return to the deleted agent's page.
+      router.replace("/dashboard/chat");
     } catch (error) {
       setNotice({
         kind: "error",
@@ -1510,11 +1539,10 @@ export default function ChatAgentsPage() {
       setIsDeleting(false);
       setConfirmingDelete(false);
     }
-  }, [getToken, selected, setChatAgents]);
+  }, [getToken, router, selected, setChatAgents]);
 
   // Escape dismisses the delete confirmation. It listens in the capture phase
-  // and stops the key there, so the expanded agent card behind does not also
-  // take it as its cue to close.
+  // and stops the key there, so nothing behind it also acts on the key.
   useEffect(() => {
     if (!confirmingDelete) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1533,7 +1561,7 @@ export default function ChatAgentsPage() {
 
       <main className="chat-main">
         <div className="chat-content">
-          {chatAgents.some((agent) => agent.hourly_limit_resets_at) ? (
+          {!agentId && chatAgents.some((agent) => agent.hourly_limit_resets_at) ? (
             <div className="chat-limit-list">
               {chatAgents.map((agent) =>
                 agent.hourly_limit_resets_at ? (
@@ -1546,6 +1574,58 @@ export default function ChatAgentsPage() {
               )}
             </div>
           ) : null}
+          {agentId ? (
+            <section aria-label="Chat agent" className="chat-agent-page">
+              {selected ? (
+                <>
+                  <AgentHeader
+                    agent={selected}
+                    onDelete={() => setConfirmingDelete(true)}
+                    onPatch={patchSelected}
+                  />
+                  <div className="chat-agent-expanded-grid">
+                    <Editor
+                      agent={selected}
+                      assignableNumbers={assignableNumbers}
+                      isRefreshingNumbers={isRefreshingNumbers}
+                      isStartingLogin={isStartingLogin}
+                      login={
+                        numberLogin && numberLogin.status !== "connected" ? numberLogin : null
+                      }
+                      loginError={numberLoginError}
+                      onPatch={patchSelected}
+                      onRefreshNumbers={refreshPhoneNumbers}
+                      onRequestCode={startNumberCodeLogin}
+                      onRequestQr={startNumberQrLogin}
+                      onStartLogin={startNumberLogin}
+                    />
+                    <ConfigPanel
+                      agent={selected}
+                      knowledgeBases={knowledgeBases}
+                      onPatch={patchSelected}
+                      phoneNumbers={phoneNumbers}
+                      tools={tools}
+                    />
+                  </div>
+                </>
+              ) : (
+                // A link or a reload lands here before the list has loaded, so
+                // "not found" waits until the server has answered.
+                <div className="chat-agent-page-empty">
+                  {isLoading ? (
+                    <span aria-busy="true">Loading chat agent...</span>
+                  ) : (
+                    <>
+                      <span>This chat agent does not exist or was deleted.</span>
+                      <Link className="chat-btn chat-btn-secondary chat-btn-sm" href="/dashboard/chat">
+                        Back to chat agents
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </section>
+          ) : (
           <section className="chat-workspace" aria-label="Chat agents workspace">
             <div className="chat-panel chat-agent-browser">
               <div className="chat-panel-head chat-list-head">
@@ -1623,13 +1703,10 @@ export default function ChatAgentsPage() {
                       const knowledgeCount = agent.knowledge_base?.knowledge_base_ids?.length ?? 0;
                       const toolCount = agent.tools?.tool_ids?.length ?? 0;
                       return (
-                        <motion.button
-                          aria-pressed={agent.id === selected?.id}
-                          className={`chat-list-row${agent.id === selected?.id ? " is-active" : ""}`}
+                        <Link
+                          className="chat-list-row"
+                          href={`/dashboard/chat/${agent.id}`}
                           key={agent.id}
-                          layoutId={`chat-agent-${agent.id}`}
-                          onClick={() => setSelectedId(agent.id)}
-                          type="button"
                         >
                           <span
                             className="chat-avatar"
@@ -1654,65 +1731,21 @@ export default function ChatAgentsPage() {
                           <span className="chat-list-chevron">
                             <Icon name="chevron" size={16} sw={2.3} />
                           </span>
-                        </motion.button>
+                        </Link>
                       );
                     })}
                   </div>
                 )}
               </div>
             </div>
-
-            <ExpandableCardDemoStandard
-              className="chat-agent-expandable"
-              layoutId={`chat-agent-${selected?.id ?? "closed"}`}
-              onClose={() => setSelectedId("")}
-              open={Boolean(selected)}
-            >
-              {selected ? (
-                <div className="chat-agent-expanded-shell">
-                  <AgentHeader
-                    agent={selected}
-                    onClose={() => setSelectedId("")}
-                    onDelete={() => setConfirmingDelete(true)}
-                    onPatch={patchSelected}
-                  />
-                  <div className="chat-agent-expanded-grid">
-                    <Editor
-                      agent={selected}
-                      assignableNumbers={assignableNumbers}
-                      isRefreshingNumbers={isRefreshingNumbers}
-                      isStartingLogin={isStartingLogin}
-                      login={
-                        numberLogin && numberLogin.status !== "connected" ? numberLogin : null
-                      }
-                      loginError={numberLoginError}
-                      onPatch={patchSelected}
-                      onRefreshNumbers={refreshPhoneNumbers}
-                      onRequestCode={startNumberCodeLogin}
-                      onRequestQr={startNumberQrLogin}
-                      onStartLogin={startNumberLogin}
-                    />
-                    <ConfigPanel
-                      agent={selected}
-                      knowledgeBases={knowledgeBases}
-                      onPatch={patchSelected}
-                      phoneNumbers={phoneNumbers}
-                      tools={tools}
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </ExpandableCardDemoStandard>
           </section>
+          )}
         </div>
       </main>
 
       {confirmingDelete && selected ? (
         <div
           className="chat-confirm-overlay"
-          // Outside-click handlers on the expanded card skip anything marked
-          // with this, so a click here never closes it.
-          data-expandable-card-ignore
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !isDeleting) setConfirmingDelete(false);
           }}
@@ -1916,17 +1949,15 @@ function CreateChatAgentModal({
 // header, then the system prompt that decides what the agent says. A chat agent
 // never opens a thread itself, so there is no opening message. Everything else
 // is configuration and lives in the panel to the right.
-// The expanded card's single top bar: who the agent is, its live switch and
-// delete, and the close button — one strip instead of a label bar stacked
-// over a separate header card.
+// The agent page's single top bar: the way back to the list, who the agent is,
+// its live switch and delete — one strip instead of a label bar stacked over a
+// separate header card.
 function AgentHeader({
   agent,
-  onClose,
   onDelete,
   onPatch,
 }: {
   agent: ApiChatAgent;
-  onClose: () => void;
   onDelete: () => void;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
 }) {
@@ -1956,6 +1987,9 @@ function AgentHeader({
 
   return (
     <div className="chat-agent-expanded-topline">
+      <Link aria-label="Back to chat agents" className="chat-agent-back" href="/dashboard/chat">
+        <Icon name="back" size={16} sw={2.4} />
+      </Link>
       <div className="chat-detail-head">
         <div className="chat-identity">
           <span className="chat-avatar chat-avatar-lg" style={{ background: avatarColor(agent.id) }}>
@@ -2031,14 +2065,6 @@ function AgentHeader({
           </button>
         </div>
       </div>
-      <button
-        aria-label="Close chat agent details"
-        className="chat-agent-expanded-close"
-        onClick={onClose}
-        type="button"
-      >
-        <Icon name="x" size={16} sw={2.4} />
-      </button>
     </div>
   );
 }
