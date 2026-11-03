@@ -8,6 +8,7 @@ import {
   BookOpen,
   Bot,
   CalendarDays,
+  ChevronRight,
   KeyRound,
   LayoutGrid,
   Menu,
@@ -35,6 +36,7 @@ import {
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import { useNewOrders } from "@/components/nav/useNewOrders";
 import { useConversationsAttention } from "@/components/nav/useConversationsAttention";
+import { useCachedState } from "@/lib/pageCache";
 import styles from "./DashboardSidebar.module.css";
 
 const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
@@ -76,6 +78,18 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
   const [drawerOpen, setDrawerOpen] = useState(false);
   const newOrders = useNewOrders();
   const needsPerson = useConversationsAttention();
+  // How many were waiting when the phone card was last closed: it comes back
+  // only once more customers need a person. Every page mounts its own sidebar,
+  // so this lives in the page cache rather than in local state.
+  const [attentionClosedAt, setAttentionClosedAt] = useCachedState<number>("conversations:attention-closed", 0);
+  // The conversations page already shows which rows are red.
+  const showAttentionCard = needsPerson > attentionClosedAt && activeLabel !== "Conversations";
+
+  // Some were marked done since: count from the lower number, so the next new
+  // one brings the card back.
+  useEffect(() => {
+    if (needsPerson < attentionClosedAt) setAttentionClosedAt(needsPerson);
+  }, [attentionClosedAt, needsPerson, setAttentionClosedAt]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -134,6 +148,32 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
           </button>
         </span>
       </header>
+      {showAttentionCard ? (
+        <div className={styles.attentionCard} role="status">
+          <Link className={styles.attentionLink} href="/dashboard/conversations">
+            <span className={styles.attentionIcon}><MessagesSquare size={17} /></span>
+            <span className={styles.attentionText}>
+              <span className={styles.attentionTitle}>
+                {needsPerson} conversation{needsPerson === 1 ? " needs" : "s need"} you
+              </span>
+              <span className={styles.attentionHint}>
+                {needsPerson === 1
+                  ? "The AI is off for this customer. Reply, then mark it done."
+                  : "The AI is off for these customers. Reply, then mark them done."}
+              </span>
+            </span>
+            <ChevronRight className={styles.attentionChevron} size={17} />
+          </Link>
+          <button
+            aria-label="Hide this message"
+            className={styles.attentionClose}
+            onClick={() => setAttentionClosedAt(needsPerson)}
+            type="button"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      ) : null}
       <div
         aria-hidden="true"
         className={styles.backdrop}
