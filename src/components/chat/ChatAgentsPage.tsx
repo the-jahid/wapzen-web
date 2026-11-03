@@ -63,7 +63,7 @@ type IconName =
 
 // The collapsible parts of the configuration panel, one per section of the
 // chat-agent contract.
-type ConfigSectionId = "knowledge-base" | "tools";
+type ConfigSectionId = "knowledge-base" | "tools" | "handover";
 
 // The editor's two tabs. "agent" is everything that configures the agent;
 // "conversation" is the record of what it has already said.
@@ -1015,6 +1015,7 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
         }
       : undefined,
     media: agent.media ? { ...agent.media } : undefined,
+    handover: agent.handover ? { ...agent.handover } : undefined,
   };
 }
 
@@ -2694,6 +2695,35 @@ function ConfigPanel({
               </div>
             ) : null}
           </ConfigSection>
+
+          {/* Only offered by a server that reports the section, since an older
+              one refuses it on save. */}
+          {agent.handover ? (
+            <ConfigSection
+              icon="agents"
+              id="handover"
+              isOpen={openSection === "handover"}
+              meta={agent.handover.handover_enabled ? "On" : "Off"}
+              onToggle={setOpenSection}
+              title="Human handover"
+            >
+              <MediaToggle
+                hint={
+                  agent.handover.handover_enabled
+                    ? "When you or your team write to a customer, from your phone or from Conversations, the AI stops answering that customer until you switch it back on."
+                    : "The AI keeps answering customers even after you or your team write to them."
+                }
+                label="Enable human handover"
+                on={agent.handover.handover_enabled}
+                onToggle={() =>
+                  onPatch((current) => ({
+                    ...current,
+                    handover: { handover_enabled: !current.handover?.handover_enabled },
+                  }))
+                }
+              />
+            </ConfigSection>
+          ) : null}
         </div>
       </div>
     </aside>

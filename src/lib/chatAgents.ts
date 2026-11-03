@@ -50,6 +50,13 @@ export type ChatMediaSection = {
   images_enabled: boolean;
 };
 
+// Human handover: whether a person writing to a customer, from the phone or the
+// dashboard, turns the AI off for that customer. Absent from older servers,
+// which refuse it on save, so it is only sent back when the server returned it.
+export type ChatHandoverSection = {
+  handover_enabled: boolean;
+};
+
 // What the running server reports about serving the agent. Never saved: it is
 // read-only and absent from older servers.
 export type ChatRuntimeSection = {
@@ -70,6 +77,7 @@ export type ApiChatAgent = {
   tools?: ChatToolsSection;
   order?: ChatOrderSection;
   media?: ChatMediaSection;
+  handover?: ChatHandoverSection;
   // True once the account has sent every reply it is allowed; the agent stays
   // silent until the limit is lifted. Read-only.
   reply_limit_reached?: boolean;
@@ -87,6 +95,7 @@ export type CreateChatAgentPayload = {
   tools?: ChatToolsSection;
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
   media?: ChatMediaSection;
+  handover?: ChatHandoverSection;
 };
 
 // Every section and every field inside a supplied section is optional on
@@ -100,6 +109,7 @@ export type UpdateChatAgentPayload = {
   tools?: Partial<ChatToolsSection>;
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
   media?: Partial<ChatMediaSection>;
+  handover?: Partial<ChatHandoverSection>;
 };
 
 // The defaults the OpenAPI document declares for a new chat agent, so the

@@ -234,16 +234,19 @@ export default function ChatConversationsWorkspace({
     setSending(true);
     setThreadError("");
     try {
-      const message = await sendChatConversationMessage(summary.id, body, getToken);
+      const { ai_reply_enabled: aiStillOn, ...message } = await sendChatConversationMessage(summary.id, body, getToken);
       setDraft("");
       if (composerRef.current) composerRef.current.style.height = "auto";
       // Answering by hand takes the chat over: the server switches the AI off
       // for this contact (which turns it red if the AI was on), and the switch
-      // shows it straight away.
-      const handedOver = {
-        ai_reply_enabled: false,
-        needs_attention: summary.ai_reply_enabled !== false || summary.needs_attention,
-      };
+      // shows it straight away. An agent with human handover off keeps the AI on.
+      const handedOver =
+        aiStillOn === true
+          ? {}
+          : {
+              ai_reply_enabled: false,
+              needs_attention: summary.ai_reply_enabled !== false || summary.needs_attention,
+            };
       setThread((current) =>
         current && current.id === summary.id
           ? { ...current, ...handedOver, messages: [...(current.messages ?? []), message] }
