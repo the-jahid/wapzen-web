@@ -2710,7 +2710,7 @@ function ConfigPanel({
                   <span className="chat-field-hint">
                     {orderEnabled ? (
                       <>
-                        Orders appear under <Link href="/dashboard/tools?tab=orders">Tools → Orders</Link>.
+                        Orders appear under <Link href="/dashboard/orders">Orders</Link>.
                       </>
                     ) : (
                       "Order taking is off, so this agent can't place orders and these instructions aren't used."

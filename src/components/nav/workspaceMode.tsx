@@ -22,6 +22,7 @@ export type NavIconName =
   | "calendar"
   | "chart"
   | "send"
+  | "orders"
   | "settings";
 
 export type WorkspaceNavItem = {
@@ -38,6 +39,7 @@ const defaultMode: WorkspaceMode = "chat";
 
 // Routes that only exist in one mode. Landing on one of these switches the
 // sidebar to that mode, so a link or a bookmark always shows a coherent menu.
+// Orders sit in both menus: voice and chat agents both take them.
 const chatOnlyPaths = ["/dashboard/chat", "/dashboard/conversations", "/dashboard/bulk-messages"];
 const voiceOnlyPaths = [
   "/dashboard/agents",
@@ -54,6 +56,7 @@ const voiceNavItems: WorkspaceNavItem[] = [
   { label: "API Keys", icon: "key", href: "/dashboard/api-keys" },
   { label: "Calls", icon: "phone", href: "/dashboard/calls" },
   { label: "Outbound", icon: "target", href: "/dashboard/outbound" },
+  { label: "Orders", icon: "orders", href: "/dashboard/orders" },
 ];
 
 // Chat mode drops everything that only makes sense for a phone call — the voice
@@ -69,6 +72,8 @@ const chatNavItems: WorkspaceNavItem[] = [
   { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
   // One message to a whole contact list, sent from a connected number.
   { label: "Bulk Messages", icon: "send", href: "/dashboard/bulk-messages" },
+  // What the agents' Take Order tool has placed.
+  { label: "Orders", icon: "orders", href: "/dashboard/orders" },
 ];
 
 export function navItemsForMode(mode: WorkspaceMode): WorkspaceNavItem[] {

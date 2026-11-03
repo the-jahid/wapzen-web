@@ -2,17 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "motion/react";
 import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
-import OrdersTab from "@/components/tools/OrdersTab";
 import {
   useWorkspaceMode,
   type WorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
-import { newOrdersCacheKey } from "@/components/nav/useNewOrders";
 import { useCachedState } from "@/lib/pageCache";
 import {
   createTool as apiCreateTool,
@@ -637,7 +635,7 @@ function Icon({
   );
 }
 
-const css = `
+export const toolsCss = `
 .tools-shell {
   --bg: var(--app-bg);
   --sidebar: var(--app-sidebar);
@@ -687,26 +685,7 @@ const css = `
 }
 .tools-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 24px 32px 32px; }
 .tools-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
-.tools-tabs { border-bottom: 1px solid var(--border); display: flex; gap: 4px; }
-.tools-tab {
-  align-items: center;
-  background: none;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  color: var(--subtle);
-  cursor: pointer;
-  display: inline-flex;
-  font-size: 13px;
-  font-weight: 800;
-  gap: 7px;
-  margin-bottom: -1px;
-  padding: 8px 12px 10px;
-  transition: border-color .18s ease, color .18s ease;
-}
-.tools-tab:hover { color: var(--text); }
-.tools-tab.is-active { border-bottom-color: var(--primary); color: var(--text); }
-.tools-tab:focus-visible { border-radius: 8px; box-shadow: 0 0 0 3px var(--app-primary-ring); outline: none; }
-.tools-tab-badge { background: var(--primary); border-radius: 999px; color: var(--app-on-accent); font-size: 10.5px; font-weight: 850; line-height: 1; padding: 3px 6px; }
+.tools-page-title { color: var(--text); font-size: 22px; font-weight: 850; letter-spacing: -.4px; margin: 0; }
 .tools-default-note { align-items: center; display: flex; flex-wrap: wrap; gap: 6px 10px; }
 .tools-function-params { display: grid; gap: 8px; }
 .tools-function-param { align-items: baseline; display: grid; gap: 10px; grid-template-columns: 150px minmax(0, 1fr); }
@@ -1260,11 +1239,13 @@ const css = `
 export default function ToolsPage() {
   const { getToken } = useAuth();
   const { mode } = useWorkspaceMode();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  // The tab lives in the URL so it survives a refresh and can be linked to.
-  const showOrders = searchParams.get("tab") === "orders";
-  // The sidebar keeps this count current on every page.
-  const [newOrders, setNewOrders] = useCachedState<number>(newOrdersCacheKey, 0);
+  // Orders were a tab here before they got their own page; old links still land.
+  const oldOrdersLink = searchParams.get("tab") === "orders";
+  useEffect(() => {
+    if (oldOrdersLink) router.replace("/dashboard/orders");
+  }, [oldOrdersLink, router]);
   const [tools, setTools, hasCachedTools] = useCachedState<Tool[]>("tools-page:tools", []);
   const [isLoading, setIsLoading] = useState(true);
   // Tools cached from an earlier visit stay on screen while they refetch.
@@ -1353,14 +1334,6 @@ export default function ToolsPage() {
     );
   }, [tools, query]);
   const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
-
-  function openTab(orders: boolean) {
-    window.history.replaceState(null, "", orders ? "?tab=orders" : window.location.pathname);
-  }
-
-  const noticeFromOrders = useCallback((kind: Notice["kind"], text: string) => {
-    setNotice({ kind, text });
-  }, []);
 
   function openCreate() {
     setDraftName("");
@@ -1464,42 +1437,13 @@ export default function ToolsPage() {
 
   return (
     <div className={`tools-shell${mode === "chat" ? " app-accent-green" : ""}`}>
-      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <style dangerouslySetInnerHTML={{ __html: toolsCss }} />
       <DashboardSidebar activeLabel="Tools" stackBelow={900} />
 
       <main className="tools-main">
         <div className="tools-content">
             <div className="tools-browse">
-              <div aria-label="Tools sections" className="tools-tabs" role="tablist">
-                <button
-                  aria-selected={!showOrders}
-                  className={`tools-tab${showOrders ? "" : " is-active"}`}
-                  onClick={() => openTab(false)}
-                  role="tab"
-                  type="button"
-                >
-                  Tools
-                </button>
-                <button
-                  aria-selected={showOrders}
-                  className={`tools-tab${showOrders ? " is-active" : ""}`}
-                  onClick={() => openTab(true)}
-                  role="tab"
-                  type="button"
-                >
-                  Orders
-                  {newOrders > 0 ? (
-                    <span aria-label={`${newOrders} new`} className="tools-tab-badge">
-                      {newOrders}
-                    </span>
-                  ) : null}
-                </button>
-              </div>
-
-              {showOrders ? (
-                <OrdersTab onNewCount={setNewOrders} onNotice={noticeFromOrders} />
-              ) : (
-              <>
+              <h1 className="tools-page-title">Tools</h1>
               <div className="tools-toolbar">
                 <div className="tools-search-wrap">
                   <span className="tools-search-icon">
@@ -1677,8 +1621,6 @@ export default function ToolsPage() {
                     <span className="tools-add-copy">Another action your agents can take.</span>
                   </button>
                 </div>
-              )}
-              </>
               )}
             </div>
           <ExpandableCardDemoStandard

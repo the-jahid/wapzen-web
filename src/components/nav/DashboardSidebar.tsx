@@ -16,6 +16,7 @@ import {
   Phone,
   PlayCircle,
   Send,
+  ShoppingBag,
   Settings,
   Target,
   Wrench,
@@ -50,6 +51,7 @@ const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
   calendar: CalendarDays,
   chart: BarChart3,
   send: Send,
+  orders: ShoppingBag,
   settings: Settings,
 };
 
@@ -191,14 +193,13 @@ function SidebarBody({
           const Icon = navIcons[item.icon];
           const count = badges?.[item.label];
           const active = item.label === activeLabel;
-          // New orders live under Tools, so while any wait, Tools opens them.
-          const ordersWaiting = item.label === "Tools" && newOrders > 0;
+          const ordersWaiting = item.label === "Orders" && newOrders > 0;
           return (
             <Link
               aria-current={active ? "page" : undefined}
               className={styles.navItem}
               data-active={active || undefined}
-              href={ordersWaiting ? "/dashboard/tools?tab=orders" : item.href ?? "#"}
+              href={item.href ?? "#"}
               key={item.label}
               onClick={onNavigate}
             >
