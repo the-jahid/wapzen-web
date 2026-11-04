@@ -281,7 +281,7 @@ export default function WhatsAppChatbotCoachingInstitutePage() {
     answerLabel="Short answer"
     questions={questions}
     sources={sources}
-    related={["/blog/free-whatsapp-ai-chatbot-india", "/blog/whatsapp-bulk-message-sender-free"]}
+    related={["/blog/free-whatsapp-ai-chatbot-india", "/blog/ai-voice-agent-whatsapp-india"]}
     product="/free-whatsapp-chatbot"
     cta={{ heading: <>Never leave a parent waiting until morning.<br /><span>Free right now, with no Meta API key.</span></>, body: "Sign up, give the agent your fees and batches and link your number. It takes about a minute, with no card and no per-message charge." }}
   />;
