@@ -57,7 +57,7 @@ const fit = [
   ["Institute sending monthly fee reminders to parents", "Yes", "Bulk Messages personalises each one, at no charge per message"],
   ["Parents who would rather call than type", "Yes", "The voice agent answers WhatsApp calls in Hindi and more"],
   ["Institute wanting attendance, tests and fee ledgers", "Use with software", "Wapzen handles only the WhatsApp conversation"],
-  ["Anyone messaging bought student databases", "No", "It’s the fastest way to get a number restricted"],
+  ["Anyone messaging bought student databases", "No", "Those people never asked to hear from you"],
   ["Brand that needs a green tick or approved templates", "No", "Those exist only on the official API"],
 ];
 
@@ -89,7 +89,6 @@ const sources = [
   { label: "Medianama: DPDP Rules on tracking children and the exemptions", href: "https://www.medianama.com/2025/11/223-dpdp-rules-real-time-child-tracking-without-consent/" },
   { label: "YourStory: DPDP Rules 2025 notified, rollout over 18 months", href: "https://yourstory.com/2025/11/digital-personal-data-protection-dpdp-rules-2025-rollout-over-18-months" },
   { label: "AiSensy: pricing and India message charges", href: "https://aisensy.com/pricing" },
-  { label: "WhatsApp: Terms of Service", href: "https://www.whatsapp.com/legal/terms-of-service" },
 ];
 
 const questions = [
@@ -166,13 +165,13 @@ const questions = [
         <li><strong>Double-check the sheet.</strong> A wrong amount is awkward to fix after 400 messages, so send a small test batch first.</li>
         <li><strong>Keep it polite.</strong> Never mention a student’s dues in a group, and don’t use a tone that could embarrass a family.</li>
       </ul>
-      <Note>Fee reminders are cheap on API platforms too: 400 messages at AiSensy’s ₹0.145 is ₹58, plus GST, per round. The real saving is the monthly plan and the AI add-on. Read <Link href="/blog/whatsapp-bulk-message-sender-free">how to send bulk messages safely</Link> before your first send.</Note>
+      <Note>Fee reminders are cheap on API platforms too: 400 messages at AiSensy’s ₹0.145 is ₹58, plus GST, per round. The real saving is the monthly plan and the AI add-on. Read <Link href="/blog/whatsapp-bulk-message-sender-free">how to send bulk messages</Link> before your first send.</Note>
     </>,
   },
   {
     id: "get-students",
     q: "What WhatsApp message should a tuition class send to get students?",
-    answer: "Send a short, personal message to people who already know you: past parents, enquiries and referrals. Include the class, subject, batch time, location and one next step, such as a free demo class. To reach new parents, put a WhatsApp link and QR code on pamphlets and posters, so they message you first, which is the safest route.",
+    answer: "Send a short, personal message to people who already know you: past parents, enquiries and referrals. Include the class, subject, batch time, location and one next step, such as a free demo class. To reach new parents, put a WhatsApp link and QR code on pamphlets and posters, so they message you first.",
     body: <>
       <h3>Admission open (Hinglish)</h3>
       <pre>{tuitionAdmission}</pre>
@@ -188,7 +187,7 @@ const questions = [
         <li><strong>A free demo class or scholarship test.</strong> It gives a parent an easy reason to message you now, not next month.</li>
         <li><strong>A fast first reply.</strong> All of the above brings enquiries, and the agent makes sure none of them waits until morning.</li>
       </ul>
-      <p>Don’t buy student databases. Those people didn’t ask to hear from you, so they’re likely to report you, and that puts your number at risk.</p>
+      <p>Don’t buy student databases. Those people didn’t ask to hear from you.</p>
     </>,
   },
   {
@@ -253,7 +252,7 @@ const questions = [
   {
     id: "limits",
     q: "What can’t a free coaching chatbot do?",
-    answer: "Wapzen can’t send PDFs or images, reply in groups, or take fee payments, and each account has one chat agent sending up to 100 AI replies an hour. 1,000 businesses already use it, and answering people who wrote to you first keeps the risk to your number low, though no unofficial tool can promise zero risk.",
+    answer: "Wapzen can’t send PDFs or images, reply in groups, or take fee payments, and each account has one chat agent sending up to 100 AI replies an hour.",
     body: <>
       <Comparison caption="Who a free WhatsApp AI chatbot suits among Indian coaching institutes" columns={["Good fit?", "Why"]} rows={fit} />
       <ul>

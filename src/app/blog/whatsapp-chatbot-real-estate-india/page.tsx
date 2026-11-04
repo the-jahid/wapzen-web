@@ -50,7 +50,7 @@ const fit = [
   ["Builder’s sales office with repeat project questions", "Yes", "Answers price, size and possession questions from your documents"],
   ["Broker selling to NRI buyers in other time zones", "Yes", "Replies while your office is closed"],
   ["Team that needs lead assignment and a pipeline", "Use with a CRM", "An API tool can send details to your CRM"],
-  ["Anyone wanting the bot to message bought lists", "No", "It’s the fastest way to get a number restricted"],
+  ["Anyone wanting the bot to message bought lists", "No", "Those people never asked to hear from you"],
   ["Business that needs a green tick or approved templates", "No", "Those exist only on the official API"],
 ];
 
@@ -82,7 +82,6 @@ const sources = [
   { label: "AiSensy: pricing and India message charges", href: "https://aisensy.com/pricing" },
   { label: "TRAI press release No. 11/2025: amendments to the TCCCPR", href: "https://cms.trai.gov.in/sites/default/files/2025-02/PR_No.11of2025.pdf" },
   { label: "YourStory: DPDP Rules 2025 notified, rollout over 18 months", href: "https://yourstory.com/2025/11/digital-personal-data-protection-dpdp-rules-2025-rollout-over-18-months" },
-  { label: "WhatsApp: Terms of Service", href: "https://www.whatsapp.com/legal/terms-of-service" },
 ];
 
 const questions = [
@@ -204,15 +203,15 @@ const questions = [
   },
   {
     id: "marketing",
-    q: "What WhatsApp marketing can a real estate broker do safely?",
-    answer: "Message people who enquired with you or bought from you, about things they’d want to hear: new launches, price revisions and site-visit reminders. Don’t buy lists. Personalise each message, include the RERA number on project messages, leave a gap between sends, and stop when someone asks. Those are the habits that best protect your number.",
+    q: "What WhatsApp marketing works for a real estate broker?",
+    answer: "Message people who enquired with you or bought from you, about things they’d want to hear: new launches, price revisions and site-visit reminders. Don’t buy lists. Personalise each message, include the RERA number on project messages, leave a gap between sends, and stop when someone asks.",
     body: <>
       <p>Bulk Messages takes an Excel or CSV sheet and fills in placeholders such as <code>{"{{name}}"}</code> from your columns. Here are two messages you can adapt.</p>
       <h3>New launch, to past enquiries</h3>
       <pre>{launch}</pre>
       <h3>Site-visit reminder</h3>
       <pre>{visit}</pre>
-      <p>Bought property-buyer databases are the biggest risk: recipients don’t know you, so they block and report you, and WhatsApp restricts numbers that many people report. Read the <Link href="/blog/whatsapp-bulk-message-sender-free">safe bulk-messaging checklist</Link> before your first send.</p>
+      <p>Skip bought property-buyer databases: those people don’t know you and never asked to hear from you. Read our <Link href="/blog/whatsapp-bulk-message-sender-free">guide to bulk messaging</Link> before your first send.</p>
     </>,
   },
   {
@@ -234,7 +233,7 @@ const questions = [
   {
     id: "limits",
     q: "What can’t a free real estate chatbot do?",
-    answer: "Wapzen can’t send PDFs or images, reply in groups, connect directly to portals, keep a pipeline or book a calendar slot without an API tool. It can send up to 100 AI replies an hour, and each account has one chat agent. 1,000 businesses already use it, and answering people who message you keeps the risk to your number low, though no unofficial tool can promise zero risk.",
+    answer: "Wapzen can’t send PDFs or images, reply in groups, connect directly to portals, keep a pipeline or book a calendar slot without an API tool. It can send up to 100 AI replies an hour, and each account has one chat agent.",
     body: <>
       <Comparison caption="Who a free WhatsApp AI chatbot suits in Indian real estate" columns={["Good fit?", "Why"]} rows={fit} />
       <ul>

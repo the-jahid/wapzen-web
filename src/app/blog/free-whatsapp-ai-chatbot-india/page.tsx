@@ -20,10 +20,9 @@ import { QaPost } from "@/components/blog/QaPost";
 // pages. Product claims follow whiskey-bailey-server. Voice is described as working at
 // the user's request, but the dashboard still shows VoiceUpdateNote, so the voice CTA
 // opens WhatsApp: swap it for sign-up when the note goes. "1,000 businesses" is the user's
-// figure (2026-11-04), not checked against the database. They also asked for "no ban
-// risk", which this post doesn't say: WhatsApp has logged out customers' numbers and sends
-// restriction notices (whiskey activity logs), so it says low risk, not zero, like
-// /blog/whatsapp-chatbot-without-business-api.
+// figure (2026-11-04), not checked against the database. The user asked for no mention of
+// bans in this post (2026-11-04), so it makes no claim either way about a number's safety;
+// /blog/whatsapp-chatbot-without-business-api still answers that question.
 const href = "/blog/free-whatsapp-ai-chatbot-india";
 const post = blogPost(href);
 const voiceAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Hi, I'd like to turn on the Wapzen voice agent for my business in India.")}`;
@@ -65,9 +64,8 @@ const fit = [
   ["Shop or service answering the same questions all day", "Yes", "It replies in seconds from your information, day and night"],
   ["Instagram or Meesho seller taking orders on WhatsApp", "Yes", "Take Order collects the details and saves each confirmed order"],
   ["Business whose customers call on WhatsApp", "Yes", "The voice agent answers in Hindi and other Indian languages"],
-  ["Brand messaging thousands who never wrote to it", "No", "That needs approved API templates, and it risks your number"],
+  ["Brand messaging thousands who never wrote to it", "No", "That needs approved API templates"],
   ["Company that needs a green tick or approved templates", "No", "Those exist only on the official API"],
-  ["Business that can’t afford any risk to its number", "No", "Use the official API: a linked device comes with no guarantee"],
   ["Team that wants several AI agents on one account", "Not yet", "Each account has one chat agent"],
 ];
 
@@ -86,8 +84,6 @@ const sources = [
   { label: "Interakt: pricing", href: "https://www.interakt.shop/pricing/" },
   { label: "WATI: pricing", href: "https://www.wati.io/pricing/" },
   { label: "Meta: WhatsApp Business Platform pricing", href: "https://developers.facebook.com/docs/whatsapp/pricing" },
-  { label: "WhatsApp: Terms of Service", href: "https://www.whatsapp.com/legal/terms-of-service" },
-  { label: "WhatsApp Business: messaging policy", href: "https://whatsappbusiness.com/policy/" },
   { label: "TRAI press release No. 11/2025: amendments to the TCCCPR", href: "https://cms.trai.gov.in/sites/default/files/2025-02/PR_No.11of2025.pdf" },
   { label: "YourStory: DPDP Rules 2025 notified, rollout over 18 months", href: "https://yourstory.com/2025/11/digital-personal-data-protection-dpdp-rules-2025-rollout-over-18-months" },
 ];
@@ -96,7 +92,7 @@ const questions = [
   {
     id: "free",
     q: "Is there a really free AI WhatsApp chatbot in India?",
-    answer: "Yes. Wapzen gives Indian businesses an AI WhatsApp chatbot that is free right now: no monthly fee, no per-message charge and no card. It runs on your existing number without the WhatsApp Business API. Most other options are a short trial, a free plan without AI, or a paid AI add-on on top of Meta’s message charges.",
+    answer: "Yes. Wapzen gives Indian businesses an AI WhatsApp chatbot that is free right now: no monthly fee, no per-message charge and no card. It runs on your existing number without the WhatsApp Business API, and 1,000 businesses already use it. Most other options are a short trial, a free plan without AI, or a paid AI add-on on top of Meta’s message charges.",
     body: <>
       <p>Search for a “free WhatsApp chatbot” in India and you’ll mostly find three things:</p>
       <ul>
@@ -115,7 +111,7 @@ const questions = [
     body: <>
       <p>Every API provider in India, including AiSensy, Interakt, WATI and Gupshup, still runs on Meta’s platform and passes its charges on to you. So the official API always involves Meta. Wapzen takes a different route: it connects the same way WhatsApp Web does.</p>
       <Comparison caption="What the official WhatsApp Business API needs compared with Wapzen" columns={["Official Business API", "Wapzen"]} rows={route} />
-      <p>It works on a personal or a WhatsApp Business number, and you keep your chats. The price of skipping the API is that you don’t get its official status, which matters for the <a href="#ban">risk question below</a>. For the full comparison, read <Link href="/blog/whatsapp-chatbot-without-business-api">how to create a WhatsApp chatbot without the Business API</Link>.</p>
+      <p>It works on a personal or a WhatsApp Business number, and you keep your chats. The price of skipping the API is that you don’t get its official status. For the full comparison, read <Link href="/blog/whatsapp-chatbot-without-business-api">how to create a WhatsApp chatbot without the Business API</Link>.</p>
     </>,
   },
   {
@@ -242,21 +238,6 @@ const questions = [
     </>,
   },
   {
-    id: "ban",
-    q: "Can my WhatsApp number get banned for using a chatbot?",
-    answer: "The risk is low when the agent only answers people who message you, and 1,000 businesses already use Wapzen on their own numbers. WhatsApp restricts numbers that send bulk or unwanted messages, or that many people report. Because Wapzen isn’t Meta’s official platform, no tool like it can promise zero risk.",
-    body: <>
-      <p>1,000 businesses already use Wapzen to answer customers on their own numbers. WhatsApp’s restrictions are aimed at bulk and unwanted messages, not at a fast reply to someone who wrote to you. To protect your number:</p>
-      <ul>
-        <li><strong>Let the agent reply,</strong> not start conversations with strangers.</li>
-        <li><strong>Never buy contact lists.</strong> Numbers that many people block or report get restricted.</li>
-        <li><strong>In bulk sends,</strong> stay with your own customers, keep the gap between messages, and stop when someone asks.</li>
-        <li><strong>Try a second number first</strong> if your business depends on one number.</li>
-      </ul>
-      <p>WhatsApp’s terms restrict automated and bulk messaging outside its Business Platform, and it can log out or restrict a number. If you can’t accept any risk to your number, use an API provider. It costs more, but it’s the official route.</p>
-    </>,
-  },
-  {
     id: "which",
     q: "Which WhatsApp chatbot should a small Indian business choose?",
     answer: "Choose by what you need. For free AI replies on your existing number with no Meta API key, use Wapzen. For official status, approved templates, a green-tick application and large broadcasts, use an API provider such as AiSensy, Interakt or WATI. If Meta Business Agent is in your app, try that too.",
@@ -306,7 +287,7 @@ export default function FreeWhatsAppAiChatbotIndiaPage() {
       body: <>Yes, you can run a free AI WhatsApp chatbot in India. <strong>Wapzen</strong> works on the number you already use, with no Meta API key, no provider, no template approval and no per-message charge, because it links your number as a device. It replies in Hindi, Hinglish, English and regional languages, takes orders, and its voice agent answers WhatsApp calls. Everything is free right now, and 1,000 businesses already use it.</>,
     }}
     facts={[["Price", "₹0 right now"], ["Meta API key", "Not needed"], ["Setup", "About 1 minute"], ["Voice calls", "Working, in Hindi and more"]]}
-    indexTitle="The 13 questions in this guide"
+    indexTitle="The 12 questions in this guide"
     answerLabel="Short answer"
     questions={questions}
     sources={sources}
