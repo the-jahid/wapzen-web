@@ -471,6 +471,8 @@ const css = `
 .chat-list-chevron { color: var(--faint); display: inline-flex; grid-area: chevron; justify-self: end; transition: color .18s ease, transform .18s ease; }
 .chat-list-row:hover .chat-list-chevron { color: var(--primary-light); transform: translateX(2px); }
 .chat-empty-list { color: var(--subtle); font-size: 12.5px; padding: 18px 4px; text-align: center; }
+.chat-panel-body-empty { display: flex; flex-direction: column; }
+.chat-empty-start { align-items: center; display: flex; flex: 1 0 auto; flex-direction: column; gap: 14px; justify-content: center; min-height: 280px; }
 .chat-pill {
   align-items: center;
   border-radius: 20px;
@@ -731,6 +733,13 @@ const css = `
 .chat-modal-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .chat-modal-footer { border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; padding: 14px 20px; flex: 0 0 auto; }
 .chat-modal-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); border-radius: 11px; color: var(--app-rose-text); font-size: 12.5px; font-weight: 650; padding: 10px 12px; }
+.chat-modal-step { color: var(--app-primary-text); font-size: 11px; font-weight: 800; letter-spacing: .4px; margin-bottom: 4px; }
+/* The first step holds a QR code and the pairing form side by side. */
+.chat-modal-card.is-pairing { max-width: 760px; }
+.chat-modal-card.is-pairing .chat-modal-body { grid-template-columns: minmax(0, 1fr); }
+.chat-modal-card .chat-number-grid { grid-template-columns: minmax(0, 1fr); }
+.chat-number-row.chat-number-linked { cursor: default; }
+.chat-number-row.chat-number-linked:hover { background: var(--panel-hover); border-color: var(--border); }
 .chat-icon-btn {
   align-items: center;
   background: transparent;
@@ -978,8 +987,19 @@ function upsertPhoneNumber(current: ApiPhoneNumber[], updated: ApiPhoneNumber): 
   return current.map((pn) => (pn.id === updated.id ? updated : pn));
 }
 
-// The create modal only asks for a name and a number; the rest of the form keeps
-// the defaults a new agent is created with, and is edited in the editor afterwards.
+// The server allows one chat agent per account. Checked before the create modal
+// opens, because the modal starts by linking a number: finding out after the
+// scan would leave someone with a linked number and no agent.
+const MAX_CHAT_AGENTS = 1;
+const CHAT_AGENT_LIMIT_MESSAGE = "Your account already has a chat agent. Edit that agent instead of creating a new one.";
+
+// The auto-login effect's owner for a login the create modal started, which has
+// no agent to belong to yet.
+const NEW_AGENT_LOGIN = "new-agent";
+
+// The create modal links a number first and then asks for a name; the rest of
+// the form keeps the defaults a new agent is created with, and is edited in the
+// editor afterwards. An empty phone_number_id is what keeps it on the linking step.
 // There is no model setting: every chat agent answers with the one model the
 // server allows, so neither payload below sends a model section.
 type CreateForm = {
@@ -1084,6 +1104,13 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   useEffect(() => {
     chatAgentsRef.current = chatAgents;
   }, [chatAgents]);
+  // The create modal is on its linking step, so a completed scan moves it on to
+  // naming the agent instead of being assigned to one.
+  const isPairingForCreate = Boolean(createForm && !createForm.phone_number_id);
+  const isPairingForCreateRef = useRef(false);
+  useEffect(() => {
+    isPairingForCreateRef.current = isPairingForCreate;
+  }, [isPairingForCreate]);
 
   const isAuthenticated = Boolean(
     isUserLoaded && isAuthLoaded && isUserSignedIn && isAuthSignedIn && user
@@ -1293,6 +1320,12 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
         );
         setPhoneNumbers((current) => upsertPhoneNumber(current, updated));
         if (updated.status === "connected") {
+          if (isPairingForCreateRef.current) {
+            console.log("[wa-login] connected for a new agent", { phoneNumberId: updated.id });
+            setCreateError("");
+            setCreateForm((current) => (current ? { ...current, phone_number_id: updated.id } : current));
+            return;
+          }
           const target = scanTargetRef.current;
           console.log("[wa-login] connected", { phoneNumberId: updated.id, scanTarget: target || null });
           if (target) assignNumber(target, updated.id);
@@ -1346,18 +1379,27 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     scanTargetRef.current = selected && !selected.agent.phone_number_id ? selected.id : "";
   }, [selected]);
 
+  // Who needs a number linked right now: the open agent if it has none, or the
+  // agent the create modal is about to make.
+  const loginOwner =
+    selected && !selected.agent.phone_number_id
+      ? selected.id
+      : isPairingForCreate
+        ? NEW_AGENT_LOGIN
+        : "";
+
   // Puts a scannable QR code on screen. Asking for a code creates nothing: the
   // login only becomes a phone number if someone scans it, and the server hands
   // back the session already running rather than opening a second one, so an
   // editor that opens on every visit leaves no numbers behind.
   const startNumberLogin = useCallback(async () => {
-    if (!selected || isStartingLogin) return;
+    if (!loginOwner || isStartingLogin) return;
     const spentId = numberLogin && numberLogin.status !== "connected" ? numberLogin.id : null;
 
     setIsStartingLogin(true);
     setNumberLoginError("");
     try {
-      console.log("[wa-login] starting login", { agentId: selected.id, restartId: spentId });
+      console.log("[wa-login] starting login", { agentId: loginOwner, restartId: spentId });
       const started = spentId
         ? await apiRestartPhoneNumberLogin(spentId, getToken)
         : await apiStartPhoneNumberLogin({}, getToken);
@@ -1371,7 +1413,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     } finally {
       setIsStartingLogin(false);
     }
-  }, [getToken, isStartingLogin, numberLogin, selected]);
+  }, [getToken, isStartingLogin, loginOwner, numberLogin]);
 
   // Swaps the login on screen, QR or an earlier code, for one linked by a typed
   // pairing code. The server ends the old login, and the poll picks up the new
@@ -1409,8 +1451,8 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   }, [getToken]);
 
   // A chat agent with no number gets its QR code without being asked: opening
-  // the editor starts the login, and a session that runs out of codes is
-  // reissued, so what is on screen is always a scannable code.
+  // the editor or the create modal starts the login, and a session that runs out
+  // of codes is reissued, so what is on screen is always a scannable code.
   //
   // WhatsApp owns the rotation itself — it hands the session a series of codes
   // (roughly one a minute, then one every 20s) which the server stores as they
@@ -1421,7 +1463,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   // out unscanned. The card offers it the number form instead.
   const isPhone = useIsPhone();
   useEffect(() => {
-    if (!isAuthenticated || !selected || selected.agent.phone_number_id || isStartingLogin) return;
+    if (!isAuthenticated || !loginOwner || isStartingLogin) return;
     if (isPhone) return;
 
     // A live session already has a code on screen, and it serves this agent as
@@ -1430,11 +1472,11 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     const status = numberLogin?.status;
     if (status === "pending_qr") return;
 
-    const key = `${selected.id}:${numberLogin?.id ?? "none"}:${status ?? "none"}`;
+    const key = `${loginOwner}:${numberLogin?.id ?? "none"}:${status ?? "none"}`;
     if (autoLoginKey.current === key) return;
 
-    if (autoLoginRuns.current.agentId !== selected.id) {
-      autoLoginRuns.current = { agentId: selected.id, count: 0 };
+    if (autoLoginRuns.current.agentId !== loginOwner) {
+      autoLoginRuns.current = { agentId: loginOwner, count: 0 };
     }
     // An editor left open all day stops reissuing eventually; the button is
     // still there for whoever comes back to it.
@@ -1443,18 +1485,17 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 
     autoLoginKey.current = key;
     void startNumberLogin();
-  }, [isAuthenticated, isPhone, isStartingLogin, numberLogin, selected, startNumberLogin]);
+  }, [isAuthenticated, isPhone, isStartingLogin, loginOwner, numberLogin, startNumberLogin]);
 
   // The pick-a-number half of the setup card. A number another chat agent
   // already holds stays listed, but says who holds it and cannot be picked —
   // two agents replying on one number is ambiguous.
   const assignableNumbers = useMemo<AssignableNumber[]>(() => {
-    if (!selected) return [];
     return phoneNumbers
       .filter((pn) => pn.status === "connected")
       .map((pn) => {
         const holder = chatAgents.find(
-          (agent) => agent.id !== selected.id && agent.agent.phone_number_id === pn.id
+          (agent) => agent.id !== selected?.id && agent.agent.phone_number_id === pn.id
         );
         const blocked = Boolean(holder);
         return {
@@ -1483,13 +1524,41 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   }, [getToken, isAuthenticated, isRefreshingNumbers, setPhoneNumbers]);
 
   const openCreateModal = useCallback(() => {
+    if (chatAgents.length >= MAX_CHAT_AGENTS) {
+      setNotice({ kind: "error", text: CHAT_AGENT_LIMIT_MESSAGE });
+      return;
+    }
     setCreateError("");
+    setNumberLoginError("");
+    autoLoginKey.current = "";
+    autoLoginRuns.current = { agentId: "", count: 0 };
     setCreateForm(newCreateForm(chatAgents.length + 1));
   }, [chatAgents.length]);
 
+  // Dropping the login stops its poll. Opening the modal again gets the same
+  // session back while the server still has it running.
   const closeCreateModal = useCallback(() => {
     setCreateForm(null);
     setCreateError("");
+    setNumberLogin(null);
+    setNumberLoginError("");
+  }, []);
+
+  // The linking step's other way forward: a number already on the account.
+  const chooseCreateNumber = useCallback((phoneNumberId: string) => {
+    setCreateError("");
+    setNumberLogin(null);
+    setNumberLoginError("");
+    setCreateForm((current) => (current ? { ...current, phone_number_id: phoneNumberId } : current));
+  }, []);
+
+  // Back from naming to linking, for the wrong number or one another agent holds.
+  const changeCreateNumber = useCallback(() => {
+    setCreateError("");
+    setNumberLogin(null);
+    setNumberLoginError("");
+    autoLoginKey.current = "";
+    setCreateForm((current) => (current ? { ...current, phone_number_id: "" } : current));
   }, []);
 
   const createAgent = useCallback(async () => {
@@ -1509,7 +1578,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       router.push(`/dashboard/chat/${created.id}`);
     } catch (error) {
       if (isChatAgentLimitError(error)) {
-        setCreateError("Your account already has a chat agent. Edit that agent instead of creating a new one.");
+        setCreateError(CHAT_AGENT_LIMIT_MESSAGE);
       } else {
         setCreateError(error instanceof Error ? error.message : "Could not create chat agent");
       }
@@ -1663,7 +1732,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                   </button>
                 </div>
               </div>
-              <div className="chat-panel-body">
+              <div className={`chat-panel-body${!showSkeleton && chatAgents.length === 0 ? " chat-panel-body-empty" : ""}`}>
                 <div className="chat-search">
                   <span className="chat-search-icon">
                     <Icon name="search" size={15} sw={2.2} />
@@ -1692,10 +1761,16 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                       </div>
                     ))}
                   </div>
-                ) : filtered.length === 0 ? (
-                  <div className="chat-empty-list">
-                    {chatAgents.length === 0 ? "No chat agents yet." : "No agent matches that search."}
+                ) : chatAgents.length === 0 ? (
+                  <div className="chat-empty-list chat-empty-start">
+                    <span>No chat agents yet.</span>
+                    <button className="chat-btn chat-btn-primary" onClick={openCreateModal} type="button">
+                      <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
+                      New chat agent
+                    </button>
                   </div>
+                ) : filtered.length === 0 ? (
+                  <div className="chat-empty-list">No agent matches that search.</div>
                 ) : (
                   <div className="chat-list">
                     {filtered.map((agent) => {
@@ -1792,11 +1867,22 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 
       {createForm ? (
         <CreateChatAgentModal
+          assignableNumbers={assignableNumbers}
           error={createError}
           form={createForm}
+          isRefreshingNumbers={isRefreshingNumbers}
+          isStartingLogin={isStartingLogin}
           isSubmitting={isCreating}
+          login={numberLogin && numberLogin.status !== "connected" ? numberLogin : null}
+          loginError={numberLoginError}
           onCancel={closeCreateModal}
+          onChangeNumber={changeCreateNumber}
           onCreate={createAgent}
+          onRefreshNumbers={refreshPhoneNumbers}
+          onRequestCode={startNumberCodeLogin}
+          onRequestQr={startNumberQrLogin}
+          onSelectNumber={chooseCreateNumber}
+          onStartLogin={startNumberLogin}
           phoneNumbers={phoneNumbers}
           setForm={setCreateForm}
         />
@@ -1815,36 +1901,57 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 }
 
 
-// "New chat agent" opens this first, so the agent is named and pointed at a
-// number before it exists, rather than appearing as an untitled row that has to
-// be corrected in the configuration panel afterwards.
+// "New chat agent" opens this. It links a WhatsApp number first, by QR code or
+// pairing code, and only then asks for a name, so an agent is born answering on
+// a number instead of sitting idle until someone connects one.
 function CreateChatAgentModal({
+  assignableNumbers,
   error,
   form,
+  isRefreshingNumbers,
+  isStartingLogin,
   isSubmitting,
+  login,
+  loginError,
   onCancel,
+  onChangeNumber,
   onCreate,
+  onRefreshNumbers,
+  onRequestCode,
+  onRequestQr,
+  onSelectNumber,
+  onStartLogin,
   phoneNumbers,
   setForm,
 }: {
+  assignableNumbers: AssignableNumber[];
   error: string;
   form: CreateForm;
+  isRefreshingNumbers: boolean;
+  isStartingLogin: boolean;
   isSubmitting: boolean;
+  login: ApiPhoneNumber | null;
+  loginError: string;
   onCancel: () => void;
+  onChangeNumber: () => void;
   onCreate: () => void;
+  onRefreshNumbers: () => void;
+  onRequestCode: (phone: string) => Promise<void>;
+  onRequestQr: () => Promise<void>;
+  onSelectNumber: (phoneNumberId: string) => void;
+  onStartLogin: () => void;
   phoneNumbers: ApiPhoneNumber[];
   setForm: (update: (current: CreateForm | null) => CreateForm | null) => void;
 }) {
   const nameRef = useRef<HTMLInputElement>(null);
-
-  function patch(next: Partial<CreateForm>) {
-    setForm((current) => (current ? { ...current, ...next } : current));
-  }
+  const isLinking = !form.phone_number_id;
+  const linkedNumber = phoneNumbers.find((pn) => pn.id === form.phone_number_id);
 
   useEffect(() => {
+    if (isLinking) return;
     nameRef.current?.focus();
     nameRef.current?.select();
-  }, []);
+  }, [isLinking]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -1854,93 +1961,133 @@ function CreateChatAgentModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onCancel]);
 
+  const head = (
+    <div className="chat-modal-head">
+      <div>
+        <div className="chat-modal-step">Step {isLinking ? 1 : 2} of 2</div>
+        <h2 className="chat-modal-title" id="chat-create-title">
+          {isLinking ? "Connect your WhatsApp" : "Name your chat agent"}
+        </h2>
+        <div className="chat-modal-subtitle">
+          {isLinking
+            ? "Scan the QR code or use a pairing code to link the number this agent will answer on. You name the agent next."
+            : "Your number is ready. The prompt, knowledge bases and tools are set in the editor once the agent exists."}
+        </div>
+      </div>
+      <button
+        aria-label="Close create chat agent"
+        className="chat-icon-btn"
+        onClick={onCancel}
+        type="button"
+      >
+        <Icon name="x" size={15} sw={2.2} />
+      </button>
+    </div>
+  );
+
   return (
     <div
       className="chat-modal-backdrop"
-      onMouseDown={(event) => event.currentTarget === event.target && onCancel()}
+      // A stray click must not end a login someone is halfway through on their
+      // phone, so only the naming step closes from the backdrop.
+      onMouseDown={(event) => !isLinking && event.currentTarget === event.target && onCancel()}
     >
-      <form
-        aria-labelledby="chat-create-title"
-        aria-modal="true"
-        className="chat-modal-card"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onCreate();
-        }}
-        role="dialog"
-      >
-        <div className="chat-modal-head">
-          <div>
-            <h2 className="chat-modal-title" id="chat-create-title">
-              Create chat agent
-            </h2>
-            <div className="chat-modal-subtitle">
-              Name it and choose which number it answers on. The prompt, knowledge bases
-              and tools are set in the editor once it exists.
+      {/* Not a form on this step: the pairing code card holds a form of its own. */}
+      {isLinking ? (
+        <div
+          aria-labelledby="chat-create-title"
+          aria-modal="true"
+          className="chat-modal-card is-pairing"
+          role="dialog"
+        >
+          {head}
+          <div className="chat-modal-body">
+            <PhoneNumberSetupCard
+              error={loginError}
+              forNewAgent
+              isRefreshingNumbers={isRefreshingNumbers}
+              isStarting={isStartingLogin}
+              login={login}
+              numbers={assignableNumbers}
+              onRefreshNumbers={onRefreshNumbers}
+              onRequestCode={onRequestCode}
+              onRequestQr={onRequestQr}
+              onSelectNumber={onSelectNumber}
+              onStartLogin={onStartLogin}
+            />
+          </div>
+          <div className="chat-modal-footer">
+            <button className="chat-btn chat-btn-secondary" onClick={onCancel} type="button">
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form
+          aria-labelledby="chat-create-title"
+          aria-modal="true"
+          className="chat-modal-card"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onCreate();
+          }}
+          role="dialog"
+        >
+          {head}
+          <div className="chat-modal-body">
+            {error ? <div className="chat-modal-error">{error}</div> : null}
+
+            <div className="chat-modal-section">
+              <div className="chat-number-row chat-number-linked">
+                <span className="chat-number-icon">
+                  <Icon name="check" size={15} sw={2.4} />
+                </span>
+                <span className="chat-number-body">
+                  <span className="chat-number-name">
+                    {linkedNumber ? phoneNumberLabel(linkedNumber) : "Your WhatsApp number"}
+                  </span>
+                  <span className="chat-number-detail">Connected</span>
+                </span>
+                <button
+                  className="chat-number-refresh"
+                  disabled={isSubmitting}
+                  onClick={onChangeNumber}
+                  type="button"
+                >
+                  Change
+                </button>
+              </div>
+              <label className="chat-field">
+                <span className="chat-control-label">Agent name</span>
+                <input
+                  className="chat-input"
+                  onChange={(event) => {
+                    const name = event.target.value;
+                    setForm((current) => (current ? { ...current, name } : current));
+                  }}
+                  placeholder="Support assistant"
+                  ref={nameRef}
+                  value={form.name}
+                />
+              </label>
             </div>
           </div>
-          <button
-            aria-label="Close create chat agent"
-            className="chat-icon-btn"
-            onClick={onCancel}
-            type="button"
-          >
-            <Icon name="x" size={15} sw={2.2} />
-          </button>
-        </div>
 
-        <div className="chat-modal-body">
-          {error ? <div className="chat-modal-error">{error}</div> : null}
-
-          <div className="chat-modal-section">
-            <h3 className="chat-modal-section-title">Identity</h3>
-            <label className="chat-field">
-              <span className="chat-control-label">Name</span>
-              <input
-                className="chat-input"
-                onChange={(event) => patch({ name: event.target.value })}
-                placeholder="Support assistant"
-                ref={nameRef}
-                value={form.name}
-              />
-            </label>
-            <label className="chat-field">
-              <span className="chat-control-label">Phone number</span>
-              <select
-                className="chat-select"
-                onChange={(event) => patch({ phone_number_id: event.target.value })}
-                value={form.phone_number_id}
-              >
-                <option value="">No number</option>
-                {phoneNumbers.map((pn) => (
-                  <option key={pn.id} value={pn.id}>
-                    {phoneNumberLabel(pn)}
-                  </option>
-                ))}
-              </select>
-              {phoneNumbers.length === 0 ? (
-                <span className="chat-field-hint">
-                  Connect one in <Link href="/dashboard/phone-numbers">Phone Numbers</Link>.
-                </span>
-              ) : null}
-            </label>
+          <div className="chat-modal-footer">
+            <button
+              className="chat-btn chat-btn-secondary"
+              disabled={isSubmitting}
+              onClick={onCancel}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button className="chat-btn chat-btn-primary" disabled={isSubmitting} type="submit">
+              {isSubmitting ? "Creating..." : "Create chat agent"}
+            </button>
           </div>
-        </div>
-
-        <div className="chat-modal-footer">
-          <button
-            className="chat-btn chat-btn-secondary"
-            disabled={isSubmitting}
-            onClick={onCancel}
-            type="button"
-          >
-            Cancel
-          </button>
-          <button className="chat-btn chat-btn-primary" disabled={isSubmitting} type="submit">
-            {isSubmitting ? "Creating..." : "Create chat agent"}
-          </button>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 }
@@ -2299,9 +2446,12 @@ function PromptCounter({ value }: { value: string }) {
 // PhoneNumberSetupCard fills the gap left by a chat agent with no number: it
 // can neither answer nor open a thread until one is picked. Both ways out are
 // offered side by side — link a brand-new WhatsApp number by scanning a QR code,
-// or claim one of the numbers already connected to the account.
+// or claim one of the numbers already connected to the account. forNewAgent is
+// the create modal's first step: the same panes, with no card around them, for an
+// agent that doesn't exist yet.
 function PhoneNumberSetupCard({
   error,
+  forNewAgent = false,
   isRefreshingNumbers,
   isStarting,
   login,
@@ -2313,6 +2463,7 @@ function PhoneNumberSetupCard({
   onStartLogin,
 }: {
   error: string;
+  forNewAgent?: boolean;
   isRefreshingNumbers: boolean;
   isStarting: boolean;
   login: ApiPhoneNumber | null;
@@ -2334,13 +2485,19 @@ function PhoneNumberSetupCard({
   const isPhone = useIsPhone();
   const [wantsQr, setWantsQr] = useState(false);
   const offersQr = !isPhone || wantsQr;
+  const onConnect = forNewAgent
+    ? "you name the agent the moment it connects"
+    : "the number is assigned to this agent the moment it connects";
+  const onConnectSentence = onConnect.charAt(0).toUpperCase() + onConnect.slice(1);
 
   return (
-    <div className="chat-card chat-number-setup">
-      <div className="chat-card-head">
-        <h3 className="chat-card-title">Connect a phone number</h3>
-        <span className="chat-number-flag">Required to reply</span>
-      </div>
+    <div className={forNewAgent ? undefined : "chat-card chat-number-setup"}>
+      {forNewAgent ? null : (
+        <div className="chat-card-head">
+          <h3 className="chat-card-title">Connect a phone number</h3>
+          <span className="chat-number-flag">Required to reply</span>
+        </div>
+      )}
 
       <div className={`chat-number-grid${numbers.length > 0 ? "" : " is-single"}`}>
         <section className="chat-number-pane" aria-label="Link a new WhatsApp number">
@@ -2392,11 +2549,11 @@ function PhoneNumberSetupCard({
             {isStarting
               ? "Getting a fresh code…"
               : showsCode || (isPending && !offersQr)
-                ? "The number is assigned to this agent the moment it connects — keep this page open."
+                ? `${onConnectSentence} — keep this page open.`
                 : isPending
-                  ? "Open WhatsApp › Linked devices and scan. The code refreshes itself until it is scanned, and the number is assigned to this agent the moment it connects — keep this page open."
+                  ? `Open WhatsApp › Linked devices and scan. The code refreshes itself until it is scanned, and ${onConnect} — keep this page open.`
                   : !offersQr
-                    ? "The number is assigned to this agent the moment it connects."
+                    ? `${onConnectSentence}.`
                     : login
                       ? `This login ${phoneStatusLabels[login.status].toLowerCase()}. A new code follows in a moment.`
                       : "The number is detected automatically after you scan."}
