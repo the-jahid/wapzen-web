@@ -19,6 +19,7 @@ export type NavIconName =
   | "demo"
   | "chat"
   | "message"
+  | "groups"
   | "calendar"
   | "chart"
   | "send"
@@ -40,7 +41,7 @@ const defaultMode: WorkspaceMode = "chat";
 // Routes that only exist in one mode. Landing on one of these switches the
 // sidebar to that mode, so a link or a bookmark always shows a coherent menu.
 // Orders sit in both menus: voice and chat agents both take them.
-const chatOnlyPaths = ["/dashboard/chat", "/dashboard/conversations", "/dashboard/bulk-messages"];
+const chatOnlyPaths = ["/dashboard/chat", "/dashboard/conversations", "/dashboard/groups", "/dashboard/bulk-messages"];
 const voiceOnlyPaths = [
   "/dashboard/agents",
   "/dashboard/calls",
@@ -67,6 +68,8 @@ const chatNavItems: WorkspaceNavItem[] = [
   // and the same threads are also readable per agent in the editor's
   // Conversation tab.
   { label: "Conversations", icon: "message", href: "/dashboard/conversations" },
+  // The WhatsApp groups a number is in, each with its own AI switch.
+  { label: "Groups", icon: "groups", href: "/dashboard/groups" },
   { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
   { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
   { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
