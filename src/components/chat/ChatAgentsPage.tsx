@@ -2095,10 +2095,9 @@ function Editor({
   onStartLogin: () => void;
 }) {
   // Which half of the editor is on screen: the agent's own settings, or the
-  // WhatsApp threads it has answered. The choice is kept across agents on
-  // purpose — somebody reading conversations usually wants the next agent's
-  // conversations too, not its prompt.
-  const [tab, setTab] = useState<EditorTab>("agent");
+  // WhatsApp threads it has answered. Cached per agent because a thread opens on
+  // its own page, and coming back should land on the Conversation tab it left.
+  const [tab, setTab] = useCachedState<EditorTab>(`chat-editor-tab:${agent.id}`, "agent");
 
   return (
     <div className="chat-editor">

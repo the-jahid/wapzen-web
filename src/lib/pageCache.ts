@@ -116,6 +116,32 @@ function sameValue(a: unknown, b: unknown): boolean {
 }
 
 /**
+ * writeCachedEntry sets one entry from outside its hook, for a page that knows
+ * what the next page will want to show first, such as the row that was clicked.
+ */
+export function writeCachedEntry<T>(key: string, next: (current: T | undefined) => T) {
+  const current = readStore();
+  current.entries = { ...current.entries, [key]: next(current.entries[key] as T | undefined) };
+  schedulePersist();
+  emit();
+}
+
+/**
+ * updateCachedEntries changes every entry whose key starts with `prefix`, so a
+ * page can correct the lists another page will show when the user goes back.
+ */
+export function updateCachedEntries<T>(prefix: string, update: (value: T) => T) {
+  const current = readStore();
+  const entries = { ...current.entries };
+  for (const [key, value] of Object.entries(entries)) {
+    if (key.startsWith(prefix)) entries[key] = update(value as T);
+  }
+  current.entries = entries;
+  schedulePersist();
+  emit();
+}
+
+/**
  * useCachedState is useState whose value is shared under `key` and kept across
  * navigations and reloads. The third value says whether the value came from
  * the cache (or has been set since), which is what lets a page skip its

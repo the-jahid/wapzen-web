@@ -603,7 +603,7 @@ function OrderDrawer({
           {order.conversation_id ? (
             <Link
               className="tools-btn tools-btn-secondary"
-              href={`/dashboard/conversations?conversation=${encodeURIComponent(order.conversation_id)}`}
+              href={`/dashboard/conversations/${encodeURIComponent(order.conversation_id)}`}
             >
               <MessageSquare size={15} />
               View conversation
