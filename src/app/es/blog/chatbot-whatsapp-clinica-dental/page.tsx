@@ -14,7 +14,7 @@ import { QaPost } from "@/components/blog/QaPost";
 // usuario (2026-11-04): Wapzen se presenta como siempre gratis y sin clave de API de Meta,
 // el agente de voz como funcionando, sin nota sobre bloqueos de número y sin mencionar el
 // límite por hora. El servidor mantiene HOURLY_REPLY_LIMIT = 100, así que el texto dice
-// "sin límite mensual", no "ilimitado": no lo cambies sin quitar antes ese límite. El CTA
+// "conversaciones ilimitadas" y "sin límite mensual", nunca "respuestas ilimitadas". El CTA
 // de voz abre WhatsApp porque el panel aún muestra VoiceUpdateNote. Precios de ejemplo
 // inventados. Tarifas de Meta: lista del 1 oct 2026; se revisan cada trimestre.
 const href = "/es/blog/chatbot-whatsapp-clinica-dental";
@@ -93,10 +93,10 @@ const questions = [
   {
     id: "gratis",
     q: "¿Existe un chatbot de WhatsApp gratis para clínicas dentales en España?",
-    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA siempre gratis para clínicas dentales: sin cuota mensual, sin coste por mensaje, sin tarjeta y sin clave de API de Meta. Responde a los pacientes a cualquier hora en tu propio número, con tus tratamientos, precios y horarios, y su agente de voz contesta las llamadas de WhatsApp.",
+    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA siempre gratis para clínicas dentales: conversaciones ilimitadas, sin cuota mensual, sin coste por mensaje, sin tarjeta y sin clave de API de Meta. Responde a los pacientes a cualquier hora en tu propio número, con tus tratamientos, precios y horarios, y su agente de voz contesta las llamadas de WhatsApp.",
     body: <>
       <p>Al buscar un “chatbot para clínicas dentales” casi siempre aparece una prueba de pocos días, un menú de botones sin IA o una plataforma de pago a la que se suman las tarifas de Meta. <Link href="/es/chatbot-whatsapp-gratis">Wapzen</Link> funciona de otra manera: vincula el número que ya usa tu clínica como un dispositivo, igual que WhatsApp Web. Por eso no necesitas la API de WhatsApp Business, un proveedor ni la aprobación de Meta.</p>
-      <p>Los pacientes siguen escribiendo al número de siempre y tú sigues usando WhatsApp en el móvil. El modelo de IA viene incluido, así que tampoco necesitas una clave de OpenAI ni un programador. No hay tope mensual de respuestas: una clínica no paga más por tener más conversaciones.</p>
+      <p>Los pacientes siguen escribiendo al número de siempre y tú sigues usando WhatsApp en el móvil. El modelo de IA viene incluido, así que tampoco necesitas una clave de OpenAI ni un programador. Las conversaciones son ilimitadas y no hay tope mensual de respuestas: una clínica no paga más porque le escriban más pacientes.</p>
     </>,
   },
   {
@@ -262,9 +262,9 @@ export default function ChatbotWhatsAppClinicaDentalPage() {
     lead="“¿Cuánto cuesta un implante?”, “¿trabajáis con mi seguro?”, “¿tenéis hueco el jueves?”. Estas preguntas llegan al WhatsApp de la clínica mientras recepción atiende el mostrador y el teléfono, y también de noche. Aquí respondemos, una a una, las dudas de las clínicas dentales españolas antes de poner una IA en su número: qué puede decir, cómo se configura sin clave de API de Meta, cuánto cuesta la alternativa y qué pide el RGPD."
     verdict={{
       title: "La respuesta corta",
-      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para clínicas dentales en España, <strong>siempre gratis y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora con tus tratamientos y precios, recoge solicitudes de cita y su agente de voz contesta las llamadas de WhatsApp. Se configura en unos minutos. No sustituye a tu programa de gestión y no da consejo clínico.</>,
+      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para clínicas dentales en España, <strong>siempre gratis, con conversaciones ilimitadas y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora con tus tratamientos y precios, recoge solicitudes de cita y su agente de voz contesta las llamadas de WhatsApp. Se configura en unos minutos. No sustituye a tu programa de gestión y no da consejo clínico.</>,
     }}
-    facts={[["Precio", "Siempre gratis"], ["Clave de API de Meta", "No hace falta"], ["Respuestas", "Sin límite mensual"], ["Llamadas", "Agente de voz funcionando"]]}
+    facts={[["Precio", "Siempre gratis"], ["Clave de API de Meta", "No hace falta"], ["Conversaciones", "Ilimitadas"], ["Llamadas", "Agente de voz funcionando"]]}
     indexTitle="Las 11 preguntas de esta guía"
     answerLabel="Respuesta corta"
     questions={questions}

@@ -15,7 +15,7 @@ import { QaPost } from "@/components/blog/QaPost";
 // cualquier hora). A pedido del usuario (2026-11-04): siempre gratis, sin clave de API de
 // Meta, agente de voz funcionando, sin nota sobre bloqueos de número y sin mencionar el
 // límite por hora. El servidor mantiene HOURLY_REPLY_LIMIT = 100, así que el texto dice
-// "sin límite mensual", no "ilimitado": no lo cambies sin quitar antes ese límite. RD
+// "conversaciones ilimitadas" y "sin límite mensual", nunca "respuestas ilimitadas". RD
 // 933/2021 leído en el BOE. No hay cifra verificada de la comisión de Booking: el 15 % es
 // un supuesto y el texto lo dice. El agente de voz tiene un idioma por agente
 // (agents.language); el de chat sigue el idioma del huésped si se le indica.
@@ -92,10 +92,10 @@ const questions = [
   {
     id: "gratis",
     q: "¿Hay un chatbot de WhatsApp gratis para hoteles y apartamentos turísticos?",
-    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA siempre gratis para hoteles, apartamentos turísticos, hostales y casas rurales: sin cuota, sin coste por mensaje y sin clave de API de Meta. Responde a tus huéspedes a cualquier hora y en su idioma, en tu propio número, y su agente de voz contesta las llamadas de WhatsApp.",
+    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA siempre gratis para hoteles, apartamentos turísticos, hostales y casas rurales: conversaciones ilimitadas, sin cuota, sin coste por mensaje y sin clave de API de Meta. Responde a tus huéspedes a cualquier hora y en su idioma, en tu propio número, y su agente de voz contesta las llamadas de WhatsApp.",
     body: <>
       <p>Las herramientas para hoteles suelen venderse con presupuesto a medida o suman una plataforma y las tarifas de Meta. <Link href="/es/chatbot-whatsapp-gratis">Wapzen</Link> vincula el número que ya usa tu alojamiento como un dispositivo, igual que WhatsApp Web. Por eso no necesitas la API de WhatsApp Business, un proveedor ni la aprobación de Meta.</p>
-      <p>Tu equipo sigue usando WhatsApp en el móvil, y los huéspedes escriben al número de siempre. La IA viene incluida y no hay tope mensual de respuestas: una temporada alta con más preguntas no te cuesta más.</p>
+      <p>Tu equipo sigue usando WhatsApp en el móvil, y los huéspedes escriben al número de siempre. La IA viene incluida, las conversaciones son ilimitadas y no hay tope mensual de respuestas: una temporada alta con más preguntas no te cuesta más.</p>
     </>,
   },
   {
@@ -267,9 +267,9 @@ export default function WhatsAppHotelesApartamentosPage() {
     lead="“What time is check-in?”, “¿dónde aparco?”, “wo lassen wir das Gepäck?”. Tus huéspedes preguntan a cualquier hora y en varios idiomas, también cuando no hay nadie en recepción. Aquí respondemos, una a una, las dudas de hoteles, gestores de apartamentos turísticos, hostales y casas rurales de España antes de poner una IA en su WhatsApp, sin clave de API de Meta."
     verdict={{
       title: "La respuesta corta",
-      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para hoteles y apartamentos turísticos en España, <strong>siempre gratis y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora y en el idioma de cada huésped, anota peticiones para tu equipo y comparte tu enlace de reservas. Su agente de voz contesta las llamadas de WhatsApp. No sustituye a tu PMS y no responde dentro de Booking ni de Airbnb.</>,
+      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para hoteles y apartamentos turísticos en España, <strong>siempre gratis, con conversaciones ilimitadas y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora y en el idioma de cada huésped, anota peticiones para tu equipo y comparte tu enlace de reservas. Su agente de voz contesta las llamadas de WhatsApp. No sustituye a tu PMS y no responde dentro de Booking ni de Airbnb.</>,
     }}
-    facts={[["Precio", "Siempre gratis"], ["Clave de API de Meta", "No hace falta"], ["Respuestas", "Sin límite mensual"], ["Llamadas", "Agente de voz funcionando"]]}
+    facts={[["Precio", "Siempre gratis"], ["Clave de API de Meta", "No hace falta"], ["Conversaciones", "Ilimitadas"], ["Llamadas", "Agente de voz funcionando"]]}
     indexTitle="Las 12 preguntas de esta guía"
     answerLabel="Respuesta corta"
     questions={questions}
