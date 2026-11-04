@@ -68,9 +68,10 @@ function formatCountdown(ms: number) {
 }
 
 // WhatsAppLinkHelp lays out the two ways to link a number, side by side where
-// there's room: scan the page's QR code (qr, left out when the screen can't use
-// one), or get an 8-character code to type into WhatsApp › Linked devices › Link
-// with phone number instead. Once a code is out it shows that code alone.
+// there's room: get an 8-character code to type into WhatsApp › Linked devices ›
+// Link with phone number instead, or scan the page's QR code (qr, left out when
+// the screen can't use one). The code comes first because it links far more
+// often. Once a code is out it shows that code alone.
 //
 // onRequestCode starts that login (it replaces the QR login, so the page must
 // swap in the login it returns) and throws with a message to show on failure.
@@ -267,28 +268,10 @@ export function WhatsAppLinkHelp({
 
   return (
     <div className="wa-link">
-      <div className="wa-link-options">
-        {qr ? (
-          <section aria-label="Scan a QR code" className="wa-link-option">
-            <div className="wa-link-option-head">
-              <span className="wa-link-option-num">1</span>
-              Scan a QR code
-            </div>
-            <div className="wa-link-qr">{qr}</div>
-            {qrExpiresIn !== null && qrLeft !== null ? (
-              <div className={`wa-link-timer${qrLeft <= 5_000 ? " is-ending" : ""}`} role="timer">
-                <span>{qrLeft > 0 ? `New code in ${formatCountdown(qrLeft)}` : "Getting a new code…"}</span>
-                <span className="wa-link-timer-track" aria-hidden="true">
-                  <span style={{ transform: `scaleX(${Math.min(1, qrLeft / qrLifetime)})` }} />
-                </span>
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-
-        <section aria-label="Use a pairing code" className="wa-link-option">
+      <div className={`wa-link-options${qr ? " has-qr" : ""}`}>
+        <section aria-label="Use a pairing code" className="wa-link-option wa-link-option-code">
           <div className="wa-link-option-head">
-            {qr ? <span className="wa-link-option-num">2</span> : null}
+            {qr ? <span className="wa-link-option-num">1</span> : null}
             Use a pairing code
           </div>
           {isPhone ? (
@@ -324,25 +307,45 @@ export function WhatsAppLinkHelp({
             </div>
             {error ? <div className="wa-link-error">{error}</div> : null}
           </form>
-          {/* The QR's steps fill the space this short form leaves beside the tall QR. */}
-          {qr ? (
-            <>
-              <div className="wa-link-steps-title">How to scan the QR code</div>
-              <ol className="wa-link-steps wa-link-steps-big">
-                <li>
-                  Open <b>WhatsApp</b> on your phone.
-                </li>
-                <li>
-                  Tap <b>Settings</b> (iPhone) or <b>⋮ Menu</b> (Android) › <b>Linked devices</b> ›{" "}
-                  <b>Link a device</b>.
-                </li>
-                <li>
-                  Point the phone&rsquo;s camera at the <b>QR code</b>.
-                </li>
-              </ol>
-            </>
-          ) : null}
         </section>
+
+        {qr ? (
+          <section aria-label="Scan a QR code" className="wa-link-option wa-link-option-qr">
+            <div className="wa-link-option-head">
+              <span className="wa-link-option-num">2</span>
+              Scan a QR code
+            </div>
+            <div className="wa-link-qr">{qr}</div>
+            {qrExpiresIn !== null && qrLeft !== null ? (
+              <div className={`wa-link-timer${qrLeft <= 5_000 ? " is-ending" : ""}`} role="timer">
+                <span>{qrLeft > 0 ? `New code in ${formatCountdown(qrLeft)}` : "Getting a new code…"}</span>
+                <span className="wa-link-timer-track" aria-hidden="true">
+                  <span style={{ transform: `scaleX(${Math.min(1, qrLeft / qrLifetime)})` }} />
+                </span>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {/* Beside the tall QR these fill the space under the short form; stacked,
+            they follow the QR they explain. */}
+        {qr ? (
+          <div className="wa-link-scan-steps">
+            <div className="wa-link-steps-title">How to scan the QR code</div>
+            <ol className="wa-link-steps wa-link-steps-big">
+              <li>
+                Open <b>WhatsApp</b> on your phone.
+              </li>
+              <li>
+                Tap <b>Settings</b> (iPhone) or <b>⋮ Menu</b> (Android) › <b>Linked devices</b> ›{" "}
+                <b>Link a device</b>.
+              </li>
+              <li>
+                Point the phone&rsquo;s camera at the <b>QR code</b>.
+              </li>
+            </ol>
+          </div>
+        ) : null}
       </div>
 
       {qr && !isPhone ? (
@@ -364,10 +367,20 @@ export function WhatsAppLinkHelp({
 }
 
 const css = `
-.wa-link { display: grid; gap: 10px; min-width: 0; text-align: left; }
+.wa-link { container-type: inline-size; display: grid; gap: 10px; min-width: 0; text-align: left; }
 /* Side by side when the pane is wide enough for both, stacked when not. */
-.wa-link-options { align-items: start; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); }
-.wa-link-option { display: grid; gap: 10px; min-width: 0; }
+.wa-link-options { align-items: start; display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 518px) {
+  .wa-link-options.has-qr {
+    grid-template-areas: "code qr" "steps qr";
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+  }
+  .wa-link-option-code { grid-area: code; }
+  .wa-link-option-qr { grid-area: qr; }
+  .wa-link-scan-steps { grid-area: steps; }
+}
+.wa-link-option, .wa-link-scan-steps { display: grid; gap: 10px; min-width: 0; }
 .wa-link-option-head {
   align-items: center;
   color: var(--app-text);

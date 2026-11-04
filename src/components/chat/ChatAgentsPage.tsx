@@ -65,13 +65,14 @@ type IconName =
 // chat-agent contract.
 type ConfigSectionId = "knowledge-base" | "tools";
 
-// The editor's two tabs. "agent" is everything that configures the agent;
-// "conversation" is the record of what it has already said.
-type EditorTab = "agent" | "conversation";
+// The editor's tabs. "agent" is what the agent says and answers on, "conversation"
+// the record of what it has already said, and "configuration" what it can reach.
+type EditorTab = "agent" | "conversation" | "configuration";
 
 const editorTabs: { id: EditorTab; label: string }[] = [
   { id: "agent", label: "Agent" },
   { id: "conversation", label: "Conversation" },
+  { id: "configuration", label: "Configuration" },
 ];
 
 
@@ -351,7 +352,7 @@ const css = `
   display: grid;
   flex: 1 1 auto;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 370px);
+  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
   padding: 16px;
@@ -423,14 +424,22 @@ const css = `
   grid-template-areas: "avatar identity status" "resources resources chevron";
   grid-template-columns: 36px minmax(0, 1fr) auto;
   padding: 16px;
+  position: relative;
   text-align: left;
-  text-decoration: none;
   transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
   width: 100%;
 }
 .chat-list-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); }
-.chat-list-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.chat-list-row:has(.chat-list-link:focus-visible) { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
 .chat-list-row.is-active { background: var(--primary-soft); border-color: var(--app-primary-border); }
+/* The name's link stretches over the whole card, because the card also holds a
+   delete button and a button can't sit inside a link. */
+.chat-list-link { color: inherit; text-decoration: none; }
+.chat-list-link:focus-visible { outline: none; }
+.chat-list-link::after { border-radius: 14px; content: ""; inset: 0; position: absolute; }
+.chat-list-row-end { align-items: center; display: inline-flex; gap: 6px; grid-area: chevron; justify-self: end; }
+.chat-list-delete { position: relative; z-index: 1; }
+.chat-icon-btn.chat-list-delete:hover { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
 .chat-list-row > .chat-avatar { grid-area: avatar; }
 .chat-list-row > .chat-pill { grid-area: status; }
 /* Loading placeholders: the real row grid with pulsing blocks in place of each
@@ -649,7 +658,8 @@ const css = `
    height to work inside instead of growing with the transcript. */
 .chat-card-conversations { display: flex; flex: 1 1 auto; flex-direction: column; height: min(640px, 72vh); min-height: 420px; }
 .chat-card-conversations > .chat-card-head { flex: 0 0 auto; }
-.chat-config-panel { min-height: 0; }
+/* Its own height inside the scrolling editor, not squeezed to fit the tab. */
+.chat-config-panel { flex: 0 0 auto; }
 .chat-config-head { align-items: flex-start; }
 /* The agent list carries its own create button, as the voice workspace does,
    so the page needs no separate header row above the columns. */
@@ -886,10 +896,6 @@ const css = `
 @media (min-width: 1680px) {
   .chat-content { padding: 28px 40px; }
 }
-/* Laptops: fold the resource counts under the model so nothing truncates. */
-@media (max-width: 1280px) {
-  .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
-}
 /* Small laptops / landscape tablets: a slimmer sidebar keeps the list usable. */
 @media (max-width: 1100px) {
   .chat-content { padding: 18px 20px; }
@@ -907,9 +913,8 @@ const css = `
   .chat-number-grid { grid-template-columns: 1fr; }
   .chat-qr-frame { justify-self: center; max-width: 260px; width: 100%; }
   .chat-agent-page { overflow: visible; }
-  .chat-agent-expanded-grid { grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  .chat-agent-expanded-grid { overflow: visible; }
   .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
-  .chat-agent-expanded-grid > .chat-config-panel { overflow: visible; }
 }
 /* Phones: one column everywhere, the agent editor goes full screen, and
    touch targets grow a little. */
@@ -950,6 +955,7 @@ const css = `
   .chat-list-head .chat-btn-label { display: none; }
   .chat-list-head .chat-btn-label-short { display: inline; }
   .chat-list-head .chat-btn { min-height: 36px; padding: 0 11px; }
+  .chat-tab { padding: 0 6px; }
   .chat-avatar { height: 30px; width: 30px; }
   .chat-accordion-button { gap: 8px; grid-template-columns: 28px minmax(0, 1fr) minmax(0, auto) 18px; padding: 11px 10px; }
 }
@@ -1072,8 +1078,10 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const [createForm, setCreateForm] = useState<CreateForm | null>(null);
   const [createError, setCreateError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  // The delete button only asks; the agent goes once the modal is confirmed.
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // A delete button, on a list card or the agent's page, only asks; the agent
+  // goes once the modal is confirmed.
+  const [deleteTargetId, setDeleteTargetId] = useState("");
+  const deleteTarget = chatAgents.find((agent) => agent.id === deleteTargetId) ?? null;
   const [isDeleting, setIsDeleting] = useState(false);
   // The QR login the editor is showing. One session serves whichever agent with
   // no number is selected — the scan lands on the agent being looked at — so it
@@ -1088,6 +1096,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const autoLoginKey = useRef("");
   // Automatic reissues so far, per agent, against maxAutoLogins.
   const autoLoginRuns = useRef({ agentId: "", count: 0 });
+  // An account with no agents is taken straight to linking a number, once per
+  // visit, so cancelling leaves them on the empty list rather than reopening.
+  const openedFirstAgentSetup = useRef(false);
   // Saves waiting out their debounce, with the save itself so leaving the page
   // can send it at once instead of dropping it.
   const saveTimers = useRef<
@@ -1124,7 +1135,13 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     // slowest of the lookups the editor needs.
     listDashboardChatAgents(getToken)
       .then((agents) => {
-        if (!cancelled) setChatAgents(agents);
+        if (cancelled) return;
+        setChatAgents(agents);
+        // Only on the server's word: a failed load or a cached list proves nothing.
+        if (!agentId && agents.length === 0 && !openedFirstAgentSetup.current) {
+          openedFirstAgentSetup.current = true;
+          setCreateForm((current) => current ?? newCreateForm(1));
+        }
       })
       .catch((error) => {
         if (cancelled) return;
@@ -1146,7 +1163,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isAuthenticated, setChatAgents, setKnowledgeBases, setPhoneNumbers, setTools]);
+  }, [agentId, getToken, isAuthenticated, setChatAgents, setKnowledgeBases, setPhoneNumbers, setTools]);
 
   // Going back to the list, or on to another agent, unmounts this page. An
   // edit still inside its debounce is sent then rather than lost; its answer
@@ -1587,18 +1604,22 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     }
   }, [createForm, getToken, isCreating, router, setChatAgents]);
 
-  const deleteSelected = useCallback(async () => {
-    if (!selected) return;
+  const deleteAgent = useCallback(async () => {
+    if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      const pending = saveTimers.current.get(selected.id);
+      const pending = saveTimers.current.get(deleteTarget.id);
       if (pending) clearTimeout(pending.timer);
-      saveTimers.current.delete(selected.id);
-      await deleteDashboardChatAgent(selected.id, getToken);
-      setChatAgents((current) => current.filter((agent) => agent.id !== selected.id));
-      // Back to the list, where the agent is gone; replace, so Back does not
-      // return to the deleted agent's page.
-      router.replace("/dashboard/chat");
+      saveTimers.current.delete(deleteTarget.id);
+      await deleteDashboardChatAgent(deleteTarget.id, getToken);
+      setChatAgents((current) => current.filter((agent) => agent.id !== deleteTarget.id));
+      if (agentId) {
+        // Back to the list, where the agent is gone; replace, so Back does not
+        // return to the deleted agent's page.
+        router.replace("/dashboard/chat");
+      } else {
+        setNotice({ kind: "success", text: `${deleteTarget.agent.name} deleted` });
+      }
     } catch (error) {
       setNotice({
         kind: "error",
@@ -1606,22 +1627,23 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       });
     } finally {
       setIsDeleting(false);
-      setConfirmingDelete(false);
+      setDeleteTargetId("");
     }
-  }, [getToken, router, selected, setChatAgents]);
+  }, [agentId, deleteTarget, getToken, router, setChatAgents]);
 
   // Escape dismisses the delete confirmation. It listens in the capture phase
   // and stops the key there, so nothing behind it also acts on the key.
+  const isConfirmingDelete = Boolean(deleteTarget);
   useEffect(() => {
-    if (!confirmingDelete) return;
+    if (!isConfirmingDelete) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.stopImmediatePropagation();
-      if (!isDeleting) setConfirmingDelete(false);
+      if (!isDeleting) setDeleteTargetId("");
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [confirmingDelete, isDeleting]);
+  }, [isConfirmingDelete, isDeleting]);
 
   return (
     <div className="chat-shell app-accent-green">
@@ -1649,7 +1671,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                 <>
                   <AgentHeader
                     agent={selected}
-                    onDelete={() => setConfirmingDelete(true)}
+                    onDelete={() => setDeleteTargetId(selected.id)}
                     onPatch={patchSelected}
                   />
                   <div className="chat-agent-expanded-grid">
@@ -1658,6 +1680,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                       assignableNumbers={assignableNumbers}
                       isRefreshingNumbers={isRefreshingNumbers}
                       isStartingLogin={isStartingLogin}
+                      knowledgeBases={knowledgeBases}
                       login={
                         numberLogin && numberLogin.status !== "connected" ? numberLogin : null
                       }
@@ -1667,11 +1690,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                       onRequestCode={startNumberCodeLogin}
                       onRequestQr={startNumberQrLogin}
                       onStartLogin={startNumberLogin}
-                    />
-                    <ConfigPanel
-                      agent={selected}
-                      knowledgeBases={knowledgeBases}
-                      onPatch={patchSelected}
                       phoneNumbers={phoneNumbers}
                       tools={tools}
                     />
@@ -1778,11 +1796,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                       const knowledgeCount = agent.knowledge_base?.knowledge_base_ids?.length ?? 0;
                       const toolCount = agent.tools?.tool_ids?.length ?? 0;
                       return (
-                        <Link
-                          className="chat-list-row"
-                          href={`/dashboard/chat/${agent.id}`}
-                          key={agent.id}
-                        >
+                        <div className="chat-list-row" key={agent.id}>
                           <span
                             className="chat-avatar"
                             style={{ background: avatarColor(agent.id) }}
@@ -1790,7 +1804,12 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                             {agent.agent.name.slice(0, 1).toUpperCase()}
                           </span>
                           <span className="chat-list-identity">
-                            <span className="chat-list-name">{agent.agent.name}</span>
+                            <Link
+                              className="chat-list-name chat-list-link"
+                              href={`/dashboard/chat/${agent.id}`}
+                            >
+                              {agent.agent.name}
+                            </Link>
                             <span className="chat-list-phone">
                               {phone ? phoneNumberLabel(phone) : "No phone number"}
                             </span>
@@ -1803,10 +1822,21 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                             ) : null}
                           </span>
                           <StatusPill status={agent.agent.status ?? "inactive"} />
-                          <span className="chat-list-chevron">
-                            <Icon name="chevron" size={16} sw={2.3} />
+                          <span className="chat-list-row-end">
+                            <button
+                              aria-label={`Delete ${agent.agent.name}`}
+                              className="chat-icon-btn chat-list-delete"
+                              onClick={() => setDeleteTargetId(agent.id)}
+                              title="Delete agent"
+                              type="button"
+                            >
+                              <Icon name="trash" size={15} sw={2.2} />
+                            </button>
+                            <span className="chat-list-chevron">
+                              <Icon name="chevron" size={16} sw={2.3} />
+                            </span>
                           </span>
-                        </Link>
+                        </div>
                       );
                     })}
                   </div>
@@ -1818,11 +1848,11 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
         </div>
       </main>
 
-      {confirmingDelete && selected ? (
+      {deleteTarget ? (
         <div
           className="chat-confirm-overlay"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !isDeleting) setConfirmingDelete(false);
+            if (event.target === event.currentTarget && !isDeleting) setDeleteTargetId("");
           }}
         >
           <div
@@ -1839,7 +1869,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
               Delete chat agent
             </h2>
             <p className="chat-confirm-copy" id="chat-delete-copy">
-              <strong>{selected.agent.name}</strong> will be deleted and will stop replying on
+              <strong>{deleteTarget.agent.name}</strong> will be deleted and will stop replying on
               WhatsApp. This cannot be undone.
             </p>
             <div className="chat-confirm-actions">
@@ -1847,7 +1877,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                 autoFocus
                 className="chat-btn chat-btn-secondary"
                 disabled={isDeleting}
-                onClick={() => setConfirmingDelete(false)}
+                onClick={() => setDeleteTargetId("")}
                 type="button"
               >
                 Cancel
@@ -1855,7 +1885,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
               <button
                 className="chat-btn chat-confirm-danger"
                 disabled={isDeleting}
-                onClick={() => void deleteSelected()}
+                onClick={() => void deleteAgent()}
                 type="button"
               >
                 {isDeleting ? "Deleting…" : "Delete agent"}
@@ -1970,7 +2000,7 @@ function CreateChatAgentModal({
         </h2>
         <div className="chat-modal-subtitle">
           {isLinking
-            ? "Scan the QR code or use a pairing code to link the number this agent will answer on. You name the agent next."
+            ? "Use a pairing code or scan the QR code to link the number this agent will answer on. You name the agent next."
             : "Your number is ready. The prompt, knowledge bases and tools are set in the editor once the agent exists."}
         </div>
       </div>
@@ -2095,7 +2125,7 @@ function CreateChatAgentModal({
 // The middle column, laid out like the voice agents workspace: an identity
 // header, then the system prompt that decides what the agent says. A chat agent
 // never opens a thread itself, so there is no opening message. Everything else
-// is configuration and lives in the panel to the right.
+// is configuration and lives in its own tab.
 // The agent page's single top bar: the way back to the list, who the agent is,
 // its live switch and delete — one strip instead of a label bar stacked over a
 // separate header card.
@@ -2221,6 +2251,7 @@ function Editor({
   assignableNumbers,
   isRefreshingNumbers,
   isStartingLogin,
+  knowledgeBases,
   login,
   loginError,
   onPatch,
@@ -2228,11 +2259,14 @@ function Editor({
   onRequestCode,
   onRequestQr,
   onStartLogin,
+  phoneNumbers,
+  tools,
 }: {
   agent: ApiChatAgent;
   assignableNumbers: AssignableNumber[];
   isRefreshingNumbers: boolean;
   isStartingLogin: boolean;
+  knowledgeBases: ApiKnowledgeBase[];
   login: ApiPhoneNumber | null;
   loginError: string;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
@@ -2240,10 +2274,12 @@ function Editor({
   onRequestCode: (phone: string) => Promise<void>;
   onRequestQr: () => Promise<void>;
   onStartLogin: () => void;
+  phoneNumbers: ApiPhoneNumber[];
+  tools: ApiTool[];
 }) {
-  // Which half of the editor is on screen: the agent's own settings, or the
-  // WhatsApp threads it has answered. Cached per agent because a thread opens on
-  // its own page, and coming back should land on the Conversation tab it left.
+  // Which part of the editor is on screen. Cached per agent because a thread
+  // opens on its own page, and coming back should land on the Conversation tab
+  // it left.
   const [tab, setTab] = useCachedState<EditorTab>(`chat-editor-tab:${agent.id}`, "agent");
 
   return (
@@ -2296,6 +2332,14 @@ function Editor({
               selection and filters into it. */}
           <ChatConversationsWorkspace agentId={agent.id} key={agent.id} />
         </div>
+      ) : tab === "configuration" ? (
+        <ConfigPanel
+          agent={agent}
+          knowledgeBases={knowledgeBases}
+          onPatch={onPatch}
+          phoneNumbers={phoneNumbers}
+          tools={tools}
+        />
       ) : (
         <>
           {agent.agent.phone_number_id ? null : (
@@ -2645,8 +2689,8 @@ function PhoneNumberSetupCard({
   );
 }
 
-// The right-hand configuration panel, mirroring the voice workspace: the basics
-// at the top, then one collapsible section per part of the chat-agent contract.
+// The Configuration tab: the basics at the top, then one collapsible section per
+// part of the chat-agent contract.
 function ConfigPanel({
   agent,
   knowledgeBases,
@@ -2675,7 +2719,7 @@ function ConfigPanel({
     list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
 
   return (
-    <aside className="chat-panel chat-config-panel">
+    <div className="chat-panel chat-config-panel">
       <div className="chat-panel-head chat-config-head">
         <div>
           <h2 className="chat-panel-title">Chat agent configuration</h2>
@@ -2878,7 +2922,7 @@ function ConfigPanel({
           </ConfigSection>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
 
