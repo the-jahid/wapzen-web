@@ -480,3 +480,26 @@ Facts that age (recheck each quarter): Meta's India rates ₹0.8631 marketing, �
 Product limits the posts state, from whiskey-bailey-server: replies are text only (`sock.sendMessage(jid, { text })`), groups, broadcasts and channels are skipped, scanned PDFs have no text layer, 1 chat agent per account, 100 AI replies per agent per hour, the AI is off for one customer only through the conversation's switch, and nothing adds a language or a don't-guess instruction, so the sample prompts carry both. No direct portal integration, no calendar and no payment check. Voice is described as working at the user's request, while the dashboard still shows VoiceUpdateNote, so each voice CTA opens WhatsApp with a prefilled message.
 
 "1,000 businesses already use Wapzen" is the user's figure (2026-11-04), not checked against the database. The user asked for no mention of bans in these posts, so they make no claim either way about a number's safety; they still say Wapzen isn't Meta's official platform. Don't add "no ban risk": WhatsApp has logged out customers' numbers and sends restriction notices (whiskey activity logs), and /blog/whatsapp-chatbot-without-business-api says no unofficial tool can promise zero risk.
+
+## Spain buyer posts (2026-11-04)
+
+The user asked for three Spain posts for the industries that use WhatsApp most and would pay, strong SEO above all for ChatGPT, saying voice works, Wapzen is always free with no Meta API key, no ban notes, no mention of the hourly limit. `docs/seo-blog-spain-research.mjs` scored 20 verticals with Google, YouTube and DuckDuckGo (gl=es, kl=es-es).
+
+| Vertical | Total | Clean phrases |
+|---|---|---|
+| Inmobiliarias | 530 | ia para inmobiliarias 30 (3/3), crm inmobiliario 30 (3/3), crm inmobiliario gratis 27, captar clientes inmobiliaria 20, whatsapp business inmobiliaria 16 |
+| Restaurantes | 433 | ia para restaurantes 30 (3/3), chatbot restaurante 20, whatsapp restaurante 20, software reservas restaurante 20 |
+| Gimnasios | 375 | software gimnasio 30, marketing para gimnasios 30 |
+| Estética | 364 | como captar clientes para clinica de estetica 20, the rest 10 or under |
+| Dental | 360 | marketing clinica dental 30 (3/3), software clinica dental 20, chatbot clinica dental 10, whatsapp clinica dental 10 |
+| Talleres | 356 | software taller mecanico 20, marketing taller mecanico 20 |
+| Abogados | 300 | ia para abogados 30 (3/3), whatsapp business para abogados 20 |
+| Hoteles y turismo | 219 | ia para hoteles 30 (3/3), whatsapp para hoteles 20, chatbot whatsapp hotel 10 |
+
+Ecommerce (686), academias (525) and ópticas (512) totals are mostly noise (English, other brands, other countries).
+
+Chosen on demand plus proof of payment, not demand alone. Inmobiliarias: top clean demand; agencies pay portals (Idealista about €1,000 a month, an unsourced newsletter estimate). Dental: 43,672 dentists (INE 2025), over 23,000 clinics (2022), reception overload, high ticket; no Spain post yet. Hoteles: the lowest demand of the three, picked for fit and payment: 96.8M tourists (INE 2025), foreign guests at all hours, CEHAT says "comisiones muy elevadas" with over 900 Spanish companies in its Booking claim. If it lags, expect that; restaurants are the next candidate.
+
+Copy decisions: "siempre gratis" and "sin clave de API de Meta" at the user's request. **The user also asked for "unlimited", but whiskey still enforces HOURLY_REPLY_LIMIT = 100, so the posts say "sin límite mensual", never "ilimitado".** If the cap goes, the word can be used. No ban or restriction notes and no WhatsApp terms in sources; the posts still say Wapzen isn't an official Meta product. Voice is described as working; its CTAs open WhatsApp because the dashboard still shows VoiceUpdateNote. Voice has one language per agent (agents.language).
+
+Facts to recheck each quarter: Meta Spain €0.0585 marketing, €0.0166 utility/service/authentication, 1,000 free service messages per number, US$0.0129 per minute for business-initiated calls (1 Oct 2026 list, via Zernio and Meta). Callbell €14 per agent, €20 WhatsApp account, €59 bot builder, €0.02 per campaign contact. Smoobu €29 + 0.9% or €35. Mobilia from €49. Aurora Inbox US$99 to 179. IAB Spain 2026 (via PPC Land): WhatsApp 94% monthly reach, 97% daily among its users. Booking commission has no verified figure, so the 15% in the hotel post is labelled a supposition. Klinikare no-show figures are a vendor statement and labelled so. No AEPD ruling on clinic reminders or WhatsApp calls was found; the posts say so where it matters. The two older /es posts still say "gratis para empezar", usage limit and paid plan, which conflicts with "siempre gratis": left alone under the additive rule and flagged to the user.

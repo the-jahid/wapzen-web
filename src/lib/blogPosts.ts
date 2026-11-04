@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, GraduationCap, Hand, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, GraduationCap, Hand, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -875,6 +875,44 @@ export const blogPosts: BlogPostEntry[] = [
     published: "2026-11-04",
     updated: "2026-11-04",
     readingMinutes: 13,
+  },
+  // Spain (2026-11-04), picked by docs/seo-blog-spain-research.mjs and proof of payment:
+  // dental clinics, estate agencies, hotels and tourist apartments. Question-and-answer format.
+  {
+    href: "/es/blog/chatbot-whatsapp-clinica-dental",
+    title: "Chatbot de WhatsApp para clínicas dentales: gratis y con IA",
+    name: "Chatbot de WhatsApp para clínicas dentales",
+    description: "Chatbot de WhatsApp con IA para clínicas dentales en España: siempre gratis, sin clave de API de Meta y con agente de voz para las llamadas de los pacientes.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-11-04",
+    updated: "2026-11-04",
+    readingMinutes: 12,
+    locale: "es",
+  },
+  {
+    href: "/es/blog/ia-para-inmobiliarias-whatsapp",
+    title: "IA para inmobiliarias: chatbot de WhatsApp gratis en España",
+    name: "IA para inmobiliarias en WhatsApp",
+    description: "IA para inmobiliarias en España: chatbot de WhatsApp siempre gratis, sin clave de API de Meta, para contactos de Idealista y Fotocasa, con agente de voz.",
+    tag: "Explainer",
+    icon: Building2,
+    published: "2026-11-04",
+    updated: "2026-11-04",
+    readingMinutes: 13,
+    locale: "es",
+  },
+  {
+    href: "/es/blog/whatsapp-hoteles-apartamentos-turisticos",
+    title: "WhatsApp para hoteles y apartamentos turísticos: IA gratis",
+    name: "WhatsApp para hoteles y apartamentos turísticos",
+    description: "WhatsApp con IA para hoteles y apartamentos turísticos en España: siempre gratis, sin clave de API de Meta, en varios idiomas y con agente de voz.",
+    tag: "Explainer",
+    icon: BedDouble,
+    published: "2026-11-04",
+    updated: "2026-11-04",
+    readingMinutes: 13,
+    locale: "es",
   },
 ];
 
