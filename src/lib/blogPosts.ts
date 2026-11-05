@@ -995,6 +995,32 @@ export const blogPosts: BlogPostEntry[] = [
     readingMinutes: 17,
     locale: "es-MX",
   },
+  // Italy (2026-11-06), picked by docs/seo-blog-it-verticals-research.mjs and the WhatsApp
+  // Marketing Report Italia 2026: tourism and beauty. Question-and-answer format.
+  {
+    href: "/it/blog/chatbot-whatsapp-hotel-bb-case-vacanza",
+    title: "Chatbot WhatsApp per hotel, B&B e case vacanza: AI gratis",
+    name: "Chatbot WhatsApp per hotel e B&B",
+    description: "Chatbot WhatsApp con AI per hotel, B&B e case vacanza in Italia: gratis, conversazioni illimitate, nessun limite nascosto, senza API Meta e con agente vocale.",
+    tag: "Explainer",
+    icon: BedDouble,
+    published: "2026-11-06",
+    updated: "2026-11-06",
+    readingMinutes: 14,
+    locale: "it",
+  },
+  {
+    href: "/it/blog/chatbot-whatsapp-parrucchieri-centri-estetici",
+    title: "Chatbot WhatsApp per parrucchieri e centri estetici: gratis",
+    name: "Chatbot WhatsApp per parrucchieri ed estetiste",
+    description: "Chatbot WhatsApp con AI per parrucchieri, barbieri e centri estetici in Italia: gratis, conversazioni illimitate, nessun limite nascosto e agente vocale attivo.",
+    tag: "Explainer",
+    icon: Scissors,
+    published: "2026-11-06",
+    updated: "2026-11-06",
+    readingMinutes: 13,
+    locale: "it",
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);
