@@ -971,6 +971,30 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-05",
     readingMinutes: 7,
   },
+  {
+    href: "/pt-br/blog/ia-para-responder-whatsapp",
+    title: "IA para responder WhatsApp: como colocar no seu número (2026)",
+    name: "IA para responder WhatsApp",
+    description: "Como colocar IA no WhatsApp da empresa: opções com preços em reais, passo a passo grátis, modelo de instruções e como um agente de IA ajuda a vender mais.",
+    tag: "Explainer",
+    icon: BotMessageSquare,
+    published: "2026-11-06",
+    updated: "2026-11-06",
+    readingMinutes: 17,
+    locale: "pt-BR",
+  },
+  {
+    href: "/es-mx/blog/chatbot-gratis-whatsapp",
+    title: "Chatbot gratis para WhatsApp en México: 8 opciones (2026)",
+    name: "Chatbot gratis para WhatsApp",
+    description: "Qué chatbots para WhatsApp son gratis de verdad en México: Wapzen, Meta, ManyChat, Kommo, Leadsales y más, con precios, pasos y cómo te ayudan a vender más.",
+    tag: "Comparison",
+    icon: Bot,
+    published: "2026-11-06",
+    updated: "2026-11-06",
+    readingMinutes: 17,
+    locale: "es-MX",
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);
