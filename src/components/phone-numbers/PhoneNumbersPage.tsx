@@ -13,6 +13,7 @@ import {
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import { useCachedState } from "@/lib/pageCache";
+import { startPolling } from "@/lib/polling";
 import {
   listDashboardAgents as apiListAgents,
   updateDashboardAgent as apiUpdateAgent,
@@ -1401,12 +1402,11 @@ export default function PhoneNumbersPage() {
       }
     };
 
-    const interval = window.setInterval(poll, 2500);
-    poll();
+    const stopPolling = startPolling(poll, 2500);
 
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
+      stopPolling();
     };
   }, [activeLoginID, activeLoginStatus, getToken, setPhoneNumbers]);
 
@@ -1437,12 +1437,11 @@ export default function PhoneNumbersPage() {
       }
     };
 
-    const interval = window.setInterval(poll, 2500);
-    poll();
+    const stopPolling = startPolling(poll, 2500);
 
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
+      stopPolling();
     };
   }, [activeLoginID, getToken, selectedPendingLoginID, setPhoneNumbers]);
 

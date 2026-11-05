@@ -23,6 +23,7 @@ import {
 import { useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
 import { useCachedState } from "@/lib/pageCache";
+import { startPolling } from "@/lib/polling";
 import {
   chatAgentDefaults,
   createDashboardChatAgent,
@@ -1383,12 +1384,11 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 
     // Fast enough that a code WhatsApp rotated mid-session is on screen almost
     // as soon as the server stores it.
-    const interval = window.setInterval(poll, 2000);
-    poll();
+    const stopPolling = startPolling(poll, 2000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
+      stopPolling();
     };
   }, [assignNumber, getToken, numberLoginId, numberLoginStatus, setPhoneNumbers]);
 
