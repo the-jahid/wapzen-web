@@ -38,7 +38,7 @@ import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWha
 import { useNewOrders } from "@/components/nav/useNewOrders";
 import styles from "./DashboardSidebar.module.css";
 
-const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
+export const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
   grid: LayoutGrid,
   agents: Bot,
   phone: Phone,

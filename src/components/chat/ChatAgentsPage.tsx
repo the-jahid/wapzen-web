@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { DashboardSidebar, navIcons } from "@/components/nav/DashboardSidebar";
+import { navItemsForMode } from "@/components/nav/workspaceMode";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
@@ -52,6 +53,7 @@ type IconName =
   | "key"
   | "book"
   | "wrench"
+  | "bag"
   | "plus"
   | "trash"
   | "search"
@@ -64,7 +66,7 @@ type IconName =
 
 // The collapsible parts of the configuration panel, one per section of the
 // chat-agent contract.
-type ConfigSectionId = "knowledge-base" | "tools";
+type ConfigSectionId = "phone-number" | "knowledge-base" | "tools" | "orders" | "voice-photos";
 
 // The editor's tabs. "agent" is what the agent says and answers on, "conversation"
 // the record of what it has already said, and "configuration" what it can reach.
@@ -76,6 +78,21 @@ const editorTabs: { id: EditorTab; label: string }[] = [
   { id: "configuration", label: "Configuration" },
 ];
 
+
+// From this width the editor is two columns, the prompt beside its settings, so
+// the Configuration tab has nothing left to hold. Keep in step with the
+// "@media (min-width: 1180px)" block in the css below.
+const DESKTOP_QUERY = "(min-width: 1180px)";
+
+function subscribeDesktopQuery(onChange: () => void) {
+  const query = window.matchMedia(DESKTOP_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function useIsDesktop() {
+  return useSyncExternalStore(subscribeDesktopQuery, () => window.matchMedia(DESKTOP_QUERY).matches, () => false);
+}
 
 const phoneStatusLabels: Record<PhoneNumberStatus, string> = {
   pending_qr: "Pending QR",
@@ -187,6 +204,14 @@ function iconPaths(name: IconName): ReactNode {
       );
     case "wrench":
       return <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.8-3.8a6 6 0 01-7.9 7.9l-6.9 6.9a2.1 2.1 0 01-3-3l6.9-6.9a6 6 0 017.9-7.9l-3.8 3.8z" />;
+    case "bag":
+      return (
+        <>
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+          <path d="M3 6h18" />
+          <path d="M16 10a4 4 0 0 1-8 0" />
+        </>
+      );
     case "plus":
       return <path d="M12 5v14M5 12h14" />;
     case "trash":
@@ -592,7 +617,7 @@ const css = `
 .chat-order-knob { background: var(--app-invert-bg); border-radius: 50%; display: block; height: 18px; transition: transform .18s ease, background .18s ease; width: 18px; }
 .chat-order-toggle.is-on .chat-order-track { background: var(--primary); border-color: transparent; }
 .chat-order-toggle.is-on .chat-order-knob { background: var(--app-on-accent); transform: translateX(20px); }
-.chat-media-settings { display: grid; gap: 16px 24px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.chat-media-settings { display: grid; gap: 16px 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
 .chat-media-option { align-content: start; display: grid; gap: 6px; }
 .chat-media-option .chat-field-hint { padding-left: 54px; }
 .chat-editor { display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-y: auto; padding-right: 4px; }
@@ -605,6 +630,25 @@ const css = `
   padding: 16px;
 }
 .chat-card-grow { min-height: 245px; }
+.chat-page-links { display: none; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chat-page-link { min-height: 34px; text-decoration: none; }
+.chat-page-link > svg { color: var(--muted); flex: none; }
+.chat-card.chat-order-shortcut {
+  align-items: center;
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 16px minmax(0, 1fr) auto 16px;
+  min-height: 44px;
+  padding: 8px 14px;
+  text-align: left;
+  width: 100%;
+}
+.chat-order-shortcut > svg { color: var(--muted); }
+.chat-card.chat-order-shortcut:hover { background: var(--panel-hover); }
+.chat-card.chat-order-shortcut:focus-visible { box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
+.chat-order-shortcut-arrow { color: var(--subtle); display: inline-flex; transform: rotate(-90deg); }
 .chat-card-head { align-items: center; display: flex; gap: 12px; justify-content: space-between; margin-bottom: 12px; }
 .chat-card-title { font-size: 13.5px; font-weight: 850; letter-spacing: -.1px; margin: 0; }
 .chat-mini-select { height: 34px; max-width: 210px; width: auto; }
@@ -891,6 +935,60 @@ const css = `
 .chat-number-detail { color: var(--subtle); font-size: 11.5px; }
 .chat-number-hint { color: var(--green); font-size: 11px; font-weight: 700; white-space: nowrap; }
 .chat-number-hint.is-blocked { color: var(--faint); }
+/* Desktop editor: the agent page takes the whole width, with the prompt filling
+   the left column and a flat list of settings on the right. Each column scrolls
+   on its own. Colours are the same tokens the stacked layout uses. */
+@media (min-width: 1180px) {
+  .chat-content:has(> .chat-agent-page) { padding: 12px 16px; }
+  .chat-agent-page { max-width: none; }
+  .chat-agent-expanded-topline { padding: 9px 14px; }
+  .chat-agent-expanded-topline .chat-avatar-lg { border-radius: 10px; font-size: 14px; height: 34px; width: 34px; }
+  .chat-agent-expanded-topline .chat-identity { grid-template-columns: 34px minmax(0, 1fr); }
+  .chat-agent-expanded-topline .chat-heading { font-size: 17px; }
+  /* The button's -7px margins let it overhang its own width; without the extra
+     14px a short name gets cut off with free space beside it. */
+  .chat-heading-edit:not(.chat-heading-input) { width: calc(100% + 14px); }
+  .chat-agent-expanded-topline .chat-btn { min-height: 34px; }
+  .chat-agent-expanded-grid { gap: 12px; grid-template-rows: minmax(0, 1fr); padding: 12px; }
+  .chat-editor { gap: 12px; padding-right: 0; }
+  /* Equal outer columns keep the tabs centred whatever the name's length. The back
+     button sits outside this grid, so the grid reaches back under it: the middle
+     is then the middle of the whole bar, not of what is left after the button. */
+  .chat-agent-back { position: relative; z-index: 1; }
+  .chat-agent-expanded-topline > .chat-detail-head { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); margin-left: -46px; }
+  .chat-agent-expanded-topline .chat-identity { padding-left: 46px; }
+  .chat-agent-expanded-topline .chat-heading-row { flex-wrap: nowrap; }
+  .chat-agent-expanded-topline .chat-heading { min-width: 0; }
+  .chat-agent-expanded-topline .chat-heading-row > :not(.chat-heading) { flex: none; }
+  .chat-agent-expanded-topline .chat-editor-actions { flex-wrap: nowrap; }
+  .chat-agent-expanded-topline .chat-tab { min-height: 28px; }
+  .chat-card-conversations { flex: 1 1 0; height: auto; }
+}
+.chat-editor-columns {
+  display: grid;
+  flex: 1 1 0;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 440px;
+}
+.chat-prompt-card { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 14px; }
+.chat-prompt-card > .chat-card-head { flex: 0 0 auto; margin-bottom: 8px; }
+.chat-prompt-card > .chat-textarea { flex: 1 1 0; min-height: 0 !important; resize: none; }
+.chat-config-panel.is-rail { flex: none; min-height: 0; }
+.is-rail > .chat-panel-body { padding: 4px 14px; }
+.is-rail .chat-accordion-list { gap: 0; }
+.is-rail .chat-accordion-item,
+.is-rail .chat-accordion-item.is-open { background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; overflow: visible; }
+.is-rail .chat-accordion-item:last-child { border-bottom: 0; }
+.is-rail .chat-accordion-button { grid-template-columns: 20px minmax(0, 1fr) auto 18px; padding: 14px 2px; }
+.is-rail .chat-accordion-icon,
+.is-rail .chat-accordion-item.is-open .chat-accordion-icon { background: transparent; border: 0; height: 20px; width: 20px; }
+.is-rail .chat-accordion-body { border-top: 0; padding: 0 2px 16px; }
+.is-rail .chat-number-grid { grid-template-columns: minmax(0, 1fr); }
+.is-rail .chat-number-pane { background: transparent; border: 0; padding: 0; }
+.is-rail .chat-accordion-body > .chat-order-settings { margin-top: 0; }
+.chat-order-toggle:disabled { cursor: not-allowed; opacity: .55; }
 /* The top bar and drawer backdrop only exist below the tablet breakpoint. */
 /* Large desktops: the list is capped at 1320px, so give the wide screen a
    little more breathing room rather than stretching the rows. */
@@ -916,6 +1014,7 @@ const css = `
   .chat-agent-page { overflow: visible; }
   .chat-agent-expanded-grid { overflow: visible; }
   .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
+  .chat-page-links { display: flex; }
 }
 /* Phones: one column everywhere, the agent editor goes full screen, and
    touch targets grow a little. */
@@ -1064,6 +1163,11 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
   const [chatAgents, setChatAgents, hasCachedAgents] = useCachedState<ApiChatAgent[]>("chat-agents", []);
+  // Which part of the editor is on screen. Cached per agent because a thread
+  // opens on its own page, and coming back should land on the Conversation tab
+  // it left.
+  const [editorTab, setEditorTab] = useCachedState<EditorTab>(`chat-editor-tab:${agentId}`, "agent");
+  const isDesktop = useIsDesktop();
   // True until the first agent fetch settles, so an empty list is only called
   // empty once the server has actually said so.
   const [isLoading, setIsLoading] = useState(true);
@@ -1673,6 +1777,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                     agent={selected}
                     onDelete={() => setDeleteTargetId(selected.id)}
                     onPatch={patchSelected}
+                    tabs={isDesktop ? <EditorTabs isDesktop onSelect={setEditorTab} tab={editorTab} /> : null}
                   />
                   <div className="chat-agent-expanded-grid">
                     <Editor
@@ -1690,7 +1795,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                       onRequestCode={startNumberCodeLogin}
                       onRequestQr={startNumberQrLogin}
                       onStartLogin={startNumberLogin}
+                      onSelectTab={setEditorTab}
                       phoneNumbers={phoneNumbers}
+                      tab={editorTab}
                       tools={tools}
                     />
                   </div>
@@ -1845,6 +1952,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
             </div>
           </section>
           )}
+          <PageLinks />
         </div>
       </main>
 
@@ -2133,10 +2241,12 @@ function AgentHeader({
   agent,
   onDelete,
   onPatch,
+  tabs,
 }: {
   agent: ApiChatAgent;
   onDelete: () => void;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+  tabs: ReactNode;
 }) {
   const status = agent.agent.status ?? "inactive";
   // Going live needs a WhatsApp number; pausing an already-live agent never
@@ -2217,6 +2327,7 @@ function AgentHeader({
             </div>
           </div>
         </div>
+        {tabs}
         <div className="chat-editor-actions">
           <button
             className="chat-btn chat-btn-secondary"
@@ -2246,6 +2357,40 @@ function AgentHeader({
   );
 }
 
+// A tab remembered from a narrower window has no button on desktop, where its
+// settings already sit beside the prompt.
+function shownEditorTab(tab: EditorTab, isDesktop: boolean): EditorTab {
+  return isDesktop && tab === "configuration" ? "agent" : tab;
+}
+
+function EditorTabs({
+  isDesktop,
+  onSelect,
+  tab,
+}: {
+  isDesktop: boolean;
+  onSelect: (tab: EditorTab) => void;
+  tab: EditorTab;
+}) {
+  const shownTab = shownEditorTab(tab, isDesktop);
+  return (
+    <div className="chat-tabs" role="tablist">
+      {editorTabs.filter((entry) => !(isDesktop && entry.id === "configuration")).map((entry) => (
+        <button
+          aria-selected={shownTab === entry.id}
+          className={`chat-tab${shownTab === entry.id ? " is-active" : ""}`}
+          key={entry.id}
+          onClick={() => onSelect(entry.id)}
+          role="tab"
+          type="button"
+        >
+          {entry.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Editor({
   agent,
   assignableNumbers,
@@ -2258,8 +2403,10 @@ function Editor({
   onRefreshNumbers,
   onRequestCode,
   onRequestQr,
+  onSelectTab,
   onStartLogin,
   phoneNumbers,
+  tab,
   tools,
 }: {
   agent: ApiChatAgent;
@@ -2273,14 +2420,64 @@ function Editor({
   onRefreshNumbers: () => void;
   onRequestCode: (phone: string) => Promise<void>;
   onRequestQr: () => Promise<void>;
+  onSelectTab: (tab: EditorTab) => void;
   onStartLogin: () => void;
   phoneNumbers: ApiPhoneNumber[];
+  tab: EditorTab;
   tools: ApiTool[];
 }) {
-  // Which part of the editor is on screen. Cached per agent because a thread
-  // opens on its own page, and coming back should land on the Conversation tab
-  // it left.
-  const [tab, setTab] = useCachedState<EditorTab>(`chat-editor-tab:${agent.id}`, "agent");
+  const isDesktop = useIsDesktop();
+  const shownTab = shownEditorTab(tab, isDesktop);
+
+  // Below desktop the Agent tab stays short: Voice & Photos sits in the
+  // Configuration tab, and Take Order is a small card leading there.
+  const orderTool = tools.find((tool) => tool.type === "order");
+  const takesOrders = Boolean(
+    agent.order?.order_enabled && orderTool && agent.tools?.tool_ids?.includes(orderTool.id)
+  );
+
+  const numberSetup = (bare: boolean) => (
+    <PhoneNumberSetupCard
+      bare={bare}
+      error={loginError}
+      isStarting={isStartingLogin}
+      isRefreshingNumbers={isRefreshingNumbers}
+      login={login}
+      numbers={assignableNumbers}
+      onSelectNumber={(phoneNumberId) =>
+        onPatch((current) => ({
+          ...current,
+          agent: { ...current.agent, phone_number_id: phoneNumberId, status: "active" },
+        }))
+      }
+      onRefreshNumbers={onRefreshNumbers}
+      onRequestCode={onRequestCode}
+      onRequestQr={onRequestQr}
+      onStartLogin={onStartLogin}
+    />
+  );
+
+  const promptHead = (
+    <div className="chat-card-head">
+      <h3 className="chat-card-title">System Prompt</h3>
+      <PromptCounter value={agent.prompt?.system_prompt ?? ""} />
+    </div>
+  );
+  const promptField = (
+    <textarea
+      aria-label="System prompt"
+      className="chat-textarea"
+      maxLength={SYSTEM_PROMPT_MAX_CHARS}
+      onChange={(event) =>
+        onPatch((current) => ({
+          ...current,
+          prompt: { ...current.prompt, system_prompt: event.target.value },
+        }))
+      }
+      style={{ minHeight: 185 }}
+      value={agent.prompt?.system_prompt ?? ""}
+    />
+  );
 
   return (
     <div className="chat-editor">
@@ -2307,22 +2504,10 @@ function Editor({
         </div>
       ) : null}
 
-      <div className="chat-tabs" role="tablist">
-        {editorTabs.map((entry) => (
-          <button
-            aria-selected={tab === entry.id}
-            className={`chat-tab${tab === entry.id ? " is-active" : ""}`}
-            key={entry.id}
-            onClick={() => setTab(entry.id)}
-            role="tab"
-            type="button"
-          >
-            {entry.label}
-          </button>
-        ))}
-      </div>
+      {/* On desktop the header draws these, in the middle of the top bar. */}
+      {isDesktop ? null : <EditorTabs isDesktop={false} onSelect={onSelectTab} tab={tab} />}
 
-      {tab === "conversation" ? (
+      {shownTab === "conversation" ? (
         <div className="chat-card chat-card-conversations">
           <div className="chat-card-head">
             <h3 className="chat-card-title">Conversations</h3>
@@ -2332,7 +2517,22 @@ function Editor({
               selection and filters into it. */}
           <ChatConversationsWorkspace agentId={agent.id} key={agent.id} />
         </div>
-      ) : tab === "configuration" ? (
+      ) : isDesktop ? (
+        <div className="chat-editor-columns">
+          <div className="chat-card chat-prompt-card">
+            {promptHead}
+            {promptField}
+          </div>
+          <ConfigPanel
+            agent={agent}
+            knowledgeBases={knowledgeBases}
+            onPatch={onPatch}
+            phoneNumbers={phoneNumbers}
+            rail={{ numberSetup: agent.agent.phone_number_id ? null : numberSetup(true) }}
+            tools={tools}
+          />
+        </div>
+      ) : shownTab === "configuration" ? (
         <ConfigPanel
           agent={agent}
           knowledgeBases={knowledgeBases}
@@ -2342,84 +2542,27 @@ function Editor({
         />
       ) : (
         <>
-          {agent.agent.phone_number_id ? null : (
-            <PhoneNumberSetupCard
-              error={loginError}
-              isStarting={isStartingLogin}
-              isRefreshingNumbers={isRefreshingNumbers}
-              login={login}
-              numbers={assignableNumbers}
-              onSelectNumber={(phoneNumberId) =>
-                onPatch((current) => ({
-                  ...current,
-                  agent: { ...current.agent, phone_number_id: phoneNumberId, status: "active" },
-                }))
-              }
-              onRefreshNumbers={onRefreshNumbers}
-              onRequestCode={onRequestCode}
-              onRequestQr={onRequestQr}
-              onStartLogin={onStartLogin}
-            />
-          )}
+          {agent.agent.phone_number_id ? null : numberSetup(false)}
 
           <div className="chat-card chat-card-grow">
-            <div className="chat-card-head">
-              <h3 className="chat-card-title">System Prompt</h3>
-              <PromptCounter value={agent.prompt?.system_prompt ?? ""} />
-            </div>
-            <textarea
-              className="chat-textarea"
-              maxLength={SYSTEM_PROMPT_MAX_CHARS}
-              onChange={(event) =>
-                onPatch((current) => ({
-                  ...current,
-                  prompt: { ...current.prompt, system_prompt: event.target.value },
-                }))
-              }
-              style={{ minHeight: 185 }}
-              value={agent.prompt?.system_prompt ?? ""}
-            />
+            {promptHead}
+            {promptField}
           </div>
 
-          {/* Only offered by a server that reports the section, since an older
-              one refuses it on save. */}
-          {agent.media ? (
-            <div className="chat-card">
-              <div className="chat-card-head">
-                <h3 className="chat-card-title">Voice &amp; Photos</h3>
-                <span className="chat-accordion-meta">{mediaMeta(agent.media)}</span>
-              </div>
-              <div className="chat-media-settings">
-                <MediaToggle
-                  hint="Voice messages are turned into text and the agent replies in text. Off: voice messages go unanswered."
-                  label="Reply to voice messages"
-                  on={agent.media.voice_messages_enabled}
-                  onToggle={() =>
-                    onPatch((current) => ({
-                      ...current,
-                      media: {
-                        images_enabled: current.media?.images_enabled ?? false,
-                        voice_messages_enabled: !current.media?.voice_messages_enabled,
-                      },
-                    }))
-                  }
-                />
-                <MediaToggle
-                  hint="The agent looks at photos customers send, such as a product or a payment screenshot. Off: only a photo's caption is read."
-                  label="Read photos"
-                  on={agent.media.images_enabled}
-                  onToggle={() =>
-                    onPatch((current) => ({
-                      ...current,
-                      media: {
-                        voice_messages_enabled: current.media?.voice_messages_enabled ?? false,
-                        images_enabled: !current.media?.images_enabled,
-                      },
-                    }))
-                  }
-                />
-              </div>
-            </div>
+          {/* Configuration opens with its Tools section unfolded, Take Order in it. */}
+          {orderTool ? (
+            <button
+              className="chat-card chat-order-shortcut"
+              onClick={() => onSelectTab("configuration")}
+              type="button"
+            >
+              <Icon name="bag" size={16} />
+              <span className="chat-accordion-title">Take Order</span>
+              <span className="chat-accordion-meta">{takesOrders ? "On" : "Off"}</span>
+              <span className="chat-order-shortcut-arrow">
+                <Icon name="chevron" size={16} sw={2.4} />
+              </span>
+            </button>
           ) : null}
         </>
       )}
@@ -2494,6 +2637,7 @@ function PromptCounter({ value }: { value: string }) {
 // the create modal's first step: the same panes, with no card around them, for an
 // agent that doesn't exist yet.
 function PhoneNumberSetupCard({
+  bare = false,
   error,
   forNewAgent = false,
   isRefreshingNumbers,
@@ -2506,6 +2650,8 @@ function PhoneNumberSetupCard({
   onRequestQr,
   onStartLogin,
 }: {
+  // No card or heading of its own, for a settings section that already has them.
+  bare?: boolean;
   error: string;
   forNewAgent?: boolean;
   isRefreshingNumbers: boolean;
@@ -2535,8 +2681,8 @@ function PhoneNumberSetupCard({
   const onConnectSentence = onConnect.charAt(0).toUpperCase() + onConnect.slice(1);
 
   return (
-    <div className={forNewAgent ? undefined : "chat-card chat-number-setup"}>
-      {forNewAgent ? null : (
+    <div className={forNewAgent || bare ? undefined : "chat-card chat-number-setup"}>
+      {forNewAgent || bare ? null : (
         <div className="chat-card-head">
           <h3 className="chat-card-title">Connect a phone number</h3>
           <span className="chat-number-flag">Required to reply</span>
@@ -2689,24 +2835,78 @@ function PhoneNumberSetupCard({
   );
 }
 
+// The phone number an agent answers on, as a plain select.
+function PhoneNumberSelect({
+  agent,
+  "aria-label": ariaLabel,
+  className,
+  onPatch,
+  phoneNumbers,
+}: {
+  agent: ApiChatAgent;
+  "aria-label"?: string;
+  className: string;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+  phoneNumbers: ApiPhoneNumber[];
+}) {
+  return (
+    <select
+      aria-label={ariaLabel}
+      className={className}
+      onChange={(event) =>
+        onPatch((current) => ({
+          ...current,
+          agent: {
+            ...current.agent,
+            phone_number_id: event.target.value || null,
+            // Connecting a number takes the agent live; removing it pauses it.
+            status: !event.target.value
+              ? "inactive"
+              : event.target.value === current.agent.phone_number_id
+                ? current.agent.status
+                : "active",
+          },
+        }))
+      }
+      value={agent.agent.phone_number_id ?? ""}
+    >
+      <option value="">No number</option>
+      {phoneNumbers.map((pn) => (
+        <option key={pn.id} value={pn.id}>
+          {phoneNumberLabel(pn)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 // The Configuration tab: the basics at the top, then one collapsible section per
-// part of the chat-agent contract.
+// part of the chat-agent contract. With `rail` it is the desktop settings column
+// instead: only the collapsible sections, including the number and Orders, which
+// live elsewhere when the editor is stacked. The name is in the header on desktop.
 function ConfigPanel({
   agent,
   knowledgeBases,
   onPatch,
   phoneNumbers,
+  rail,
   tools,
 }: {
   agent: ApiChatAgent;
   knowledgeBases: ApiKnowledgeBase[];
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
   phoneNumbers: ApiPhoneNumber[];
+  rail?: { numberSetup: ReactNode };
   tools: ApiTool[];
 }) {
-  const [openSection, setOpenSection] = useState<ConfigSectionId | null>("tools");
+  // On desktop Orders starts open so the switch is seen, unless the agent has no
+  // number: it can't answer anyone until that is done, so linking one comes first.
+  const [openSection, setOpenSection] = useState<ConfigSectionId | null>(
+    rail ? (rail.numberSetup ? "phone-number" : "orders") : "tools"
+  );
   const attachedKbs = agent.knowledge_base?.knowledge_base_ids ?? [];
   const attachedTools = agent.tools?.tool_ids ?? [];
+  const attachedNumber = phoneNumbers.find((pn) => pn.id === agent.agent.phone_number_id);
   // end_call and transfer_call exist to release a phone call, so the server
   // ignores them in a chat. Offering them here would be offering nothing.
   const chatCapableTools = tools.filter(
@@ -2714,21 +2914,30 @@ function ConfigPanel({
   );
   const orderTool = chatCapableTools.find((tool) => tool.type === "order");
   const orderEnabled = agent.order?.order_enabled ?? false;
+  // Orders are only taken with the switch on and Take Order attached. The desktop
+  // Orders section is one switch for both, so Take Order isn't also a tool there.
+  const takesOrders = orderEnabled && Boolean(orderTool && attachedTools.includes(orderTool.id));
+  const listedTools = rail ? chatCapableTools.filter((tool) => tool.type !== "order") : chatCapableTools;
+  const listedToolIds = rail ? attachedTools.filter((id) => id !== orderTool?.id) : attachedTools;
+  const ownTools = rail ? tools.filter((tool) => tool.type !== "order") : tools;
 
   const toggleId = (list: string[], id: string) =>
     list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
 
   return (
-    <div className="chat-panel chat-config-panel">
-      <div className="chat-panel-head chat-config-head">
-        <div>
-          <h2 className="chat-panel-title">Chat agent configuration</h2>
-          <div className="chat-panel-copy">
-            How the agent is addressed and what it can reach.
+    <div className={`chat-panel chat-config-panel${rail ? " is-rail" : ""}`}>
+      {rail ? null : (
+        <div className="chat-panel-head chat-config-head">
+          <div>
+            <h2 className="chat-panel-title">Chat agent configuration</h2>
+            <div className="chat-panel-copy">
+              How the agent is addressed and what it can reach.
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <div className="chat-panel-body">
+        {rail ? null : (
         <div className="chat-config-fields">
           <label className="chat-field">
             <span className="chat-control-label">Name</span>
@@ -2745,32 +2954,12 @@ function ConfigPanel({
           </label>
           <label className="chat-field">
             <span className="chat-control-label">Phone number</span>
-            <select
+            <PhoneNumberSelect
+              agent={agent}
               className="chat-select"
-              onChange={(event) =>
-                onPatch((current) => ({
-                  ...current,
-                  agent: {
-                    ...current.agent,
-                    phone_number_id: event.target.value || null,
-                    // Connecting a number takes the agent live; removing it pauses it.
-                    status: !event.target.value
-                      ? "inactive"
-                      : event.target.value === current.agent.phone_number_id
-                        ? current.agent.status
-                        : "active",
-                  },
-                }))
-              }
-              value={agent.agent.phone_number_id ?? ""}
-            >
-              <option value="">No number</option>
-              {phoneNumbers.map((pn) => (
-                <option key={pn.id} value={pn.id}>
-                  {phoneNumberLabel(pn)}
-                </option>
-              ))}
-            </select>
+              onPatch={onPatch}
+              phoneNumbers={phoneNumbers}
+            />
             {phoneNumbers.length === 0 ? (
               <span className="chat-field-hint">
                 Connect one in <Link href="/dashboard/phone-numbers">Phone Numbers</Link>.
@@ -2778,8 +2967,36 @@ function ConfigPanel({
             ) : null}
           </label>
         </div>
+        )}
 
         <div className="chat-accordion-list">
+          {rail ? (
+            <ConfigSection
+              icon="phone"
+              id="phone-number"
+              isOpen={openSection === "phone-number"}
+              meta={
+                rail.numberSetup ? (
+                  <span className="chat-number-flag">Required to reply</span>
+                ) : (
+                  attachedNumber ? phoneNumberDetail(attachedNumber) : ""
+                )
+              }
+              onToggle={setOpenSection}
+              title="Phone Number"
+            >
+              {rail.numberSetup ?? (
+                <PhoneNumberSelect
+                  agent={agent}
+                  aria-label="Phone number"
+                  className="chat-select"
+                  onPatch={onPatch}
+                  phoneNumbers={phoneNumbers}
+                />
+              )}
+            </ConfigSection>
+          ) : null}
+
           <ConfigSection
             icon="book"
             id="knowledge-base"
@@ -2828,13 +3045,13 @@ function ConfigPanel({
             icon="wrench"
             id="tools"
             isOpen={openSection === "tools"}
-            meta={attachedTools.length ? `${attachedTools.length} attached` : "None"}
+            meta={listedToolIds.length ? `${listedToolIds.length} attached` : "None"}
             onToggle={setOpenSection}
             title="Tools"
           >
-            {chatCapableTools.length === 0 ? (
+            {listedTools.length === 0 ? (
               <div className="chat-chips-empty">
-                {tools.length === 0 ? (
+                {ownTools.length === 0 ? (
                   <>
                     No tools yet — create one in <Link href="/dashboard/tools">Tools</Link>.
                   </>
@@ -2847,7 +3064,7 @@ function ConfigPanel({
               </div>
             ) : (
               <div className="chat-chips">
-                {chatCapableTools.map((tool) => {
+                {listedTools.map((tool) => {
                   const on = attachedTools.includes(tool.id);
                   return (
                     <button
@@ -2875,7 +3092,7 @@ function ConfigPanel({
                 })}
               </div>
             )}
-            {orderTool && attachedTools.includes(orderTool.id) ? (
+            {!rail && orderTool && attachedTools.includes(orderTool.id) ? (
               <div className="chat-order-settings">
                 <button
                   aria-pressed={orderEnabled}
@@ -2893,35 +3110,136 @@ function ConfigPanel({
                   </span>
                   <span>Enable order taking</span>
                 </button>
-                <label className="chat-field">
-                  <span className="chat-control-label">Order instructions</span>
-                  <textarea
-                    className="chat-textarea"
-                    maxLength={4000}
-                    onChange={(event) =>
-                      onPatch((current) => ({
-                        ...current,
-                        order: { ...current.order, order_instructions: event.target.value },
-                      }))
-                    }
-                    placeholder="Only take orders for our menu items. Always ask for name, phone and delivery address. Email is optional. Read the order back and get a yes before placing it. Delivery only inside Dhaka."
-                    value={agent.order?.order_instructions ?? ""}
-                  />
-                  <span className="chat-field-hint">
-                    {orderEnabled ? (
-                      <>
-                        Orders appear under <Link href="/dashboard/orders">Orders</Link>.
-                      </>
-                    ) : (
-                      "Order taking is off, so this agent can't place orders and these instructions aren't used."
-                    )}
-                  </span>
-                </label>
+                <OrderInstructionsField agent={agent} on={orderEnabled} onPatch={onPatch} />
               </div>
             ) : null}
           </ConfigSection>
+
+          {rail && agent.order ? (
+            <ConfigSection
+              icon="bag"
+              id="orders"
+              isOpen={openSection === "orders"}
+              meta={takesOrders ? "On" : "Off"}
+              onToggle={setOpenSection}
+              title="Orders"
+            >
+              <div className="chat-order-settings">
+                <MediaToggle
+                  disabled={!orderTool}
+                  label="Enable order taking"
+                  on={takesOrders}
+                  onToggle={() => {
+                    if (!orderTool) return;
+                    onPatch((current) => {
+                      const others = (current.tools?.tool_ids ?? []).filter((id) => id !== orderTool.id);
+                      return {
+                        ...current,
+                        tools: { tool_ids: takesOrders ? others : [...others, orderTool.id] },
+                        order: { ...current.order, order_enabled: !takesOrders },
+                      };
+                    });
+                  }}
+                />
+                <OrderInstructionsField agent={agent} on={takesOrders} onPatch={onPatch} />
+              </div>
+            </ConfigSection>
+          ) : null}
+
+          {/* Only offered by a server that reports the section, since an older
+              one refuses it on save. */}
+          {agent.media ? (
+            <ConfigSection
+              icon="message"
+              id="voice-photos"
+              isOpen={openSection === "voice-photos"}
+              meta={mediaMeta(agent.media)}
+              onToggle={setOpenSection}
+              title="Voice & Photos"
+            >
+              <MediaSettings media={agent.media} onPatch={onPatch} />
+            </ConfigSection>
+          ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+function OrderInstructionsField({
+  agent,
+  on,
+  onPatch,
+}: {
+  agent: ApiChatAgent;
+  on: boolean;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+}) {
+  return (
+    <label className="chat-field">
+      <span className="chat-control-label">Order instructions</span>
+      <textarea
+        className="chat-textarea"
+        maxLength={4000}
+        onChange={(event) =>
+          onPatch((current) => ({
+            ...current,
+            order: { ...current.order, order_instructions: event.target.value },
+          }))
+        }
+        placeholder="Only take orders for our menu items. Always ask for name, phone and delivery address. Email is optional. Read the order back and get a yes before placing it. Delivery only inside Dhaka."
+        value={agent.order?.order_instructions ?? ""}
+      />
+      <span className="chat-field-hint">
+        {on ? (
+          <>
+            Orders appear under <Link href="/dashboard/orders">Orders</Link>.
+          </>
+        ) : (
+          "Order taking is off, so this agent can't place orders and these instructions aren't used."
+        )}
+      </span>
+    </label>
+  );
+}
+
+function MediaSettings({
+  media,
+  onPatch,
+}: {
+  media: ChatMediaSection;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+}) {
+  return (
+    <div className="chat-media-settings">
+      <MediaToggle
+        hint="Voice messages are turned into text and the agent replies in text. Off: voice messages go unanswered."
+        label="Reply to voice messages"
+        on={media.voice_messages_enabled}
+        onToggle={() =>
+          onPatch((current) => ({
+            ...current,
+            media: {
+              images_enabled: current.media?.images_enabled ?? false,
+              voice_messages_enabled: !current.media?.voice_messages_enabled,
+            },
+          }))
+        }
+      />
+      <MediaToggle
+        hint="The agent looks at photos customers send, such as a product or a payment screenshot. Off: only a photo's caption is read."
+        label="Read photos"
+        on={media.images_enabled}
+        onToggle={() =>
+          onPatch((current) => ({
+            ...current,
+            media: {
+              voice_messages_enabled: current.media?.voice_messages_enabled ?? false,
+              images_enabled: !current.media?.images_enabled,
+            },
+          }))
+        }
+      />
     </div>
   );
 }
@@ -2932,12 +3250,14 @@ function mediaMeta(media: ChatMediaSection): string {
 }
 
 function MediaToggle({
+  disabled = false,
   hint,
   label,
   on,
   onToggle,
 }: {
-  hint: string;
+  disabled?: boolean;
+  hint?: string;
   label: string;
   on: boolean;
   onToggle: () => void;
@@ -2947,6 +3267,7 @@ function MediaToggle({
       <button
         aria-pressed={on}
         className={`chat-order-toggle${on ? " is-on" : ""}`}
+        disabled={disabled}
         onClick={onToggle}
         type="button"
       >
@@ -2955,7 +3276,7 @@ function MediaToggle({
         </span>
         <span>{label}</span>
       </button>
-      <span className="chat-field-hint">{hint}</span>
+      {hint ? <span className="chat-field-hint">{hint}</span> : null}
     </div>
   );
 }
@@ -2973,7 +3294,7 @@ function ConfigSection({
   icon: IconName;
   id: ConfigSectionId;
   isOpen: boolean;
-  meta: string;
+  meta: ReactNode;
   onToggle: (next: ConfigSectionId | null) => void;
   title: string;
 }) {
@@ -2996,6 +3317,26 @@ function ConfigSection({
       </button>
       {isOpen ? <div className="chat-accordion-body">{children}</div> : null}
     </div>
+  );
+}
+
+// Small buttons to the menu's other pages, for screens where the menu is folded
+// away behind the top bar's button. The css hides them once the sidebar is showing.
+function PageLinks() {
+  return (
+    <nav aria-label="Other pages" className="chat-page-links">
+      {navItemsForMode("chat")
+        .filter((item) => item.href !== "/dashboard/chat")
+        .map((item) => {
+          const LinkIcon = navIcons[item.icon];
+          return (
+            <Link className="chat-chip chat-page-link" href={item.href ?? "#"} key={item.label}>
+              <LinkIcon aria-hidden="true" size={14} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+    </nav>
   );
 }
 
