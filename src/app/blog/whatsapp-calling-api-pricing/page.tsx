@@ -127,7 +127,7 @@ const sections = [
         <li><strong>Brazil:</strong> 2,000 × $0.0108 = <strong>$21.60</strong></li>
         <li><strong>Indonesia:</strong> 2,000 × $0.0242 = <strong>$48.40</strong></li>
       </ul>
-      <p>Meta’s fee is usually the small part. An AI voice platform costs far more per minute: <Link href="/blog/bland-ai-vs-vapi">Bland’s Start plan charges $0.14 a minute</Link>, so the same 2,000 minutes would add <strong>$280</strong>. Permission requests are charged as messages too, and providers may add a plan fee. WATI says it adds no per-call markup to Meta’s rate and draws usage from a prepaid wallet.</p>
+      <p>Meta’s fee is usually the small part. An AI voice platform costs far more per minute: <a href="https://www.bland.ai/pricing">Bland’s Start plan charges $0.14 a minute</a>, so the same 2,000 minutes would add <strong>$280</strong>. Permission requests are charged as messages too, and providers may add a plan fee. WATI says it adds no per-call markup to Meta’s rate and draws usage from a prepaid wallet.</p>
     </>,
   },
   {
@@ -171,7 +171,7 @@ export default function WhatsAppCallingApiPricingPage() {
     sections={sections}
     faq={faqs}
     sources={sources}
-    related={["/blog/whatsapp-business-calling-api", "/blog/bland-ai-vs-vapi"]}
+    related={["/blog/whatsapp-business-calling-api", "/blog/whatsapp-business-api-pricing"]}
     product="/free-ai-calling-agent"
     action={{ href: voiceAccess, label: "Message us on WhatsApp" }}
     cta={{ heading: <>AI on your WhatsApp calls.<br /><span>No per-minute charge.</span></>, body: "Wapzen’s voice agent answers and makes WhatsApp calls on your own number, free right now. Message us and we’ll switch it on." }}
