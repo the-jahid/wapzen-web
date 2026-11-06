@@ -26,13 +26,22 @@ import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
 import { useCachedState } from "@/lib/pageCache";
 import { startPolling } from "@/lib/polling";
 import {
+  AGENT_FILE_ACCEPT,
+  AGENT_FILE_DESCRIPTION_MAX,
+  AGENT_FILE_MAX_BYTES,
+  AGENT_FILES_MAX,
+  ChatAgentError,
   chatAgentDefaults,
   createDashboardChatAgent,
+  deleteAgentFile,
   deleteDashboardChatAgent,
   getDashboardChatAgent,
   isChatAgentLimitError,
+  listAgentFiles,
   listDashboardChatAgents,
   updateDashboardChatAgent,
+  uploadAgentFile,
+  type ApiAgentFile,
   type ApiChatAgent,
   type ChatMediaSection,
   type CreateChatAgentPayload,
@@ -54,6 +63,7 @@ type IconName =
   | "book"
   | "wrench"
   | "bag"
+  | "paperclip"
   | "plus"
   | "trash"
   | "search"
@@ -66,7 +76,7 @@ type IconName =
 
 // The collapsible parts of the configuration panel, one per section of the
 // chat-agent contract.
-type ConfigSectionId = "phone-number" | "knowledge-base" | "tools" | "orders" | "voice-photos";
+type ConfigSectionId = "phone-number" | "knowledge-base" | "tools" | "orders" | "files" | "voice-photos";
 
 // The editor's tabs. "agent" is what the agent says and answers on, "conversation"
 // the record of what it has already said, and "configuration" what it can reach.
@@ -212,6 +222,8 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M16 10a4 4 0 0 1-8 0" />
         </>
       );
+    case "paperclip":
+      return <path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9" />;
     case "plus":
       return <path d="M12 5v14M5 12h14" />;
     case "trash":
@@ -620,6 +632,17 @@ const css = `
 .chat-media-settings { display: grid; gap: 16px 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
 .chat-media-option { align-content: start; display: grid; gap: 6px; }
 .chat-media-option .chat-field-hint { padding-left: 54px; }
+.chat-files { display: grid; gap: 12px; }
+.chat-file-list { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.chat-file { align-items: start; background: var(--panel-hover); border: 1px solid var(--border); border-radius: 10px; display: grid; gap: 4px 8px; grid-template-columns: minmax(0, 1fr) auto; padding: 8px 8px 8px 10px; }
+.chat-file-name { color: var(--text); font-size: 12.5px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-file-size { color: var(--faint); font-weight: 500; }
+.chat-file-description { color: var(--subtle); font-size: 11.5px; grid-column: 1 / -1; line-height: 1.45; overflow-wrap: anywhere; }
+.chat-file-form { display: grid; gap: 10px; }
+.chat-file-preview { border: 1px solid var(--border); border-radius: 10px; display: block; height: auto; max-height: 200px; max-width: 100%; width: auto; }
+.chat-file-picked { color: var(--text); font-size: 12.5px; font-weight: 750; overflow-wrap: anywhere; }
+.chat-file-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.chat-file-error { color: var(--app-rose-text); font-size: 11.5px; line-height: 1.45; }
 .chat-editor { display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-y: auto; padding-right: 4px; }
 .chat-card {
   background: var(--surface);
@@ -972,7 +995,12 @@ const css = `
   grid-template-rows: minmax(0, 1fr);
   min-height: 440px;
 }
-.chat-prompt-card { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 14px; }
+/* The prompt takes the top half of the left column, Images & Files the space under
+   it. The column scrolls when a long file list needs more room than that. */
+.chat-editor-main { display: flex; flex-direction: column; gap: 12px; min-height: 0; min-width: 0; overflow-y: auto; }
+.chat-prompt-card { display: flex; flex: 0 0 50%; flex-direction: column; min-width: 0; padding: 14px; }
+.chat-card.chat-files-card { padding: 0 14px; }
+.chat-card.chat-files-card:empty { display: none; }
 .chat-prompt-card > .chat-card-head { flex: 0 0 auto; margin-bottom: 8px; }
 .chat-prompt-card > .chat-textarea { flex: 1 1 0; min-height: 0 !important; resize: none; }
 .chat-config-panel.is-rail { flex: none; min-height: 0; }
@@ -2519,9 +2547,12 @@ function Editor({
         </div>
       ) : isDesktop ? (
         <div className="chat-editor-columns">
-          <div className="chat-card chat-prompt-card">
-            {promptHead}
-            {promptField}
+          <div className="chat-editor-main">
+            <div className="chat-card chat-prompt-card">
+              {promptHead}
+              {promptField}
+            </div>
+            <FilesCard agentId={agent.id} key={agent.id} />
           </div>
           <ConfigPanel
             agent={agent}
@@ -2548,6 +2579,8 @@ function Editor({
             {promptHead}
             {promptField}
           </div>
+
+          <FilesCard agentId={agent.id} key={agent.id} />
 
           {/* Configuration opens with its Tools section unfolded, Take Order in it. */}
           {orderTool ? (
@@ -3163,6 +3196,257 @@ function ConfigPanel({
         </div>
       </div>
     </div>
+  );
+}
+
+function formatFileSize(bytes: number) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Images & Files on its own card under the prompt, open from the start. The
+// section renders nothing on a server without the feature, and the css then hides
+// the empty card.
+function FilesCard({ agentId }: { agentId: string }) {
+  const [isOpen, setIsOpen] = useState(true);
+  return (
+    <div className="chat-card chat-files-card is-rail">
+      <AgentFilesSection agentId={agentId} isOpen={isOpen} onToggle={(next) => setIsOpen(next !== null)} />
+    </div>
+  );
+}
+
+// The images and documents the agent can send, each with a note saying when.
+// Unlike the rest of the panel these save straight away, not with the agent.
+function AgentFilesSection({
+  agentId,
+  isOpen,
+  onToggle,
+}: {
+  agentId: string;
+  isOpen: boolean;
+  onToggle: (next: ConfigSectionId | null) => void;
+}) {
+  const { getToken } = useAuth();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState<ApiAgentFile[] | null>(null);
+  const [unsupported, setUnsupported] = useState(false);
+  const [picked, setPicked] = useState<File | null>(null);
+  // A browser-only link to the picked image. Each one holds the file in memory
+  // until it is revoked, so the ref lets the last one go when the page closes.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let stale = false;
+    listAgentFiles(agentId, getToken)
+      .then((list) => {
+        if (!stale) setFiles(list);
+      })
+      .catch((err: unknown) => {
+        if (stale) return;
+        // A server without this feature yet answers 404: nothing to offer.
+        if (err instanceof ChatAgentError && err.status === 404) setUnsupported(true);
+        else setError(err instanceof Error ? err.message : "Could not load the files.");
+      });
+    return () => {
+      stale = true;
+    };
+  }, [agentId, getToken]);
+
+  useEffect(
+    () => () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    },
+    []
+  );
+
+  if (unsupported) return null;
+
+  const showPreview = (url: string | null) => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = url;
+    setPreviewUrl(url);
+  };
+
+  const onPick = (file: File | undefined) => {
+    setError("");
+    if (!file) return;
+    if (file.size > AGENT_FILE_MAX_BYTES) {
+      setError(`${file.name} is larger than ${AGENT_FILE_MAX_BYTES / (1024 * 1024)} MB.`);
+      return;
+    }
+    setPicked(file);
+    showPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
+  };
+
+  const cancel = () => {
+    setPicked(null);
+    showPreview(null);
+    setDescription("");
+    setError("");
+  };
+
+  const upload = async () => {
+    if (!picked || !description.trim()) return;
+    setIsUploading(true);
+    setError("");
+    try {
+      const added = await uploadAgentFile(agentId, picked, description.trim(), getToken);
+      setFiles((current) => [...(current ?? []), added]);
+      setPicked(null);
+      showPreview(null);
+      setDescription("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The file could not be uploaded.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const remove = async (fileId: string) => {
+    setError("");
+    try {
+      await deleteAgentFile(agentId, fileId, getToken);
+      setFiles((current) => (current ?? []).filter((file) => file.id !== fileId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The file could not be deleted.");
+    } finally {
+      setConfirmingId(null);
+    }
+  };
+
+  const atLimit = (files?.length ?? 0) >= AGENT_FILES_MAX;
+
+  return (
+    <ConfigSection
+      icon="paperclip"
+      id="files"
+      isOpen={isOpen}
+      meta={files === null ? "" : files.length ? `${files.length} uploaded` : "None"}
+      onToggle={onToggle}
+      title="Images & Files"
+    >
+      <div className="chat-files">
+        {files?.length ? (
+          <ul className="chat-file-list">
+            {files.map((file) => (
+              <li className="chat-file" key={file.id}>
+                <span className="chat-file-name" title={file.file_name}>
+                  {file.file_name} <span className="chat-file-size">· {formatFileSize(file.size_bytes)}</span>
+                </span>
+                {confirmingId === file.id ? (
+                  <span className="chat-file-actions">
+                    <button className="chat-btn chat-btn-danger chat-btn-sm" onClick={() => void remove(file.id)} type="button">
+                      Delete
+                    </button>
+                    <button className="chat-btn chat-btn-secondary chat-btn-sm" onClick={() => setConfirmingId(null)} type="button">
+                      Keep
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    aria-label={`Delete ${file.file_name}`}
+                    className="chat-btn chat-btn-secondary chat-btn-sm"
+                    onClick={() => setConfirmingId(file.id)}
+                    type="button"
+                  >
+                    <Icon name="trash" size={13} sw={2.2} />
+                  </button>
+                )}
+                <span className="chat-file-description">{file.description}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <input
+          accept={AGENT_FILE_ACCEPT}
+          aria-label="Choose an image or file"
+          hidden
+          onChange={(event) => {
+            onPick(event.target.files?.[0]);
+            // So choosing the same file again still fires a change.
+            event.target.value = "";
+          }}
+          ref={inputRef}
+          type="file"
+        />
+
+        {picked ? (
+          <div className="chat-file-form">
+            {previewUrl ? (
+              <Image
+                alt={`Preview of ${picked.name}`}
+                className="chat-file-preview"
+                height={200}
+                src={previewUrl}
+                unoptimized
+                width={320}
+              />
+            ) : null}
+            <span className="chat-file-picked">
+              {picked.name} <span className="chat-file-size">· {formatFileSize(picked.size)}</span>
+            </span>
+            <label className="chat-field">
+              <span className="chat-control-label">When should the agent send this?</span>
+              <textarea
+                className="chat-textarea"
+                maxLength={AGENT_FILE_DESCRIPTION_MAX}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="When someone asks for the menu or the prices."
+                style={{ minHeight: 76 }}
+                value={description}
+              />
+            </label>
+            <div className="chat-file-actions">
+              <button
+                className="chat-btn chat-btn-primary chat-btn-sm"
+                disabled={isUploading || !description.trim()}
+                onClick={() => void upload()}
+                type="button"
+              >
+                {isUploading ? "Uploading..." : "Upload"}
+              </button>
+              <button
+                className="chat-btn chat-btn-secondary chat-btn-sm"
+                disabled={isUploading}
+                onClick={cancel}
+                type="button"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="chat-file-actions">
+            <button
+              className="chat-btn chat-btn-secondary chat-btn-sm"
+              disabled={atLimit}
+              onClick={() => inputRef.current?.click()}
+              type="button"
+            >
+              <Icon name="plus" size={13} sw={2.4} />
+              Upload image or file
+            </button>
+          </div>
+        )}
+
+        {error ? (
+          <span className="chat-file-error" role="alert">
+            {error}
+          </span>
+        ) : null}
+        <span className="chat-field-hint">
+          {atLimit
+            ? `An agent can hold ${AGENT_FILES_MAX} files. Delete one to add another.`
+            : "The agent sends a file on WhatsApp when the chat matches your note. Images, PDF, Word, Excel, PowerPoint or text, up to 10 MB. No videos."}
+        </span>
+      </div>
+    </ConfigSection>
   );
 }
 

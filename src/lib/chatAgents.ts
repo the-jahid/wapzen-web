@@ -198,3 +198,47 @@ export function deleteDashboardChatAgent(
     getToken
   );
 }
+
+// One image or document the agent can send a customer. The bytes stay on the
+// server; description says when the agent should send it.
+export type ApiAgentFile = {
+  id: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  description: string;
+  created_at: string;
+};
+
+// Mirrors what the server takes, so a form can refuse a file before uploading it.
+export const AGENT_FILE_ACCEPT = ".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv";
+export const AGENT_FILE_MAX_BYTES = 10 * 1024 * 1024;
+export const AGENT_FILE_DESCRIPTION_MAX = 300;
+export const AGENT_FILES_MAX = 20;
+
+const agentFilesPath = (agentId: string) => `/v1/dashboard/chat-agents/${encodeURIComponent(agentId)}/files`;
+
+export function listAgentFiles(agentId: string, getToken: AuthTokenGetter): Promise<ApiAgentFile[]> {
+  return request<ApiAgentFile[]>(agentFilesPath(agentId), undefined, getToken);
+}
+
+// Content-Type is left unset: fetch derives it, boundary included, from the form.
+export function uploadAgentFile(
+  agentId: string,
+  file: File,
+  description: string,
+  getToken: AuthTokenGetter
+): Promise<ApiAgentFile> {
+  const form = new FormData();
+  form.append("description", description);
+  form.append("file", file, file.name);
+  return request<ApiAgentFile>(agentFilesPath(agentId), { method: "POST", body: form }, getToken);
+}
+
+export function deleteAgentFile(agentId: string, fileId: string, getToken: AuthTokenGetter) {
+  return request<{ id: string; deleted: boolean }>(
+    `${agentFilesPath(agentId)}/${encodeURIComponent(fileId)}`,
+    { method: "DELETE" },
+    getToken
+  );
+}
