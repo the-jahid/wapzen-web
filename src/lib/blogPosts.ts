@@ -999,6 +999,31 @@ export const blogPosts: BlogPostEntry[] = [
     readingMinutes: 13,
     locale: "it",
   },
+  // Brazil (2026-11-06), picked by docs/seo-blog-br-free-salon-research.mjs. Question-and-answer format.
+  {
+    href: "/pt-br/blog/chatbot-gratuito-para-whatsapp-business",
+    title: "Chatbot gratuito para WhatsApp Business: 9 opções (2026)",
+    name: "Chatbot gratuito para WhatsApp Business",
+    description: "Compare 9 chatbots para WhatsApp Business: o que é grátis de verdade, preços, alternativa ao BotConversa e como criar o seu com IA sem pagar.",
+    tag: "Comparison",
+    icon: Bot,
+    published: "2026-11-06",
+    updated: "2026-11-06",
+    readingMinutes: 14,
+    locale: "pt-BR",
+  },
+  {
+    href: "/pt-br/blog/ia-para-barbearia-e-salao-de-beleza",
+    title: "IA para barbearia e salão de beleza no WhatsApp: grátis (2026)",
+    name: "IA para barbearia e salão de beleza",
+    description: "IA no WhatsApp para barbearia e salão de beleza: responde preços e horários, recebe agendamentos e atende ligações. Grátis, sem API da Meta e sem cartão.",
+    tag: "Explainer",
+    icon: Scissors,
+    published: "2026-11-06",
+    updated: "2026-11-06",
+    readingMinutes: 14,
+    locale: "pt-BR",
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);
