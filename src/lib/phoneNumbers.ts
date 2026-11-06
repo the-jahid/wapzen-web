@@ -45,12 +45,37 @@ export class PhoneNumberError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<T> {
+// Mobile data drops requests, and a server restart looks the same to the browser,
+// so a request that never got an answer is sent again before the user hears of it.
+const unansweredRetryDelaysMs = [1000, 3000, 6000];
+
+async function fetchWithRetries(
+  path: string,
+  init: RequestInit | undefined,
+  getToken: AuthTokenGetter,
+  retryDelaysMs: number[]
+): Promise<Response> {
+  for (const delayMs of retryDelaysMs) {
+    try {
+      return await serverFetch(path, init, getToken);
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return serverFetch(path, init, getToken);
+}
+
+async function request<T>(
+  path: string,
+  init: RequestInit | undefined,
+  getToken: AuthTokenGetter,
+  retryDelaysMs: number[] = []
+): Promise<T> {
   let response: Response;
   try {
-    response = await serverFetch(path, init, getToken);
+    response = await fetchWithRetries(path, init, getToken, retryDelaysMs);
   } catch {
-    throw new PhoneNumberError("Could not reach the server. Is the backend running?", 0);
+    throw new PhoneNumberError("Could not connect. Check your internet and try again in a minute.", 0);
   }
 
   let envelope: Envelope<T> | null = null;
@@ -80,6 +105,10 @@ export function getPhoneNumber(phoneNumberId: string, getToken: AuthTokenGetter)
 // scan links to that agent the moment WhatsApp connects it, so a login started
 // from an agent's editor needs no follow-up assignment; the server skips it when
 // the agent already has a number, and rejects an id that is not the caller's.
+//
+// This and the two below are safe to send twice: the server hands back a running
+// QR login and retires an earlier code once the new one is ready. The restart and
+// re-pair calls further down aren't, so they don't retry.
 export function startPhoneNumberLogin(
   payload: { phone_number?: string; label?: string; agent_id?: string },
   getToken: AuthTokenGetter
@@ -88,7 +117,7 @@ export function startPhoneNumberLogin(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  }, getToken);
+  }, getToken, unansweredRetryDelaysMs);
 }
 
 // startPhoneNumberCodeLogin is startPhoneNumberLogin for someone who can't scan
@@ -104,7 +133,7 @@ export function startPhoneNumberCodeLogin(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, pairing_method: "phone_code" }),
-  }, getToken);
+  }, getToken, unansweredRetryDelaysMs);
 }
 
 // startPhoneNumberQrLogin is the way back from a pairing code. Plain
@@ -118,7 +147,7 @@ export function startPhoneNumberQrLogin(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, pairing_method: "qr" }),
-  }, getToken);
+  }, getToken, unansweredRetryDelaysMs);
 }
 
 // restartPhoneNumberLogin reissues a QR code for a session that expired or
