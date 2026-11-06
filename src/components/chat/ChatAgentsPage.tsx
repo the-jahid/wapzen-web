@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -1001,6 +1001,11 @@ const css = `
 .chat-prompt-card { display: flex; flex: 0 0 50%; flex-direction: column; min-width: 0; padding: 14px; }
 .chat-card.chat-files-card { padding: 0 14px; }
 .chat-card.chat-files-card:empty { display: none; }
+.chat-card.chat-new-note { align-items: center; background: var(--primary-soft); border-color: var(--app-primary-border); display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 8px 8px 8px 12px; }
+.chat-new-note-tag { background: var(--primary-light); border-radius: 999px; color: var(--surface); flex: none; font-size: 10.5px; font-weight: 800; padding: 2px 8px; }
+.chat-new-note-text { color: var(--text); flex: 0 1 auto; font-size: 13px; font-weight: 600; min-width: 0; }
+.chat-new-note-try { background: none; border: 0; color: var(--primary-light); cursor: pointer; flex: none; font: inherit; font-size: 13px; font-weight: 750; min-height: 28px; padding: 0 2px; text-decoration: underline; text-underline-offset: 3px; }
+.chat-new-note-close { flex: none; margin-left: auto; }
 .chat-prompt-card > .chat-card-head { flex: 0 0 auto; margin-bottom: 8px; }
 .chat-prompt-card > .chat-textarea { flex: 1 1 0; min-height: 0 !important; resize: none; }
 .chat-config-panel.is-rail { flex: none; min-height: 0; }
@@ -2456,6 +2461,19 @@ function Editor({
 }) {
   const isDesktop = useIsDesktop();
   const shownTab = shownEditorTab(tab, isDesktop);
+  const filesCardRef = useRef<HTMLDivElement>(null);
+  const [filesOpen, setFilesOpen] = useState(true);
+  const [filesAvailable, setFilesAvailable] = useState(false);
+  const filesCard = (
+    <FilesCard
+      agentId={agent.id}
+      cardRef={filesCardRef}
+      isOpen={filesOpen}
+      key={agent.id}
+      onAvailable={setFilesAvailable}
+      onOpenChange={setFilesOpen}
+    />
+  );
 
   // Below desktop the Agent tab stays short: Voice & Photos sits in the
   // Configuration tab, and Take Order is a small card leading there.
@@ -2535,6 +2553,17 @@ function Editor({
       {/* On desktop the header draws these, in the middle of the top bar. */}
       {isDesktop ? null : <EditorTabs isDesktop={false} onSelect={onSelectTab} tab={tab} />}
 
+      {/* Only once the server has answered for files, so it never announces a
+          feature this server can't do yet. */}
+      {filesAvailable && shownTab === "agent" ? (
+        <NewFilesNote
+          onTry={() => {
+            setFilesOpen(true);
+            filesCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
+      ) : null}
+
       {shownTab === "conversation" ? (
         <div className="chat-card chat-card-conversations">
           <div className="chat-card-head">
@@ -2552,7 +2581,7 @@ function Editor({
               {promptHead}
               {promptField}
             </div>
-            <FilesCard agentId={agent.id} key={agent.id} />
+            {filesCard}
           </div>
           <ConfigPanel
             agent={agent}
@@ -2580,7 +2609,7 @@ function Editor({
             {promptField}
           </div>
 
-          <FilesCard agentId={agent.id} key={agent.id} />
+          {filesCard}
 
           {/* Configuration opens with its Tools section unfolded, Take Order in it. */}
           {orderTool ? (
@@ -3206,11 +3235,66 @@ function formatFileSize(bytes: number) {
 // Images & Files on its own card under the prompt, open from the start. The
 // section renders nothing on a server without the feature, and the css then hides
 // the empty card.
-function FilesCard({ agentId }: { agentId: string }) {
-  const [isOpen, setIsOpen] = useState(true);
+function FilesCard({
+  agentId,
+  cardRef,
+  isOpen,
+  onAvailable,
+  onOpenChange,
+}: {
+  agentId: string;
+  cardRef: RefObject<HTMLDivElement | null>;
+  isOpen: boolean;
+  onAvailable: (available: boolean) => void;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <div className="chat-card chat-files-card is-rail">
-      <AgentFilesSection agentId={agentId} isOpen={isOpen} onToggle={(next) => setIsOpen(next !== null)} />
+    <div className="chat-card chat-files-card is-rail" ref={cardRef}>
+      <AgentFilesSection
+        agentId={agentId}
+        isOpen={isOpen}
+        onAvailable={onAvailable}
+        onToggle={(next) => onOpenChange(next !== null)}
+      />
+    </div>
+  );
+}
+
+const FILES_NOTE_CLOSED_KEY = "wapzen.agent-files-note-closed";
+
+function readFilesNoteClosed() {
+  try {
+    return window.localStorage.getItem(FILES_NOTE_CLOSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+// Tells owners about Images & Files until they close it. The choice is kept per
+// browser. If storage is blocked the note still closes, for this visit.
+function NewFilesNote({ onTry }: { onTry: () => void }) {
+  const [closed, setClosed] = useState(readFilesNoteClosed);
+  if (closed) return null;
+
+  const close = () => {
+    setClosed(true);
+    try {
+      window.localStorage.setItem(FILES_NOTE_CLOSED_KEY, "1");
+    } catch {
+      // Storage unavailable: it stays closed until the page is opened again.
+    }
+  };
+
+  return (
+    <div className="chat-card chat-new-note">
+      <span className="chat-new-note-tag">New</span>
+      <span className="chat-new-note-text">Your agent can now send images to your customers.</span>
+      <button className="chat-new-note-try" onClick={onTry} type="button">
+        Try this feature
+      </button>
+      <button aria-label="Close this note" className="chat-icon-btn chat-new-note-close" onClick={close} type="button">
+        <Icon name="x" size={15} sw={2.2} />
+      </button>
     </div>
   );
 }
@@ -3220,10 +3304,12 @@ function FilesCard({ agentId }: { agentId: string }) {
 function AgentFilesSection({
   agentId,
   isOpen,
+  onAvailable,
   onToggle,
 }: {
   agentId: string;
   isOpen: boolean;
+  onAvailable: (available: boolean) => void;
   onToggle: (next: ConfigSectionId | null) => void;
 }) {
   const { getToken } = useAuth();
@@ -3244,7 +3330,9 @@ function AgentFilesSection({
     let stale = false;
     listAgentFiles(agentId, getToken)
       .then((list) => {
-        if (!stale) setFiles(list);
+        if (stale) return;
+        setFiles(list);
+        onAvailable(true);
       })
       .catch((err: unknown) => {
         if (stale) return;
@@ -3255,7 +3343,7 @@ function AgentFilesSection({
     return () => {
       stale = true;
     };
-  }, [agentId, getToken]);
+  }, [agentId, getToken, onAvailable]);
 
   useEffect(
     () => () => {
