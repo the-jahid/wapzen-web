@@ -74,13 +74,15 @@ export type KnowledgeBase = Omit<
 
 // CreateKnowledgeBasePayload is the POST /v1/dashboard/knowledge-base body.
 // knowledge_base_name is the only required field; omitted settings fall back to
-// the server defaults (2000 / 400 / auto refresh off). Sources are accepted by
-// the endpoint but not indexed yet, so they are deliberately not sent here.
+// the server defaults (2000 / 400 / auto refresh off). Texts sent here are indexed
+// by the create itself, atomically: if indexing fails, no knowledge base is left
+// behind. Files cannot be sent here; they are uploaded to the sources endpoint.
 export type CreateKnowledgeBasePayload = {
   knowledge_base_name: string;
   enable_auto_refresh?: boolean;
   max_chunk_size?: number;
   min_chunk_size?: number;
+  knowledge_base_texts?: NewKnowledgeBaseText[];
 };
 
 // UpdateKnowledgeBasePayload is the PATCH body: a partial update where every

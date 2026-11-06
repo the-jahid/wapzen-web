@@ -25,7 +25,6 @@ import {
   sourceTitleFromFilename,
   KnowledgeBaseError,
   type ApiKnowledgeBase,
-  type FieldError,
   type KnowledgeBase,
   type KnowledgeBaseSource,
 } from "@/lib/knowledgeBases";
@@ -33,13 +32,13 @@ import type { AuthTokenGetter } from "@/lib/api";
 import { useCachedState } from "@/lib/pageCache";
 
 // Every knowledge base shown here comes from the server: the list is loaded
-// from GET /v1/dashboard/knowledge-base, the New modal creates through POST, the
-// config panel saves through PATCH, the trash buttons remove through DELETE —
-// the knowledge base itself, or one of its sources with its vectors — and the
-// Add sources dialog indexes through POST .../sources, either raw texts as JSON
-// or documents as a multipart upload the server extracts the text from. Only
-// refreshing has no endpoint, so that one control stays disabled rather than
-// pretending to re-scrape.
+// from GET /v1/dashboard/knowledge-base, the config panel saves through PATCH,
+// the trash buttons remove through DELETE — the knowledge base itself, or one of
+// its sources with its vectors — and KnowledgeBaseDialog creates through POST and
+// indexes through POST .../sources, either raw texts as JSON or documents as a
+// multipart upload the server extracts the text from. Only refreshing has no
+// endpoint, so that one control stays disabled rather than pretending to
+// re-scrape.
 
 // fromApi maps a knowledge base off the wire onto the resource shape this page
 // renders. The server omits the sources of a knowledge base that has none and
@@ -86,6 +85,8 @@ type IconName =
   | "refresh"
   | "file"
   | "text"
+  | "type"
+  | "upload"
   | "globe"
   | "clock"
   | "layers"
@@ -253,6 +254,10 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M4 6h16M4 12h12M4 18h8" />
         </>
       );
+    case "type":
+      return <path d="M5 7V5h14v2M12 5v14M9 19h6" />;
+    case "upload":
+      return <path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" />;
     case "globe":
       return (
         <>
@@ -765,53 +770,7 @@ const css = `
 .kb-textarea::placeholder { color: var(--faint); }
 .kb-textarea:focus { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
 .kb-textarea:disabled { cursor: not-allowed; opacity: .6; }
-.kb-draft { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; display: grid; gap: 11px; padding: 13px; }
-.kb-draft.is-invalid { border-color: var(--app-rose-border); }
-.kb-draft-head { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
-.kb-draft-index { color: var(--faint); font-size: 10.5px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
-.kb-draft-error { color: var(--app-rose-text); font-size: 11.5px; font-weight: 700; line-height: 1.45; }
-.kb-draft-footer { align-items: center; display: flex; gap: 12px; justify-content: space-between; }
-.kb-tabs { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 4px; grid-auto-flow: column; margin-top: 16px; padding: 4px; }
-.kb-tab {
-  background: transparent;
-  border: 0;
-  border-radius: 9px;
-  color: var(--subtle);
-  cursor: pointer;
-  font-size: 12.5px;
-  font-weight: 800;
-  padding: 8px 12px;
-  transition: background .16s ease, color .16s ease;
-}
-.kb-tab:hover:not(:disabled) { color: var(--text); }
-.kb-tab.is-active { background: var(--app-primary-soft-2); color: var(--app-primary-text); }
-.kb-tab:disabled { cursor: not-allowed; opacity: .5; }
-.kb-dropzone {
-  background: var(--panel);
-  border: 1px dashed var(--app-border-strong);
-  border-radius: 14px;
-  color: var(--subtle);
-  cursor: pointer;
-  display: grid;
-  gap: 5px;
-  justify-items: center;
-  padding: 26px 16px;
-  text-align: center;
-  transition: background .16s ease, border-color .16s ease;
-  width: 100%;
-}
-.kb-dropzone:hover:not(:disabled), .kb-dropzone.is-dragging { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); color: var(--text); }
-.kb-dropzone:disabled { cursor: not-allowed; opacity: .55; }
-.kb-dropzone-title { color: var(--text); font-size: 13px; font-weight: 800; }
-.kb-dropzone-hint { font-size: 11.5px; line-height: 1.5; }
 .kb-file-input { display: none; }
-.kb-file { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; display: grid; gap: 10px; padding: 13px; }
-.kb-file.is-invalid { border-color: var(--app-rose-border); }
-.kb-file-head { align-items: center; display: flex; gap: 10px; }
-.kb-file-body { min-width: 0; }
-.kb-file-name { font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kb-file-meta { color: var(--faint); font-size: 11px; margin-top: 2px; }
-.kb-file-spacer { flex: 1; }
 .kb-icon-button:disabled, .kb-switch:disabled { cursor: not-allowed; opacity: .45; }
 .kb-icon-button:disabled:hover { background: var(--panel); border-color: var(--app-border); color: var(--subtle); }
 .kb-range:disabled { cursor: not-allowed; opacity: .5; }
@@ -840,7 +799,6 @@ const css = `
   padding: 22px;
   width: 100%;
 }
-.kb-modal-wide { max-width: 620px; }
 .kb-modal-title { font-size: 17px; font-weight: 850; letter-spacing: -.2px; margin: 0; }
 .kb-modal-copy { color: var(--muted); font-size: 12.5px; line-height: 1.55; margin: 6px 0 0; }
 .kb-modal-copy strong { color: var(--text); font-weight: 800; }
@@ -866,6 +824,131 @@ const css = `
 }
 .kb-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-green-text); }
 .kb-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+.kb-add-modal {
+  background: var(--surface);
+  border-radius: 14px;
+  max-width: 840px;
+  overflow: visible; /* the Add menu may hang past the bottom edge */
+  padding: 16px;
+}
+.kb-add-modal.is-dragging { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring), 0 30px 80px var(--app-shadow-color-strong); }
+.kb-add-text-modal { max-width: 640px; overflow-y: auto; }
+.kb-add-head { align-items: center; display: flex; gap: 12px; justify-content: space-between; min-height: 28px; }
+.kb-add-title { font-size: 16px; font-weight: 600; letter-spacing: -.1px; margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-add-close {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+.kb-add-close:hover:not(:disabled) { background: var(--app-hover); color: var(--text); }
+.kb-add-close:disabled { cursor: not-allowed; opacity: .5; }
+.kb-add-body { display: grid; gap: 20px; margin-top: 14px; }
+.kb-add-field { display: grid; gap: 6px; min-width: 0; }
+.kb-add-label { color: var(--text); font-size: 14px; font-weight: 500; }
+.kb-add-input { background: var(--surface); border-radius: 8px; font-size: 14px; height: 34px; }
+.kb-add-textarea { background: var(--surface); border-radius: 8px; font-size: 14px; min-height: 220px; }
+.kb-add-picker { position: relative; width: fit-content; }
+.kb-add-btn {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--app-border-strong);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 6px;
+  height: 34px;
+  justify-content: center;
+  padding: 0 12px;
+  transition: background .16s ease;
+  white-space: nowrap;
+}
+.kb-add-btn:hover:not(:disabled) { background: var(--app-hover); }
+.kb-add-btn:disabled { cursor: not-allowed; opacity: .6; }
+.kb-add-save { background: var(--primary); border-color: transparent; color: var(--app-on-accent); }
+.kb-add-save:hover:not(:disabled) { background: var(--primary); filter: brightness(1.06); }
+.kb-add-save:disabled { background: var(--app-hover-2); color: var(--faint); opacity: 1; }
+.kb-add-menu {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px var(--app-shadow-color);
+  left: 0;
+  padding: 5px;
+  position: absolute;
+  top: calc(100% + 8px);
+  width: 240px;
+  z-index: 10;
+}
+.kb-add-menu-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 8px;
+  height: 32px;
+  padding: 0 8px;
+  text-align: left;
+  width: 100%;
+}
+.kb-add-menu-item:hover:not(:disabled) { background: var(--app-hover); }
+.kb-add-menu-item:disabled { cursor: not-allowed; opacity: .5; }
+.kb-add-menu-hint { color: var(--subtle); font-size: 12px; font-weight: 400; margin-left: auto; }
+.kb-add-hint { color: var(--subtle); font-size: 14px; margin: 36px 0 0; }
+.kb-add-docs { display: grid; gap: 6px; list-style: none; margin: 8px 0 0; max-height: min(240px, 32vh); overflow-y: auto; padding: 0; }
+.kb-add-doc { border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
+.kb-add-doc.is-invalid { border-color: var(--app-rose-border); }
+.kb-add-doc-row { align-items: center; color: var(--subtle); display: flex; gap: 8px; min-height: 36px; padding: 0 4px 0 10px; }
+.kb-add-doc-row > svg { flex-shrink: 0; }
+.kb-add-doc-name {
+  background: none;
+  border: 0;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kb-add-doc-name.is-editable { cursor: pointer; }
+.kb-add-doc-name.is-editable:hover:not(:disabled) { text-decoration: underline; }
+.kb-add-doc-meta { flex-shrink: 0; font-size: 12px; margin-left: auto; padding-left: 8px; white-space: nowrap; }
+.kb-add-doc-remove {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+.kb-add-doc-remove:hover:not(:disabled) { background: var(--app-rose-soft-2); color: var(--app-rose-text); }
+.kb-add-doc-remove:disabled { cursor: not-allowed; opacity: .5; }
+.kb-add-doc-error { color: var(--app-rose-text); font-size: 12px; font-weight: 600; line-height: 1.45; padding: 0 10px 8px; }
+.kb-add-actions { align-items: center; display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.kb-add-progress { color: var(--subtle); font-size: 12.5px; margin-right: auto; }
 /* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
 /* Wide screens: a little more room around the capped content. */
 @media (min-width: 1680px) {
@@ -910,7 +993,6 @@ const css = `
   .kb-expandable-card { border: 0; border-radius: 0; height: 100dvh; max-height: 100dvh; max-width: none; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
   .kb-modal-overlay { align-items: flex-end; padding: 0; }
   .kb-modal { border-radius: 18px 18px 0 0; max-height: calc(100dvh - 24px); max-width: none; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); }
-  .kb-modal-wide { max-width: none; }
   .kb-modal-actions { flex-direction: column-reverse; }
   .kb-modal-actions > * { width: 100%; }
   .kb-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
@@ -963,9 +1045,6 @@ export default function KnowledgeBasePage() {
   const [query, setQuery] = useState("");
   const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [createError, setCreateError] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
   // Deleting is confirmed against a snapshot of the row rather than the id
   // alone, so the dialog can name it even while the list changes underneath.
@@ -1145,56 +1224,11 @@ export default function KnowledgeBasePage() {
   }
 
   function openCreate() {
-    setNewName("");
-    setCreateError("");
-    setIsCreating(true);
-  }
-
-  function closeCreate() {
-    if (isSaving) return;
-    setIsCreating(false);
-    setCreateError("");
-  }
-
-  async function createBase() {
-    const name = newName.trim();
-    if (!name || isSaving) return;
     if (isAuthLoaded && !isSignedIn) {
-      setCreateError("Sign in to create a knowledge base.");
+      flash("error", "Sign in to create a knowledge base.");
       return;
     }
-
-    setIsSaving(true);
-    setCreateError("");
-    try {
-      const created = await apiCreateKnowledgeBase(
-        {
-          knowledge_base_name: name,
-          enable_auto_refresh: false,
-          max_chunk_size: 2000,
-          min_chunk_size: 400,
-        },
-        getToken
-      );
-      const base = fromApi(created);
-      setBases((current) => [base, ...current]);
-      setSelectedId(base.knowledge_base_id);
-      setIsCreating(false);
-      flash("success", `Knowledge base "${base.knowledge_base_name}" created`);
-    } catch (error) {
-      // Field errors are more specific than the summary message, so lead with
-      // them when the server sent any.
-      const fieldMessage =
-        error instanceof KnowledgeBaseError && error.fieldErrors.length > 0
-          ? error.fieldErrors.map((item) => `${item.field}: ${item.message}`).join(" · ")
-          : "";
-      setCreateError(
-        fieldMessage ||
-          (error instanceof Error ? error.message : "Failed to create knowledge base")
-      );
-    } finally {
-      setIsSaving(false);
-    }
+    setIsCreating(true);
   }
 
   return (
@@ -1534,69 +1568,27 @@ export default function KnowledgeBasePage() {
             </main>
 
       {isCreating ? (
-        <div
-          className="kb-modal-overlay"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeCreate();
+        <KnowledgeBaseDialog
+          base={null}
+          getToken={getToken}
+          onClose={() => setIsCreating(false)}
+          onSaved={(created) => {
+            setBases((current) => [created, ...current]);
+            setSelectedId(created.knowledge_base_id);
+            setIsCreating(false);
+            flash("success", `Knowledge base "${created.knowledge_base_name}" created`);
           }}
-        >
-          <div aria-labelledby="kb-create-title" aria-modal="true" className="kb-modal" role="dialog">
-            <h2 className="kb-modal-title" id="kb-create-title">
-              New knowledge base
-            </h2>
-            <p className="kb-modal-copy">
-              The name is the only required field. Chunk sizes and auto refresh are fixed at
-              creation, so set them now — the base is saved on the server and starts in{" "}
-              <strong>Indexing</strong>.
-            </p>
-            <div className="kb-modal-body">
-              <label className="kb-field">
-                <span className="kb-field-label">Name</span>
-                <input
-                  autoFocus
-                  className="kb-input"
-                  disabled={isSaving}
-                  maxLength={nameLimit}
-                  onChange={(event) => setNewName(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") createBase();
-                  }}
-                  placeholder="Support handbook"
-                  value={newName}
-                />
-                <span className="kb-field-hint">
-                  {newName.length}/{nameLimit} characters
-                </span>
-              </label>
-              {createError ? (
-                <div className="kb-form-error" role="alert">
-                  {createError}
-                </div>
-              ) : null}
-            </div>
-            <div className="kb-modal-actions">
-              <button className="kb-btn" disabled={isSaving} onClick={closeCreate} type="button">
-                Cancel
-              </button>
-              <button
-                className="kb-btn kb-btn-primary"
-                disabled={!newName.trim() || isSaving}
-                onClick={createBase}
-                type="button"
-              >
-                {isSaving ? "Creating…" : "Create"}
-              </button>
-            </div>
-          </div>
-        </div>
+        />
       ) : null}
 
       {isAddingSources && selected ? (
-        <AddSourcesModal
+        <KnowledgeBaseDialog
           base={selected}
           getToken={getToken}
           key={selected.knowledge_base_id}
-          onAdded={(updated, addedCount) => {
+          onClose={() => setIsAddingSources(false)}
+          onPartial={applyUpdatedBase}
+          onSaved={(updated, addedCount) => {
             applyUpdatedBase(updated);
             setIsAddingSources(false);
             flash(
@@ -1604,7 +1596,6 @@ export default function KnowledgeBasePage() {
               `${addedCount} source${addedCount === 1 ? "" : "s"} indexed into "${updated.knowledge_base_name}"`
             );
           }}
-          onClose={() => setIsAddingSources(false)}
         />
       ) : null}
 
@@ -1714,26 +1705,16 @@ export default function KnowledgeBasePage() {
   );
 }
 
-// describeDraftSize previews what a draft will cost to index. The chunk count is
-// a lower bound rather than a prediction: the splitter breaks on sentence
-// boundaries and merges anything shorter than the min chunk size, so a text can
-// produce fewer, larger chunks than dividing by the max suggests.
-function describeDraftSize(text: string, base: KnowledgeBase) {
-  const length = text.trim().length;
-  if (length === 0) return "Nothing to index yet.";
-  const chunks = Math.max(1, Math.ceil(length / base.max_chunk_size));
-  return `${length.toLocaleString()} characters · at least ${chunks} chunk${chunks === 1 ? "" : "s"}`;
-}
+// DocumentDraft is one text or file waiting in the dialog. The key is what React
+// lists on and what a server error is mapped back to. A file is never read here:
+// it is handed to the server, which extracts the text.
+type TextDraft = { key: number; kind: "text"; title: string; text: string };
+type FileDraft = { key: number; kind: "file"; title: string; file: File };
+type DocumentDraft = TextDraft | FileDraft;
 
-// SourceDraft is one text being written in the Add sources dialog. The key is
-// what React lists on, so removing an entry cannot make the one below it inherit
-// the removed textarea's state the way an index would.
-type SourceDraft = { key: number; title: string; text: string };
-
-// FileDraft is one picked file waiting to be uploaded, with the title it will be
-// stored under. The file itself is never read here — it is handed to the server,
-// which extracts the text — so this only ever holds the browser's File handle.
-type FileDraft = { key: number; file: File; title: string };
+// TextEditor is the open Add text dialog. A null key means a new text rather
+// than an edit of one already listed.
+type TextEditor = { key: number | null; title: string; text: string; error: string };
 
 // formatFileSize renders a picked file's size for the row that lists it.
 function formatFileSize(bytes: number) {
@@ -1742,55 +1723,101 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// AddSourcesModal collects sources and indexes them through POST
-// /v1/dashboard/knowledge-base/{id}/sources, either as raw texts or as uploaded
-// documents. The server chunks, embeds and upserts inside the request, so the
-// dialog stays open — and disabled — until indexing finishes, and closes on a
-// knowledge base that already carries the new sources rather than one the caller
-// has to poll.
+// uniqueTitle numbers a filename-derived title that is already taken. Rows have
+// nowhere to edit a file's title, and titles must be unique per knowledge base.
+// It also matters for non-Latin filenames, which all sanitise to the same few
+// characters: two Bangla PDFs would otherwise both become ".pdf".
+function uniqueTitle(title: string, taken: Set<string>) {
+  if (!taken.has(title)) return title;
+  const dot = title.lastIndexOf(".");
+  const stem = dot > 0 ? title.slice(0, dot) : title;
+  const extension = dot > 0 ? title.slice(dot) : "";
+  for (let n = 2; ; n++) {
+    const suffix = ` (${n})`;
+    const room = sourceBounds.titleLength - suffix.length - extension.length;
+    const candidate = `${stem.slice(0, room)}${suffix}${extension}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+}
+
+// KnowledgeBaseDialog collects a name and documents for a new knowledge base, or,
+// given a base, only documents to add to it. At least one text or file is
+// required either way, so the dashboard cannot create an empty knowledge base.
 //
-// Uploads send the files and nothing else: the browser does not open them, and
-// the text that gets indexed is what the server extracted. That is why a PDF or
-// a .docx is no harder to add here than a pasted paragraph.
+// The server chunks, embeds and upserts inside each request, so the dialog stays
+// open and disabled until indexing finishes. Texts and files travel separately
+// because the endpoints take them separately, and that decides failure handling:
 //
-// The request is all-or-nothing on the server, which is why nothing here is
-// submitted entry by entry: a rejected batch leaves the knowledge base untouched
-// and the drafts intact, so fixing the offending entry and retrying is enough.
-function AddSourcesModal({
+//  - Creating: the texts go with the create, which the server keeps atomic, and
+//    the files follow. If the files fail, the new base is deleted so nothing half
+//    filled is left and the same name can be retried.
+//  - Adding: the base is not this dialog's to delete. If the files fail after the
+//    texts landed, the landed rows leave the list and only the files are retried.
+function KnowledgeBaseDialog({
   base,
   getToken,
-  onAdded,
   onClose,
+  onPartial,
+  onSaved,
 }: {
-  base: KnowledgeBase;
+  base: KnowledgeBase | null;
   getToken: AuthTokenGetter;
-  onAdded: (updated: KnowledgeBase, addedCount: number) => void;
   onClose: () => void;
+  onPartial?: (updated: KnowledgeBase) => void;
+  onSaved: (saved: KnowledgeBase, addedCount: number) => void;
 }) {
-  const [mode, setMode] = useState<"text" | "file">("file");
-  const [drafts, setDrafts] = useState<SourceDraft[]>([{ key: 0, title: "", text: "" }]);
-  const [draftErrors, setDraftErrors] = useState<Record<number, string>>({});
-  const [files, setFiles] = useState<FileDraft[]>([]);
-  const [fileErrors, setFileErrors] = useState<Record<number, string>>({});
+  const [name, setName] = useState("");
+  const [documents, setDocuments] = useState<DocumentDraft[]>([]);
+  const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
+  const [textEditor, setTextEditor] = useState<TextEditor | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const nextKey = useRef(1);
+  const nextKey = useRef(0);
   const filePicker = useRef<HTMLInputElement>(null);
+  const picker = useRef<HTMLDivElement>(null);
 
-  const isFull = drafts.length >= sourceBounds.textsPerRequest;
-  // An entry the user added and never typed into is dropped rather than
-  // reported: it says nothing about what they meant to index, and the endpoint
-  // would reject the whole batch over it.
-  const filled = drafts.filter((draft) => draft.title.trim() || draft.text.trim());
+  const texts = documents.filter((entry): entry is TextDraft => entry.kind === "text");
+  const files = documents.filter((entry): entry is FileDraft => entry.kind === "file");
+  const canSave = !isSaving && documents.length > 0 && (base !== null || name.trim() !== "");
+  // A stray click or Escape must not throw away typed names or pasted text, so
+  // only Cancel and the X close the dialog once something has been entered.
+  const hasEntries = name.trim() !== "" || documents.length > 0;
 
-  function updateDraft(key: number, patch: Partial<SourceDraft>) {
-    setDrafts((current) =>
-      current.map((draft) => (draft.key === key ? { ...draft, ...patch } : draft))
-    );
-    // The message described the value that was just replaced, so it is dropped
-    // rather than left pointing at text the field no longer holds.
-    setDraftErrors((current) => {
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    function onMouseDown(event: MouseEvent) {
+      if (!picker.current?.contains(event.target as Node)) setIsMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape" || isSaving) return;
+      if (textEditor) {
+        if (!textEditor.title.trim() && !textEditor.text.trim()) setTextEditor(null);
+      } else if (isMenuOpen) {
+        setIsMenuOpen(false);
+      } else if (!hasEntries) {
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [hasEntries, isMenuOpen, isSaving, onClose, textEditor]);
+
+  function takenTitles(exceptKey: number | null = null) {
+    return new Set([
+      ...(base?.knowledge_base_sources ?? []).map((source) => source.title),
+      ...documents.filter((entry) => entry.key !== exceptKey).map((entry) => entry.title.trim()),
+    ]);
+  }
+
+  function clearRowError(key: number) {
+    setRowErrors((current) => {
       if (!(key in current)) return current;
       const next = { ...current };
       delete next[key];
@@ -1798,475 +1825,352 @@ function AddSourcesModal({
     });
   }
 
-  function addDraft() {
-    if (isFull) return;
-    setDrafts((current) => [...current, { key: nextKey.current++, title: "", text: "" }]);
-  }
-
-  function removeDraft(key: number) {
-    setDrafts((current) =>
-      current.length === 1 ? current : current.filter((draft) => draft.key !== key)
-    );
-  }
-
-  // addFiles takes what the picker or a drop gave us. Anything past the
-  // per-request limit is left out rather than silently making the request fail,
-  // and the caller is told how many were kept.
-  //
-  // The list is copied out first, before any state is touched. A FileList is a
-  // live view onto the input element, so it empties the moment the input is
-  // cleared — reading it inside a state updater, which React runs later, would
-  // find nothing there.
+  // addFiles takes what the picker or a drop handed over. The FileList is a live
+  // view onto the input, which empties when the input is cleared, so it is copied
+  // out before anything else. A file the server could not read is refused here
+  // and named; anything past the per-request limit is left out and reported.
   function addFiles(picked: FileList | null) {
     const chosen = picked ? Array.from(picked) : [];
     if (chosen.length === 0) return;
 
-    const room = sourceBounds.filesPerRequest - files.length;
-    if (room <= 0) {
-      setError(`At most ${sourceBounds.filesPerRequest} files can be indexed in one request.`);
-      return;
-    }
+    const taken = takenTitles();
+    const added: FileDraft[] = [];
+    const problems: string[] = [];
+    let room = sourceBounds.filesPerRequest - files.length;
+    let leftOut = 0;
 
-    const accepted = chosen.slice(0, room);
-    setError(
-      accepted.length < chosen.length
-        ? `Only ${accepted.length} of ${chosen.length} files were added — at most ${sourceBounds.filesPerRequest} fit in one request.`
-        : ""
-    );
-
-    // Keys are handed out here rather than inside the updater, which React may
-    // run more than once.
-    const added = accepted.map((file) => ({
-      key: nextKey.current++,
-      file,
-      // Prefilled with the same title the server would derive, so the common
-      // case needs no typing and an unusable filename is visibly fixable before
-      // the upload rather than after it.
-      title: sourceTitleFromFilename(file.name),
-    }));
-    setFiles((current) => [...current, ...added]);
-  }
-
-  function updateFileTitle(key: number, title: string) {
-    setFiles((current) => current.map((draft) => (draft.key === key ? { ...draft, title } : draft)));
-    setFileErrors((current) => {
-      if (!(key in current)) return current;
-      const next = { ...current };
-      delete next[key];
-      return next;
-    });
-  }
-
-  function removeFile(key: number) {
-    setFiles((current) => current.filter((draft) => draft.key !== key));
-  }
-
-  // validate mirrors what the endpoint enforces — the title bounds, the
-  // characters a vector-store record id allows, and uniqueness within the
-  // knowledge base — so a mistake reads as inline feedback instead of a 400 or a
-  // 409 after the round trip.
-  function validate(entries: SourceDraft[]): Record<number, string> {
-    const errors: Record<number, string> = {};
-    const seen = new Set<string>();
-    const existing = new Set(base.knowledge_base_sources.map((source) => source.title));
-
-    for (const draft of entries) {
-      const title = draft.title.trim();
-      const titleError = describeInvalidSourceTitle(draft.title);
-
-      if (titleError) {
-        errors[draft.key] = titleError;
-      } else if (!draft.text.trim()) {
-        errors[draft.key] = "Text is required — this is the content that gets indexed.";
-      } else if (existing.has(title)) {
-        errors[draft.key] = "This knowledge base already has a source with this title.";
-      } else if (seen.has(title)) {
-        errors[draft.key] = "Another entry below already uses this title.";
-      }
-
-      seen.add(title);
-    }
-
-    return errors;
-  }
-
-  // validateFiles mirrors what the endpoint enforces for an upload: a format it
-  // can read, a size it accepts, and a storable title unique to the knowledge
-  // base. Whether a readable file actually holds any text is not decided here —
-  // the server is the one that opens it.
-  function validateFiles(entries: FileDraft[]): Record<number, string> {
-    const errors: Record<number, string> = {};
-    const seen = new Set<string>();
-    const existing = new Set(base.knowledge_base_sources.map((source) => source.title));
-
-    for (const draft of entries) {
-      const title = draft.title.trim();
-      const unreadable = describeUnreadableFile(draft.file);
-      const titleError = describeInvalidSourceTitle(draft.title);
-
+    for (const file of chosen) {
+      const unreadable = describeUnreadableFile(file);
+      const isRepeat = files.some(
+        (entry) =>
+          entry.file.name === file.name &&
+          entry.file.size === file.size &&
+          entry.file.lastModified === file.lastModified
+      );
       if (unreadable) {
-        errors[draft.key] = unreadable;
-      } else if (titleError) {
-        errors[draft.key] = titleError;
-      } else if (existing.has(title)) {
-        errors[draft.key] = "This knowledge base already has a source with this title.";
-      } else if (seen.has(title)) {
-        errors[draft.key] = "Another file already uses this title.";
+        problems.push(`${file.name}: ${unreadable}`);
+      } else if (isRepeat) {
+        continue;
+      } else if (room <= 0) {
+        leftOut++;
+      } else {
+        const title = uniqueTitle(sourceTitleFromFilename(file.name), taken);
+        taken.add(title);
+        added.push({ key: nextKey.current++, kind: "file", title, file });
+        room--;
       }
-
-      seen.add(title);
     }
 
-    return errors;
+    if (leftOut > 0) {
+      problems.push(
+        `${leftOut} file${leftOut === 1 ? " was" : "s were"} left out: at most ${sourceBounds.filesPerRequest} can be added at once.`
+      );
+    }
+    setError(problems.join(" "));
+    setDocuments((current) => [...current, ...added]);
   }
 
-  // applyFieldErrors puts the server's per-entry errors back on the entries they
-  // came from, rather than summarising them at the bottom of a dialog that can be
-  // scrolled away from the offending row. The field name carries the index the
-  // entry was sent under, which is what maps it back to a draft key.
-  function applyFieldErrors<T extends { key: number }>(
-    fieldErrors: FieldError[],
-    sent: T[],
-    pattern: RegExp,
-    setPerEntry: (errors: Record<number, string>) => void
-  ) {
-    const perEntry: Record<number, string> = {};
+  function removeDocument(key: number) {
+    setDocuments((current) => current.filter((entry) => entry.key !== key));
+    clearRowError(key);
+  }
+
+  // saveText mirrors what the endpoint enforces on a title, so a mistake reads as
+  // feedback in the dialog where it can be fixed rather than as a failed save.
+  function saveText() {
+    if (!textEditor) return;
+    const title = textEditor.title.trim();
+    const text = textEditor.text.trim();
+    const problem =
+      describeInvalidSourceTitle(title) ||
+      (text ? "" : "Text is required.") ||
+      (takenTitles(textEditor.key).has(title) ? "Another document already uses this title." : "");
+    if (problem) {
+      setTextEditor({ ...textEditor, error: problem });
+      return;
+    }
+
+    const { key } = textEditor;
+    if (key === null) {
+      const draft: TextDraft = { key: nextKey.current++, kind: "text", title, text };
+      setDocuments((current) => [...current, draft]);
+    } else {
+      setDocuments((current) =>
+        current.map((entry) => (entry.key === key ? { key, kind: "text", title, text } : entry))
+      );
+      clearRowError(key);
+    }
+    setError("");
+    setTextEditor(null);
+  }
+
+  // showSaveError puts the server's per-entry errors back on the rows they came
+  // from: the field name carries the index the entry was sent under.
+  function showSaveError(err: unknown) {
+    if (!(err instanceof KnowledgeBaseError) || err.fieldErrors.length === 0) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+      return;
+    }
+    const perRow: Record<number, string> = {};
     const rest: string[] = [];
-    for (const fieldError of fieldErrors) {
-      const index = Number(pattern.exec(fieldError.field)?.[1] ?? NaN);
-      const entry = sent[index];
-      if (entry) {
-        perEntry[entry.key] = fieldError.message;
-      } else {
-        rest.push(`${fieldError.field}: ${fieldError.message}`);
-      }
+    for (const { field, message } of err.fieldErrors) {
+      const match = /^(knowledge_base_texts|files)\[(\d+)\]/.exec(field);
+      const row = match ? (match[1] === "files" ? files : texts)[Number(match[2])] : undefined;
+      if (row) perRow[row.key] = message;
+      else rest.push(message);
     }
-    setPerEntry(perEntry);
-    setError(rest.join(" · ") || "Fix the highlighted entries before indexing.");
+    setRowErrors(perRow);
+    setError(rest.join(" · ") || "Fix the highlighted documents, then save again.");
   }
 
-  async function submit() {
-    if (isSaving) return;
-    if (mode === "file") {
-      await submitFiles();
-      return;
-    }
-    if (filled.length === 0) return;
+  async function save() {
+    if (!canSave) return;
 
-    const errors = validate(filled);
-    if (Object.keys(errors).length > 0) {
-      setDraftErrors(errors);
-      setError("Fix the highlighted entries before indexing.");
-      return;
-    }
+    const textEntries = texts.map(({ title, text }) => ({ title, text }));
+    const fileEntries = files.map(({ file, title }) => ({ file, title }));
 
     setIsSaving(true);
-    setDraftErrors({});
+    setRowErrors({});
     setError("");
     try {
-      const updated = await apiAddKnowledgeBaseSources(
-        base.knowledge_base_id,
-        filled.map((draft) => ({ title: draft.title, text: draft.text })),
+      if (base) {
+        let saved = base;
+        if (textEntries.length > 0) {
+          saved = fromApi(
+            await apiAddKnowledgeBaseSources(base.knowledge_base_id, textEntries, getToken)
+          );
+          if (fileEntries.length > 0) {
+            onPartial?.(saved);
+            setDocuments(files);
+          }
+        }
+        if (fileEntries.length > 0) {
+          saved = fromApi(
+            await apiAddKnowledgeBaseFileSources(base.knowledge_base_id, fileEntries, getToken)
+          );
+        }
+        onSaved(saved, documents.length);
+        return;
+      }
+
+      const created = await apiCreateKnowledgeBase(
+        {
+          knowledge_base_name: name.trim(),
+          enable_auto_refresh: false,
+          max_chunk_size: 2000,
+          min_chunk_size: 400,
+          ...(textEntries.length > 0 ? { knowledge_base_texts: textEntries } : {}),
+        },
         getToken
       );
-      onAdded(fromApi(updated), filled.length);
-    } catch (err) {
-      if (err instanceof KnowledgeBaseError && err.fieldErrors.length > 0) {
-        applyFieldErrors(err.fieldErrors, filled, /^knowledge_base_texts\[(\d+)\]/, setDraftErrors);
-      } else {
-        setError(err instanceof Error ? err.message : "Failed to add sources");
+      if (fileEntries.length === 0) {
+        onSaved(fromApi(created), documents.length);
+        return;
       }
+      try {
+        const filled = await apiAddKnowledgeBaseFileSources(
+          created.knowledge_base_id,
+          fileEntries,
+          getToken
+        );
+        onSaved(fromApi(filled), documents.length);
+      } catch (err) {
+        // The upload's error is the one to show, so a failed clean-up stays quiet.
+        await apiDeleteKnowledgeBase(created.knowledge_base_id, getToken).catch(() => undefined);
+        throw err;
+      }
+    } catch (err) {
+      showSaveError(err);
     } finally {
       setIsSaving(false);
     }
   }
 
-  // submitFiles uploads the picked documents. The files go up as they are and the
-  // server does the reading, so this waits out extraction, chunking, embedding
-  // and the upsert in one request — which is why the whole dialog is disabled
-  // while it runs.
-  async function submitFiles() {
-    if (files.length === 0) return;
-
-    const errors = validateFiles(files);
-    if (Object.keys(errors).length > 0) {
-      setFileErrors(errors);
-      setError("Fix the highlighted files before indexing.");
-      return;
-    }
-
-    setIsSaving(true);
-    setFileErrors({});
-    setError("");
-    try {
-      const updated = await apiAddKnowledgeBaseFileSources(
-        base.knowledge_base_id,
-        files.map((draft) => ({ file: draft.file, title: draft.title })),
-        getToken
-      );
-      onAdded(fromApi(updated), files.length);
-    } catch (err) {
-      if (err instanceof KnowledgeBaseError && err.fieldErrors.length > 0) {
-        applyFieldErrors(err.fieldErrors, files, /^files\[(\d+)\]/, setFileErrors);
-      } else {
-        setError(err instanceof Error ? err.message : "Failed to upload files");
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  }
+  const heading = base ? `Add to ${base.knowledge_base_name}` : "Add Knowledge Base";
 
   return (
-    <div
-      className="kb-modal-overlay"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isSaving) onClose();
-      }}
-    >
+    <>
       <div
-        aria-labelledby="kb-sources-title"
-        aria-modal="true"
-        className="kb-modal kb-modal-wide"
-        role="dialog"
+        className="kb-modal-overlay"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !isSaving && !hasEntries) onClose();
+        }}
       >
-        <h2 className="kb-modal-title" id="kb-sources-title">
-          Add sources
-        </h2>
-        <p className="kb-modal-copy">
-          {mode === "text" ? "Each text" : "Each file's text"} is split into chunks of{" "}
-          <strong>
-            {base.min_chunk_size}–{base.max_chunk_size}
-          </strong>{" "}
-          characters, embedded and written into{" "}
-          <strong>{base.namespace_id ?? "this knowledge base's namespace"}</strong> under its title.{" "}
-          {mode === "file"
-            ? "The text is extracted on the server — nothing is read in your browser. "
-            : ""}
-          Indexing runs while you wait, and either all of these land or none of them do.
-        </p>
-
-        <div className="kb-tabs" role="tablist">
-          <button
-            aria-selected={mode === "file"}
-            className={`kb-tab${mode === "file" ? " is-active" : ""}`}
-            disabled={isSaving}
-            onClick={() => {
-              setMode("file");
-              setError("");
-            }}
-            role="tab"
-            type="button"
-          >
-            Upload files
-          </button>
-          <button
-            aria-selected={mode === "text"}
-            className={`kb-tab${mode === "text" ? " is-active" : ""}`}
-            disabled={isSaving}
-            onClick={() => {
-              setMode("text");
-              setError("");
-            }}
-            role="tab"
-            type="button"
-          >
-            Raw text
-          </button>
-        </div>
-
-        {mode === "file" ? (
-          <div className="kb-modal-body">
-            <input
-              accept={fileExtensions.join(",")}
-              className="kb-file-input"
-              disabled={isSaving}
-              multiple
-              onChange={(event) => {
-                addFiles(event.target.files);
-                // Cleared so picking the same file again still fires a change.
-                event.target.value = "";
-              }}
-              ref={filePicker}
-              type="file"
-            />
+        <div
+          aria-labelledby="kb-add-title"
+          aria-modal="true"
+          className={`kb-modal kb-add-modal${isDragging ? " is-dragging" : ""}`}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              setIsDragging(false);
+            }
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            if (!isSaving) setIsDragging(true);
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            setIsDragging(false);
+            if (!isSaving) addFiles(event.dataTransfer.files);
+          }}
+          role="dialog"
+        >
+          <div className="kb-add-head">
+            <h2 className="kb-add-title" id="kb-add-title">
+              {heading}
+            </h2>
             <button
-              className={`kb-dropzone${isDragging ? " is-dragging" : ""}`}
-              disabled={isSaving || files.length >= sourceBounds.filesPerRequest}
-              onClick={() => filePicker.current?.click()}
-              onDragLeave={() => setIsDragging(false)}
-              onDragOver={(event) => {
-                event.preventDefault();
-                if (!isSaving) setIsDragging(true);
-              }}
-              onDrop={(event) => {
-                event.preventDefault();
-                setIsDragging(false);
-                if (!isSaving) addFiles(event.dataTransfer.files);
-              }}
+              aria-label="Close"
+              className="kb-add-close"
+              disabled={isSaving}
+              onClick={onClose}
               type="button"
             >
-              <Icon name="file" size={20} />
-              <span className="kb-dropzone-title">
-                {files.length >= sourceBounds.filesPerRequest
-                  ? `${sourceBounds.filesPerRequest} files is the limit for one request`
-                  : "Drop files here, or click to choose"}
-              </span>
-              <span className="kb-dropzone-hint">
-                {fileExtensions.join(" · ")} — up to{" "}
-                {Math.round(sourceBounds.fileBytes / (1024 * 1024))} MB each,{" "}
-                {sourceBounds.filesPerRequest} per request.
-              </span>
+              <Icon name="x" size={16} />
             </button>
+          </div>
 
-            {files.map((draft) => {
-              const fileError = fileErrors[draft.key];
-
-              return (
-                <div className={`kb-file${fileError ? " is-invalid" : ""}`} key={draft.key}>
-                  <div className="kb-file-head">
-                    <span className="kb-source-icon is-file">
-                      <Icon name="file" size={16} />
-                    </span>
-                    <div className="kb-file-body">
-                      <div className="kb-file-name">{draft.file.name}</div>
-                      <div className="kb-file-meta">{formatFileSize(draft.file.size)}</div>
-                    </div>
-                    <span className="kb-file-spacer" />
-                    <button
-                      aria-label={`Remove ${draft.file.name}`}
-                      className="kb-icon-button is-danger"
-                      disabled={isSaving}
-                      onClick={() => removeFile(draft.key)}
-                      title="Remove this file from the upload"
-                      type="button"
-                    >
-                      <Icon name="trash" size={15} />
-                    </button>
-                  </div>
-                  <label className="kb-field">
-                    <span className="kb-field-label">Title</span>
-                    <input
-                      className="kb-input"
-                      disabled={isSaving}
-                      maxLength={sourceBounds.titleLength}
-                      onChange={(event) => updateFileTitle(draft.key, event.target.value)}
-                      placeholder={draft.file.name}
-                      value={draft.title}
-                    />
-                    <span className="kb-field-hint">
-                      Stored under this name and used verbatim as the record id in the vector store,
-                      so it has to be printable ASCII without “#”, and unique in this knowledge base.
-                    </span>
-                  </label>
-                  {fileError ? (
-                    <div className="kb-draft-error" role="alert">
-                      {fileError}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-
-            {files.length > 0 ? (
-              <div className="kb-draft-footer">
-                <span className="kb-field-hint">
-                  {files.length}/{sourceBounds.filesPerRequest} files
-                </span>
-                <button
-                  className="kb-btn"
+          <div className="kb-add-body">
+            {base ? null : (
+              <label className="kb-add-field">
+                <span className="kb-add-label">Knowledge Base Name</span>
+                <input
+                  autoFocus
+                  className="kb-input kb-add-input"
                   disabled={isSaving}
-                  onClick={() => {
-                    setFiles([]);
-                    setFileErrors({});
-                    setError("");
+                  maxLength={nameLimit}
+                  onChange={(event) => setName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") save();
                   }}
+                  placeholder="Enter"
+                  value={name}
+                />
+              </label>
+            )}
+
+            <div className="kb-add-field">
+              <span className="kb-add-label">Documents</span>
+              <div className="kb-add-picker" ref={picker}>
+                <input
+                  accept={fileExtensions.join(",")}
+                  className="kb-file-input"
+                  disabled={isSaving}
+                  multiple
+                  onChange={(event) => {
+                    addFiles(event.target.files);
+                    // Cleared so picking the same file again still fires a change.
+                    event.target.value = "";
+                  }}
+                  ref={filePicker}
+                  type="file"
+                />
+                <button
+                  aria-expanded={isMenuOpen}
+                  className="kb-add-btn"
+                  disabled={isSaving}
+                  onClick={() => setIsMenuOpen((current) => !current)}
                   type="button"
                 >
-                  Clear all
+                  <Icon name="plus" size={15} />
+                  Add
                 </button>
-              </div>
-            ) : null}
-
-            {error ? (
-              <div className="kb-form-error" role="alert">
-                {error}
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          <div className="kb-modal-body">
-            {drafts.map((draft, index) => {
-              const draftError = draftErrors[draft.key];
-
-              return (
-                <div className={`kb-draft${draftError ? " is-invalid" : ""}`} key={draft.key}>
-                  <div className="kb-draft-head">
-                    <span className="kb-draft-index">Text {index + 1}</span>
+                {isMenuOpen ? (
+                  <div className="kb-add-menu">
                     <button
-                      aria-label={`Remove text ${index + 1}`}
-                      className="kb-icon-button is-danger"
-                      disabled={isSaving || drafts.length === 1}
-                      onClick={() => removeDraft(draft.key)}
-                      title={
-                        drafts.length === 1
-                          ? "At least one text is required"
-                          : "Remove this text from the request"
-                      }
+                      className="kb-add-menu-item"
+                      disabled={files.length >= sourceBounds.filesPerRequest}
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        filePicker.current?.click();
+                      }}
                       type="button"
                     >
-                      <Icon name="trash" size={15} />
+                      <Icon name="upload" size={16} />
+                      <span>Upload files</span>
+                      <span className="kb-add-menu-hint">
+                        {files.length >= sourceBounds.filesPerRequest
+                          ? `${sourceBounds.filesPerRequest} max`
+                          : `Up to ${Math.round(sourceBounds.fileBytes / (1024 * 1024))}MB`}
+                      </span>
+                    </button>
+                    <button
+                      className="kb-add-menu-item"
+                      disabled={texts.length >= sourceBounds.textsPerRequest}
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setTextEditor({ key: null, title: "", text: "", error: "" });
+                      }}
+                      type="button"
+                    >
+                      <Icon name="type" size={16} />
+                      <span>Add text</span>
+                      {texts.length >= sourceBounds.textsPerRequest ? (
+                        <span className="kb-add-menu-hint">{sourceBounds.textsPerRequest} max</span>
+                      ) : null}
                     </button>
                   </div>
-                  <label className="kb-field">
-                    <span className="kb-field-label">Title</span>
-                    <input
-                      autoFocus={index === 0}
-                      className="kb-input"
-                      disabled={isSaving}
-                      maxLength={sourceBounds.titleLength}
-                      onChange={(event) => updateDraft(draft.key, { title: event.target.value })}
-                      placeholder="Refund policy"
-                      value={draft.title}
-                    />
-                    <span className="kb-field-hint">
-                      Used verbatim as the record id in the vector store, so it has to be printable
-                      ASCII without “#”, and unique in this knowledge base.
-                    </span>
-                  </label>
-                  <label className="kb-field">
-                    <span className="kb-field-label">Text</span>
-                    <textarea
-                      className="kb-textarea"
-                      disabled={isSaving}
-                      onChange={(event) => updateDraft(draft.key, { text: event.target.value })}
-                      placeholder="Paste the content your agents should be able to quote…"
-                      value={draft.text}
-                    />
-                    <span className="kb-field-hint">{describeDraftSize(draft.text, base)}</span>
-                  </label>
-                  {draftError ? (
-                    <div className="kb-draft-error" role="alert">
-                      {draftError}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
+                ) : null}
+              </div>
 
-            <div className="kb-draft-footer">
-              <button
-                className="kb-btn"
-                disabled={isSaving || isFull}
-                onClick={addDraft}
-                title={isFull ? `At most ${sourceBounds.textsPerRequest} texts per request` : undefined}
-                type="button"
-              >
-                <Icon name="plus" size={15} />
-                Add another text
-              </button>
-              <span className="kb-field-hint">
-                {drafts.length}/{sourceBounds.textsPerRequest} texts
-              </span>
+              {documents.length === 0 ? (
+                <p className="kb-add-hint">Add at least one text or file.</p>
+              ) : (
+                <ul className="kb-add-docs">
+                  {documents.map((entry) => {
+                    const details =
+                      entry.kind === "file"
+                        ? formatFileSize(entry.file.size)
+                        : `${entry.text.length.toLocaleString()} characters`;
+                    const rowError = rowErrors[entry.key];
+                    return (
+                      <li className={`kb-add-doc${rowError ? " is-invalid" : ""}`} key={entry.key}>
+                        <div className="kb-add-doc-row">
+                          <Icon name={entry.kind === "file" ? "file" : "type"} size={16} />
+                          {entry.kind === "text" ? (
+                            <button
+                              aria-label={`Edit ${entry.title}`}
+                              className="kb-add-doc-name is-editable"
+                              disabled={isSaving}
+                              onClick={() =>
+                                setTextEditor({
+                                  key: entry.key,
+                                  title: entry.title,
+                                  text: entry.text,
+                                  error: "",
+                                })
+                              }
+                              type="button"
+                            >
+                              {entry.title}
+                            </button>
+                          ) : (
+                            <span className="kb-add-doc-name" title={entry.title}>
+                              {entry.title}
+                            </span>
+                          )}
+                          <span className="kb-add-doc-meta">{details}</span>
+                          <button
+                            aria-label={`Remove ${entry.title}`}
+                            className="kb-add-doc-remove"
+                            disabled={isSaving}
+                            onClick={() => removeDocument(entry.key)}
+                            type="button"
+                          >
+                            <Icon name="x" size={14} />
+                          </button>
+                        </div>
+                        {rowError ? (
+                          <div className="kb-add-doc-error" role="alert">
+                            {rowError}
+                          </div>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
 
             {error ? (
@@ -2275,28 +2179,105 @@ function AddSourcesModal({
               </div>
             ) : null}
           </div>
-        )}
-        <div className="kb-modal-actions">
-          <button className="kb-btn" disabled={isSaving} onClick={onClose} type="button">
-            Cancel
-          </button>
-          <button
-            className="kb-btn kb-btn-primary"
-            disabled={isSaving || (mode === "file" ? files.length === 0 : filled.length === 0)}
-            onClick={submit}
-            type="button"
-          >
-            {isSaving
-              ? mode === "file"
-                ? "Extracting and indexing…"
-                : "Indexing…"
-              : mode === "file"
-                ? `Index ${files.length} file${files.length === 1 ? "" : "s"}`
-                : `Index ${filled.length || drafts.length} text${(filled.length || drafts.length) === 1 ? "" : "s"}`}
-          </button>
+
+          <div className="kb-add-actions">
+            {isSaving ? <span className="kb-add-progress">Indexing your documents…</span> : null}
+            <button className="kb-add-btn" disabled={isSaving} onClick={onClose} type="button">
+              Cancel
+            </button>
+            <button
+              className="kb-add-btn kb-add-save"
+              disabled={!canSave}
+              onClick={save}
+              title={canSave ? undefined : base ? "Add at least one text or file." : "Enter a name and add at least one text or file."}
+              type="button"
+            >
+              {isSaving ? "Saving…" : "Save"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {textEditor ? (
+        <div
+          className="kb-modal-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget &&
+              !textEditor.title.trim() &&
+              !textEditor.text.trim()
+            ) {
+              setTextEditor(null);
+            }
+          }}
+        >
+          <div
+            aria-labelledby="kb-add-text-title"
+            aria-modal="true"
+            className="kb-modal kb-add-modal kb-add-text-modal"
+            role="dialog"
+          >
+            <div className="kb-add-head">
+              <h2 className="kb-add-title" id="kb-add-text-title">
+                {textEditor.key === null ? "Add text" : "Edit text"}
+              </h2>
+              <button
+                aria-label="Close"
+                className="kb-add-close"
+                onClick={() => setTextEditor(null)}
+                type="button"
+              >
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+            <div className="kb-add-body">
+              <label className="kb-add-field">
+                <span className="kb-add-label">Title</span>
+                <input
+                  autoFocus
+                  className="kb-input kb-add-input"
+                  maxLength={sourceBounds.titleLength}
+                  onChange={(event) =>
+                    setTextEditor({ ...textEditor, title: event.target.value, error: "" })
+                  }
+                  placeholder="Enter"
+                  value={textEditor.title}
+                />
+              </label>
+              <label className="kb-add-field">
+                <span className="kb-add-label">Text</span>
+                <textarea
+                  className="kb-textarea kb-add-textarea"
+                  onChange={(event) =>
+                    setTextEditor({ ...textEditor, text: event.target.value, error: "" })
+                  }
+                  placeholder="Enter"
+                  value={textEditor.text}
+                />
+              </label>
+              {textEditor.error ? (
+                <div className="kb-form-error" role="alert">
+                  {textEditor.error}
+                </div>
+              ) : null}
+            </div>
+            <div className="kb-add-actions">
+              <button className="kb-add-btn" onClick={() => setTextEditor(null)} type="button">
+                Cancel
+              </button>
+              <button
+                className="kb-add-btn kb-add-save"
+                disabled={!textEditor.title.trim() || !textEditor.text.trim()}
+                onClick={saveText}
+                type="button"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 
