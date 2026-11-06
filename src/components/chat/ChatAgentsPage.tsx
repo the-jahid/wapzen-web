@@ -39,6 +39,7 @@ import {
   isChatAgentLimitError,
   listAgentFiles,
   listDashboardChatAgents,
+  updateAgentFile,
   updateDashboardChatAgent,
   uploadAgentFile,
   type ApiAgentFile,
@@ -64,6 +65,7 @@ type IconName =
   | "wrench"
   | "bag"
   | "paperclip"
+  | "pencil"
   | "plus"
   | "trash"
   | "search"
@@ -222,6 +224,8 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M16 10a4 4 0 0 1-8 0" />
         </>
       );
+    case "pencil":
+      return <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />;
     case "paperclip":
       return <path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9" />;
     case "plus":
@@ -638,6 +642,7 @@ const css = `
 .chat-file-name { color: var(--text); font-size: 12.5px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-file-size { color: var(--faint); font-weight: 500; }
 .chat-file-description { color: var(--subtle); font-size: 11.5px; grid-column: 1 / -1; line-height: 1.45; overflow-wrap: anywhere; }
+.chat-file-edit { display: grid; gap: 8px; grid-column: 1 / -1; }
 .chat-file-form { display: grid; gap: 10px; }
 .chat-file-preview { border: 1px solid var(--border); border-radius: 10px; display: block; height: auto; max-height: 200px; max-width: 100%; width: auto; }
 .chat-file-picked { color: var(--text); font-size: 12.5px; font-weight: 750; overflow-wrap: anywhere; }
@@ -3324,6 +3329,9 @@ function AgentFilesSection({
   const [description, setDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -3395,6 +3403,28 @@ function AgentFilesSection({
     }
   };
 
+  const startEdit = (file: ApiAgentFile) => {
+    setError("");
+    setConfirmingId(null);
+    setEditingId(file.id);
+    setEditText(file.description);
+  };
+
+  const saveEdit = async (fileId: string) => {
+    if (!editText.trim()) return;
+    setIsSavingEdit(true);
+    setError("");
+    try {
+      const saved = await updateAgentFile(agentId, fileId, editText.trim(), getToken);
+      setFiles((current) => (current ?? []).map((file) => (file.id === fileId ? saved : file)));
+      setEditingId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The note could not be saved.");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const remove = async (fileId: string) => {
     setError("");
     try {
@@ -3436,16 +3466,64 @@ function AgentFilesSection({
                     </button>
                   </span>
                 ) : (
-                  <button
-                    aria-label={`Delete ${file.file_name}`}
-                    className="chat-btn chat-btn-secondary chat-btn-sm"
-                    onClick={() => setConfirmingId(file.id)}
-                    type="button"
-                  >
-                    <Icon name="trash" size={13} sw={2.2} />
-                  </button>
+                  <span className="chat-file-actions">
+                    {editingId === file.id ? null : (
+                      <button
+                        aria-label={`Edit the note for ${file.file_name}`}
+                        className="chat-btn chat-btn-secondary chat-btn-sm"
+                        onClick={() => startEdit(file)}
+                        title="Edit note"
+                        type="button"
+                      >
+                        <Icon name="pencil" size={13} sw={2.2} />
+                      </button>
+                    )}
+                    <button
+                      aria-label={`Delete ${file.file_name}`}
+                      className="chat-btn chat-btn-secondary chat-btn-sm"
+                      onClick={() => {
+                        setEditingId(null);
+                        setConfirmingId(file.id);
+                      }}
+                      type="button"
+                    >
+                      <Icon name="trash" size={13} sw={2.2} />
+                    </button>
+                  </span>
                 )}
-                <span className="chat-file-description">{file.description}</span>
+                {editingId === file.id ? (
+                  <div className="chat-file-edit">
+                    <textarea
+                      aria-label={`When should the agent send ${file.file_name}?`}
+                      autoFocus
+                      className="chat-textarea"
+                      maxLength={AGENT_FILE_DESCRIPTION_MAX}
+                      onChange={(event) => setEditText(event.target.value)}
+                      style={{ minHeight: 76 }}
+                      value={editText}
+                    />
+                    <span className="chat-file-actions">
+                      <button
+                        className="chat-btn chat-btn-primary chat-btn-sm"
+                        disabled={isSavingEdit || !editText.trim()}
+                        onClick={() => void saveEdit(file.id)}
+                        type="button"
+                      >
+                        {isSavingEdit ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        className="chat-btn chat-btn-secondary chat-btn-sm"
+                        disabled={isSavingEdit}
+                        onClick={() => setEditingId(null)}
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+                    </span>
+                  </div>
+                ) : (
+                  <span className="chat-file-description">{file.description}</span>
+                )}
               </li>
             ))}
           </ul>

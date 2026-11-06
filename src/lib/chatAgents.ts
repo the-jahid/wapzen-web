@@ -235,6 +235,19 @@ export function uploadAgentFile(
   return request<ApiAgentFile>(agentFilesPath(agentId), { method: "POST", body: form }, getToken);
 }
 
+export function updateAgentFile(
+  agentId: string,
+  fileId: string,
+  description: string,
+  getToken: AuthTokenGetter
+): Promise<ApiAgentFile> {
+  return request<ApiAgentFile>(
+    `${agentFilesPath(agentId)}/${encodeURIComponent(fileId)}`,
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description }) },
+    getToken
+  );
+}
+
 export function deleteAgentFile(agentId: string, fileId: string, getToken: AuthTokenGetter) {
   return request<{ id: string; deleted: boolean }>(
     `${agentFilesPath(agentId)}/${encodeURIComponent(fileId)}`,
