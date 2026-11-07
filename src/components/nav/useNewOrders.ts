@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { listOrders } from "@/lib/orders";
 import { useCachedState } from "@/lib/pageCache";
+import { startRefreshing } from "@/lib/polling";
 
 // Shared with the Orders tab, whose own fetches keep this current too.
 export const newOrdersCacheKey = "orders:new-count";
@@ -30,10 +31,10 @@ export function useNewOrders(): number {
         .catch(() => undefined); // A missed count is retried on the next tick.
     };
     refresh();
-    const timer = window.setInterval(refresh, refreshMs);
+    const stopRefreshing = startRefreshing(refresh, refreshMs);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stopRefreshing();
     };
   }, [getToken, isSignedIn, setCount]);
 

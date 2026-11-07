@@ -161,8 +161,12 @@ export function listDashboardChatAgents(getToken: AuthTokenGetter): Promise<ApiC
   return request<ApiChatAgent[]>("/v1/dashboard/chat-agents?limit=100", undefined, getToken);
 }
 
-export function getDashboardChatAgent(id: string, getToken: AuthTokenGetter): Promise<ApiChatAgent> {
-  return request<ApiChatAgent>(`/v1/dashboard/chat-agents/${encodeURIComponent(id)}`, undefined, getToken);
+// What changes on its own while an agent runs, for every agent on the account.
+// A page keeping this up to date reads only this, not each agent's whole prompt.
+export type ChatAgentLiveState = Pick<ApiChatAgent, "id" | "hourly_limit_resets_at">;
+
+export function listChatAgentLiveStates(getToken: AuthTokenGetter): Promise<ChatAgentLiveState[]> {
+  return request<ChatAgentLiveState[]>("/v1/dashboard/chat-agents/live", undefined, getToken);
 }
 
 export function createDashboardChatAgent(

@@ -27,6 +27,7 @@ import {
   type OrderStatus,
 } from "@/lib/orders";
 import { useCachedState } from "@/lib/pageCache";
+import { startRefreshing } from "@/lib/polling";
 
 // Every order the account's agents have taken. An order arrives whenever a
 // customer confirms one, so the list re-reads itself on the same slow timer as
@@ -133,10 +134,7 @@ export default function OrdersTab({
     };
   }, [filters, getToken, onNewCount, pageNumber, reloadKey, setOrderPage]);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setReloadKey((key) => key + 1), refreshMs);
-    return () => window.clearInterval(timer);
-  }, []);
+  useEffect(() => startRefreshing(() => setReloadKey((key) => key + 1), refreshMs), []);
 
   // The agent list only fills the filter, so failing to load it costs the
   // filter and nothing else.

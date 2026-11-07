@@ -112,14 +112,35 @@ export async function listChatConversations(
   return { items, total: envelope.meta?.pagination?.total_items ?? items.length };
 }
 
+// getChatConversationsVersion is a short text that changes whenever the listing
+// with the same filter would, so a page on a timer can tell whether its list is
+// out of date without downloading it again.
+export async function getChatConversationsVersion(
+  getToken: AuthTokenGetter,
+  options?: { chatAgentId?: string }
+): Promise<string> {
+  const params = new URLSearchParams();
+  if (options?.chatAgentId) params.set("chat_agent_id", options.chatAgentId);
+  const query = params.toString();
+  const envelope = await request<{ version: string }>(
+    `${dashboardPath}/version${query ? `?${query}` : ""}`,
+    undefined,
+    getToken
+  );
+  return envelope.data.version;
+}
+
 // getChatConversation loads one thread with its transcript: the listing carries
-// no messages, so opening a thread is a second request.
+// no messages, so opening a thread is a second request. With afterSeq, only the
+// messages after that one come back, for a page that already has the rest.
 export async function getChatConversation(
   id: string,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  options?: { afterSeq?: number }
 ): Promise<ApiChatConversation> {
+  const query = options?.afterSeq === undefined ? "" : `?after_seq=${options.afterSeq}`;
   const envelope = await request<ApiChatConversation>(
-    `${dashboardPath}/${encodeURIComponent(id)}`,
+    `${dashboardPath}/${encodeURIComponent(id)}${query}`,
     undefined,
     getToken
   );

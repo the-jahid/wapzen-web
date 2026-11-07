@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useCachedState, writeCachedEntry } from "@/lib/pageCache";
+import { startRefreshing } from "@/lib/polling";
 import {
   AiReplySwitch,
   avatarColor,
@@ -14,6 +15,7 @@ import {
 import {
   conversationPhone,
   conversationTitle,
+  getChatConversationsVersion,
   listChatAgentConversations,
   listChatConversations,
   setChatConversationAiReply,
@@ -31,6 +33,9 @@ export type ConversationAgentOption = { id: string; name: string };
 // this is a transcript being kept, not a live inbox, and the Refresh button is
 // there for anyone who wants it sooner.
 const refreshMs = 15000;
+// The list is read after this many turns even if it seems unchanged, for the few
+// things that don't touch a thread's row, such as a contact's number becoming known.
+const listAtLeastEvery = 20;
 
 // Where each list had scrolled to, so coming back from a thread lands on the row
 // it was opened from. Only this tab's visit needs it, so it isn't stored.
@@ -93,10 +98,28 @@ export default function ChatConversationsWorkspace({
     };
   }, [agentFilter, agentId, getToken, reloadKey, setConversations]);
 
+  // Each turn asks whether the list changed, and only then downloads it. If that
+  // question fails, the list is read anyway, as it would be without it.
   useEffect(() => {
-    const timer = window.setInterval(() => setReloadKey((key) => key + 1), refreshMs);
-    return () => window.clearInterval(timer);
-  }, [agentId]);
+    let cancelled = false;
+    let knownVersion: string | null = null;
+    let turnsSinceList = 0;
+    const stopRefreshing = startRefreshing(async () => {
+      const version = await getChatConversationsVersion(getToken, {
+        chatAgentId: agentId || agentFilter || undefined,
+      }).catch(() => null);
+      if (cancelled) return;
+      turnsSinceList += 1;
+      if (version !== null && version === knownVersion && turnsSinceList < listAtLeastEvery) return;
+      knownVersion = version;
+      turnsSinceList = 0;
+      setReloadKey((key) => key + 1);
+    }, refreshMs);
+    return () => {
+      cancelled = true;
+      stopRefreshing();
+    };
+  }, [agentFilter, agentId, getToken]);
 
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();

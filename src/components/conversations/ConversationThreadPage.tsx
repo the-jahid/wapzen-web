@@ -18,9 +18,10 @@ import {
   type ApiChatMessage,
 } from "@/lib/chatConversations";
 import { updateCachedEntries, useCachedState } from "@/lib/pageCache";
+import { startRefreshing } from "@/lib/polling";
 
-// A chat thread arrives whenever somebody writes in, so the transcript re-reads
-// itself on a timer rather than waiting to be told.
+// A chat thread arrives whenever somebody writes in, so the transcript asks for
+// new messages on a timer rather than waiting to be told.
 const refreshMs = 15000;
 
 // How tall the reply box may grow before it scrolls instead.
@@ -67,12 +68,34 @@ export default function ConversationThreadPage({
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // The thread as last drawn, for a refresh to read without restarting on it.
+  const threadRef = useRef(thread);
+  useEffect(() => {
+    threadRef.current = thread;
+  }, [thread]);
+  // Set once this visit holds the whole transcript. Until then, and whenever the
+  // count says something is missing, a refresh reads all of it.
+  const haveWholeThread = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        const known = haveWholeThread.current ? threadRef.current?.messages : undefined;
+        const afterSeq = known?.[known.length - 1]?.seq;
+        if (known && afterSeq !== undefined) {
+          const newer = await getChatConversation(conversationId, getToken, { afterSeq });
+          if (cancelled) return;
+          const messages = [...known, ...(newer.messages ?? []).filter((message) => message.seq > afterSeq)];
+          if (messages.length === newer.message_count) {
+            setThread({ ...newer, messages });
+            setError("");
+            return;
+          }
+        }
         const full = await getChatConversation(conversationId, getToken);
         if (cancelled) return;
+        haveWholeThread.current = full.messages?.length === full.message_count;
         setThread(full);
         setError("");
       } catch (loadError) {
@@ -85,10 +108,7 @@ export default function ConversationThreadPage({
     };
   }, [conversationId, getToken, reloadKey, setThread]);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setReloadKey((key) => key + 1), refreshMs);
-    return () => window.clearInterval(timer);
-  }, []);
+  useEffect(() => startRefreshing(() => setReloadKey((key) => key + 1), refreshMs), []);
 
   // A seeded row has no messages yet; only the thread's own response carries them.
   const messages = thread?.messages;

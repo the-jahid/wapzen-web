@@ -24,7 +24,7 @@ import {
 import { useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
 import { useCachedState } from "@/lib/pageCache";
-import { startPolling } from "@/lib/polling";
+import { startPolling, startRefreshing } from "@/lib/polling";
 import {
   AGENT_FILE_ACCEPT,
   AGENT_FILE_DESCRIPTION_MAX,
@@ -35,9 +35,9 @@ import {
   createDashboardChatAgent,
   deleteAgentFile,
   deleteDashboardChatAgent,
-  getDashboardChatAgent,
   isChatAgentLimitError,
   listAgentFiles,
+  listChatAgentLiveStates,
   listDashboardChatAgents,
   updateAgentFile,
   updateDashboardChatAgent,
@@ -1339,48 +1339,19 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     [chatAgents, selectedId]
   );
 
-  // A live agent's runtime section changes on the server as messages arrive, so
-  // it is re-read while the agent is open. Only that section is taken, never the
-  // settings, so an edit still waiting to save is not overwritten.
-  const selectedLiveId = selected?.agent.status === "active" ? selected.id : "";
+  // A live agent can reach its hourly limit at any moment, on the list or with
+  // the agent open, so the timer is re-read while one is on screen. Only that
+  // field is taken, never the settings, so an edit still waiting to save is not
+  // overwritten.
+  const watchLiveAgents =
+    selected?.agent.status === "active" ||
+    (!agentId && chatAgents.some((agent) => agent.agent.status === "active"));
   useEffect(() => {
-    if (!selectedLiveId) return;
+    if (!watchLiveAgents) return;
     let cancelled = false;
-    const timer = setInterval(async () => {
+    const stopRefreshing = startRefreshing(async () => {
       try {
-        const fresh = await getDashboardChatAgent(selectedLiveId, getToken);
-        if (cancelled) return;
-        setChatAgents((current) =>
-          current.map((item) =>
-            item.id === fresh.id
-              ? {
-                  ...item,
-                  reply_limit_reached: fresh.reply_limit_reached,
-                  hourly_limit_resets_at: fresh.hourly_limit_resets_at,
-                  runtime: fresh.runtime,
-                }
-              : item
-          )
-        );
-      } catch {
-        // A missed refresh is retried on the next tick.
-      }
-    }, 15000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [getToken, selectedLiveId, setChatAgents]);
-
-  // On the list, a live agent can reach its hourly limit too, so the timer is
-  // re-read there the same way. Only that field is taken.
-  const watchListLimits = !agentId && chatAgents.some((agent) => agent.agent.status === "active");
-  useEffect(() => {
-    if (!watchListLimits) return;
-    let cancelled = false;
-    const timer = setInterval(async () => {
-      try {
-        const fresh = await listDashboardChatAgents(getToken);
+        const fresh = await listChatAgentLiveStates(getToken);
         if (cancelled) return;
         const freshById = new Map(fresh.map((agent) => [agent.id, agent]));
         setChatAgents((current) =>
@@ -1395,9 +1366,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     }, 15000);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      stopRefreshing();
     };
-  }, [getToken, setChatAgents, watchListLimits]);
+  }, [getToken, setChatAgents, watchLiveAgents]);
 
   const queueSave = useCallback(
     (agent: ApiChatAgent, delay = 500) => {
