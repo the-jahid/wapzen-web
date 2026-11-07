@@ -15,7 +15,6 @@ import {
   MessagesSquare,
   Phone,
   PlayCircle,
-  Send,
   ShoppingBag,
   Settings,
   Target,
@@ -52,7 +51,6 @@ export const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
   groups: Users,
   calendar: CalendarDays,
   chart: BarChart3,
-  send: Send,
   orders: ShoppingBag,
   settings: Settings,
 };
