@@ -538,6 +538,7 @@ const css = `
 }
 .chat-pill.is-active { background: var(--app-green-soft); color: var(--green); }
 .chat-pill.is-inactive { background: var(--app-border); color: var(--subtle); }
+.chat-pill-timer { color: var(--app-amber-text); font-variant-numeric: tabular-nums; }
 .chat-dot { background: currentColor; border-radius: 50%; height: 5px; width: 5px; }
 .chat-btn {
   align-items: center;
@@ -1371,6 +1372,33 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     };
   }, [getToken, selectedLiveId, setChatAgents]);
 
+  // On the list, a live agent can reach its hourly limit too, so the timer is
+  // re-read there the same way. Only that field is taken.
+  const watchListLimits = !agentId && chatAgents.some((agent) => agent.agent.status === "active");
+  useEffect(() => {
+    if (!watchListLimits) return;
+    let cancelled = false;
+    const timer = setInterval(async () => {
+      try {
+        const fresh = await listDashboardChatAgents(getToken);
+        if (cancelled) return;
+        const freshById = new Map(fresh.map((agent) => [agent.id, agent]));
+        setChatAgents((current) =>
+          current.map((item) => {
+            const match = freshById.get(item.id);
+            return match ? { ...item, hourly_limit_resets_at: match.hourly_limit_resets_at } : item;
+          })
+        );
+      } catch {
+        // A missed refresh is retried on the next tick.
+      }
+    }, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [getToken, setChatAgents, watchListLimits]);
+
   const queueSave = useCallback(
     (agent: ApiChatAgent, delay = 500) => {
       const previous = saveTimers.current.get(agent.id);
@@ -1794,17 +1822,11 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 
       <main className="chat-main">
         <div className="chat-content">
-          {!agentId && chatAgents.some((agent) => agent.hourly_limit_resets_at) ? (
+          {!agentId && chatAgents.some((agent) => agent.agent.status === "active" && agent.hourly_limit_resets_at) ? (
             <div className="chat-limit-list">
-              {chatAgents.map((agent) =>
-                agent.hourly_limit_resets_at ? (
-                  <HourlyLimitCard
-                    agentName={agent.agent.name}
-                    key={agent.id}
-                    resetsAt={agent.hourly_limit_resets_at}
-                  />
-                ) : null
-              )}
+              {chatAgents.map((agent) => (
+                <HourlyLimitCard agent={agent} key={agent.id} />
+              ))}
             </div>
           ) : null}
           {agentId ? (
@@ -1966,7 +1988,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                               <span className="chat-orders-on">Orders on</span>
                             ) : null}
                           </span>
-                          <StatusPill status={agent.agent.status ?? "inactive"} />
+                          <StatusPill agent={agent} />
                           <span className="chat-list-row-end">
                             <button
                               aria-label={`Delete ${agent.agent.name}`}
@@ -2287,6 +2309,7 @@ function AgentHeader({
   tabs: ReactNode;
 }) {
   const status = agent.agent.status ?? "inactive";
+  const hourlyLimit = useHourlyLimit(agent);
   // Going live needs a WhatsApp number; pausing an already-live agent never
   // does. The server enforces the same invariant for direct API requests.
   const activationBlocked = status !== "active" && !agent.agent.phone_number_id;
@@ -2361,7 +2384,7 @@ function AgentHeader({
                 )}
               </h2>
               <span className="chat-tag">Chat</span>
-              <StatusPill status={status} />
+              <StatusPill agent={agent} />
             </div>
           </div>
         </div>
@@ -2379,11 +2402,17 @@ function AgentHeader({
                 },
               }))
             }
-            title={activationBlocked ? needsNumberHint : undefined}
+            title={
+              activationBlocked
+                ? needsNumberHint
+                : hourlyLimit
+                  ? "Stay paused when the timer ends, until you activate this agent"
+                  : undefined
+            }
             type="button"
           >
             <Icon name="demo" size={16} sw={2.2} />
-            {status === "active" ? "Pause" : "Activate"}
+            {status !== "active" ? "Activate" : hourlyLimit ? "Keep paused" : "Pause"}
           </button>
           <button className="chat-btn chat-btn-danger" onClick={onDelete} type="button">
             <Icon name="trash" size={15} sw={2.2} />
@@ -2532,9 +2561,7 @@ function Editor({
 
   return (
     <div className="chat-editor">
-      {agent.hourly_limit_resets_at ? (
-        <HourlyLimitCard agentName={agent.agent.name} resetsAt={agent.hourly_limit_resets_at} />
-      ) : null}
+      <HourlyLimitCard agent={agent} />
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
           <span className="chat-runtime-alert-icon">!</span>
@@ -2641,51 +2668,64 @@ function Editor({
 // every reply, so its length is the main per-reply cost a free account adds.
 const SYSTEM_PROMPT_MAX_CHARS = 8000;
 
-// PromptCounter counts code points, as the servers do, so an emoji is one
-// character here and there. It warns from 90% and turns red past the cap,
-// which only a prompt saved before the cap existed can be.
-// Shown only while the agent is at its hourly reply limit, counting down to
-// when it starts answering again. It goes away by itself when the time is up.
-function HourlyLimitCard({ agentName, resetsAt }: { agentName: string; resetsAt: string }) {
-  const resetsAtMs = Date.parse(resetsAt);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const tick = Date.now();
-      setNow(tick);
-      if (tick >= resetsAtMs) clearInterval(timer);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [resetsAtMs]);
-  const remaining = resetsAtMs - now;
-  if (!(remaining > 0)) return null;
+function subscribeToSeconds(onTick: () => void) {
+  const timer = setInterval(onTick, 1000);
+  return () => clearInterval(timer);
+}
 
-  const seconds = Math.ceil(remaining / 1000);
+function subscribeToNothing() {
+  return () => undefined;
+}
+
+// The time left while a live agent is at its hourly reply limit, or null. The
+// server doesn't change the agent's status at the limit, so this is what says it
+// is paused. An agent the owner paused stays paused when the hour ends, so it has
+// no timer. It clears by itself when the time is up.
+function useHourlyLimit(agent: ApiChatAgent) {
+  const resetsAt = agent.agent.status === "active" ? agent.hourly_limit_resets_at : undefined;
+  const resetsAtMs = resetsAt ? Date.parse(resetsAt) : 0;
+  const seconds = useSyncExternalStore(
+    resetsAt ? subscribeToSeconds : subscribeToNothing,
+    () => Math.max(0, Math.ceil((resetsAtMs - Date.now()) / 1000)),
+    () => 0
+  );
+  if (!(seconds > 0)) return null;
+
   const pad = (n: number) => String(n).padStart(2, "0");
-  const countdown =
-    seconds >= 3600
-      ? `${Math.floor(seconds / 3600)}:${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`
-      : `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`;
-  const at = new Date(resetsAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return {
+    countdown:
+      seconds >= 3600
+        ? `${Math.floor(seconds / 3600)}:${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`
+        : `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`,
+    at: new Date(resetsAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+  };
+}
+
+function HourlyLimitCard({ agent }: { agent: ApiChatAgent }) {
+  const limit = useHourlyLimit(agent);
+  if (!limit) return null;
 
   return (
     <div className="chat-card chat-runtime-alert chat-limit-card" role="status">
       <span className="chat-runtime-alert-icon">!</span>
       <div className="chat-limit-card-text">
-        <p className="chat-runtime-alert-title">Your 1-hour message limit is reached</p>
+        <p className="chat-runtime-alert-title">You have reached your hourly AI reply limit</p>
         <p className="chat-runtime-alert-copy">
-          {agentName} has sent 100 AI replies this hour, so it is paused. It turns back on by itself when the
+          {agent.agent.name} has sent 50 AI replies this hour, so it is paused. It turns back on by itself when the
           timer ends. Messages that arrive meanwhile are still saved in Conversations.
         </p>
       </div>
-      <div className="chat-limit-timer" aria-label={`Active again in ${countdown}, at ${at}`}>
-        <span className="chat-limit-timer-value">{countdown}</span>
-        <span className="chat-limit-timer-label">Active again at {at}</span>
+      <div className="chat-limit-timer" aria-label={`Active again in ${limit.countdown}, at ${limit.at}`}>
+        <span className="chat-limit-timer-value">{limit.countdown}</span>
+        <span className="chat-limit-timer-label">Active again at {limit.at}</span>
       </div>
     </div>
   );
 }
 
+// PromptCounter counts code points, as the servers do, so an emoji is one
+// character here and there. It warns from 90% and turns red past the cap,
+// which only a prompt saved before the cap existed can be.
 function PromptCounter({ value }: { value: string }) {
   const count = Array.from(value).length;
   const state =
@@ -3790,11 +3830,14 @@ function PageLinks() {
   );
 }
 
-function StatusPill({ status }: { status: "active" | "inactive" }) {
+function StatusPill({ agent }: { agent: ApiChatAgent }) {
+  const limit = useHourlyLimit(agent);
+  const live = agent.agent.status === "active" && !limit;
   return (
-    <span className={`chat-pill ${status === "active" ? "is-active" : "is-inactive"}`}>
+    <span className={`chat-pill ${live ? "is-active" : "is-inactive"}`}>
       <span className="chat-dot" />
-      {status === "active" ? "Live" : "Paused"}
+      {live ? "Live" : "Paused"}
+      {limit ? <span className="chat-pill-timer">{limit.countdown}</span> : null}
     </span>
   );
 }
