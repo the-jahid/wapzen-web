@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "motion/react";
-import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import {
   useWorkspaceMode,
   type WorkspaceMode,
@@ -944,6 +943,8 @@ export const toolsCss = `
   padding: 20px;
   text-align: center;
 }
+.tools-page-back { align-items: center; align-self: flex-start; color: var(--subtle); display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; text-decoration: none; }
+.tools-page-back:hover { color: var(--text); }
 .tools-detail { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 1120px; min-width: 0; width: 100%; }
 .tools-back {
   align-items: center;
@@ -1219,8 +1220,8 @@ export const toolsCss = `
   .tools-row-chevron { display: none; }
   .expandable-card-stage { align-items: stretch; padding: 0; }
   .tools-expandable-card { border: 0; border-radius: 0; height: 100dvh; max-height: 100dvh; max-width: none; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
-  .tools-modal-overlay { align-items: flex-end; padding: 0; }
-  .tools-modal { border-radius: 18px 18px 0 0; max-height: calc(100dvh - 24px); max-width: none; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .tools-modal-overlay { align-items: center; padding: 16px; }
+  .tools-modal { border-radius: 18px; max-height: calc(100dvh - 32px); max-width: none; padding: 20px 16px; }
   .tools-modal-sm, .tools-modal-lg { max-width: none; }
   .tools-modal-actions { flex-direction: column-reverse; }
   .tools-modal-actions .tools-btn { width: 100%; }
@@ -1236,7 +1237,7 @@ export const toolsCss = `
 }
 `;
 
-export default function ToolsPage() {
+export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
   const { getToken } = useAuth();
   const { mode } = useWorkspaceMode();
   const router = useRouter();
@@ -1251,7 +1252,11 @@ export default function ToolsPage() {
   // Tools cached from an earlier visit stay on screen while they refetch.
   const showSkeleton = isLoading && !hasCachedTools;
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The open tool comes from the URL: /dashboard/tools/<id> shows it on its
+  // own page, the bare route shows the list.
+  const selectedId = toolId ?? null;
+  const openTool = (id: string) => router.push(`/dashboard/tools/${encodeURIComponent(id)}`);
+  const backToList = () => router.push("/dashboard/tools");
   const [query, setQuery] = useState("");
   const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -1392,7 +1397,7 @@ export default function ToolsPage() {
       const tool = fromApi(created);
       setDetailEpoch((current) => current + 1);
       setTools((current) => [tool, ...current]);
-      setSelectedId(tool.id);
+      openTool(tool.id);
       setIsCreateOpen(false);
       setQuery("");
       setNotice({ kind: "success", text: `Tool "${tool.name}" created.` });
@@ -1425,7 +1430,7 @@ export default function ToolsPage() {
     try {
       await apiDeleteTool(tool.id, getToken);
       setTools((current) => current.filter((item) => item.id !== tool.id));
-      setSelectedId((current) => (current === tool.id ? null : current));
+      if (selectedId === tool.id) backToList();
       setPendingDelete(null);
       setNotice({ kind: "success", text: `Tool "${tool.name}" deleted.` });
     } catch (error) {
@@ -1442,6 +1447,39 @@ export default function ToolsPage() {
 
       <main className="tools-main">
         <div className="tools-content">
+          {toolId ? (
+            selected?.isSystem ? (
+              <SystemToolDetail
+                key={`${selected.id}:${detailEpoch}`}
+                onBack={backToList}
+                tool={selected}
+              />
+            ) : selected ? (
+              <ToolDetail
+                key={`${selected.id}:${detailEpoch}`}
+                onBack={backToList}
+                onDelete={() => setPendingDelete(selected)}
+                onError={(message) => setNotice({ kind: "error", text: message })}
+                onSave={saveTool}
+                tool={selected}
+                mode={mode}
+              />
+            ) : (
+              <div className="tools-detail">
+                <Link className="tools-page-back" href="/dashboard/tools">
+                  <Icon name="back" size={15} sw={2.2} />
+                  Tools
+                </Link>
+                <div className="tools-empty">
+                  <span>
+                    {isLoading
+                      ? "Loading tool…"
+                      : loadError ?? "This tool was not found. It may have been deleted."}
+                  </span>
+                </div>
+              </div>
+            )
+          ) : (
             <div className="tools-browse">
               <h1 className="tools-page-title">Tools</h1>
               <div className="tools-toolbar">
@@ -1539,7 +1577,7 @@ export default function ToolsPage() {
                         className="tools-row"
                         key={tool.id}
                         layoutId={`tool-${tool.id}`}
-                        onClick={() => setSelectedId(tool.id)}
+                        onClick={() => openTool(tool.id)}
                         type="button"
                       >
                         <span className={`tools-tile tools-accent-${meta.accent}`}>
@@ -1581,7 +1619,7 @@ export default function ToolsPage() {
                         className="tools-card-item"
                         key={tool.id}
                         layoutId={`tool-${tool.id}`}
-                        onClick={() => setSelectedId(tool.id)}
+                        onClick={() => openTool(tool.id)}
                         type="button"
                       >
                         <span className="tools-card-top">
@@ -1623,31 +1661,7 @@ export default function ToolsPage() {
                 </div>
               )}
             </div>
-          <ExpandableCardDemoStandard
-            className="tools-expandable-card"
-            dismissDisabled={Boolean(pendingDelete)}
-            layoutId={`tool-${selected?.id ?? "closed"}`}
-            onClose={() => setSelectedId(null)}
-            open={Boolean(selected)}
-          >
-            {selected?.isSystem ? (
-              <SystemToolDetail
-                key={`${selected.id}:${detailEpoch}`}
-                onBack={() => setSelectedId(null)}
-                tool={selected}
-              />
-            ) : selected ? (
-              <ToolDetail
-                key={`${selected.id}:${detailEpoch}`}
-                onBack={() => setSelectedId(null)}
-                onDelete={() => setPendingDelete(selected)}
-                onError={(message) => setNotice({ kind: "error", text: message })}
-                onSave={saveTool}
-                tool={selected}
-                mode={mode}
-              />
-            ) : null}
-          </ExpandableCardDemoStandard>
+          )}
         </div>
 
       </main>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "motion/react";
-import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import {
   useWorkspaceMode,
 } from "@/components/nav/workspaceMode";
@@ -453,6 +454,9 @@ const css = `
 .kb-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
 .kb-expandable-card .kb-detail-layout { max-width: none; }
 .kb-detail-layout { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.kb-page { max-width: 1040px; }
+.kb-page-back { align-items: center; align-self: flex-start; color: var(--subtle); display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; text-decoration: none; }
+.kb-page-back:hover { color: var(--text); }
 .kb-detail-grid { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
 .kb-back {
   align-items: center;
@@ -991,8 +995,8 @@ const css = `
   .kb-row-chevron { display: none; }
   .expandable-card-stage { align-items: stretch; padding: 0; }
   .kb-expandable-card { border: 0; border-radius: 0; height: 100dvh; max-height: 100dvh; max-width: none; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
-  .kb-modal-overlay { align-items: flex-end; padding: 0; }
-  .kb-modal { border-radius: 18px 18px 0 0; max-height: calc(100dvh - 24px); max-width: none; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .kb-modal-overlay { align-items: center; padding: 16px; }
+  .kb-modal { border-radius: 18px; max-height: calc(100dvh - 32px); max-width: none; padding: 20px 16px; }
   .kb-modal-actions { flex-direction: column-reverse; }
   .kb-modal-actions > * { width: 100%; }
   .kb-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
@@ -1034,11 +1038,15 @@ function sourceDetail(source: KnowledgeBaseSource) {
   return `${source.chunk_count} chunk${source.chunk_count === 1 ? "" : "s"}`;
 }
 
-export default function KnowledgeBasePage() {
+export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId?: string } = {}) {
+  const router = useRouter();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const { mode } = useWorkspaceMode();
   const [bases, setBases, hasCachedBases] = useCachedState<KnowledgeBase[]>("knowledge-base-page:bases", []);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The open base comes from the URL: /dashboard/knowledge-base/<id> shows it
+  // on its own page, the bare route shows the list.
+  const selectedId = knowledgeBaseId ?? null;
+  const openBase = (id: string) => router.push(`/dashboard/knowledge-base/${encodeURIComponent(id)}`);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -1098,9 +1106,6 @@ export default function KnowledgeBasePage() {
         if (cancelled) return;
         const list = rows.map(fromApi);
         setBases(list);
-        setSelectedId((current) =>
-          current && list.some((base) => base.knowledge_base_id === current) ? current : null
-        );
         setLoadState("ready");
       } catch (error) {
         if (cancelled) return;
@@ -1161,11 +1166,9 @@ export default function KnowledgeBasePage() {
       setBases((current) =>
         current.filter((row) => row.knowledge_base_id !== base.knowledge_base_id)
       );
-      // Clearing the selection returns to the grid, which is where the deleted
-      // base's card no longer is.
-      setSelectedId((currentId) =>
-        currentId === base.knowledge_base_id ? null : currentId
-      );
+      // Deleting the open base goes back to the list, which is where the
+      // deleted base's card no longer is.
+      if (selectedId === base.knowledge_base_id) router.push("/dashboard/knowledge-base");
       setPendingDelete(null);
       flash("success", `Knowledge base "${base.knowledge_base_name}" deleted`);
     } catch (error) {
@@ -1238,26 +1241,40 @@ export default function KnowledgeBasePage() {
 
       <main className="kb-main">
         <div className="kb-content">
-          {selected ? (
-            <ExpandableCardDemoStandard
-              className="kb-expandable-card"
-              dismissDisabled={isAddingSources || Boolean(pendingDelete) || Boolean(pendingSourceDelete)}
-              layoutId={`knowledge-base-${selected.knowledge_base_id}`}
-              onClose={() => setSelectedId(null)}
-              open
-            >
-            <div className="kb-detail-layout">
-              <div className="kb-expandable-topline">
-                <span className="kb-expandable-label">Knowledge base details</span>
-                <button
-                  aria-label="Close knowledge base details"
-                  className="kb-expandable-close"
-                  onClick={() => setSelectedId(null)}
-                  type="button"
-                >
-                  <Icon name="x" size={16} sw={2.4} />
-                </button>
+          {knowledgeBaseId && !selected ? (
+            <div className="kb-detail-layout kb-page">
+              <Link className="kb-page-back" href="/dashboard/knowledge-base">
+                <Icon name="back" size={15} sw={2.2} />
+                Knowledge bases
+              </Link>
+              <div className="kb-empty">
+                {pendingLoadState === "loading" ? (
+                  <p>Loading knowledge base…</p>
+                ) : effectiveLoadState === "error" ? (
+                  <>
+                    <p>{effectiveLoadError}</p>
+                    {authError ? null : (
+                      <button
+                        className="kb-btn"
+                        onClick={() => setReloadKey((current) => current + 1)}
+                        type="button"
+                      >
+                        <Icon name="refresh" size={15} />
+                        Try again
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <p>This knowledge base was not found. It may have been deleted.</p>
+                )}
               </div>
+            </div>
+          ) : selected ? (
+            <div className="kb-detail-layout kb-page">
+              <Link className="kb-page-back" href="/dashboard/knowledge-base">
+                <Icon name="back" size={15} sw={2.2} />
+                Knowledge bases
+              </Link>
 
               <div className="kb-detail-grid">
               <div className="kb-detail-column">
@@ -1380,7 +1397,6 @@ export default function KnowledgeBasePage() {
               </div>
               </div>
             </div>
-            </ExpandableCardDemoStandard>
           ) : (
             <div className="kb-browse">
               <div className="kb-toolbar">
@@ -1479,7 +1495,7 @@ export default function KnowledgeBasePage() {
                         className="kb-row"
                         key={base.knowledge_base_id}
                         layoutId={`knowledge-base-${base.knowledge_base_id}`}
-                        onClick={() => setSelectedId(base.knowledge_base_id)}
+                        onClick={() => openBase(base.knowledge_base_id)}
                         type="button"
                       >
                         <span className="kb-avatar">
@@ -1522,7 +1538,7 @@ export default function KnowledgeBasePage() {
                       className="kb-card kb-card-item"
                       key={base.knowledge_base_id}
                       layoutId={`knowledge-base-${base.knowledge_base_id}`}
-                      onClick={() => setSelectedId(base.knowledge_base_id)}
+                      onClick={() => openBase(base.knowledge_base_id)}
                       type="button"
                     >
                       <span className="kb-card-top">
@@ -1574,7 +1590,7 @@ export default function KnowledgeBasePage() {
           onClose={() => setIsCreating(false)}
           onSaved={(created) => {
             setBases((current) => [created, ...current]);
-            setSelectedId(created.knowledge_base_id);
+            openBase(created.knowledge_base_id);
             setIsCreating(false);
             flash("success", `Knowledge base "${created.knowledge_base_name}" created`);
           }}

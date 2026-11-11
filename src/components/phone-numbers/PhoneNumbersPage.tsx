@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { motion } from "motion/react";
-import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import {
   type WorkspaceMode,
   useWorkspaceMode,
@@ -526,6 +526,12 @@ const css = `
 .phone-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
 .phone-expandable-body { overflow: auto; padding: 16px; }
 .phone-expandable-body .phone-config-section { box-shadow: none; }
+.phone-page { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 960px; width: 100%; }
+.phone-expandable-card.phone-page-card { border: 1px solid var(--border-strong); border-radius: 20px; box-shadow: 0 10px 30px var(--app-shadow-soft); height: auto; max-height: none; max-width: none; overflow: visible; }
+.phone-page-card .phone-expandable-head { border-radius: 20px 20px 0 0; }
+.phone-page-back { margin-left: 0; margin-right: 2px; margin-top: 4px; }
+.phone-page-backlink { align-items: center; align-self: flex-start; color: var(--subtle); display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; text-decoration: none; }
+.phone-page-backlink:hover { color: var(--text); }
 .phone-expandable-actions {
   align-items: center;
   border-top: 1px solid var(--border);
@@ -1145,8 +1151,8 @@ const css = `
   .phone-expandable-actions { padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
   .phone-expandable-actions .phone-top-btn, .phone-expandable-actions .phone-danger-btn { flex: 1 1 auto; width: auto; }
   .phone-setting-span .phone-assignment-grid { grid-template-columns: 1fr; }
-  .phone-modal-backdrop { align-items: flex-end; padding: 0; }
-  .phone-modal-card { border-radius: 18px 18px 0 0; max-width: none; width: 100%; }
+  .phone-modal-backdrop { align-items: center; padding: 16px; }
+  .phone-modal-card { border-radius: 18px; max-height: calc(100dvh - 32px); max-width: none; overflow-y: auto; width: 100%; }
   .phone-modal-head, .phone-modal-body { padding: 16px; }
   .phone-modal-footer { flex-direction: column-reverse; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
   .phone-modal-footer > * { width: 100%; }
@@ -1263,14 +1269,25 @@ function upsertChatAgents(current: ApiChatAgent[], updated: ApiChatAgent[]) {
   return current.map((agent) => updated.find((item) => item.id === agent.id) ?? agent);
 }
 
-export default function PhoneNumbersPage() {
+export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: string } = {}) {
+  const router = useRouter();
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
   const { mode } = useWorkspaceMode();
   const [phoneNumbers, setPhoneNumbers, hasCachedNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
   const [voiceAgents, setVoiceAgents] = useCachedState<ApiAgentResource[]>("voice-agents", []);
   const [chatAgents, setChatAgents] = useCachedState<ApiChatAgent[]>("chat-agents", []);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The selected number comes from the URL: /dashboard/phone-numbers/<id>
+  // opens it on its own page, the bare list route shows the grid.
+  const selectedId = phoneNumberId ?? null;
+  const openNumber = useCallback(
+    (id: string, replace = false) => {
+      const href = `/dashboard/phone-numbers/${encodeURIComponent(id)}`;
+      if (replace) router.replace(href);
+      else router.push(href);
+    },
+    [router]
+  );
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -1342,7 +1359,6 @@ export default function PhoneNumbersPage() {
           if (cancelled) return;
           setPhoneNumbers(rows);
           setChatAgents(agentRows);
-          setSelectedId((current) => (current && rows.some((item) => item.id === current) ? current : null));
         } else {
           const [rows, agentRows] = await Promise.all([
             apiListPhoneNumbers(getToken),
@@ -1351,7 +1367,6 @@ export default function PhoneNumbersPage() {
           if (cancelled) return;
           setPhoneNumbers(rows);
           setVoiceAgents(agentRows);
-          setSelectedId((current) => (current && rows.some((item) => item.id === current) ? current : null));
         }
         setLoadState("ready");
       } catch (error) {
@@ -1458,7 +1473,7 @@ export default function PhoneNumbersPage() {
         : await apiStartPhoneNumberLogin(payload, getToken);
       setActiveLogin(started);
       setPhoneNumbers((current) => upsertPhoneNumber(current, started));
-      setSelectedId(started.id);
+      openNumber(started.id);
       setLabel("");
       setIsCreateOpen(false);
       setNotice({ kind: "success", text: "Phone number login started" });
@@ -1485,7 +1500,7 @@ export default function PhoneNumbersPage() {
       setPhoneNumbers((current) =>
         upsertPhoneNumber(current.filter((entry) => entry.id !== replaced?.id), started)
       );
-      setSelectedId(started.id);
+      if (started.id !== replaced?.id) openNumber(started.id, true);
     } finally {
       setIsRestarting(false);
     }
@@ -1506,7 +1521,7 @@ export default function PhoneNumbersPage() {
       await apiLogoutPhoneNumber(phone.id, getToken);
       const remaining = phoneNumbers.filter((item) => item.id !== phone.id);
       setPhoneNumbers(remaining);
-      setSelectedId((current) => (current === phone.id ? null : current));
+      if (selectedId === phone.id) router.push("/dashboard/phone-numbers");
       if (activeLogin?.id === phone.id) setActiveLogin(null);
       setNotice({ kind: "success", text: `${displayName(phone)} removed` });
     } catch (error) {
@@ -1653,7 +1668,7 @@ export default function PhoneNumbersPage() {
             restarted
           )
         );
-        setSelectedId(restarted.id);
+        if (restarted.id !== previousId) openNumber(restarted.id, true);
         setNotice({ kind: "success", text: "New login session started. Scan the QR code with WhatsApp." });
       } catch (error) {
         setNotice({
@@ -1682,7 +1697,7 @@ export default function PhoneNumbersPage() {
       const restarted = await apiRePairPhoneNumber(selectedPhoneNumber.id, getToken);
       setActiveLogin(restarted);
       setPhoneNumbers((current) => upsertPhoneNumber(current, restarted));
-      setSelectedId(restarted.id);
+      if (restarted.id !== selectedPhoneNumber.id) openNumber(restarted.id, true);
       setNotice({ kind: "success", text: "Old companion unlinked. Scan the new QR code once." });
     } catch (error) {
       setNotice({
@@ -1701,7 +1716,27 @@ export default function PhoneNumbersPage() {
 
       <main className="phone-main">
         <div className="phone-content">
-          <>
+          {phoneNumberId ? (
+            <PhoneNumberPageView
+              agents={agents}
+              assigningKey={assigningKey}
+              assignments={selectedAssignments}
+              disconnectingId={disconnectingId}
+              effectiveLoadError={effectiveLoadError}
+              effectiveLoadState={effectiveLoadState}
+              isAuthenticated={isAuthenticated}
+              isFetching={pendingLoadState === "loading"}
+              isRestarting={isRestarting}
+              mode={mode}
+              onAssignAgent={assignAgent}
+              onDisconnect={disconnect}
+              onRePair={rePair}
+              onRequestCode={startCodeLogin}
+              onRequestQr={startQrLogin}
+              onRefresh={refresh}
+              phoneNumber={selectedPhoneNumber}
+            />
+          ) : (
             <PhoneNumberGrid
               agents={agents}
               assigningKey={assigningKey}
@@ -1714,33 +1749,13 @@ export default function PhoneNumbersPage() {
               onCreate={() => setIsCreateOpen(true)}
               onQueryChange={setQuery}
               onRetry={refresh}
-              onSelect={setSelectedId}
+              onSelect={(id) => openNumber(id)}
               onViewChange={setViewMode}
               phoneNumbers={phoneNumbers}
               query={query}
               view={viewMode}
             />
-            <PhoneNumberExpandableCard
-              agents={agents}
-              assigningKey={assigningKey}
-              assignments={selectedAssignments}
-              disconnectingId={disconnectingId}
-              effectiveLoadError={effectiveLoadError}
-              effectiveLoadState={effectiveLoadState}
-              isAuthenticated={isAuthenticated}
-              isRestarting={isRestarting}
-              mode={mode}
-              onAssignAgent={assignAgent}
-              onClose={() => setSelectedId(null)}
-              onCreate={() => setIsCreateOpen(true)}
-              onDisconnect={disconnect}
-              onRePair={rePair}
-              onRequestCode={startCodeLogin}
-              onRequestQr={startQrLogin}
-              onRefresh={refresh}
-              phoneNumber={selectedPhoneNumber}
-            />
-          </>
+          )}
         </div>
       </main>
 
@@ -1764,7 +1779,9 @@ export default function PhoneNumbersPage() {
   );
 }
 
-function PhoneNumberExpandableCard({
+// PhoneNumberPageView is one number on its own page: a back link to the
+// list, the number's details and its actions.
+function PhoneNumberPageView({
   agents,
   assigningKey,
   assignments,
@@ -1772,11 +1789,10 @@ function PhoneNumberExpandableCard({
   effectiveLoadError,
   effectiveLoadState,
   isAuthenticated,
+  isFetching,
   isRestarting,
   mode,
   onAssignAgent,
-  onClose,
-  onCreate,
   onDisconnect,
   onRePair,
   onRequestCode,
@@ -1791,11 +1807,12 @@ function PhoneNumberExpandableCard({
   effectiveLoadError: string;
   effectiveLoadState: "loading" | "ready" | "error";
   isAuthenticated: boolean;
+  // True while the list is still being fetched, even when cached rows are
+  // shown, so a number missing from the cache isn't called "not found" early.
+  isFetching: boolean;
   isRestarting: boolean;
   mode: WorkspaceMode;
   onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
-  onClose: () => void;
-  onCreate: () => void;
   onDisconnect: (phoneNumber: ApiPhoneNumber) => void;
   onRePair: () => void;
   onRequestCode: (phone: string) => Promise<void>;
@@ -1803,27 +1820,54 @@ function PhoneNumberExpandableCard({
   onRefresh: () => void;
   phoneNumber: ApiPhoneNumber | null;
 }) {
+  if (!phoneNumber) {
+    return (
+      <div className="phone-page">
+        <Link className="phone-page-backlink" href="/dashboard/phone-numbers">
+          <Icon name="back" size={15} sw={2.2} />
+          Phone numbers
+        </Link>
+        <div className="phone-empty-workspace">
+          {isFetching ? (
+            <p>Loading phone number...</p>
+          ) : effectiveLoadState === "error" ? (
+            <>
+              <p>{effectiveLoadError}</p>
+              {isAuthenticated ? (
+                <button className="phone-ghost-btn" onClick={onRefresh} type="button">
+                  <Icon name="refresh" size={15} />
+                  Try again
+                </button>
+              ) : null}
+            </>
+          ) : (
+            <p>This phone number was not found. It may have been removed.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <ExpandableCardDemoStandard
-      className="phone-expandable-card"
-      layoutId={`phone-number-${phoneNumber?.id ?? "closed"}`}
-      onClose={onClose}
-      open={Boolean(phoneNumber)}
-    >
-      {phoneNumber ? (
+    <div className="phone-page">
+      <div className="phone-expandable-card phone-page-card">
         <>
           <header className="phone-expandable-head">
+            <Link
+              aria-label="Back to phone numbers"
+              className="phone-expandable-close phone-page-back"
+              href="/dashboard/phone-numbers"
+            >
+              <Icon name="back" size={16} sw={2.2} />
+            </Link>
             <span className="phone-summary-icon">
               <Icon name="phone" size={20} />
             </span>
             <div className="phone-expandable-identity">
-              <div className="phone-expandable-title">{displayName(phoneNumber)}</div>
-              <div className="phone-expandable-subtitle">WhatsApp · {displayNumber(phoneNumber)}</div>
+              <div className="phone-expandable-title notranslate">{displayName(phoneNumber)}</div>
+              <div className="phone-expandable-subtitle notranslate">WhatsApp · {displayNumber(phoneNumber)}</div>
             </div>
             <StatusChip compact status={phoneNumber.status} />
-            <button aria-label="Close phone number" className="phone-expandable-close" onClick={onClose} type="button">
-              <Icon name="x" size={16} sw={2.4} />
-            </button>
           </header>
 
           <div className="phone-expandable-body">
@@ -1837,7 +1881,7 @@ function PhoneNumberExpandableCard({
               isRestarting={isRestarting}
               mode={mode}
               onAssignAgent={onAssignAgent}
-              onCreate={onCreate}
+              onCreate={() => undefined}
               onRequestCode={onRequestCode}
               onRequestQr={onRequestQr}
               onRetry={onRefresh}
@@ -1877,8 +1921,8 @@ function PhoneNumberExpandableCard({
             </button>
           </footer>
         </>
-      ) : null}
-    </ExpandableCardDemoStandard>
+      </div>
+    </div>
   );
 }
 
@@ -2073,8 +2117,8 @@ function PhoneNumberCard({ onSelect, ...rest }: BrowseItemProps) {
         </span>
         <StatusChip compact status={phoneNumber.status} />
       </span>
-      <span className="phone-card-name">{displayName(phoneNumber)}</span>
-      <span className="phone-card-desc">WhatsApp - {displayNumber(phoneNumber)}</span>
+      <span className="phone-card-name notranslate">{displayName(phoneNumber)}</span>
+      <span className="phone-card-desc notranslate">WhatsApp - {displayNumber(phoneNumber)}</span>
       <span className="phone-card-agents">
         <AgentChipPickers {...rest} />
       </span>
@@ -2102,8 +2146,8 @@ function PhoneNumberRow({ onSelect, ...rest }: BrowseItemProps) {
         <Icon name="phone" size={18} />
       </span>
       <span className="phone-row-identity">
-        <span className="phone-row-name">{displayName(phoneNumber)}</span>
-        <span className="phone-row-sub">WhatsApp - {displayNumber(phoneNumber)}</span>
+        <span className="phone-row-name notranslate">{displayName(phoneNumber)}</span>
+        <span className="phone-row-sub notranslate">WhatsApp - {displayNumber(phoneNumber)}</span>
       </span>
       <span className="phone-row-agents">
         <AgentChipPickers {...rest} />
@@ -2123,7 +2167,7 @@ function PhoneNumberRow({ onSelect, ...rest }: BrowseItemProps) {
 // sit inside without nesting one button in another; it is painted below them.
 function OpenOverlay({ label, onSelect }: { label: string; onSelect: () => void }) {
   return (
-    <button aria-label={`Open ${label}`} className="phone-open-overlay" onClick={onSelect} type="button" />
+    <button aria-label={`Open ${label}`} className="phone-open-overlay notranslate" onClick={onSelect} type="button" />
   );
 }
 
