@@ -50,6 +50,14 @@ export type ChatMediaSection = {
   images_enabled: boolean;
 };
 
+// The owner's website, which the agent reads while it replies when on. Absent
+// from servers that predate it, so, like media, it is only sent back when the
+// server returned it. The address is stored as typed.
+export type ChatWebsiteSection = {
+  website_enabled: boolean;
+  website_url: string;
+};
+
 // What the running server reports about serving the agent. Never saved: it is
 // read-only and absent from older servers.
 export type ChatRuntimeSection = {
@@ -70,6 +78,7 @@ export type ApiChatAgent = {
   tools?: ChatToolsSection;
   order?: ChatOrderSection;
   media?: ChatMediaSection;
+  website?: ChatWebsiteSection;
   // True once the account has sent every reply it is allowed; the agent stays
   // silent until the limit is lifted. Read-only.
   reply_limit_reached?: boolean;
@@ -87,6 +96,7 @@ export type CreateChatAgentPayload = {
   tools?: ChatToolsSection;
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
   media?: ChatMediaSection;
+  website?: ChatWebsiteSection;
 };
 
 // Every section and every field inside a supplied section is optional on
@@ -100,6 +110,7 @@ export type UpdateChatAgentPayload = {
   tools?: Partial<ChatToolsSection>;
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
   media?: Partial<ChatMediaSection>;
+  website?: Partial<ChatWebsiteSection>;
 };
 
 // The defaults the OpenAPI document declares for a new chat agent, so the

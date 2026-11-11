@@ -45,6 +45,7 @@ import {
   type ApiAgentFile,
   type ApiChatAgent,
   type ChatMediaSection,
+  type ChatWebsiteSection,
   type CreateChatAgentPayload,
 } from "@/lib/chatAgents";
 
@@ -65,6 +66,7 @@ type IconName =
   | "wrench"
   | "bag"
   | "paperclip"
+  | "globe"
   | "pencil"
   | "plus"
   | "trash"
@@ -78,7 +80,7 @@ type IconName =
 
 // The collapsible parts of the configuration panel, one per section of the
 // chat-agent contract.
-type ConfigSectionId = "phone-number" | "knowledge-base" | "tools" | "orders" | "files" | "voice-photos";
+type ConfigSectionId = "phone-number" | "knowledge-base" | "tools" | "orders" | "files" | "website" | "voice-photos";
 
 // The editor's tabs. "agent" is what the agent says and answers on, "conversation"
 // the record of what it has already said, and "configuration" what it can reach.
@@ -228,6 +230,14 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />;
     case "paperclip":
       return <path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9" />;
+    case "globe":
+      return (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18" />
+          <path d="M12 3a14 14 0 010 18M12 3a14 14 0 000 18" />
+        </>
+      );
     case "plus":
       return <path d="M12 5v14M5 12h14" />;
     case "trash":
@@ -638,6 +648,7 @@ const css = `
 .chat-media-option { align-content: start; display: grid; gap: 6px; }
 .chat-media-option .chat-field-hint { padding-left: 54px; }
 .chat-files { display: grid; gap: 12px; }
+.chat-website { display: grid; gap: 14px; max-width: 640px; }
 .chat-file-list { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .chat-file { align-items: start; background: var(--panel-hover); border: 1px solid var(--border); border-radius: 10px; display: grid; gap: 4px 8px; grid-template-columns: minmax(0, 1fr) auto; padding: 8px 8px 8px 10px; }
 .chat-file-name { color: var(--text); font-size: 12.5px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1191,6 +1202,7 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
         }
       : undefined,
     media: agent.media ? { ...agent.media } : undefined,
+    website: agent.website ? { ...agent.website } : undefined,
   };
 }
 
@@ -2479,6 +2491,7 @@ function Editor({
       onOpenChange={setFilesOpen}
     />
   );
+  const websiteCard = <WebsiteCard agent={agent} key={`website-${agent.id}`} onPatch={onPatch} />;
 
   // Below desktop the Agent tab stays short: Voice & Photos sits in the
   // Configuration tab, and Take Order is a small card leading there.
@@ -2585,6 +2598,7 @@ function Editor({
               {promptField}
             </div>
             {filesCard}
+            {websiteCard}
           </div>
           <ConfigPanel
             agent={agent}
@@ -2613,6 +2627,7 @@ function Editor({
           </div>
 
           {filesCard}
+          {websiteCard}
 
           {/* Configuration opens with its Tools section unfolded, Take Order in it. */}
           {orderTool ? (
@@ -3272,6 +3287,92 @@ function FilesCard({
         onAvailable={onAvailable}
         onToggle={(next) => onOpenChange(next !== null)}
       />
+    </div>
+  );
+}
+
+// Whether what the owner typed is an address the server will read, by the same
+// rule: "shop.com" counts as https://shop.com, and a bare word doesn't count.
+function isWebsiteAddress(typed: string) {
+  const value = typed.trim();
+  if (!value) return false;
+  try {
+    const url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(value) ? value : `https://${value}`);
+    return (url.protocol === "http:" || url.protocol === "https:") && url.hostname.includes(".") && !url.username;
+  } catch {
+    return false;
+  }
+}
+
+// Web Search on its own card under Images & Files: the owner's website, which
+// the agent reads while it replies. Saved with the agent like the other
+// settings. Only shown when the server returns the section, since older servers
+// refuse it.
+function WebsiteCard({
+  agent,
+  onPatch,
+}: {
+  agent: ApiChatAgent;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(true);
+  const website = agent.website;
+  if (!website) return null;
+
+  const typed = website.website_url;
+  const valid = isWebsiteAddress(typed);
+  const reading = website.website_enabled && valid;
+  const setWebsite = (change: Partial<ChatWebsiteSection>) =>
+    onPatch((current) => ({
+      ...current,
+      website: {
+        website_enabled: current.website?.website_enabled ?? false,
+        website_url: current.website?.website_url ?? "",
+        ...change,
+      },
+    }));
+
+  let hint: string;
+  if (typed.trim() && !valid) hint = "This isn't a website address yet. Use one like https://yourshop.com.";
+  else if (!website.website_enabled) hint = "Off: the agent doesn't read your website.";
+  else if (!valid) hint = "Add your website's address so the agent has something to read.";
+  else
+    hint =
+      "The agent reads your home page with each reply and opens your other pages when a customer asks about something on them. Only this site is read. Pages drawn only by JavaScript can't be read.";
+
+  return (
+    <div className="chat-card chat-files-card is-rail">
+      <ConfigSection
+        icon="globe"
+        id="website"
+        isOpen={isOpen}
+        meta={reading ? "On" : "Off"}
+        onToggle={(next) => setIsOpen(next !== null)}
+        title="Web Search"
+      >
+        <div className="chat-website">
+          <label className="chat-field">
+            <span className="chat-control-label">Website address</span>
+            <input
+              autoComplete="url"
+              className="chat-input"
+              inputMode="url"
+              maxLength={500}
+              onChange={(event) => setWebsite({ website_url: event.target.value })}
+              placeholder="https://yourshop.com"
+              spellCheck={false}
+              type="url"
+              value={typed}
+            />
+          </label>
+          <MediaToggle
+            hint={hint}
+            label="Let the agent read this website"
+            on={website.website_enabled}
+            onToggle={() => setWebsite({ website_enabled: !website.website_enabled })}
+          />
+        </div>
+      </ConfigSection>
     </div>
   );
 }
