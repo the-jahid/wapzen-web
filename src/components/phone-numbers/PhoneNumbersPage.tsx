@@ -467,7 +467,10 @@ const css = `
   z-index: 1;
 }
 .phone-open-overlay:focus-visible { box-shadow: 0 0 0 3px var(--app-primary-ring-strong); outline: none; }
-.phone-card-agents, .phone-row-agents { position: relative; z-index: 2; }
+/* The wrapper spans its whole column, so only the chips themselves take
+   clicks; the empty space around them falls through to the open overlay. */
+.phone-card-agents, .phone-row-agents { pointer-events: none; position: relative; z-index: 2; }
+.phone-card-agents > *, .phone-row-agents > * { pointer-events: auto; }
 .expandable-card-backdrop {
   background: var(--app-overlay);
   inset: 0;
@@ -1292,7 +1295,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<BrowseView>("grid");
+  const [viewMode, setViewMode] = useState<BrowseView>("list");
   const [label, setLabel] = useState("");
   const [activeLogin, setActiveLogin] = useState<ApiPhoneNumber | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
