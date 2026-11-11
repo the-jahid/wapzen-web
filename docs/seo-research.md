@@ -578,3 +578,43 @@ The user asked for two more Brazil posts, researched online and built to rank on
 **Weak facts, labelled as such in the copy:** ManyChat from Kanal (read 4 Nov; ManyChat refuses automated reads). Digisac's 10-day trial and quote-only pricing from a search excerpt of their blog (the page blocks automated reads). Umbler Talk's R$ 198 per user from a Capterra excerpt (April 2026; umbler.com pricing not found). AppBarber from the US App Store only, no price in reais. Koalendar's free plan from its own guide.
 
 **Left out because they couldn't be confirmed:** a "91% of beauty professionals schedule by WhatsApp" figure attributed to Sebrae-PR (the search tool's summary only; the PDF wouldn't open and later searches didn't find it); 1,059,500 MEIs under CNAE 9602-5/01 (DataSebrae PDF refuses this machine, and a search for the number found nothing); any no-show percentage for Brazil (only a thesis with no number and a foreign stat with no method); 140,000 barbershops (a Goiás article with no source). No study measures WhatsApp use in salons specifically, and the post says so.
+
+
+## Finland posts (2026-11-11)
+
+The user asked for three posts that rank in Finland on Google and ChatGPT for the free WhatsApp AI chatbot, with no mention of limits or ban risk. `docs/seo-blog-finland-research.mjs` scored 11 clusters with Google, YouTube and DuckDuckGo (hl=fi, gl=fi, kl=fi-fi). Search Console wasn't read: Finland has no pages yet, so there is nothing to see there.
+
+| Cluster | Total | Clean phrases | Who ranks | Decision |
+|---|---|---|---|---|
+| WhatsApp bot and free chatbot | 592 + 68 | whatsapp chatbot 38 (3/3), whatsapp chatbot free 30 (3/3), ilmainen tekoälyagentti 20, tekoäly whatsapp 20, whatsapp asiakaspalvelu 20, chatbot suomeksi 20, ai chatbot suomeksi 18, chatbot hinta 10 | Machine-translated vendor pages (Jotform, FlowHunt) and English lists | **Built:** `/fi/blog/ilmainen-whatsapp-chatbot` |
+| WhatsApp Business cost | 561 | whatsapp business api 41 (3/3), whatsapp business 30 (3/3), onko whatsapp business ilmainen 20, whatsapp yritystili 20, whatsapp business hinta 17, whatsapp business kokemuksia 16, whatsapp business tietokoneelle 13, onko whatsapp business maksullinen 10, whatsapp business käyttöönotto 10 | A machine-translated blog and English pages; nothing with Finnish rates in euros | **Built:** `/fi/blog/onko-whatsapp-business-ilmainen` |
+| Automatic replies | 131 | whatsapp ajastettu viesti 20 (2/3), whatsapp business automaattinen vastaus 19, whatsapp automaattinen vastaus 10, automaattinen vastaus whatsapp 10, whatsapp automaattiviesti 10, whatsapp poissaoloviesti 10 | No Finnish guide in the results at all | **Built:** `/fi/blog/whatsapp-automaattinen-vastaus`. Smallest cluster, picked because nothing competes |
+| AI in customer service | 664 | tekoäly asiakaspalvelussa 40, tekoälyagentti 20, ai agentti 20 | Not checked; broad, and the top phrases are about training courses | Not built |
+| Beauty and booking | 342 | ilmainen ajanvarausjärjestelmä 20 (2/3), timma hinta 20 (2/3) | Not checked | Not built: Wapzen has no calendar, so it can't honestly answer a booking-system search. A salon post like the Italian one is the next candidate |
+| Finnish-language AI | 244 | tekoäly suomeksi 20, suomenkielinen tekoäly 20 | Consumer intent (ChatGPT in Finnish) | Answered as one question inside the free-chatbot post |
+| Tourism, shops, trades | 73, 69, 103 | tekoäly matkailussa 20, verkkokauppa chatbot 20 | Not checked | Too little demand for a post each |
+
+**New locale `fi`:** blog only, `fallback: "en"`, like `id`. Every public page's footer gains one language link ("Suomi") and the blog indexes gain a `fi` hreflang entry. The three posts are not registered as translations of English posts, so no English post's hreflang changes.
+
+**Copy decisions:** free right now ("ilmainen nyt", "tällä hetkellä"), never free forever. No mention of the hourly cap, the group cap or one agent per account, at the user's request; the caps still exist, so copy says "keskusteluja rajattomasti" and "ei kuukausirajaa", never "rajattomat vastaukset" or "ei rajoituksia". No ban wording either way, and the posts still say Wapzen isn't an official Meta product. Nothing says Wapzen sends campaigns (Bulk Messages was removed on 2026-11-07). Voice is mentioned only in the free-chatbot post, with a WhatsApp CTA.
+
+**Facts and where they came from (read 2026-11-11):**
+- Traficom consumer survey, December 2023, 2,162 adults (Verian): 81% use WhatsApp weekly for messages, 34% for calls. Read on traficom.fi in Finnish. A 2025 survey exists (Bilendi, published 23 Apr 2026) but its figures are only in an ODS file that wasn't read: use it at the next update.
+- Meta's pricing page lists Finland in "Rest of Western Europe" with Austria, Belgium, Denmark, Ireland, Norway, Portugal, Sweden and Switzerland. EUR list rates on the 1 Oct 2026 card: marketing €0.049, utility and authentication €0.0142, excluding VAT (DEV Community table checked against Meta's file on 27 Oct; Reinicia shows the same figures). USD: $0.0592 and $0.0171 (Voltade). Service replies: 1,000 free a month per number, then the utility rate (Meta's page states the free tier, not the number).
+- Germany, France, Spain and Netherlands EUR rates are the ones already in this file.
+- Meta One $14.99 / $49.99 / $149 / $499 and "may vary by region" (about.fb.com). No euro price was found.
+- Meta Business Agent: "eligible businesses in select markets", no countries named and no price on the product page. Whether it is offered in Finland is unknown, and the posts say to check the app.
+- Scheduled messages: WABetaInfo, 22 Oct 2026, iOS beta, 10 minutes to two weeks ahead, no public date.
+
+**Vendor prices (each vendor's pricing page, 2026-11-11):** Tidio free 50 conversations a month and 50 Lyro conversations lifetime, WhatsApp integration ticked on Free, Starter $24.17, Lyro from $32.50 (the page doesn't say whether these are monthly or annual billing). Jotform AI Agents free 5 agents and 100 conversations a month, Bronze $39 for 1,000; the pricing page doesn't say whether WhatsApp is on the free plan. Typebot free 200 chats, WhatsApp only on Pro $89. Superchat Free €0 with 30 active contacts and no AI agent, Basic €89, Professional €149 with 1 AI agent, Advanced €299, net prices, 12-month minimum term. Leadoo: no prices shown, Leadoo Lite free (analytics), WhatsApp not mentioned.
+
+**Weak facts, labelled as such in the copy:** ManyChat from Kanal (read 4 Nov; ManyChat refuses automated reads). Premium at $5 to $15 a month is from reports, as in the English post. Superchat using the official API and Leadoo being Finnish-founded are from general knowledge and a SourceForge listing, not from the pricing pages. giosg was left out: its pricing page returned 404.
+
+**Not verified:**
+- Finnish menu names in the WhatsApp Business app. WhatsApp's help pages aren't translated into Finnish; only "Linkitetyt laitteet" was seen in WhatsApp's own Finnish text. "Työkalut", "Poissaoloviesti", "Tervehdysviesti" and "Linkitä laite" are the expected labels, shown beside the English ones with a note that they vary. A Finnish speaker with the app should check them.
+- The Finnish itself was not reviewed by a native speaker.
+- The away-message schedule options and "the phone must be online" come from third-party guides and the English greeting post, not from a WhatsApp help page read on this date.
+- tietosuoja.fi refuses this machine, so no Finnish regulator page is cited and the posts don't quote Finland's direct-marketing consent rule.
+- The 177 € a month example assumes Meta's fees are billed on top of Superchat's plan; the post states that assumption.
+
+**Recheck next quarter (1 Jan 2027):** Meta EUR rates, Meta One prices and any euro price, every vendor price above, scheduled-message status, and the Traficom 2025 figures.

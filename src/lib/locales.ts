@@ -1,11 +1,11 @@
 // Languages of the public marketing pages. English pages live at the root;
-// the others under /pt-br, /es, /es-mx, /es-co, /es-cl, /es-pe, /it, /de, /ar-sa, /ar-eg
-// and /id (see app/<prefix>/layout.tsx). Each
+// the others under /pt-br, /es, /es-mx, /es-co, /es-cl, /es-pe, /it, /de, /ar-sa, /ar-eg,
+// /id and /fi (see app/<prefix>/layout.tsx). Each
 // localized page names its English equivalent in lib/marketingPages.ts (blog
 // posts in lib/blogPosts.ts), which drives the hreflang alternates. The
 // dashboard itself is English-only.
 
-export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "es-CO" | "es-CL" | "es-PE" | "it" | "de" | "ar-SA" | "ar-EG" | "id";
+export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "es-CO" | "es-CL" | "es-PE" | "it" | "de" | "ar-SA" | "ar-EG" | "id" | "fi";
 
 /** The blog index and the fixed text of its posts, in one language. */
 export type BlogUi = {
@@ -757,6 +757,67 @@ export const locales: Record<Locale, {
         readPost: "Baca artikel",
         learnMore: "Pelajari",
         choose: (name) => `Pilih ${name} jika…`,
+      },
+    },
+  },
+  fi: {
+    hreflang: "fi",
+    htmlLang: "fi",
+    ogLocale: "fi_FI",
+    label: "Suomi",
+    fallback: "en",
+    ui: {
+      nav: { features: "Ominaisuudet", pricing: "Hinnat", tools: "Ilmaiset työkalut", faq: "UKK", faqHref: "#faq" },
+      login: "Kirjaudu",
+      dashboard: "Hallintapaneeli",
+      home: "Etusivu",
+      breadcrumb: "Murupolku",
+      startFree: "Aloita ilmaiseksi",
+      explore: ["Tutustu lisää.", "Wapzen, ilmaiseksi."],
+      readMore: "Lue lisää",
+      openTools: "Avaa työkalut",
+      toolsTitle: "Ilmaiset WhatsApp-työkalut",
+      toolsBody: "Linkki- ja QR-koodigeneraattorit, maatunnukset ja muuta. Englanniksi, ilman rekisteröitymistä.",
+      copy: "Kopioi",
+      copied: "Kopioitu",
+      footer: {
+        tagline: ["Tekoälychatbotit ja ääniagentit WhatsAppiin.", "Yrityksesi omilla tiedoilla."],
+        product: "TUOTE",
+        features: "Ominaisuudet",
+        chatbot: "Tekoälychatbot",
+        voiceAgent: "Tekoäly-ääniagentti",
+        useCases: "Käyttötapaukset",
+        industries: "Toimialat",
+        howItWorks: "Näin se toimii",
+        faq: "Usein kysyttyä",
+        freeTools: "ILMAISET TYÖKALUT",
+        allTools: "Kaikki työkalut",
+        solutions: "RATKAISUT",
+        connect: "OTA YHTEYTTÄ",
+        sayHello: "Lähetä viesti",
+        rights: "Kaikki oikeudet pidätetään.",
+        backToTop: "Takaisin ylös ↑",
+        languages: "Kielet",
+      },
+      blog: {
+        href: "/fi/blog",
+        label: "Blogi",
+        dateLocale: "fi-FI",
+        author: "Wapzen-tiimi",
+        updated: "Päivitetty",
+        minRead: (minutes) => `Lukuaika ${minutes} min`,
+        tags: { Comparison: "Vertailu", Alternatives: "Vaihtoehdot", Guide: "Opas", Explainer: "Tietopaketti" },
+        onThisPage: "Tällä sivulla",
+        faqTitle: "Usein kysytyt kysymykset",
+        sourcesTitle: "Lähteet",
+        guideTitle: "Tietoa tästä oppaasta",
+        guideNote: (date) => `Vaiheet ja kuvakaappaukset ovat Wapzenin hallintapaneelista (${date}), ja niissä on esimerkkitietoja: yritykset, henkilöt ja puhelinnumerot ovat keksittyjä.`,
+        explainerNote: (date) => `Tämän artikkelin tiedot ja hinnat ovat peräisin alla olevista lähteistä, ja ne on tarkistettu ${date}. Meta ja muut palveluntarjoajat muuttavat hintojaan ja ehtojaan usein: tarkista ne lähteestä ennen kuin teet päätöksiä.`,
+        comparisonNote: (date) => `Hinnat ja ominaisuudet ovat kunkin palveluntarjoajan omilta sivuilta, ja ne on tarkistettu ${date}. Ne muuttuvat usein: tarkista ne palveluntarjoajan sivuilta ennen ostopäätöstä.`,
+        keepReading: ["Jatka lukemista.", "Lisää blogista."],
+        readPost: "Lue artikkeli",
+        learnMore: "Lue lisää",
+        choose: (name) => `Valitse ${name}, jos…`,
       },
     },
   },

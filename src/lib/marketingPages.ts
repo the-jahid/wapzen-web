@@ -191,6 +191,7 @@ export const localeHome: Record<Locale, string> = {
   "ar-SA": "/ar-sa/blog",
   "ar-EG": "/ar-eg/blog",
   id: "/id/blog",
+  fi: "/fi/blog",
 };
 
 // Every page that can have a translation: marketing pages, blog posts, and
