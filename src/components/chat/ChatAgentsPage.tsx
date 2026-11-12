@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar, navIcons } from "@/components/nav/DashboardSidebar";
 import { navItemsForMode } from "@/components/nav/workspaceMode";
-import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
+import { FREE_TRIAL_WHATSAPP_URL, SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
 import {
@@ -581,6 +581,8 @@ const css = `
 .chat-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 .chat-confirm-danger { background: var(--app-rose); border-color: transparent; color: #fff; }
 .chat-confirm-danger:hover { filter: brightness(1.08); }
+.chat-upgrade-whatsapp { background: #25d366; border-color: transparent; color: #fff; gap: 8px; text-decoration: none; }
+.chat-upgrade-whatsapp:hover { filter: brightness(1.06); }
 @keyframes chat-confirm-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes chat-confirm-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .chat-confirm-overlay, .chat-confirm { animation: none; } }
@@ -1369,7 +1371,13 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
         setChatAgents((current) =>
           current.map((item) => {
             const match = freshById.get(item.id);
-            return match ? { ...item, hourly_limit_resets_at: match.hourly_limit_resets_at } : item;
+            if (!match) return item;
+            return {
+              ...item,
+              agent: match.status ? { ...item.agent, status: match.status } : item.agent,
+              hourly_limit_resets_at: match.hourly_limit_resets_at,
+              free_trial_ended: match.free_trial_ended,
+            };
           })
         );
       } catch {
@@ -1805,6 +1813,11 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 
       <main className="chat-main">
         <div className="chat-content">
+          {!agentId && chatAgents.some((agent) => agent.free_trial_ended) ? (
+            <div className="chat-limit-list">
+              <FreeTrialEndedCard />
+            </div>
+          ) : null}
           {!agentId && chatAgents.some((agent) => agent.agent.status === "active" && agent.hourly_limit_resets_at) ? (
             <div className="chat-limit-list">
               {chatAgents.map((agent) => (
@@ -2545,6 +2558,7 @@ function Editor({
 
   return (
     <div className="chat-editor">
+      {agent.free_trial_ended ? <FreeTrialEndedCard /> : null}
       <HourlyLimitCard agent={agent} />
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
@@ -2705,6 +2719,34 @@ function HourlyLimitCard({ agent }: { agent: ApiChatAgent }) {
         <span className="chat-limit-timer-value">{limit.countdown}</span>
         <span className="chat-limit-timer-label">Active again at {limit.at}</span>
       </div>
+    </div>
+  );
+}
+
+// FreeTrialEndedCard is shown once the account has used up its free trial: the
+// server has turned its agents off and keeps them off until a paid plan is set
+// up, which is done by hand after the owner messages us.
+function FreeTrialEndedCard() {
+  return (
+    <div className="chat-card chat-runtime-alert chat-limit-card" role="alert">
+      <span className="chat-runtime-alert-icon">!</span>
+      <div className="chat-limit-card-text">
+        <p className="chat-runtime-alert-title">Your free trial has ended</p>
+        <p className="chat-runtime-alert-copy">
+          Your AI agent is turned off. To keep using it, you need a <strong>paid plan</strong>. To buy one, message
+          us on WhatsApp at <strong className="notranslate">+880 1701-750469</strong> and we&apos;ll set it up for
+          you.
+        </p>
+      </div>
+      <a
+        className="chat-btn chat-upgrade-whatsapp"
+        href={FREE_TRIAL_WHATSAPP_URL}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <WhatsAppGlyph size={16} />
+        Message us on WhatsApp
+      </a>
     </div>
   );
 }

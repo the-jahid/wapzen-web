@@ -85,6 +85,9 @@ export type ApiChatAgent = {
   // Only present while the agent has sent its replies for the hour: when it
   // starts answering again. Read-only.
   hourly_limit_resets_at?: string;
+  // True once the account has used up its free trial and has no paid plan: the
+  // agent is off and the server keeps it off. Read-only.
+  free_trial_ended?: boolean;
   runtime?: ChatRuntimeSection;
 };
 
@@ -174,7 +177,11 @@ export function listDashboardChatAgents(getToken: AuthTokenGetter): Promise<ApiC
 
 // What changes on its own while an agent runs, for every agent on the account.
 // A page keeping this up to date reads only this, not each agent's whole prompt.
-export type ChatAgentLiveState = Pick<ApiChatAgent, "id" | "hourly_limit_resets_at">;
+export type ChatAgentLiveState = Pick<ApiChatAgent, "id" | "hourly_limit_resets_at" | "free_trial_ended"> & {
+  // The stored status, so an agent the server stopped (free trial over) shows
+  // as stopped without a reload.
+  status?: ChatAgentStatus;
+};
 
 export function listChatAgentLiveStates(getToken: AuthTokenGetter): Promise<ChatAgentLiveState[]> {
   return request<ChatAgentLiveState[]>("/v1/dashboard/chat-agents/live", undefined, getToken);
