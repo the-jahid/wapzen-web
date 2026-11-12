@@ -1702,7 +1702,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   }, [getToken, isAuthenticated, isRefreshingNumbers, setPhoneNumbers]);
 
   const openCreateModal = useCallback(() => {
-    if (chatAgents.length >= MAX_CHAT_AGENTS) {
+    // The server may let an account hold more than one agent
+    // (users.max_chat_agents), so the first extra agent is left to its 403.
+    if (chatAgents.length > MAX_CHAT_AGENTS) {
       setNotice({ kind: "error", text: CHAT_AGENT_LIMIT_MESSAGE });
       return;
     }
