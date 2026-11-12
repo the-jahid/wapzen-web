@@ -618,3 +618,39 @@ The user asked for three posts that rank in Finland on Google and ChatGPT for th
 - The 177 € a month example assumes Meta's fees are billed on top of Superchat's plan; the post states that assumption.
 
 **Recheck next quarter (1 Jan 2027):** Meta EUR rates, Meta One prices and any euro price, every vendor price above, scheduled-message status, and the Traficom 2025 figures.
+
+## Peru posts (2026-11-12)
+
+The user asked for three Peru posts for the country's biggest kinds of business, built to rank on Google and ChatGPT, saying how Wapzen helps each one, that it is free, and with no mention of limits or ban risk. `docs/seo-blog-peru-research.mjs` scored 11 clusters with Google, YouTube and DuckDuckGo (hl=es-419, gl=pe, kl=pe-es). Search Console wasn't read.
+
+**Which businesses:** Produce counted 2,326,126 formal micro and small firms at the end of 2024: commerce 44.2% (1,028,768), services 41.6% (966,559), manufacturing 8.5% (Andina, 17 May 2025). Restaurants are the largest named group inside services, and INEI reports them growing through 2026 (5.97% in January, pollerías leading). Tourism brought 4,157,469 international visitors in 2025 (Mincetur).
+
+| Cluster | Total | Clean phrases | Who ranks | Decision |
+|---|---|---|---|---|
+| Free chatbot (generic) | 2,328 | bot de whatsapp gratis 70 (3/3), ia para whatsapp gratis 69 (3/3), chatbot whatsapp gratis 63 (3/3), chatbot para whatsapp gratis 54 (3/3), mejor chatbot para whatsapp 42 | Not checked | Not built: the user asked for posts by kind of business. Strongest unbuilt Peru topic |
+| Shops and selling | 1,593 | como vender por whatsapp business 40 (3/3), como vender por whatsapp 37 (3/3), ventas por whatsapp 30 (3/3), vender por whatsapp 29, catálogo whatsapp business 29 | Tiendanube, Zenvia, Brevo, Aurora Inbox; kom.pe is the only Peru-specific site | **Built:** `/es-pe/blog/como-vender-por-whatsapp` |
+| Restaurants and delivery | 809 | chatbot para delivery 30 (3/3), ia para restaurantes 30 (3/3), pedidos por whatsapp 30 (3/3), sistema de pedidos por whatsapp 25, chatbot para restaurantes 20, whatsapp para restaurantes 20 | Vendor pages (Aurora Inbox, GuruSup, Cliengo); kom.pe for Peru | **Built:** `/es-pe/blog/chatbot-whatsapp-para-restaurantes` |
+| Tourism | 627 | ia para agencias de viajes 30 (3/3), ia para hoteles 30 (3/3), whatsapp para hoteles 20, chatbot turismo 20 | kom.pe, WATI's Peru page, Trengo, SleekFlow | **Built:** `/es-pe/blog/ia-para-agencias-de-viajes-y-hoteles` |
+| Real estate | 553 | crm inmobiliario gratis 56 (3/3), ia para inmobiliarias 30 (3/3), crm inmobiliario 30, ia para agentes inmobiliarios 20 | kom.pe, Clientify, GuruSup | Not built: the top phrase wants a CRM, which Wapzen isn't. Next candidate after the generic free post |
+| WhatsApp Business cost | 1,489 | whatsapp business api 47, whatsapp business api precios 38, whatsapp business es gratis 31 | Not checked | Not built |
+| Booking and beauty | 810 | agendar citas por whatsapp 43 (3/3), agendar citas por whatsapp business 37 | Not checked | Not built |
+| Lawyers, schools | 361, 195 | ia para abogados 30 (legal research tools) | Not checked | Too little clean demand |
+
+**Copy decisions:** the server has given each account a free trial since 2026-11-12 (`FREE_TRIAL_REPLIES`) and then asks for a paid plan, so the posts say "empieza gratis" and "gratis para empezar", never "gratis para siempre", "ilimitado" or "S/ 0 al mes". No limit and no ban wording, at the user's request. They still say Wapzen isn't an official Meta product, that it doesn't confirm Yape or Plin payments, and that it doesn't send campaigns (Bulk Messages was removed on 2026-11-07). Voice is described as working with a WhatsApp CTA. Numbers use the Peruvian press style (S/ 72.90, 1,000); the older clinic post uses comma decimals.
+
+**Facts and where they came from (read 2026-11-12):**
+- Ipsos Perú "Comportamiento digital", fieldwork November 2023, 1,000 cases, urban Peruvians aged 15 to 70 online daily: WhatsApp 98% (Gestión, 5 Jan 2024).
+- Yape: 16.4 million monthly active users (Forbes Perú on Credicorp's Q1 2026 results, 15 May 2026).
+- Capece Observatorio Ecommerce Perú 2024-2025: more than 335,000 firms sell online (El Peruano, 19 May 2026).
+- Mincetur 2025: 4,157,469 international visitors, +4.1%; Chile 1,281,858, United States 628,720, Ecuador 347,373, Bolivia 227,660, Brazil 222,186, Colombia 193,468; South America 58.8%, North America 19.7%, Europe 14.4% (El Peruano, 15 Jan 2026).
+- Consumer code article 58.1 e): no commercial calls or messages without prior consent; Indecopi upheld a 10.44 UIT (S/ 57,420) fine in March 2026 (El Peruano, 25 Mar 2026).
+- Libro de Reclamaciones: required for establishments open to the public, physical or virtual, 15 working days to answer, Indecopi's free "Tu Libro de Reclamaciones" (El Peruano, 2 Dec 2025). Ley 32495, published 11 Nov 2025, extends it to digital e-commerce platforms (articles 150 and 151); the regulation was still a draft in July 2026, so the selling post tells readers to ask Indecopi.
+- DS 005-2020-MINCETUR: travel agency regulation and registration in the Directorio Nacional de Prestadores de Servicios Turísticos Calificados, virtual agencies included (Andina, 14 May 2020).
+- Meta's 1 Oct 2026 card via Zernio: Peru marketing US$0.0703, utility, authentication and service US$0.0300, calls US$0.0121 a minute, 1,000 free service messages a month per number. Chile US$0.02 from the same card.
+- Exchange rate: about S/ 3.45 per US dollar in early November 2026 (SBS and SUNAT reference rates in press reports). The older clinic post says S/ 3.75.
+
+**Weak facts, labelled as such in the copy:** delivery-app commissions of 20% to 30% come from a Perú Retail article that refuses automated reads (seen only as a search excerpt); the post attributes it to the press and tells readers to ask each app. INEI's own pages (gob.pe) refuse this machine, so the restaurant growth figure is Andina's report of INEI.
+
+**Not verified:** the Spanish menu names in the WhatsApp Business app ("Herramientas para la empresa", "Respuestas rápidas", "Etiquetas") weren't checked on a phone on this date. A real file sent by the agent to a real phone and the website reader on production are as unproven as before. Using Take Order for a booking request is untested, and the travel post says to test it. No Peruvian reader reviewed the copy.
+
+**Recheck next quarter (1 Jan 2027):** Meta's Peru and Chile rates, the exchange rate, the status of the Ley 32495 regulation, Yape's user figure, and Mincetur's 2026 visitor numbers when they are published.

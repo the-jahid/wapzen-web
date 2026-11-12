@@ -1062,6 +1062,45 @@ export const blogPosts: BlogPostEntry[] = [
     readingMinutes: 11,
     locale: "fi",
   },
+  // Peru (2026-11-12), picked by docs/seo-blog-peru-research.mjs and Produce's count of small
+  // businesses by sector: restaurants and delivery, shops that sell by WhatsApp, and travel
+  // agencies and hotels. Question-and-answer format.
+  {
+    href: "/es-pe/blog/chatbot-whatsapp-para-restaurantes",
+    title: "Chatbot de WhatsApp para restaurantes en Perú: empieza gratis",
+    name: "Chatbot de WhatsApp para restaurantes y delivery",
+    description: "Chatbot de WhatsApp con IA para restaurantes, pollerías y delivery en Perú: toma pedidos, envía la carta y responde 24 horas. Gratis para empezar, sin API de Meta.",
+    tag: "Explainer",
+    icon: UtensilsCrossed,
+    published: "2026-11-12",
+    updated: "2026-11-12",
+    readingMinutes: 13,
+    locale: "es-PE",
+  },
+  {
+    href: "/es-pe/blog/como-vender-por-whatsapp",
+    title: "Cómo vender por WhatsApp Business en Perú con IA: empieza gratis",
+    name: "Cómo vender por WhatsApp en Perú",
+    description: "Cómo vender por WhatsApp Business en Perú paso a paso: catálogo, cobros con Yape y Plin, envíos y un agente de IA que responde y anota pedidos. Empieza gratis.",
+    tag: "Explainer",
+    icon: ShoppingBag,
+    published: "2026-11-12",
+    updated: "2026-11-12",
+    readingMinutes: 14,
+    locale: "es-PE",
+  },
+  {
+    href: "/es-pe/blog/ia-para-agencias-de-viajes-y-hoteles",
+    title: "IA para agencias de viajes y hoteles en Perú: empieza gratis",
+    name: "IA para agencias de viajes y hoteles",
+    description: "IA en WhatsApp para agencias de viajes, hoteles y hospedajes en Perú: responde a los viajeros en su idioma a toda hora y recoge pedidos de reserva. Empieza gratis.",
+    tag: "Explainer",
+    icon: Plane,
+    published: "2026-11-12",
+    updated: "2026-11-12",
+    readingMinutes: 13,
+    locale: "es-PE",
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);
