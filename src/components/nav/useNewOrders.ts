@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { listOrders } from "@/lib/orders";
+import { getOrdersVersion, listOrders } from "@/lib/orders";
 import { useCachedState } from "@/lib/pageCache";
 import { startRefreshing } from "@/lib/polling";
 
@@ -22,11 +22,15 @@ export function useNewOrders(): number {
   useEffect(() => {
     if (!isSignedIn) return;
     let cancelled = false;
+    // The count comes from the version route, a fraction of the size of the
+    // list this used to read for it. A server without that route is asked the
+    // old way.
     const refresh = () => {
       if (document.hidden) return;
-      listOrders(getToken, { limit: 1 })
-        .then((result) => {
-          if (!cancelled) setCount(result.newOrders);
+      getOrdersVersion(getToken)
+        .then(async (state) => state?.newOrders ?? (await listOrders(getToken, { limit: 1 })).newOrders)
+        .then((newOrders) => {
+          if (!cancelled) setCount(newOrders);
         })
         .catch(() => undefined); // A missed count is retried on the next tick.
     };

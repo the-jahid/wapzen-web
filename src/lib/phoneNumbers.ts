@@ -14,6 +14,8 @@ export type ApiPhoneNumber = {
   wa_jid?: string | null;
   status: PhoneNumberStatus;
   qr_code?: string | null;
+  // Names the code qr_code is a picture of. Absent from older servers.
+  qr_id?: string | null;
   // How long qr_code stays scannable, counted from when the server answered:
   // WhatsApp gives the first code 60s and each later one 20s. Only on an
   // unscanned QR login.
@@ -97,8 +99,52 @@ export function listPhoneNumbers(getToken: AuthTokenGetter): Promise<ApiPhoneNum
   return request<ApiPhoneNumber[]>("/v1/phone-number", undefined, getToken);
 }
 
-export function getPhoneNumber(phoneNumberId: string, getToken: AuthTokenGetter): Promise<ApiPhoneNumber> {
-  return request<ApiPhoneNumber>(`/v1/phone-number/${encodeURIComponent(phoneNumberId)}`, undefined, getToken);
+// The QR picture each login was last given, by the id it is asked about. A
+// waiting login is asked about every 2 seconds and its picture changes every
+// 20 to 60, so the server is told which one is already here and sends only a
+// new one. Callers still get qr_code on every answer.
+const heldQrs = new Map<string, { id: string; code: string }>();
+const MAX_HELD_QRS = 8;
+
+function holdQr(askedId: string, login: ApiPhoneNumber) {
+  if (!login.qr_id || !login.qr_code) return;
+  heldQrs.delete(askedId);
+  heldQrs.set(askedId, { id: login.qr_id, code: login.qr_code });
+  if (heldQrs.size > MAX_HELD_QRS) heldQrs.delete(heldQrs.keys().next().value as string);
+}
+
+// A login as a login route answered it, with its QR picture kept for the
+// status checks that follow.
+async function startedLogin(pending: Promise<ApiPhoneNumber>): Promise<ApiPhoneNumber> {
+  const login = await pending;
+  holdQr(login.id, login);
+  return login;
+}
+
+export async function getPhoneNumber(phoneNumberId: string, getToken: AuthTokenGetter): Promise<ApiPhoneNumber> {
+  const path = `/v1/phone-number/${encodeURIComponent(phoneNumberId)}`;
+  const held = heldQrs.get(phoneNumberId);
+  if (!held) {
+    const login = await request<ApiPhoneNumber>(path, undefined, getToken);
+    holdQr(phoneNumberId, login);
+    return login;
+  }
+
+  const login = await request<ApiPhoneNumber>(`${path}?have_qr=${encodeURIComponent(held.id)}`, undefined, getToken);
+  if (login.qr_code || !login.qr_id) {
+    // A new code, or no code any more: the login linked, ended or uses a
+    // pairing code. An older server sends the picture every time and lands here.
+    if (login.qr_id) holdQr(phoneNumberId, login);
+    else heldQrs.delete(phoneNumberId);
+    return login;
+  }
+  // The picture was left out because the one held is still the one on show.
+  if (login.qr_id === held.id) return { ...login, qr_code: held.code };
+  // Left out for a picture that isn't here. It shouldn't happen; ask for it.
+  heldQrs.delete(phoneNumberId);
+  const whole = await request<ApiPhoneNumber>(path, undefined, getToken);
+  holdQr(phoneNumberId, whole);
+  return whole;
 }
 
 // startPhoneNumberLogin opens a QR login session. agent_id hands the number the
@@ -113,11 +159,11 @@ export function startPhoneNumberLogin(
   payload: { phone_number?: string; label?: string; agent_id?: string },
   getToken: AuthTokenGetter
 ): Promise<ApiPhoneNumber> {
-  return request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  }, getToken, unansweredRetryDelaysMs);
+  }, getToken, unansweredRetryDelaysMs));
 }
 
 // startPhoneNumberCodeLogin is startPhoneNumberLogin for someone who can't scan
@@ -129,11 +175,11 @@ export function startPhoneNumberCodeLogin(
   payload: { phone_number: string; label?: string; agent_id?: string },
   getToken: AuthTokenGetter
 ): Promise<ApiPhoneNumber> {
-  return request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, pairing_method: "phone_code" }),
-  }, getToken, unansweredRetryDelaysMs);
+  }, getToken, unansweredRetryDelaysMs));
 }
 
 // startPhoneNumberQrLogin is the way back from a pairing code. Plain
@@ -143,11 +189,11 @@ export function startPhoneNumberQrLogin(
   payload: { label?: string; agent_id?: string },
   getToken: AuthTokenGetter
 ): Promise<ApiPhoneNumber> {
-  return request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, pairing_method: "qr" }),
-  }, getToken, unansweredRetryDelaysMs);
+  }, getToken, unansweredRetryDelaysMs));
 }
 
 // restartPhoneNumberLogin reissues a QR code for a session that expired or
@@ -158,22 +204,22 @@ export function restartPhoneNumberLogin(
   getToken: AuthTokenGetter,
   agentId?: string
 ): Promise<ApiPhoneNumber> {
-  return request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone_number_id: phoneNumberId, ...(agentId ? { agent_id: agentId } : {}) }),
-  }, getToken);
+  }, getToken));
 }
 
 export function rePairPhoneNumber(
   phoneNumberId: string,
   getToken: AuthTokenGetter
 ): Promise<ApiPhoneNumber> {
-  return request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone_number_id: phoneNumberId, force_repair: true }),
-  }, getToken);
+  }, getToken));
 }
 
 export function logoutPhoneNumber(

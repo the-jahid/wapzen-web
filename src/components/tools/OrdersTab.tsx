@@ -20,6 +20,7 @@ import { listDashboardChatAgents } from "@/lib/chatAgents";
 import {
   deleteOrder,
   exportOrders,
+  getOrdersVersion,
   listOrders,
   orderStatuses,
   updateOrder,
@@ -33,6 +34,9 @@ import { startRefreshing } from "@/lib/polling";
 // customer confirms one, so the list re-reads itself on the same slow timer as
 // the Conversations inbox; the server has nothing to push it with.
 const refreshMs = 15000;
+// The list is read after this many turns even if it seems unchanged, for the few
+// things that don't touch an order's row, such as its agent being renamed.
+const listAtLeastEvery = 20;
 const pageSize = 50;
 const searchDelayMs = 300;
 
@@ -134,7 +138,29 @@ export default function OrdersTab({
     };
   }, [filters, getToken, onNewCount, pageNumber, reloadKey, setOrderPage]);
 
-  useEffect(() => startRefreshing(() => setReloadKey((key) => key + 1), refreshMs), []);
+  // Each turn asks whether any order changed, and only then downloads the page
+  // again. The answer carries the badge count, so that stays current either way.
+  // If the question can't be answered, the page is read anyway, as it would be
+  // without it.
+  useEffect(() => {
+    let cancelled = false;
+    let knownVersion: string | null = null;
+    let turnsSinceList = 0;
+    const stopRefreshing = startRefreshing(async () => {
+      const state = await getOrdersVersion(getToken).catch(() => null);
+      if (cancelled) return;
+      turnsSinceList += 1;
+      if (state) onNewCount(state.newOrders);
+      if (state !== null && state.version === knownVersion && turnsSinceList < listAtLeastEvery) return;
+      knownVersion = state?.version ?? null;
+      turnsSinceList = 0;
+      setReloadKey((key) => key + 1);
+    }, refreshMs);
+    return () => {
+      cancelled = true;
+      stopRefreshing();
+    };
+  }, [getToken, onNewCount]);
 
   // The agent list only fills the filter, so failing to load it costs the
   // filter and nothing else.

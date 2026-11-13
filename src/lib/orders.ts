@@ -124,6 +124,34 @@ export async function listOrders(
   };
 }
 
+// Older servers have no version route and read "version" as an order id.
+let versionRouteMissing = false;
+
+// getOrdersVersion is what a page on a timer asks instead of reading the list:
+// version changes whenever any listing of the account's orders would, and
+// newOrders is the badge count. Null from a server that can't say, which a
+// caller answers by reading the list as it did before.
+export async function getOrdersVersion(
+  getToken: AuthTokenGetter
+): Promise<{ version: string; newOrders: number } | null> {
+  if (versionRouteMissing) return null;
+  try {
+    const envelope = await request<{ version?: string; new_orders?: number }>(
+      `${dashboardPath}/version`,
+      undefined,
+      getToken
+    );
+    if (typeof envelope.data?.version !== "string") return null;
+    return { version: envelope.data.version, newOrders: envelope.data.new_orders ?? 0 };
+  } catch (error) {
+    if (error instanceof OrderError && error.status === 404) {
+      versionRouteMissing = true;
+      return null;
+    }
+    throw error;
+  }
+}
+
 export async function updateOrder(
   id: string,
   update: { status?: OrderStatus; internal_note?: string | null },
