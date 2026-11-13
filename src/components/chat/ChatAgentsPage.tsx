@@ -1201,6 +1201,9 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
       ? {
           order_enabled: agent.order.order_enabled,
           order_instructions: agent.order.order_instructions,
+          ...(agent.order.order_notify_phone !== undefined
+            ? { order_notify_phone: agent.order.order_notify_phone }
+            : {}),
         }
       : undefined,
     media: agent.media ? { ...agent.media } : undefined,
@@ -3248,6 +3251,7 @@ function ConfigPanel({
                   <span>Enable order taking</span>
                 </button>
                 <OrderInstructionsField agent={agent} on={orderEnabled} onPatch={onPatch} />
+                <OrderAlertField agent={agent} onPatch={onPatch} />
               </div>
             ) : null}
           </ConfigSection>
@@ -3279,6 +3283,7 @@ function ConfigPanel({
                   }}
                 />
                 <OrderInstructionsField agent={agent} on={takesOrders} onPatch={onPatch} />
+                <OrderAlertField agent={agent} onPatch={onPatch} />
               </div>
             </ConfigSection>
           ) : null}
@@ -3804,6 +3809,52 @@ function OrderInstructionsField({
         ) : (
           "Order taking is off, so this agent can't place orders and these instructions aren't used."
         )}
+      </span>
+    </label>
+  );
+}
+
+// Optional: a WhatsApp number told about every order the agent places or
+// changes, sent from the agent's own number. Only offered by a server that
+// reports the field, since an older one refuses it on save. Stored as typed
+// (the page autosaves mid-typing), so a number that can't be one gets a hint.
+function OrderAlertField({
+  agent,
+  onPatch,
+}: {
+  agent: ApiChatAgent;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+}) {
+  const phone = agent.order?.order_notify_phone;
+  if (phone === undefined) return null;
+  const digits = phone.replace(/D/g, "");
+  const looksWrong =
+    phone.trim() !== "" && (/[^ds()+.-/]/.test(phone) || digits.length < 7 || digits.length > 15);
+  return (
+    <label className="chat-field">
+      <span className="chat-control-label">Order alerts on WhatsApp (optional)</span>
+      <input
+        autoComplete="tel"
+        className="chat-input"
+        inputMode="tel"
+        maxLength={40}
+        onChange={(event) =>
+          onPatch((current) => ({
+            ...current,
+            order: { ...current.order, order_notify_phone: event.target.value },
+          }))
+        }
+        placeholder="+8801712345678"
+        spellCheck={false}
+        type="tel"
+        value={phone}
+      />
+      <span className="chat-field-hint">
+        {looksWrong
+          ? "This doesn't look like a phone number, so no alerts will be sent. Use digits, with the country code."
+          : phone.trim()
+            ? "Every new or changed order is sent to this number on WhatsApp, from this agent's number."
+            : "Add a WhatsApp number to get each new or changed order there too, sent from this agent's number."}
       </span>
     </label>
   );

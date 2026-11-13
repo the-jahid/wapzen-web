@@ -39,6 +39,10 @@ export type ChatToolsSection = {
 export type ChatOrderSection = {
   order_enabled?: boolean;
   order_instructions?: string;
+  // Optional WhatsApp number the agent messages, from its own number, about
+  // every order it places or changes. Absent from servers that predate it,
+  // which refuse it on save, so it is only sent back when the server returned it.
+  order_notify_phone?: string;
   orders_on?: boolean;
 };
 
@@ -97,7 +101,7 @@ export type CreateChatAgentPayload = {
   prompt?: ChatPromptSection;
   knowledge_base?: ChatKnowledgeBaseSection;
   tools?: ChatToolsSection;
-  order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
+  order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions" | "order_notify_phone">;
   media?: ChatMediaSection;
   website?: ChatWebsiteSection;
 };
@@ -111,7 +115,7 @@ export type UpdateChatAgentPayload = {
   prompt?: Partial<ChatPromptSection>;
   knowledge_base?: Partial<ChatKnowledgeBaseSection>;
   tools?: Partial<ChatToolsSection>;
-  order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions">;
+  order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions" | "order_notify_phone">;
   media?: Partial<ChatMediaSection>;
   website?: Partial<ChatWebsiteSection>;
 };
