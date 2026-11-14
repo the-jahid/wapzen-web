@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, GraduationCap, Hand, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -1132,6 +1132,19 @@ export const blogPosts: BlogPostEntry[] = [
     description: "AI for Indian travel agents: a fully free WhatsApp AI agent that answers package enquiries 24x7 in Hindi and English, sends itineraries and records leads.",
     tag: "Explainer",
     icon: Plane,
+    published: "2026-11-14",
+    updated: "2026-11-14",
+    readingMinutes: 14,
+  },
+  // Sales agent post (2026-11-14), picked by docs/seo-blog-sales-agent-research.mjs:
+  // "whatsapp sales automation", "whatsapp sales bot", "whatsapp sales agent". Q&A format.
+  {
+    href: "/blog/whatsapp-ai-sales-agent",
+    title: "WhatsApp AI Sales Agent: Automate Sales & Orders (2026)",
+    name: "WhatsApp AI sales agent",
+    description: "A WhatsApp AI sales agent answers buyers in seconds, sends product photos and takes orders on your own number. Follow-ups, costs and free setup explained.",
+    tag: "Explainer",
+    icon: Handshake,
     published: "2026-11-14",
     updated: "2026-11-14",
     readingMinutes: 14,

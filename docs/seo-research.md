@@ -684,3 +684,28 @@ The user asked for three more India posts, one per industry where Wapzen helps, 
 **Product facts behind the copy:** Take Order (confirmation gate, open order amended), Orders page, "Order alerts on WhatsApp (optional)", Images & Files, Web Search card, Reply to voice messages, Read photos, per-conversation AI switch, groups off unless switched on, pairing code or QR on New chat agent. Take Order used as an appointment request form (clinics) or enquiry form (travel) is untested, and both posts say to test it. File sending on a real phone is still unproven.
 
 **Recheck next quarter (1 Jan 2027):** Meta's India rates, AiSensy prices, the Swiggy/Zomato dispute, the TCS rule, and the NMC guidelines' full text.
+
+## Sales agent post (2026-11-14)
+
+Asked for after a customer wrote: "I want an intelligent sales agent that can automatically respond to my customers, present my products, handle orders, follow up with prospects, and help me complete sales through WhatsApp." No English post targeted sales. `docs/seo-blog-sales-agent-research.mjs` ran 32 seeds through Google, YouTube and DuckDuckGo autocomplete in the US, India and the UK (9 source/market pairs, rank-weighted). Cluster totals: sales agent 2,555, selling 2,355, products 2,202, sales bot 1,600, follow-up 1,362.
+
+| Phrase | Score | Sources |
+|---|---|---|
+| whatsapp sales automation | 140 | 9/9 |
+| ai agent for sales | 128 | 9/9 |
+| whatsapp sales bot | 125 | 6/9 |
+| whatsapp sales agent | 120 | 9/9 |
+| ai sales chatbot | 117 | 9/9 |
+| how to sell on whatsapp | 109 | 9/9 |
+| how to sell on whatsapp business | 105 | 9/9 |
+| whatsapp ai sales agent | 84 | 6/9 |
+| whatsapp sales funnel | 84 | 6/9 |
+| ai sales agent whatsapp | 70 | 6/9 |
+| how to increase sales on whatsapp | 60 | 6/9 |
+| whatsapp follow up message | 27 | 3/9 |
+
+Built: `/blog/whatsapp-ai-sales-agent` (QaPost, 15 questions). Title takes "WhatsApp AI Sales Agent" + "Automate Sales"; questions carry "sales bot", "how to sell more on WhatsApp Business", "follow up", "qualify leads". Skipped: "whatsapp sales agent n8n" (76, a builder's tutorial; /blog/n8n-whatsapp-ai-agent exists), "whatsapp salesforce" (integration Wapzen lacks), "ai sales agent call" (voice outbound, not claimed).
+
+SERP (2026-11-14): vendor pages hold "whatsapp ai sales agent": Rasayel, Wapikit, AiSensy (its /whatsapp-ai-agent-for-sales URL returned 404 that day), Wati (Astra), Salesmate, MaviBot (~2,000 words, six H2s, "maximum two follow-ups per conversation", official API). None runs on the owner's existing number without the API, which is the angle. Meta's Business Agent page (read 2026-11-14): select markets, no price stated, no order saving or scheduled follow-ups described.
+
+Honesty: Wapzen's chat agent only replies, so the post says it does NOT follow up by itself, and shows the owner-sends, agent-continues flow (dashboard and phone sends both join the agent's history: chat-responder `rememberSent` / `personSent`, active agent only). "Free to start" because of the free trial.
