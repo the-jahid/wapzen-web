@@ -1101,6 +1101,41 @@ export const blogPosts: BlogPostEntry[] = [
     readingMinutes: 13,
     locale: "es-PE",
   },
+  // India industry posts (2026-11-14), picked by docs/seo-blog-india-industries-research.mjs:
+  // clinics, restaurants and cloud kitchens, travel agents. Question-and-answer format.
+  {
+    href: "/blog/whatsapp-chatbot-for-clinics-india",
+    title: "WhatsApp Chatbot for Clinics in India: Free AI Receptionist",
+    name: "WhatsApp chatbot for clinics in India",
+    description: "A fully free AI receptionist on your clinic’s WhatsApp in India: OPD timings, fees and appointment requests in Hindi, within the NMC’s 2026 rules.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-11-14",
+    updated: "2026-11-14",
+    readingMinutes: 13,
+  },
+  {
+    href: "/blog/whatsapp-ordering-for-restaurants-india",
+    title: "WhatsApp Ordering for Restaurants in India: Free AI Bot (2026)",
+    name: "WhatsApp ordering for restaurants in India",
+    description: "Take food orders on your own WhatsApp in India with a fully free AI agent: menu and delivery answers in Hindi, orders saved, and no Zomato commission.",
+    tag: "Explainer",
+    icon: UtensilsCrossed,
+    published: "2026-11-14",
+    updated: "2026-11-14",
+    readingMinutes: 13,
+  },
+  {
+    href: "/blog/ai-for-travel-agents-india",
+    title: "AI for Travel Agents in India: Free WhatsApp AI Agent (2026)",
+    name: "AI for travel agents in India",
+    description: "AI for Indian travel agents: a fully free WhatsApp AI agent that answers package enquiries 24x7 in Hindi and English, sends itineraries and records leads.",
+    tag: "Explainer",
+    icon: Plane,
+    published: "2026-11-14",
+    updated: "2026-11-14",
+    readingMinutes: 14,
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);
