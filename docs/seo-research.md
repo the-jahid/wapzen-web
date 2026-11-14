@@ -709,3 +709,30 @@ Built: `/blog/whatsapp-ai-sales-agent` (QaPost, 15 questions). Title takes "What
 SERP (2026-11-14): vendor pages hold "whatsapp ai sales agent": Rasayel, Wapikit, AiSensy (its /whatsapp-ai-agent-for-sales URL returned 404 that day), Wati (Astra), Salesmate, MaviBot (~2,000 words, six H2s, "maximum two follow-ups per conversation", official API). None runs on the owner's existing number without the API, which is the angle. Meta's Business Agent page (read 2026-11-14): select markets, no price stated, no order saving or scheduled follow-ups described.
 
 Honesty: Wapzen's chat agent only replies, so the post says it does NOT follow up by itself, and shows the owner-sends, agent-continues flow (dashboard and phone sends both join the agent's history: chat-responder `rememberSent` / `personSent`, active agent only). "Free to start" because of the free trial.
+
+## Gym post (2026-11-14)
+
+The user asked for an English post for gyms and fitness, the first industry Wapzen had no post for. `docs/seo-blog-gym-research.mjs` ran 31 seeds through Google, YouTube and DuckDuckGo autocomplete in the US, India and the UK (9 source/market pairs, rank-weighted). Cluster totals: gym AI 2,135, gym operations 1,803, gym WhatsApp 1,369 (noisy: status, DP and group-name searches), gym messages 651, studios 405.
+
+| Phrase | Score | Sources |
+|---|---|---|
+| ai for personal trainers | 90 | 9/9 |
+| gym membership software | 90 | 9/9 |
+| ai for gyms | 60 | 6/9 |
+| fitness chatbot | 60 | 6/9 |
+| gym automation | 60 | 6/9 |
+| ai receptionist for gyms | 57 | 3/9 |
+| gym lead generation | 54 | 6/9 |
+| ai automation for gyms | 51 | 6/9 |
+| ai chatbot for gym / gym chatbot | 30 | 3/9 |
+| follow up message for gym inquiry | 30 | 3/9 |
+| gym membership renewal message sample | 30 | 3/9 |
+| gym welcome message / gym reminder message | 30 | 3/9 |
+| gym fee reminder message | 27 | 3/9 |
+| gym whatsapp group | 24 | 3/9 |
+
+Built: `/blog/whatsapp-chatbot-for-gyms` (QaPost, 15 questions). Title takes "AI for Gyms" + "WhatsApp Chatbot" + "AI Receptionist"; questions carry "get more members", follow-up/welcome/renewal/fee-reminder samples, "gym WhatsApp group" and workout advice. Skipped: "gym membership software" (Wapzen isn't one) and "ai for personal trainers" (mostly workout-programming tools; one question says so).
+
+SERP (2026-11-14): vendor pages. "whatsapp chatbot for gyms": Pabbly, Aurora Inbox, Achiya, Gurusup, Conferbot, Palmate, Edesy. "ai receptionist for gyms": Zenoti, My AI Front Desk, ABC Fitness (Replify), Glofox, CloudTalk, SchedulingKit. Read 2026-11-14: Glofox and ABC/Replify list phone, SMS, email and web chat; Zenoti is phone-first plus text and web chat; none mentions WhatsApp or lists a price. Gymdesk returned 403.
+
+Honesty: the agent doesn't send renewal reminders or follow-ups (samples are for the owner to send), Take Order acts as an untested trial-request form, no class calendar or billing access, no medical or diet advice. "Free to start" because of the free trial.

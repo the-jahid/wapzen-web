@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Dumbbell, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -1148,6 +1148,18 @@ export const blogPosts: BlogPostEntry[] = [
     published: "2026-11-14",
     updated: "2026-11-14",
     readingMinutes: 14,
+  },  // Gym post (2026-11-14), picked by docs/seo-blog-gym-research.mjs: "ai for gyms",
+  // "ai receptionist for gyms", "fitness chatbot", "gym lead generation". Q&A format.
+  {
+    href: "/blog/whatsapp-chatbot-for-gyms",
+    title: "AI for Gyms: WhatsApp Chatbot & AI Receptionist (2026)",
+    name: "WhatsApp chatbot for gyms",
+    description: "AI for gyms on WhatsApp: a chatbot that answers membership enquiries, sends class timetables and takes trial requests on your own number. Free to start.",
+    tag: "Explainer",
+    icon: Dumbbell,
+    published: "2026-11-14",
+    updated: "2026-11-14",
+    readingMinutes: 13,
   },
 ];
 
