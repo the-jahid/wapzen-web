@@ -24,7 +24,8 @@ import { QaPost } from "@/components/blog/QaPost";
 // send renewal reminders or follow-ups by itself; the post gives samples the owner sends. Wapzen
 // has no class calendar: Take Order acts as a trial-request form (built for product orders, so
 // the post says to test it) and staff confirm the slot. It can't see billing or a live
-// schedule. Copy says "free to start" (FREE_TRIAL_REPLIES), never "unlimited" or "free forever";
+// schedule. Copy says "fully free" at the user's request (2026-11-14, as in the India posts), despite
+// the server's free trial (FREE_TRIAL_REPLIES); never "unlimited" or "free forever";
 // no reply-limit and no ban wording, at the user's request. Voice is described as working, with
 // a WhatsApp CTA, as in the other posts. Groups: off by default, replies when tagged or replied to.
 const href = "/blog/whatsapp-chatbot-for-gyms";
@@ -82,7 +83,7 @@ const compare = [
   ["Gym software", "Built to work with their own management software; some connect to other CRMs", "Works without gym software"],
   ["Trial and tour bookings", "Books into the live schedule", "Takes the request; your front desk confirms the slot"],
   ["Lead follow-up", "Follows up by phone, text and email", "You follow up; the agent carries on the chat"],
-  ["Price", "Not listed on their pages: demo or sales call", "Free to start, no card"],
+  ["Price", "Not listed on their pages: demo or sales call", "Fully free, no card"],
 ];
 
 const fit = [
@@ -106,10 +107,10 @@ const questions = [
   {
     id: "what",
     q: "What can AI do for a gym on WhatsApp?",
-    answer: "AI can be your gym’s receptionist on WhatsApp: it answers membership prices, opening hours, class times and personal training questions in seconds, sends your timetable, takes trial class requests and hands members to your staff for freezes, billing and complaints. Wapzen puts one on the number your gym already uses, free to start.",
+    answer: "AI can be your gym’s receptionist on WhatsApp: it answers membership prices, opening hours, class times and personal training questions in seconds, sends your timetable, takes trial class requests and hands members to your staff for freezes, billing and complaints. Wapzen puts one on the number your gym already uses, and it’s fully free.",
     body: <>
       <p>Most people who want to join a gym send a message before they visit: the price, the hours, whether there’s a women’s area, whether they can try a class. Those messages often arrive at 10 pm or while your front desk is busy. A gym chatbot answers all of them straight away, from the information you give it.</p>
-      <p><strong>Wapzen</strong> links your gym’s WhatsApp number as a device, so your phone keeps working and your staff can still reply. There’s no Meta API key, no card and no gym software needed, and the AI is included.</p>
+      <p><strong>Wapzen</strong> links your gym’s WhatsApp number as a device, so your phone keeps working and your staff can still reply. <strong>It’s fully free</strong>: no Meta API key, no card and no gym software needed, and the AI is included.</p>
       <p>It suits gyms, fitness clubs, yoga, pilates and dance studios, martial arts schools, CrossFit boxes and personal trainers. To see how it works behind the scenes, read <Link href="/blog/what-is-a-whatsapp-chatbot">what a WhatsApp chatbot is</Link>.</p>
     </>,
   },
@@ -154,7 +155,7 @@ const questions = [
         ]}
       />
       <p>Take Order was built for product orders, so here it works as a trial request form. Test it with a few made-up requests before you rely on it. If your booking software has a public API, someone technical can connect it with an API tool so the agent checks real class spaces; the <Link href="/blog/whatsapp-appointment-booking">WhatsApp appointment booking</Link> guide shows how.</p>
-      <InlineCta title="Answer tonight’s gym enquiries" body="Free to start: no card and no Meta API key, on the WhatsApp number your members already have." label="Start free" />
+      <InlineCta title="Answer tonight’s gym enquiries" body="Fully free: no card and no Meta API key, on the WhatsApp number your members already have." label="Start free" />
     </>,
   },
   {
@@ -228,7 +229,7 @@ const questions = [
   {
     id: "compare",
     q: "How does it compare with gym software AI receptionists?",
-    answer: "Gym software companies such as Glofox, ABC Fitness and Zenoti sell AI receptionists that answer phone calls, SMS, email and web chat and book straight into their own schedules; their pages don’t mention WhatsApp or list a price. Wapzen works on WhatsApp only, on your current number, without gym software, and is free to start, but your staff confirm bookings.",
+    answer: "Gym software companies such as Glofox, ABC Fitness and Zenoti sell AI receptionists that answer phone calls, SMS, email and web chat and book straight into their own schedules; their pages don’t mention WhatsApp or list a price. Wapzen works on WhatsApp only, on your current number, without gym software, and is fully free, but your staff confirm bookings.",
     body: <>
       <Comparison caption="Gym software AI receptionists compared with a WhatsApp AI agent" columns={["Gym software AI (Glofox, ABC Fitness, Zenoti)", "Wapzen"]} rows={compare} />
       <p>Choose your gym software’s AI if you already use that software, get most enquiries by phone, SMS or web chat, and want bookings and follow-ups fully automatic. Choose Wapzen if your members and leads write to you on WhatsApp and you want them answered today, without changing software. The two can sit side by side.</p>
@@ -237,10 +238,10 @@ const questions = [
   {
     id: "cost",
     q: "How much does a WhatsApp chatbot for a gym cost?",
-    answer: "Wapzen is free to start, with no card and no Meta API key, and it doesn’t use the API, so there are no Meta per-message charges. Gym software AI receptionists don’t list prices on their pages; you book a demo. API chatbot platforms charge a monthly plan, and Meta charges for template messages such as renewal reminders.",
+    answer: "Wapzen is fully free, with no card and no Meta API key, and it doesn’t use the API, so there are no Meta per-message charges. Gym software AI receptionists don’t list prices on their pages; you book a demo. API chatbot platforms charge a monthly plan, and Meta charges for template messages such as renewal reminders.",
     body: <>
       <ul>
-        <li><strong>Wapzen:</strong> free to start, on your current number.</li>
+        <li><strong>Wapzen:</strong> fully free, on your current number.</li>
         <li><strong>Gym software AI:</strong> priced by the vendor, usually on top of the management software.</li>
         <li><strong>API platforms:</strong> a plan and often AI credits, plus Meta’s charges. Since 1 October 2026, Meta also charges for service replies beyond the first 1,000 a month per number.</li>
       </ul>
@@ -292,15 +293,15 @@ export default function WhatsAppChatbotForGymsPage() {
     lead="People who want to join a gym message first: the price, the hours, whether they can try a class. Here are 15 questions gym and studio owners ask before handing those chats to AI: what a gym chatbot answers, how it sends timetables and takes trial requests, what follow-up and renewal reminders look like on WhatsApp, with sample messages, how it compares with gym software AI receptionists, what it costs and how to set one up."
     verdict={{
       title: "The short answer",
-      body: <>A WhatsApp chatbot answers your gym’s enquiries in seconds, from your own prices and timetable. With <strong>Wapzen</strong> it runs on the number you already use: it quotes memberships, sends the class timetable, understands voice notes, takes trial requests for your front desk and hands members to your staff. It doesn’t send reminders by itself; you do, and it carries on the chat. <strong>It’s free to start</strong>, with no Meta API key.</>,
+      body: <>A WhatsApp chatbot answers your gym’s enquiries in seconds, from your own prices and timetable. With <strong>Wapzen</strong> it runs on the number you already use: it quotes memberships, sends the class timetable, understands voice notes, takes trial requests for your front desk and hands members to your staff. It doesn’t send reminders by itself; you do, and it carries on the chat. <strong>It’s fully free</strong>, with no Meta API key.</>,
     }}
-    facts={[["Price", "Free to start, no card"], ["Meta API key", "Not needed"], ["Your number", "The one your gym already uses"], ["Trial requests", "Saved and sent to your WhatsApp"]]}
+    facts={[["Price", "Fully free, no card"], ["Meta API key", "Not needed"], ["Your number", "The one your gym already uses"], ["Trial requests", "Saved and sent to your WhatsApp"]]}
     indexTitle="The 15 questions in this guide"
     answerLabel="Short answer"
     questions={questions}
     sources={sources}
     related={["/blog/whatsapp-appointment-booking", "/blog/whatsapp-ai-sales-agent"]}
     product="/free-whatsapp-chatbot"
-    cta={{ heading: <>Turn gym enquiries into trial visits.<br /><span>Free to start, with no Meta API key.</span></>, body: "Sign up, give the agent your prices and timetable, and link your gym’s number. No card needed." }}
+    cta={{ heading: <>Turn gym enquiries into trial visits.<br /><span>Fully free, with no Meta API key.</span></>, body: "Sign up, give the agent your prices and timetable, and link your gym’s number. No card needed." }}
   />;
 }

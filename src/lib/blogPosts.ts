@@ -1152,9 +1152,9 @@ export const blogPosts: BlogPostEntry[] = [
   // "ai receptionist for gyms", "fitness chatbot", "gym lead generation". Q&A format.
   {
     href: "/blog/whatsapp-chatbot-for-gyms",
-    title: "AI for Gyms: WhatsApp Chatbot & AI Receptionist (2026)",
+    title: "AI for Gyms: Free WhatsApp Chatbot & AI Receptionist (2026)",
     name: "WhatsApp chatbot for gyms",
-    description: "AI for gyms on WhatsApp: a chatbot that answers membership enquiries, sends class timetables and takes trial requests on your own number. Free to start.",
+    description: "AI for gyms on WhatsApp: a chatbot that answers membership enquiries, sends class timetables and takes trial requests on your own number. Fully free.",
     tag: "Explainer",
     icon: Dumbbell,
     published: "2026-11-14",
