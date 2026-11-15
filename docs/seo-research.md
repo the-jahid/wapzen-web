@@ -749,3 +749,34 @@ Three candidates: online shops, food businesses, clinics (dental + beauty). Buil
 
 Not built: clinics ("admin klinik" phrases are partly job searches), hotels/villas ("chatbot hotel" 30).
 Weak: 2026 food-delivery merchant commission not confirmed (Bisnis.com 403, Investortrust 429; only the 2021 figure, stated with its year); the 95.33% is the 2023 survey (2024 edition released 28 Nov 2025, channel share not read); the Katadata fee ranges come from a vendor-quoted article; Indonesian WhatsApp menu string "Tautkan dengan nomor telepon saja" not checked on a phone.
+
+## Malaysia posts (2026-11-15)
+
+Request: two posts for Malaysia, picked by what can rank first. `node docs/seo-blog-malaysia-research.mjs` (Google + YouTube autocomplete with hl=ms and hl=en, gl=my, ie/oe=utf-8; DuckDuckGo kl=my-ms and kl=my-en; rank-weighted, max 6/6 sources). Malaysians search in both languages, so every seed runs through both. Cluster totals: **autoReply 2,718**, whatsappBot 2,311, **business/API 2,287**, percuma 1,906, aiBisnes 1,841, servis 1,669, pesaing 1,544, jualan 1,494, hartanah 863, makanan 673 (industry clusters are thin and noisy: "pusat tuisyen near me", "cloud kitchen malaysia" rentals).
+
+| Phrase | Score | Sources | Post |
+|---|---|---|---|
+| auto reply whatsapp business | 139 | 6/6 | Malay |
+| whatsapp business api pricing malaysia | 134 | 4/6 | English |
+| whatsapp business api malaysia | 127 | 4/6 | English |
+| cara buat auto reply whatsapp | 101 | 6/6 | Malay |
+| cara buat bot whatsapp | 91 | 6/6 | Malay |
+| whatsapp business auto reply | 77 | 6/6 | Malay |
+| cara buat chatbot whatsapp | 74 | 6/6 | Malay |
+| whatsapp ai chatbot malaysia | 72 | 2/6 | (not built) |
+| whatsapp chatbot malaysia | 65 | 4/6 | (not built) |
+| greeting / quick reply whatsapp business | 60 each | 6/6 | Malay |
+| away message whatsapp business | 58 | 6/6 | Malay |
+| whatsapp business berbayar | 58 | 6/6 | English (app is free) |
+| auto reply whatsapp biasa / personal | 44 / 39 | 2/6, 5/6 | Malay |
+| malaysia broadcast whatsapp business api rate | 40 | 2/6 | English |
+
+Built:
+- `/ms/blog/cara-buat-auto-reply-whatsapp` (Malay, 11 questions, 15 copy-paste Malay messages). SERP for "cara buat auto reply whatsapp business" (2026-11-15): Indonesian pages (Fortune IDN, detik, respond.io/id, SleekFlow id-id, Qiscus id) plus one machine-translated Malay page (mundobytes ms), so a real Malaysian Malay guide is the gap. New blog-only locale `ms` (hreflang ms-MY, `/ms/blog`, fallback en).
+- `/blog/whatsapp-business-api-pricing-malaysia` (English, 11 questions). Highest-intent cluster; SERP is crowded with vendor posts (respond.io, SleekFlow, ChatMaxima, Go4whatsup, ForwardChat, Bixtech, Waapy, Whautomate), so this one competes on completeness: MYR rates, the 1 Oct 2026 change, platform prices side by side, a worked bill and the no-API route.
+
+Not built: "whatsapp ai chatbot malaysia" / "whatsapp chatbot malaysia" (SERP held by Qiscus and SleekFlow roundups; next candidate as a comparison post), "chatgpt whatsapp" (consumer intent), "whatsapp blast malaysia" (Wapzen doesn't send broadcasts).
+
+Facts (read 2026-11-15, recheck each quarter): Meta developer pricing page (1 Oct 2026 version) confirms MYR billing since 1 Apr 2026 (chosen at account creation), 1,000 free service messages per number a month, in-window utility charged since 1 Oct 2026, free entry point window up to 7 days, user-initiated calls free. MYR figures are in Meta's rate-card download, not the page text; respond.io (updated 13 Nov 2026) and ChatMaxima agree: marketing RM 0.3467, utility/authentication/service RM 0.0564, international authentication RM 0.1685; USD 0.0860 / 0.0140 (ChatMaxima only). ChatMaxima wrongly says in-window utility is free. Utility tiers start at 150,001 (RM 0.0536), authentication at 100,001 (respond.io). Malaysia business-initiated call rate not found. SleekFlow en-my: Pro RM 399/month billed yearly (RM 4,788), Premium RM 1,199 (RM 14,388), RM 50/month number hosting, 7-day trial. respond.io: Starter US$79 yearly / US$99 monthly, Growth 159/199, Advanced 279/349, WhatsApp fees not included. WATI: Growth US$39, Pro US$79, Business US$199 a month billed yearly; monthly-billed figures not captured. PDPA (Amendment) Act 2024: cross-border whitelist removed 1 Apr 2025; DPO and breach notification from 1 Jun 2025 (Sidley, Rajah & Tann). No reliable 2025-2026 figure for WhatsApp use in Malaysia was found (MCMC IUS has none in search results; ZenWeb 403), so neither post cites one.
+
+Unverified: WhatsApp Business menu names in Malay (each step also gives the English label); no Malaysian reader reviewed the Malay; SleekFlow's own message rate card vs Meta's list price.

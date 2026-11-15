@@ -1,11 +1,11 @@
 // Languages of the public marketing pages. English pages live at the root;
 // the others under /pt-br, /es, /es-mx, /es-co, /es-cl, /es-pe, /it, /de, /ar-sa, /ar-eg,
-// /id and /fi (see app/<prefix>/layout.tsx). Each
+// /id, /fi and /ms (see app/<prefix>/layout.tsx). Each
 // localized page names its English equivalent in lib/marketingPages.ts (blog
 // posts in lib/blogPosts.ts), which drives the hreflang alternates. The
 // dashboard itself is English-only.
 
-export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "es-CO" | "es-CL" | "es-PE" | "it" | "de" | "ar-SA" | "ar-EG" | "id" | "fi";
+export type Locale = "en" | "pt-BR" | "es" | "es-MX" | "es-CO" | "es-CL" | "es-PE" | "it" | "de" | "ar-SA" | "ar-EG" | "id" | "fi" | "ms";
 
 /** The blog index and the fixed text of its posts, in one language. */
 export type BlogUi = {
@@ -818,6 +818,67 @@ export const locales: Record<Locale, {
         readPost: "Lue artikkeli",
         learnMore: "Lue lisää",
         choose: (name) => `Valitse ${name}, jos…`,
+      },
+    },
+  },
+  ms: {
+    hreflang: "ms-MY",
+    htmlLang: "ms-MY",
+    ogLocale: "ms_MY",
+    label: "Bahasa Melayu",
+    fallback: "en",
+    ui: {
+      nav: { features: "Ciri-ciri", pricing: "Harga", tools: "Alat percuma", faq: "Soalan lazim", faqHref: "#faq" },
+      login: "Log masuk",
+      dashboard: "Papan pemuka",
+      home: "Laman utama",
+      breadcrumb: "Navigasi",
+      startFree: "Mula percuma",
+      explore: ["Teroka lagi.", "Wapzen, mula percuma."],
+      readMore: "Baca lagi",
+      openTools: "Buka alat",
+      toolsTitle: "Alat WhatsApp percuma",
+      toolsBody: "Penjana pautan dan kod QR, pencari kod negara dan banyak lagi. Dalam bahasa Inggeris, tanpa daftar.",
+      copy: "Salin",
+      copied: "Disalin",
+      footer: {
+        tagline: ["Chatbot dan ejen suara AI untuk WhatsApp.", "Menggunakan maklumat perniagaan anda."],
+        product: "PRODUK",
+        features: "Ciri-ciri",
+        chatbot: "Chatbot AI",
+        voiceAgent: "Ejen suara AI",
+        useCases: "Contoh penggunaan",
+        industries: "Industri",
+        howItWorks: "Cara ia berfungsi",
+        faq: "Soalan lazim",
+        freeTools: "ALAT PERCUMA",
+        allTools: "Semua alat",
+        solutions: "PENYELESAIAN",
+        connect: "HUBUNGI KAMI",
+        sayHello: "Hantar mesej",
+        rights: "Hak cipta terpelihara.",
+        backToTop: "Kembali ke atas ↑",
+        languages: "Bahasa",
+      },
+      blog: {
+        href: "/ms/blog",
+        label: "Blog",
+        dateLocale: "ms-MY",
+        author: "Pasukan Wapzen",
+        updated: "Dikemas kini",
+        minRead: (minutes) => `${minutes} minit bacaan`,
+        tags: { Comparison: "Perbandingan", Alternatives: "Alternatif", Guide: "Panduan", Explainer: "Penerangan" },
+        onThisPage: "Dalam halaman ini",
+        faqTitle: "Soalan lazim",
+        sourcesTitle: "Sumber",
+        guideTitle: "Tentang panduan ini",
+        guideNote: (date) => `Langkah dan tangkapan skrin diambil daripada papan pemuka Wapzen pada ${date}, dengan data contoh: perniagaan, orang dan nombor telefon di dalamnya adalah rekaan.`,
+        explainerNote: (date) => `Fakta dan harga dalam artikel ini datang daripada sumber di bawah, disemak pada ${date}. Meta, vendor lain dan peraturan kerajaan kerap berubah: semak semula di sumbernya sebelum anda bergantung padanya.`,
+        comparisonNote: (date) => `Harga dan ciri diambil daripada halaman setiap vendor, disemak pada ${date}. Ia kerap berubah: semak di laman vendor sebelum membeli.`,
+        keepReading: ["Teruskan membaca.", "Lagi dari blog."],
+        readPost: "Baca artikel",
+        learnMore: "Ketahui lagi",
+        choose: (name) => `Pilih ${name} jika…`,
       },
     },
   },

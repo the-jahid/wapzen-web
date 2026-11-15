@@ -1188,6 +1188,33 @@ export const blogPosts: BlogPostEntry[] = [
     readingMinutes: 13,
     locale: "id",
   },
+  // Malaysia posts (2026-11-15), picked by docs/seo-blog-malaysia-research.mjs: the largest
+  // cluster ("auto reply whatsapp business", "cara buat auto reply whatsapp", "cara buat bot
+  // whatsapp") in Malay, and the highest-intent one ("whatsapp business api pricing malaysia")
+  // in English, as Malaysians search it. Q&A format.
+  {
+    href: "/ms/blog/cara-buat-auto-reply-whatsapp",
+    title: "Cara Buat Auto Reply WhatsApp Business + Bot AI (2026)",
+    name: "Cara buat auto reply WhatsApp",
+    description: "Cara set auto reply WhatsApp Business langkah demi langkah: mesej sapaan, mesej tiada di tempat, balasan pantas, 15 contoh mesej Bahasa Melayu dan bot AI.",
+    tag: "Explainer",
+    icon: MessageSquareReply,
+    published: "2026-11-15",
+    updated: "2026-11-15",
+    readingMinutes: 12,
+    locale: "ms",
+  },
+  {
+    href: "/blog/whatsapp-business-api-pricing-malaysia",
+    title: "WhatsApp Business API Pricing Malaysia (2026): RM Rates & Fees",
+    name: "WhatsApp Business API pricing in Malaysia",
+    description: "WhatsApp Business API pricing in Malaysia for 2026: Meta’s RM rates per message, the 1,000 free service replies, SleekFlow, respond.io and WATI fees, a worked bill.",
+    tag: "Explainer",
+    icon: CircleDollarSign,
+    published: "2026-11-15",
+    updated: "2026-11-15",
+    readingMinutes: 11,
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);
