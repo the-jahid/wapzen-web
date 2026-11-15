@@ -189,25 +189,42 @@ export function WhatsAppLinkHelp({
     const canSwitch = !disabled && !isRequesting && !isRequestingQr;
     const canRenew = canSwitch && Boolean(number);
     const renew = () => void requestCode(number);
+    const parsedNumber = number ? parsePhoneNumberFromString(number) : undefined;
+    const shownNumber = parsedNumber?.formatInternational() ?? number;
+    const half = Math.ceil(pairingCode.length / 2);
+    const codeHalves = [pairingCode.slice(0, half), pairingCode.slice(half)];
     return (
       <div className="wa-link">
-        <div className="wa-link-btn-pair">
-          <button
-            className={`wa-link-btn wa-link-btn-wide${expired ? "" : " wa-link-btn-quiet"}`}
-            disabled={!canRenew}
-            onClick={renew}
-            type="button"
-          >
-            {isRequesting ? "Sending a new code…" : "Send a new code"}
-          </button>
-          <button
-            className="wa-link-btn wa-link-btn-wide wa-link-btn-quiet"
-            disabled={!canSwitch}
-            onClick={() => void requestQr()}
-            type="button"
-          >
-            {isRequestingQr ? "Getting a QR code…" : "Scan a QR code instead"}
-          </button>
+        <div className="wa-pair-head">
+          <div className="wa-pair-title">Enter code on phone</div>
+          <div className="wa-pair-account">
+            Linking WhatsApp account <b>{shownNumber || "your number"}</b> (
+            <button
+              className="wa-pair-inline-link"
+              disabled={!canSwitch}
+              onClick={() => void requestQr()}
+              type="button"
+            >
+              edit
+            </button>
+            )
+          </div>
+        </div>
+        <div
+          className={`wa-pair-code${expired ? " is-expired" : ""}`}
+          aria-label={`Pairing code ${pairingCode.split("").join(" ")}`}
+          role="img"
+        >
+          {codeHalves.map((part, partIndex) => (
+            <span className="wa-pair-code-group" key={partIndex}>
+              {partIndex > 0 ? <span className="wa-pair-code-dash" aria-hidden="true">-</span> : null}
+              {part.split("").map((char, index) => (
+                <span className="wa-pair-code-box" aria-hidden="true" key={index}>
+                  {char}
+                </span>
+              ))}
+            </span>
+          ))}
         </div>
         {remaining === null ? (
           <div className="wa-link-timer" role="timer">
@@ -221,43 +238,42 @@ export function WhatsAppLinkHelp({
             </span>
           </div>
         )}
-        <div
-          className={`wa-link-code${expired ? " is-expired" : ""}`}
-          aria-label={`Pairing code ${pairingCode.split("").join(" ")}`}
-        >
-          {pairingCode}
-        </div>
         {resent ? (
           <div className="wa-link-sent" role="status">
             New code sent. Type this one — the last code no longer works.
           </div>
         ) : null}
         {error ? <div className="wa-link-error">{error}</div> : null}
-        <div className="wa-link-steps-title">Do this on your phone</div>
-        <ol className="wa-link-steps wa-link-steps-big">
+        <ol className="wa-pair-steps">
           <li>
-            Open <b>WhatsApp</b> on the phone with <b>{number || "this number"}</b>.
-            <span className="wa-link-step-hint">
-              See the notification <b>&ldquo;Enter code to link new device&rdquo;</b>? Tap it and skip to step 4.
-            </span>
+            Open <b>WhatsApp</b> <WhatsAppIcon /> on your phone
           </li>
           <li>
-            Tap <b>⋮ Menu</b> (Android) or <b>Settings</b> (iPhone) › <b>Linked devices</b> ›{" "}
-            <b>Link a device</b>.
+            On Android tap <b>Menu</b> <MenuIcon /> · On iPhone tap <b>Settings</b> <SettingsIcon />
           </li>
           <li>
-            Tap <b>Link with phone number instead</b>.
-            <span className="wa-link-step-hint">It&rsquo;s at the bottom of the camera screen — don&rsquo;t scan.</span>
+            Tap <b>Linked devices</b>, then <b>Link device</b>
           </li>
           <li>
-            Type the code <b className="wa-link-step-code">{pairingCode}</b>.
-            <span className="wa-link-step-hint">The number connects by itself — keep this page open.</span>
+            Tap <b>Link with phone number instead</b> and enter this code on your phone
           </li>
         </ol>
-        <p className="wa-link-note">
-          Nothing on your phone, or it says the code is wrong? This code only works for{" "}
-          {number || "the number you entered"}, so check that is the WhatsApp number on the phone.
-        </p>
+        <div className="wa-pair-links">
+          <button className="wa-pair-link" disabled={!canSwitch} onClick={() => void requestQr()} type="button">
+            {isRequestingQr ? "Getting a QR code…" : "Log in with QR code"}
+            <svg aria-hidden="true" fill="none" height="14" viewBox="0 0 24 24" width="14">
+              <path d="m9 6 6 6-6 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
+            </svg>
+          </button>
+          <button
+            className={`wa-pair-link${expired ? " is-strong" : ""}`}
+            disabled={!canRenew}
+            onClick={renew}
+            type="button"
+          >
+            {isRequesting ? "Sending a new code…" : "Send a new code"}
+          </button>
+        </div>
         <style dangerouslySetInnerHTML={{ __html: css }} />
       </div>
     );
@@ -366,7 +382,169 @@ export function WhatsAppLinkHelp({
   );
 }
 
+// Small inline pictures of what to tap, so the steps can be followed by eye.
+function WhatsAppIcon() {
+  return (
+    <span className="wa-pair-icon is-whatsapp" aria-hidden="true">
+      <svg fill="none" height="14" viewBox="0 0 24 24" width="14">
+        <path
+          d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5Z"
+          stroke="currentColor"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M9.2 8.3c.2-.4.4-.4.7-.4h.5c.2 0 .4 0 .5.4l.7 1.6c.1.2 0 .4-.1.6l-.5.6c-.1.1-.2.3 0 .5.3.6.8 1.2 1.3 1.6.6.5 1.1.7 1.5.9.2.1.4 0 .5-.1l.6-.8c.2-.2.4-.2.6-.1l1.5.7c.2.1.4.2.4.4 0 .5-.1 1.1-.5 1.4-.5.4-1.3.7-2.2.5-1-.2-2.4-.8-3.7-2-1.4-1.3-2.2-2.7-2.4-3.6-.2-.9.1-1.7.4-2.2Z"
+          fill="currentColor"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <span className="wa-pair-icon" aria-hidden="true">
+      <svg height="14" viewBox="0 0 24 24" width="14">
+        <circle cx="12" cy="5.5" fill="currentColor" r="1.8" />
+        <circle cx="12" cy="12" fill="currentColor" r="1.8" />
+        <circle cx="12" cy="18.5" fill="currentColor" r="1.8" />
+      </svg>
+    </span>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <span className="wa-pair-icon" aria-hidden="true">
+      <svg fill="none" height="14" viewBox="0 0 24 24" width="14">
+        <path
+          d="M10.3 3h3.4l.5 2.4 1.6.9 2.3-.8 1.7 2.9-1.8 1.6v1.9l1.8 1.6-1.7 2.9-2.3-.8-1.6.9-.5 2.4h-3.4l-.5-2.4-1.6-.9-2.3.8-1.7-2.9 1.8-1.6v-1.9L4.2 8.4l1.7-2.9 2.3.8 1.6-.9.5-2.4Z"
+          stroke="currentColor"
+          strokeLinejoin="round"
+          strokeWidth="1.6"
+        />
+        <circle cx="12" cy="12" r="2.8" stroke="currentColor" strokeWidth="1.6" />
+      </svg>
+    </span>
+  );
+}
+
 const css = `
+.wa-pair-head { display: grid; gap: 4px; }
+.wa-pair-title { color: var(--app-text-strong); font-size: clamp(22px, 5vw, 28px); font-weight: 500; line-height: 1.2; }
+.wa-pair-account { color: var(--app-text-soft); font-size: 14px; line-height: 1.45; }
+.wa-pair-account b { color: var(--app-text-strong); font-weight: 800; }
+.wa-pair-inline-link {
+  background: none;
+  border: 0;
+  color: var(--app-primary-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+.wa-pair-inline-link:disabled { cursor: default; opacity: 0.6; }
+.wa-pair-code {
+  align-items: center;
+  background: var(--app-inset);
+  border-radius: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
+  padding: 20px 10px;
+  user-select: all;
+}
+.wa-pair-code-group { align-items: center; display: flex; gap: 6px; }
+.wa-pair-code-box {
+  align-items: center;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-strong);
+  border-radius: 8px;
+  color: var(--app-text-strong);
+  display: inline-flex;
+  font-size: clamp(16px, 4.5vw, 20px);
+  font-weight: 700;
+  height: clamp(38px, 10vw, 48px);
+  justify-content: center;
+  width: clamp(28px, 8vw, 38px);
+}
+.wa-pair-code-dash { color: var(--app-text-strong); font-size: 20px; font-weight: 700; margin-right: 2px; }
+.wa-pair-code.is-expired .wa-pair-code-box { color: var(--app-muted); text-decoration: line-through; }
+@container (max-width: 340px) {
+  .wa-pair-code-dash { display: none; }
+}
+.wa-pair-steps { counter-reset: wa-pair; display: grid; list-style: none; margin: 4px 0 0; padding: 0; }
+.wa-pair-steps > li {
+  align-items: center;
+  color: var(--app-text);
+  counter-increment: wa-pair;
+  display: block;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 26px;
+  padding: 0 0 20px 40px;
+  position: relative;
+}
+.wa-pair-steps > li:last-child { padding-bottom: 0; }
+.wa-pair-steps > li::before {
+  align-items: center;
+  background: var(--app-surface);
+  border: 1.5px solid var(--app-text);
+  border-radius: 999px;
+  color: var(--app-text);
+  content: counter(wa-pair);
+  display: flex;
+  font-size: 12px;
+  font-weight: 600;
+  height: 24px;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 24px;
+  z-index: 1;
+}
+.wa-pair-steps > li:not(:last-child)::after {
+  background: var(--app-text);
+  bottom: -1px;
+  content: "";
+  left: 12px;
+  position: absolute;
+  top: 24px;
+  width: 1.5px;
+}
+.wa-pair-steps b { color: var(--app-text-strong); font-weight: 700; }
+.wa-pair-icon {
+  align-items: center;
+  border: 1px solid var(--app-border-strong);
+  border-radius: 6px;
+  color: var(--app-text-soft);
+  display: inline-flex;
+  height: 22px;
+  justify-content: center;
+  vertical-align: -5px;
+  width: 22px;
+}
+.wa-pair-icon.is-whatsapp { background: #25d366; border-color: #25d366; color: #fff; }
+.wa-pair-links { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 6px 0 0 40px; }
+.wa-pair-link {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid var(--app-primary);
+  color: var(--app-text-strong);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 4px;
+  padding: 0 0 2px;
+}
+.wa-pair-link.is-strong { color: var(--app-primary-text); }
+.wa-pair-link:disabled { cursor: default; opacity: 0.6; }
 .wa-link { container-type: inline-size; display: grid; gap: 10px; min-width: 0; text-align: left; }
 /* Side by side when the pane is wide enough for both, stacked when not. */
 .wa-link-options { align-items: start; display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
