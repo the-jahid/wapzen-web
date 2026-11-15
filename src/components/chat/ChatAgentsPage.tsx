@@ -1215,6 +1215,10 @@ const CHAT_AGENT_LIMIT_MESSAGE = "Your account already has a chat agent.";
 // no agent to belong to yet.
 const NEW_AGENT_LOGIN = "new-agent";
 
+// Matches whiskey's AUTO_AGENT_NAME, the name an agent gets when linking a
+// number creates it.
+const DEFAULT_AGENT_NAME = "WhatsApp Agent";
+
 // The create modal links a number first and then asks for a name; the rest of
 // the form keeps the defaults a new agent is created with, and is edited in the
 // editor afterwards. An empty phone_number_id is what keeps it on the linking step.
@@ -1556,6 +1560,52 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     [queueSave, setChatAgents]
   );
 
+  // A linked number is all a new agent needs: there is no naming step. The
+  // server gives a freshly linked number its agent before the number reads
+  // connected, so this finds it and opens it. A number that has no agent (one
+  // already on the account, picked from the list, or an older server) gets one
+  // here with the default name. Only if that fails does the naming step show,
+  // with the error, as the way to finish by hand.
+  const finishCreateWithNumber = useCallback(
+    async (phoneNumberId: string) => {
+      setCreateError("");
+      setIsCreating(true);
+      try {
+        let agents = await listDashboardChatAgents(getToken);
+        let agent = agents.find((item) => item.agent.phone_number_id === phoneNumberId);
+        if (!agent) {
+          agent = await createDashboardChatAgent(
+            createFormToPayload({
+              ...newCreateForm(1),
+              name: DEFAULT_AGENT_NAME,
+              phone_number_id: phoneNumberId,
+            }),
+            getToken
+          );
+          agents = [agent, ...agents];
+        }
+        setChatAgents(agents);
+        setCreateForm(null);
+        router.push(`/dashboard/chat/${agent.id}`);
+      } catch (error) {
+        if (isChatAgentLimitError(error)) {
+          setCreateForm(null);
+          setIsUpgradeOpen(true);
+        } else {
+          setCreateForm((current) => (current ? { ...current, name: DEFAULT_AGENT_NAME, phone_number_id: phoneNumberId } : current));
+          setCreateError(error instanceof Error ? error.message : "Could not create chat agent");
+        }
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [getToken, router, setChatAgents]
+  );
+  const finishCreateRef = useRef(finishCreateWithNumber);
+  useEffect(() => {
+    finishCreateRef.current = finishCreateWithNumber;
+  }, [finishCreateWithNumber]);
+
   const numberLoginId = numberLogin?.id;
   const numberLoginStatus = numberLogin?.status;
 
@@ -1587,8 +1637,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
         if (updated.status === "connected") {
           if (isPairingForCreateRef.current) {
             console.log("[wa-login] connected for a new agent", { phoneNumberId: updated.id });
-            setCreateError("");
-            setCreateForm((current) => (current ? { ...current, phone_number_id: updated.id } : current));
+            void finishCreateRef.current(updated.id);
             return;
           }
           const target = scanTargetRef.current;
@@ -1820,8 +1869,8 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     setCreateError("");
     setNumberLogin(null);
     setNumberLoginError("");
-    setCreateForm((current) => (current ? { ...current, phone_number_id: phoneNumberId } : current));
-  }, []);
+    void finishCreateWithNumber(phoneNumberId);
+  }, [finishCreateWithNumber]);
 
   // Back from naming to linking, for the wrong number or one another agent holds.
   const changeCreateNumber = useCallback(() => {
@@ -2413,13 +2462,13 @@ function CreateChatAgentModal({
   const head = (
     <div className="chat-modal-head">
       <div>
-        <div className="chat-modal-step">Step {isLinking ? 1 : 2} of 2</div>
+        {isLinking ? null : <div className="chat-modal-step">Almost done</div>}
         <h2 className="chat-modal-title" id="chat-create-title">
           {isLinking ? "Connect your WhatsApp" : "Name your chat agent"}
         </h2>
         <div className="chat-modal-subtitle">
           {isLinking
-            ? "Use a pairing code or scan the QR code to link the number this agent will answer on. You name the agent next."
+            ? "Use a pairing code or scan the QR code to link the number your agent will answer on. Your agent is ready the moment it connects."
             : "Your number is ready. The prompt, knowledge bases and tools are set in the editor once the agent exists."}
         </div>
       </div>
@@ -3053,7 +3102,7 @@ function PhoneNumberSetupCard({
   const [wantsQr, setWantsQr] = useState(false);
   const offersQr = wantsQr || (isPending && !login?.pairing_code);
   const onConnect = forNewAgent
-    ? "you name the agent the moment it connects"
+    ? "your agent is ready the moment it connects"
     : "the number is assigned to this agent the moment it connects";
   const onConnectSentence = onConnect.charAt(0).toUpperCase() + onConnect.slice(1);
 
