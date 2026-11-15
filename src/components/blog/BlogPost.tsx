@@ -175,11 +175,11 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
 }
 
 /** A table with one highlighted row (Wapzen), e.g. a list of alternatives. */
-export function RowTable({ caption, columns, rows, highlight }: { caption: string; columns: string[]; rows: string[][]; highlight?: string }) {
+export function RowTable({ caption, columns, rows, highlight, firstColumn = "Tool" }: { caption: string; columns: string[]; rows: string[][]; highlight?: string; /** Header of the first column, for posts in other languages. */ firstColumn?: string }) {
   return <div className={styles.tableWrap}>
     <table className={styles.table}>
       <caption className={tools.srOnly}>{caption}</caption>
-      <thead><tr><th scope="col">Tool</th>{columns.map((column) => <th key={column} scope="col">{column}</th>)}</tr></thead>
+      <thead><tr><th scope="col">{firstColumn}</th>{columns.map((column) => <th key={column} scope="col">{column}</th>)}</tr></thead>
       <tbody>{rows.map(([label, ...cells]) => <tr key={label} data-highlight={label === highlight || undefined}><th scope="row">{label}</th>{cells.map((cell, i) => <td key={i} data-label={columns[i]}>{cell}</td>)}</tr>)}</tbody>
     </table>
   </div>;

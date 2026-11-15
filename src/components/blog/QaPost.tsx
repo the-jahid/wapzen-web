@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, MessageCircleQuestion } from "lucide-react";
 import { blogPost, blogUi, formatPostDate, postsIn } from "@/lib/blogPosts";
-import { locales } from "@/lib/locales";
+import { locales, type Locale } from "@/lib/locales";
 import { marketingPages } from "@/lib/marketingPages";
 import { GetStarted } from "@/components/landing/SiteChrome";
 import { Section } from "@/components/marketing/MarketingPage";
@@ -38,7 +38,8 @@ type QaPostProps = {
   questions: Question[];
   sources?: Array<{ label: string; href: string }>;
   related?: [string, string];
-  product: string;
+  /** A marketing page in the same language for the "keep reading" row, if there is one. */
+  product?: string;
   cta: { heading: ReactNode; body: string };
 };
 
@@ -51,6 +52,8 @@ export function QaPost({ href, heading, lead, verdict, facts, indexTitle, answer
   const others = related ? related.map(blogPost) : postsIn(locale).filter((entry) => entry.href !== href).slice(0, 2);
   const page = marketingPages.find((entry) => entry.href === product);
   const faq = questions.map(({ q, answer }) => ({ q, a: answer }));
+  // A post in a script that runs the other way (English under an Arabic post) keeps its own direction.
+  const crossScript = (other: Locale = "en") => (locales[other].dir ?? "ltr") === (locales[locale].dir ?? "ltr") ? {} : { dir: locales[other].dir ?? "ltr", lang: locales[other].htmlLang };
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(postJsonLd(post, faq)).replace(/</g, "\\u003c") }} />
     <header className={tools.hero}>
@@ -91,7 +94,7 @@ export function QaPost({ href, heading, lead, verdict, facts, indexTitle, answer
 
     <Section id="keep-reading" heading={<>{t.keepReading[0]}<br /><span>{t.keepReading[1]}</span></>}>
       <div className={tools.grid3}>
-        {others.map((entry) => <Link key={entry.href} href={entry.href} className={tools.toolTile}><span className={tools.cardIcon}><entry.icon size={20} /></span><h3 className={marketing.tileTitle}>{entry.name}</h3><p>{entry.description}</p><span>{t.readPost}<ArrowRight size={15} /></span></Link>)}
+        {others.map((entry) => <Link key={entry.href} href={entry.href} className={tools.toolTile} {...crossScript(entry.locale)}><span className={tools.cardIcon}><entry.icon size={20} /></span><h3 className={marketing.tileTitle}>{entry.name}</h3><p>{entry.description}</p><span>{t.readPost}<ArrowRight size={15} /></span></Link>)}
         {page && <Link href={page.href} className={tools.toolTile}><span className={tools.cardIcon}><page.icon size={20} /></span><h3 className={marketing.tileTitle}>{page.name}</h3><p>{page.description}</p><span>{t.learnMore}<ArrowRight size={15} /></span></Link>}
       </div>
     </Section>

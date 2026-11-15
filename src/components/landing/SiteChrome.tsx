@@ -1,4 +1,4 @@
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
@@ -6,6 +6,7 @@ import { ThemeToggleButton } from "@/components/theme/ThemeToggle";
 import { freeTools } from "@/lib/freeTools";
 import { locales, type Locale } from "@/lib/locales";
 import { localeHome, solutionsFor } from "@/lib/marketingPages";
+import { AuthSwitch } from "./AuthSwitch";
 import { ResizableNavbar } from "./ResizableNavbar";
 import styles from "./CoreLanding.module.css";
 
@@ -19,10 +20,10 @@ export function Brand({ href = "#top" }: { href?: string }) {
 
 export function GetStarted({ label = "Create your agent", dark = false }: { label?: string; dark?: boolean }) {
   const className = `${styles.button} ${dark ? styles.darkButton : styles.greenButton}`;
-  return <>
-    <Show when="signed-out"><SignUpButton mode="modal" forceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard"><button type="button" className={className}>{label}<ArrowUpRight size={17} /></button></SignUpButton></Show>
-    <Show when="signed-in"><a href="/dashboard" className={className}>Open dashboard<ArrowUpRight size={17} /></a></Show>
-  </>;
+  return <AuthSwitch
+    signedOut={<SignUpButton mode="modal" forceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard"><button type="button" className={className}>{label}<ArrowUpRight size={17} /></button></SignUpButton>}
+    signedIn={<a href="/dashboard" className={className}>Open dashboard<ArrowUpRight size={17} /></a>}
+  />;
 }
 
 /** Styled like GetStarted, but opens a chat with us on WhatsApp (e.g. voice early access). */
@@ -32,7 +33,7 @@ export function WhatsAppButton({ href, label }: { href: string; label: string })
 
 export function SiteHeader({ links, brandHref, locale = "en" }: { links: Array<{ href: string; label: string }>; brandHref?: string; locale?: Locale }) {
   const { ui } = locales[locale];
-  return <ResizableNavbar brand={<Brand href={brandHref} />} links={links} actions={<><ThemeToggleButton /><Show when="signed-out"><SignInButton mode="modal" forceRedirectUrl="/dashboard" signUpForceRedirectUrl="/dashboard"><button className={styles.login} type="button">{ui.login}<ArrowUpRight size={14} /></button></SignInButton></Show><Show when="signed-in"><a href="/dashboard" className={styles.login}>{ui.dashboard}</a><UserButton /></Show></>} />;
+  return <ResizableNavbar brand={<Brand href={brandHref} />} links={links} actions={<><ThemeToggleButton /><AuthSwitch signedOut={<SignInButton mode="modal" forceRedirectUrl="/dashboard" signUpForceRedirectUrl="/dashboard"><button className={styles.login} type="button">{ui.login}<ArrowUpRight size={14} /></button></SignInButton>} signedIn={<><a href="/dashboard" className={styles.login}>{ui.dashboard}</a><UserButton /></>} /></>} />;
 }
 
 // The footer's SOLUTIONS column lists the pages in the current language (or

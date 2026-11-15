@@ -114,7 +114,7 @@ const sections = [
         { name: "the Calling API", points: ["You need Meta’s official platform", "You already use a Business API provider", "A team or contact centre takes the calls", "You have developers, or a provider that has built it"] },
         { name: "Wapzen", points: ["You want AI to answer calls on your current number", "Your number is in the WhatsApp Business app", "You don’t want per-minute fees", "You want it working today, without code"] },
       ]} />
-      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a device, not through the Calling API. Call only people who expect your call: WhatsApp restricts numbers that make unwanted calls. For phone-line AI agents, see <Link href="/blog/bland-ai-vs-vapi">Bland AI vs Vapi</Link>.</Note>
+      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a device, not through the Calling API. Call only people who expect your call: WhatsApp restricts numbers that make unwanted calls.</Note>
     </>,
   },
 ];

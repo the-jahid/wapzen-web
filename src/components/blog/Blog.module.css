@@ -147,3 +147,8 @@
   .table td { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 12px; padding: 6px 0; }
   .table td::before { content: attr(data-label); font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--site-text-muted); }
 }
+
+/* Right-to-left posts (Arabic): mirror the physical sides used above. */
+:global([dir="rtl"]) .prose > ul, :global([dir="rtl"]) .prose > ol { padding-left: 0; padding-right: 22px; }
+:global([dir="rtl"]) .note, :global([dir="rtl"]) .prose > blockquote { border-left: 0; border-right: 3px solid var(--landing-green); border-radius: 12px 0 0 12px; }
+:global([dir="rtl"]) .table th, :global([dir="rtl"]) .table td { text-align: right; }

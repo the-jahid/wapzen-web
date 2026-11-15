@@ -11,6 +11,10 @@ const removedPosts: Array<[string, string]> = [
   ["/blog/whatsapp-chatbot-ecommerce-ireland", "/whatsapp-ai-customer-service"],
   ["/blog/whatsapp-chatbot-travel-agencies-hotels-ireland", "/whatsapp-ai-customer-service"],
   ["/blog/whatsapp-booking-chatbot-salons-gyms-ireland", "/blog/whatsapp-appointment-booking"],
+  // Removed on 2026-11-06: WhatsApp calls are restricted inside the UAE, and the
+  // Bland vs Vapi readers want phone lines, which Wapzen can't call.
+  ["/blog/ai-voice-agent-whatsapp-uae", "/free-ai-calling-agent"],
+  ["/blog/bland-ai-vs-vapi", "/free-ai-calling-agent"],
 ];
 
 const nextConfig: NextConfig = {
