@@ -1,0 +1,12 @@
+/* The /faq "at a glance" table: label and value, stacked on phones. */
+.wrap { border: 1px solid var(--site-border); border-radius: 22px; background: var(--site-panel); overflow: hidden; }
+.facts { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.6; }
+.facts th, .facts td { padding: 16px 20px; text-align: left; vertical-align: top; }
+.facts tr + tr { border-top: 1px solid var(--site-border); }
+.facts th { width: 26%; font-weight: 600; color: var(--site-text); }
+.facts td { color: var(--site-text-soft); }
+
+@media (max-width: 560px) {
+  .facts tr { display: grid; gap: 4px; padding: 14px 18px; }
+  .facts th, .facts td { width: auto; padding: 0; }
+}

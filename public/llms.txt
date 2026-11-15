@@ -1,23 +1,50 @@
 # Wapzen
 
-> Wapzen is a free, no-code builder for WhatsApp AI chatbots and WhatsApp AI calling agents. Connect an existing personal WhatsApp or WhatsApp Business number by QR code (no WhatsApp Business API needed), then let AI agents auto-reply to messages, auto-answer inbound WhatsApp calls, and make outbound AI calls 24/7.
+> Wapzen is a no-code builder for WhatsApp AI chatbots and WhatsApp AI calling agents, free to start. Connect an existing personal WhatsApp or WhatsApp Business number by QR code or pairing code (no WhatsApp Business API needed), then let an AI chat agent auto-reply to messages and an AI voice agent answer and make WhatsApp calls, 24/7.
+
+Facts checked 15 November 2026. Straight answers to common questions: [Wapzen FAQ](/faq). Every fact and answer in one file: [llms-full.txt](/llms-full.txt). Where an older page or post disagrees with this section, this section is current (see "Corrections to older pages" below).
 
 ## What it does
 
-- WhatsApp AI chatbot: an AI chat agent that auto-replies to incoming WhatsApp text messages, using an OpenAI GPT or Anthropic Claude model, your system prompt, knowledge bases, and API tools. Works on personal WhatsApp numbers, which have no built-in auto-reply, as well as WhatsApp Business numbers.
-- WhatsApp AI voice agent: an AI calling agent that automatically answers inbound WhatsApp voice calls and places outbound calls in real time, with a configurable voice, language, transcriber, prompt, knowledge bases, and tools.
+- WhatsApp AI chatbot: an AI chat agent that auto-replies to incoming WhatsApp messages, using your system prompt, knowledge bases, and API tools. Wapzen picks and runs the AI model (currently a GPT model from OpenAI), so there is no model to choose and no API key to bring. Works on personal WhatsApp numbers, which have no built-in auto-reply, as well as WhatsApp Business numbers.
+- WhatsApp AI voice agent: an AI calling agent that answers inbound WhatsApp voice calls and places outbound calls in real time, with a configurable voice, language, prompt, knowledge bases, and tools. Call transcripts are saved.
 - AI outbound calling campaigns: add leads to a campaign, assign a voice agent, and each lead is called on WhatsApp; review campaign activity and analytics.
+- Voice notes and photos: the chat agent transcribes voice notes and reads photos customers send, then replies in text.
+- Files: the chat agent sends the business's own images and documents, such as a menu, price list, or product photo, when a customer asks.
+- Website reading: if switched on, the chat agent reads the business's own website while it replies.
 - Knowledge bases: train agents on text, PDF, and Word documents; agents search them during chats and calls.
 - API request tools: let agents take actions in your own systems, such as checking an order or booking an appointment.
-- Conversation review: WhatsApp chat history, call history, and call transcripts in one dashboard.
+- Take Order: a built-in tool that lets a chat agent collect order details, confirm a summary with the customer, and save the order. Each new or changed order can also be sent to a WhatsApp number the owner chooses.
+- Conversation review: WhatsApp chat history, call history, and call transcripts in one dashboard. The AI can be switched off for a single contact so a person can reply.
+- WhatsApp groups: the AI is off in every group by default. Switched on for a group, the agent answers messages that tag the number or reply to it.
 
 ## Pricing
 
-- Wapzen is currently free to use, with every feature included: $0 per month, no credit card.
-- AI models (OpenAI GPT, Anthropic Claude), speech, and voices are included; no customer API keys are needed.
+- Wapzen is free to start: $0, no credit card.
+- Businesses that need more, such as a second chat agent, can arrange a paid plan on WhatsApp.
+- The AI model, speech, and voices are included; customers don't need their own OpenAI or Anthropic API keys.
 - No WhatsApp Business API, so no Meta per-message fees. Calls run over WhatsApp, with no per-minute charges.
 - AI calls are WhatsApp voice calls only; Wapzen does not dial regular phone numbers.
 - Details: [Pricing](/pricing)
+
+## Good to know
+
+- Wapzen is not an official Meta product and does not use the WhatsApp Business API. It links a number the way WhatsApp Web does, as a linked device. For high-volume broadcasts or enterprise-scale messaging, the official Business API is the better fit ([comparison](/whatsapp-business-api-alternative)).
+- Chat agents reply in one-to-one chats, and in groups only where the owner switches the AI on. Status updates and channels are skipped.
+- The chat agent answers people who message the business. Wapzen doesn't send broadcasts, bulk text messages, or automatic follow-up texts; outbound calling campaigns are voice calls to the business's own leads.
+- Agents can reply in the customer's language. The dashboard is in English.
+- Voice agents can't transfer a live call to a person.
+- Booking, order lookup, and CRM updates work through API request tools connected to the business's own systems. There is no built-in calendar.
+- A linked device keeps working while the phone is offline, but WhatsApp logs linked devices out if the phone isn't used for about 14 days.
+
+## Corrections to older pages
+
+- AI model: chat agents have no model picker. Older pages that say you choose an OpenAI or Anthropic model, or that GPT and Claude are both included, are out of date. Wapzen picks and runs the model.
+- Pricing: the current wording is "free to start, no credit card", with paid plans arranged on WhatsApp. Older pages that say "every feature included" or "no cap on AI replies" are out of date.
+- Bulk Messages was removed in November 2026. Pages that describe sending text messages to up to 5,000 numbers are out of date; the chat agent only answers people who message the business.
+- Hourly limits: no hourly AI reply limit is applied right now. Posts that mention 100 AI replies an hour per agent describe an earlier setting.
+- Groups: older pages that say group chats are skipped are out of date. The AI can be switched on per group.
+- Voice: AI voice agents for WhatsApp calls are working. Older pages that call voice "early access" or "coming in the next update" are out of date.
 
 ## Use cases
 
@@ -39,14 +66,15 @@
 
 ## Setup
 
-1. Connect a WhatsApp number from the dashboard by scanning a QR code.
-2. Create a chat agent (WhatsApp AI chatbot) or voice agent (WhatsApp AI calling agent) and set its prompt and model options.
+1. Connect a WhatsApp number from the dashboard by scanning a QR code or entering a pairing code.
+2. Create a chat agent (WhatsApp AI chatbot) or voice agent (WhatsApp AI calling agent) and set its prompt.
 3. Attach relevant knowledge bases and tools.
 4. Review conversations, calls, and outbound campaigns in the dashboard.
 
 ## Pages
 
 - [Home](/): WhatsApp AI chatbot and AI calling agent overview, features, use cases, industries, setup workflow, and FAQ.
+- [Wapzen FAQ](/faq): straight answers about Wapzen: price, setup by QR or pairing code, the AI model, ban risk, voice calls, groups, orders, files, and what it doesn't do.
 - [Pricing](/pricing): the free plan, what a WhatsApp chatbot or AI calling agent usually costs, and a comparison.
 - [Free WhatsApp chatbot builder](/free-whatsapp-chatbot): how to make a WhatsApp AI chatbot for free in five steps, and free options compared.
 - [Free AI calling agent](/free-ai-calling-agent): how to make a free AI voice agent for WhatsApp calls, and how it differs from a phone-line AI agent.
@@ -103,15 +131,15 @@ The Wapzen dashboard itself is in English.
 - [WhatsApp order taking chatbot](/blog/whatsapp-order-taking-chatbot): how an AI chatbot answers product questions, collects order details, confirms a summary, and saves the order with Wapzen's built-in Take Order tool or an API request.
 - [WhatsApp order confirmation messages](/blog/whatsapp-order-confirmation-messages): 25 copy-and-paste templates for new orders, payment and COD, shipping, delivery and customer care, and changes, cancellations and refunds.
 - [WhatsApp AI auto reply examples](/blog/whatsapp-ai-auto-reply-customer-conversations): 12 illustrative customer conversations with the rule each one needs, which messages to automate or escalate, setup, what to measure, and common mistakes.
-- [AI voice agent on WhatsApp in India](/blog/ai-voice-agent-whatsapp-india): an AI telecaller on a business WhatsApp number for Indian sales and support teams: lead call-back by API, COD confirmation, admissions, reminders; per-minute phone-line pricing (Bolna ₹5.52 pay-as-you-go) vs WhatsApp, Hindi and 9 more Indian languages, TRAI 140/1600 series, DPDP Rules timeline, RBI recovery call hours. Voice is in early access, free to start; no live transfer.
-- [Free WhatsApp AI agent](/blog/free-whatsapp-ai-agent): what a WhatsApp AI agent does compared with away messages and menu bots, AI reply quotas on AiSensy ($50 for 1,000 AI messages), Interakt (100, then $0.011) and WATI (250 credits), and Wapzen's free AI agent with no cap on AI replies: knowledge base, Take Order, API tools, bulk messages, voice agent, a sample prompt, setup by QR or pairing code, and its limits.
+- [AI voice agent on WhatsApp in India](/blog/ai-voice-agent-whatsapp-india): an AI telecaller on a business WhatsApp number for Indian sales and support teams: lead call-back by API, COD confirmation, admissions, reminders; per-minute phone-line pricing (Bolna ₹5.52 pay-as-you-go) vs WhatsApp, Hindi and 9 more Indian languages, TRAI 140/1600 series, DPDP Rules timeline, RBI recovery call hours. Free to start; no live transfer.
+- [Free WhatsApp AI agent](/blog/free-whatsapp-ai-agent): what a WhatsApp AI agent does compared with away messages and menu bots, AI reply quotas on AiSensy ($50 for 1,000 AI messages), Interakt (100, then $0.011) and WATI (250 credits), and Wapzen's free AI agent: knowledge base, Take Order, API tools, voice agent, a sample prompt, setup by QR or pairing code, and its limits.
 - [Is the WhatsApp Business API free?](/blog/is-whatsapp-business-api-free): free to access, not to use: what is free (no access fee, incoming messages, 1,000 service replies a month per number from 1 October 2026, 7-day free entry point window), what is charged, "free API" offers checked (Meta Cloud API, AiSensy Free Forever, WATI and Interakt trials, GitHub libraries), a worked Indian monthly bill, and the no-API route.
 - [AiSensy vs Interakt](/blog/aisensy-vs-interakt): plan prices (AiSensy Basic $45 / ₹1,500, Interakt Growth $55 + taxes), AI agent add-ons ($50 for 1,000 vs $74.99 for 100 AI messages), seats, chatbots, WhatsApp calling, Shopify, a worked monthly bill for an Indian store, and Wapzen as the free option for AI replies.
 - [WATI pricing](/blog/wati-pricing): WATI's plans billed monthly and annually (Growth $49/$39, Pro $99/$79, Business $249/$199), extra users, AI credits, Astra, message charges, three worked monthly bills, and cheaper or free alternatives.
-- [Free WhatsApp bulk message sender](/blog/whatsapp-bulk-message-sender-free): broadcast lists (256, saved contacts only), browser extensions, the Business API and Wapzen Bulk Messages (up to 5,000 numbers per send, personalised, 30-second default gap, AI answers replies) compared, WhatsApp's bulk-messaging rule, a ban-avoidance checklist, and 8 templates.
-- [Free WhatsApp AI chatbot in India](/blog/free-whatsapp-ai-chatbot-india): a question-and-answer guide for Indian businesses: a free AI WhatsApp chatbot with no Meta API key, no provider and no per-message charge, set up in about a minute by QR or pairing code; costs in rupees against AiSensy (₹1,500 plan, ₹1,350 for 1,000 AI messages, ₹0.145 a reply), Interakt and WATI with a worked monthly bill; Hindi and Hinglish replies, a Hinglish setup guide, Take Order, voice notes, photos, Bulk Messages, API tools and the per-customer AI switch; a voice agent that answers WhatsApp calls in 11 languages; comparison with Meta Business Agent; DPDP and TRAI; and limits (1 chat agent per account, 100 AI replies an hour per agent, one-to-one text only).
+- [Free WhatsApp bulk message sender](/blog/whatsapp-bulk-message-sender-free): broadcast lists (256, saved contacts only), browser extensions, and the Business API compared (Wapzen's own Bulk Messages feature, which this post also describes, was removed in November 2026), WhatsApp's bulk-messaging rule, a ban-avoidance checklist, and 8 templates.
+- [Free WhatsApp AI chatbot in India](/blog/free-whatsapp-ai-chatbot-india): a question-and-answer guide for Indian businesses: a free AI WhatsApp chatbot with no Meta API key, no provider and no per-message charge, set up in about a minute by QR or pairing code; costs in rupees against AiSensy (₹1,500 plan, ₹1,350 for 1,000 AI messages, ₹0.145 a reply), Interakt and WATI with a worked monthly bill; Hindi and Hinglish replies, a Hinglish setup guide, Take Order, voice notes, photos, API tools and the per-customer AI switch; a voice agent that answers WhatsApp calls in 11 languages; comparison with Meta Business Agent; DPDP and TRAI; and limits (1 chat agent per account, 100 AI replies an hour per agent, one-to-one text only).
 - [WhatsApp chatbot for real estate in India](/blog/whatsapp-chatbot-real-estate-india): a question-and-answer guide for Indian brokers, channel partners and builders: a free AI WhatsApp chatbot with no Meta API key that replies to property enquiries in seconds and qualifies buyers on six questions in Hindi or Hinglish; how to use it with 99acres, MagicBricks and Housing.com leads (no direct portal integration), when you still need a real estate CRM, a worked cost example, WhatsApp marketing templates, MahaRERA's registration number and QR code rule, a voice agent for buyers' calls, and limits.
-- [WhatsApp chatbot for coaching institutes](/blog/whatsapp-chatbot-coaching-institute-india): a question-and-answer guide for coaching institutes and tuition classes in India: a free AI WhatsApp chatbot with no Meta API key for admission enquiries, fees, batches and demo classes; fee reminder messages in English and Hinglish through Bulk Messages; WhatsApp messages to get students for tuition classes; how it differs from management software such as Classplus or Teachmint; the CCPA's 2024 coaching advertising guidelines as prompt rules, the DPDP Act on under-18s, a voice agent for parents' calls, and limits.
+- [WhatsApp chatbot for coaching institutes](/blog/whatsapp-chatbot-coaching-institute-india): a question-and-answer guide for coaching institutes and tuition classes in India: a free AI WhatsApp chatbot with no Meta API key for admission enquiries, fees, batches and demo classes; fee reminder messages in English and Hinglish; WhatsApp messages to get students for tuition classes; how it differs from management software such as Classplus or Teachmint; the CCPA's 2024 coaching advertising guidelines as prompt rules, the DPDP Act on under-18s, a voice agent for parents' calls, and limits.
 - [Is WhatsApp Business free?](/blog/is-whatsapp-business-free): the free app, regular vs business broadcasts, WhatsApp Business Premium, Meta One plans ($14.99 to $499 a month), API rates, and which a small business needs.
 - [How to make a WhatsApp QR code](/blog/how-to-make-whatsapp-qr-code): making a code in the Business app or with a logo, Wapzen's scan tests of logo size, style and colour, and how to fix a code that fails.
 - [WhatsApp Calling API pricing](/blog/whatsapp-calling-api-pricing): per-minute rates for 18 markets, India's volume tiers, worked monthly bills, and Wapzen's free voice agent.
@@ -144,7 +172,7 @@ The Wapzen dashboard itself is in English.
 - [¿WhatsApp Business tiene costo?](/es-mx/blog/whatsapp-business-precio): the free app vs the paid API, Meta's Mexico rates from 1 October 2026 (marketing US$0.0397 / MXN 0.7298; utility, authentication and service US$0.0085 / MXN 0.1565, service free for the first 1,000 a month per number) and three monthly bills. English version: /blog/whatsapp-business-api-pricing.
 - [Mensajes automáticos de WhatsApp Business](/es-mx/blog/mensajes-automaticos-whatsapp-business): 40 welcome, away and quick reply examples in Mexican Spanish, setup steps, and why automatic messages don't send. English version: /blog/whatsapp-business-greeting-message.
 - [IA para inmobiliarias en México](/es-mx/blog/ia-para-inmobiliarias-whatsapp): an AI agent that answers real estate prospects on WhatsApp in Mexico: who already pays for this (Lastro, Vambe), questions for buyers and renters (Infonavit, Fovissste), NOM-247-SE-2021, the 2025 data protection law, rental fraud, and how it compares with Vambe and Cliengo. Free to start with usage limits; text only, replies only.
-- [Agente de voz con IA para WhatsApp](/es-mx/blog/agente-de-voz-ia-whatsapp-gratis): an AI voice agent that answers and makes WhatsApp calls for Mexican businesses (clinics, real estate, car dealers, schools, payment reminders), costs vs a human call center and Bland AI or Vapi, REPEP, the 2025 data protection law, and limits (WhatsApp calls only, no transfers). Voice is in early access, free to start.
+- [Agente de voz con IA para WhatsApp](/es-mx/blog/agente-de-voz-ia-whatsapp-gratis): an AI voice agent that answers and makes WhatsApp calls for Mexican businesses (clinics, real estate, car dealers, schools, payment reminders), costs vs a human call center and Bland AI or Vapi, REPEP, the 2025 data protection law, and limits (WhatsApp calls only, no transfers). Free to start.
 - [Chatbot gratis para WhatsApp en México](/es-mx/blog/chatbot-gratis-whatsapp): which WhatsApp chatbots are really free in Mexico. Wapzen (everything free right now, no Meta API key, personal or Business number) and Meta Business Agent compared with ManyChat, SendPulse, Landbot, Kommo, WATI and Leadsales, with prices, a monthly bill in MXN, setup steps with a sample prompt, how it helps a business grow, the 2025 data protection law, LFPC articles 7 and 17, REPEP, and limits.
 
 ## Blog in Brazilian Portuguese
@@ -158,7 +186,7 @@ The Wapzen dashboard itself is in English.
 - [Chatbot para clínica odontológica](/pt-br/blog/chatbot-whatsapp-clinica-odontologica): an AI receptionist for Brazilian dental clinics on WhatsApp: five sample chats, setup steps, booking options, and the LGPD, CFO and WhatsApp policy limits. The chatbot never diagnoses or prescribes.
 - [Chatbot para delivery no WhatsApp](/pt-br/blog/chatbot-para-delivery-whatsapp): an AI agent that takes delivery orders by text for Brazilian restaurants: what an R$ 100 order costs on iFood (12% to 23% plus 3.2%) against a direct order, a sample order, five setup steps, limits (no voice notes, no Pix confirmation, no kitchen printer), and how it compares with Anota AI, which iFood bought in 2022 and which grew to 70,000 registered restaurants.
 - [IA para imobiliária e corretor de imóveis](/pt-br/blog/ia-para-imobiliaria-whatsapp): an AI agent that answers property leads on WhatsApp in Brazil: who already pays (Lastro's Lais at 1,000+ agencies, Morada.ai), qualification questions for buyers and renters, a commission example, Lei 6.530 and LGPD limits, and how it compares with Lais and Morada.ai. Free to start with usage limits; text only, replies only.
-- [Agente de voz IA grátis no WhatsApp](/pt-br/blog/agente-de-voz-ia-whatsapp-gratis): an AI voice agent that answers and makes WhatsApp calls for Brazilian businesses: 77% of WhatsApp users in Brazil make more voice calls on the app than on carrier minutes (Panorama Mobile Time/Opinion Box, 2025), uses by segment, costs vs Bland AI and Vapi, Não Me Perturbe, 0303, LGPD and CDC art. 42, and limits (WhatsApp calls only, no transfers). Voice is in early access, free to start.
+- [Agente de voz IA grátis no WhatsApp](/pt-br/blog/agente-de-voz-ia-whatsapp-gratis): an AI voice agent that answers and makes WhatsApp calls for Brazilian businesses: 77% of WhatsApp users in Brazil make more voice calls on the app than on carrier minutes (Panorama Mobile Time/Opinion Box, 2025), uses by segment, costs vs Bland AI and Vapi, Não Me Perturbe, 0303, LGPD and CDC art. 42, and limits (WhatsApp calls only, no transfers). Free to start.
 - [IA para responder WhatsApp](/pt-br/blog/ia-para-responder-whatsapp): how to put an AI agent on a Brazilian business's WhatsApp number. Wapzen (everything free right now, no Meta API key, personal or Business number) compared with Meta Business Agent (Meta One from R$ 59 a month), BotConversa (R$ 199 a month on the annual plan plus Meta fees) and n8n, Z-API or Evolution API builds, with setup steps and a sample prompt, how it helps a business grow, voice notes and photos, WhatsApp calls, the per-contact AI switch, LGPD, CDC art. 30, and limits.
 - [Chatbot gratuito para WhatsApp Business](/pt-br/blog/chatbot-gratuito-para-whatsapp-business): which WhatsApp chatbots are really free in Brazil, nine compared: Wapzen (everything free right now, no Meta API key, personal or Business number, unlimited conversations), Meta Business Agent, ManyChat, SendPulse, Typebot, BotConversa (no free plan or trial, R$ 199 a month with AI on the annual plan), Kommo, Digisac and Umbler Talk. Includes costs in reais, a free BotConversa alternative and setup steps. Wapzen is our product and isn't an official Meta product, so this is a comparison with sources, not a ranking.
 - [IA para barbearia e salão de beleza](/pt-br/blog/ia-para-barbearia-e-salao-de-beleza): an AI agent for Brazilian barbershops, beauty salons, manicurists and estheticians on WhatsApp: answers prices, durations and hours, sends price lists and photos, takes booking requests the owner confirms, understands voice notes and photos, and answers WhatsApp calls with a voice agent. Free right now, no Meta API key. It isn't a salon management system (no calendar, till or commissions): compares Trinks, Booksy, AppBarber, Google Calendar and Koalendar, and covers reminders, LGPD and what it does not do.
@@ -181,7 +209,7 @@ The Wapzen dashboard itself is in English.
 
 - [Blog (Chile)](/es-cl/blog): WhatsApp guides for businesses in Chile.
 - [Chatbot de WhatsApp para clínicas dentales](/es-cl/blog/chatbot-whatsapp-clinica-dental): an AI agent for dental clinics in Chile: answering administrative questions and taking appointment requests after hours, working alongside Dentalink or AgendaPro, three ways to book, Ley 20.584, the status of Ley 21.719 on 1 November 2026, and limits (no reminders, no diagnosis, no access to clinical records).
-- [Chatbot de WhatsApp gratis en Chile](/es-cl/blog/chatbot-whatsapp-gratis): a question-and-answer guide for Chilean businesses: is there a free AI WhatsApp chatbot in Chile (yes, Wapzen: no cap on AI replies, no Meta message fees because it links as a device, AI voice agent for WhatsApp calls), what unlimited covers (1 chat agent per account, one-to-one text), costs compared (Superpyme from CLP 29.990 for 500 AI replies, WATI Growth US$49 with 250 AI credits, Meta API US$0.02 per reply in Chile after 1,000 free), setup, ban risk, when not to use it, and Ley 21.719.
+- [Chatbot de WhatsApp gratis en Chile](/es-cl/blog/chatbot-whatsapp-gratis): a question-and-answer guide for Chilean businesses: is there a free AI WhatsApp chatbot in Chile (yes, Wapzen: free to start, no Meta message fees because it links as a device, AI voice agent for WhatsApp calls), what it covers (1 chat agent per account, one-to-one text), costs compared (Superpyme from CLP 29.990 for 500 AI replies, WATI Growth US$49 with 250 AI credits, Meta API US$0.02 per reply in Chile after 1,000 free), setup, ban risk, when not to use it, and Ley 21.719.
 
 
 ## Blog in German (for businesses in Germany)
@@ -190,7 +218,7 @@ The Wapzen dashboard itself is in English.
 - [WhatsApp Chatbot für Handwerker](/de/blog/whatsapp-chatbot-handwerker-kostenlos): a WhatsApp AI chatbot for electricians, plumbers and other trades in Germany: answering enquiries around the clock, preparing appointments, pre-qualifying requests, and setup steps.
 - [WhatsApp KI Chatbot für Autohäuser und Kfz-Werkstätten](/de/blog/whatsapp-ki-chatbot-autohaus-kfz-werkstatt): a WhatsApp AI chatbot for car dealerships and garages in Germany: service appointments, vehicle questions, repair status, test drives and after-hours replies.
 - [WhatsApp Chatbot für Solarfirmen und Wärmepumpen](/de/blog/whatsapp-chatbot-solarfirma-waermepumpe): a WhatsApp AI chatbot for solar and heat pump companies in Germany: pre-qualifying leads, general product questions, preparing consultations and multilingual replies.
-- [KI-Telefonassistent für WhatsApp-Anrufe](/de/blog/ki-telefonassistent-whatsapp-kostenlos): whether a free AI phone assistant exists in Germany (IONOS from €39 a month incl. VAT, fonio from €99 net), why Wapzen answers WhatsApp calls but not landlines, uses for trades, garages, tax advisers and hotels, § 7 and § 7a UWG (consent; AI calls may count as automated calling machines), GDPR data location, and AI Act Art. 50 disclosure. Voice is in early access, free to start.
+- [KI-Telefonassistent für WhatsApp-Anrufe](/de/blog/ki-telefonassistent-whatsapp-kostenlos): whether a free AI phone assistant exists in Germany (IONOS from €39 a month incl. VAT, fonio from €99 net), why Wapzen answers WhatsApp calls but not landlines, uses for trades, garages, tax advisers and hotels, § 7 and § 7a UWG (consent; AI calls may count as automated calling machines), GDPR data location, and AI Act Art. 50 disclosure. Free to start.
 
 ## Blog in Peruvian Spanish
 
