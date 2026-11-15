@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { preconnect } from "react-dom";
 
 import { AccountBlockedScreen } from "@/components/nav/AccountBlockedScreen";
+import { FirstAgentGate } from "@/components/nav/FirstAgentGate";
 import { MaintenanceScreen } from "@/components/nav/MaintenanceScreen";
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (origin) preconnect(origin, { crossOrigin: "anonymous" });
   return (
     <>
-      {children}
+      <FirstAgentGate>{children}</FirstAgentGate>
       <MaintenanceScreen />
       <AccountBlockedScreen />
     </>

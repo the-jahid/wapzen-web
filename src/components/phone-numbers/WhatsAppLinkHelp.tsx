@@ -376,9 +376,11 @@ const css = `
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto 1fr;
   }
-  .wa-link-option-code { grid-area: code; }
-  .wa-link-option-qr { grid-area: qr; }
-  .wa-link-scan-steps { grid-area: steps; }
+  /* Only with the QR: without its template, a named area becomes an empty
+     implicit column that pushes the code form sideways. */
+  .has-qr > .wa-link-option-code { grid-area: code; }
+  .has-qr > .wa-link-option-qr { grid-area: qr; }
+  .has-qr > .wa-link-scan-steps { grid-area: steps; }
 }
 .wa-link-option, .wa-link-scan-steps { display: grid; gap: 10px; min-width: 0; }
 .wa-link-option-head {

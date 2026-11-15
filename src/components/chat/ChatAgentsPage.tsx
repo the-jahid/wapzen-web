@@ -1,11 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { SignOutButton, useAuth, useUser } from "@clerk/nextjs";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { DashboardSidebar, navIcons } from "@/components/nav/DashboardSidebar";
+import {
+  reportChatAgentCount,
+  skipFirstAgentSetup,
+  useChatAgentCount,
+  useFirstAgentSetupSkipped,
+} from "@/lib/chatAgentCount";
 import { navItemsForMode } from "@/components/nav/workspaceMode";
 import {
   FREE_TRIAL_WHATSAPP_URL,
@@ -26,7 +33,7 @@ import {
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
-import { useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
+import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
 import { useCachedState } from "@/lib/pageCache";
 import { startPolling, startRefreshing } from "@/lib/polling";
@@ -81,6 +88,7 @@ type IconName =
   | "check"
   | "menu"
   | "back"
+  | "qr"
   | "x";
 
 // The collapsible parts of the configuration panel, one per section of the
@@ -279,6 +287,10 @@ function iconPaths(name: IconName): ReactNode {
       return <path d="M15 18l-6-6 6-6" />;
     case "x":
       return <path d="M6 6l12 12M18 6L6 18" />;
+    case "qr":
+      return (
+        <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2M14 18v2M18 18h2v2" />
+      );
   }
 }
 
@@ -842,6 +854,41 @@ const css = `
 .chat-modal-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); border-radius: 11px; color: var(--app-rose-text); font-size: 12.5px; font-weight: 650; padding: 10px 12px; }
 .chat-modal-step { color: var(--app-primary-text); font-size: 11px; font-weight: 800; letter-spacing: .4px; margin-bottom: 4px; }
 /* The first step holds a QR code and the pairing form side by side. */
+.chat-qr-reveal { display: grid; gap: 12px; margin-top: 4px; }
+.chat-qr-reveal-or { align-items: center; color: var(--faint); display: flex; font-size: 12px; font-weight: 700; gap: 12px; text-transform: uppercase; }
+.chat-qr-reveal-or::before, .chat-qr-reveal-or::after { background: var(--border); content: ""; flex: 1 1 auto; height: 1px; }
+.chat-qr-reveal .chat-btn { justify-content: center; width: 100%; }
+/* The setup page's top bar holds the logo and three buttons, so it shortens
+   their labels on tablets and phones, and on narrow phones the WhatsApp
+   button keeps only its icon and the logo only its mark. */
+@media (max-width: 680px) {
+  .chat-setup-top { padding: 10px 16px; }
+  .chat-setup-top .chat-btn .chat-btn-label { display: none; }
+  .chat-setup-top .chat-btn .chat-btn-label-short { display: inline; }
+  .chat-setup-actions { gap: 6px; }
+}
+@media (max-width: 460px) {
+  .chat-setup-top .chat-btn-whatsapp .chat-btn-label-short,
+  .chat-setup-brand > .notranslate { display: none; }
+}
+.chat-setup-shell { flex-direction: column; overflow-y: auto; }
+.chat-setup-top {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex: 0 0 auto;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+.chat-setup-brand { align-items: center; display: inline-flex; font-size: 16px; font-weight: 850; gap: 9px; letter-spacing: -.2px; }
+.chat-setup-mark { display: inline-block; width: 30px; }
+.chat-setup-actions { align-items: center; display: flex; gap: 8px; }
+.chat-setup-main { align-items: flex-start; display: flex; flex: 1 0 auto; justify-content: center; padding: 28px 16px 40px; }
+.chat-setup-card-wrap { align-items: flex-start; display: flex; justify-content: center; width: 100%; }
+.chat-setup-card-wrap .chat-modal-card { border-radius: 18px; box-shadow: none; max-height: none; overflow: visible; }
+.chat-setup-card-wrap .chat-modal-body { overflow: visible; }
+.chat-setup-loading { align-self: center; color: var(--muted); }
 .chat-modal-card.is-pairing { max-width: 760px; }
 .chat-modal-card.is-pairing .chat-modal-body { grid-template-columns: minmax(0, 1fr); }
 .chat-modal-card .chat-number-grid { grid-template-columns: minmax(0, 1fr); }
@@ -1030,11 +1077,6 @@ const css = `
 .chat-prompt-card { display: flex; flex: 0 0 50%; flex-direction: column; min-width: 0; padding: 14px; }
 .chat-card.chat-files-card { padding: 0 14px; }
 .chat-card.chat-files-card:empty { display: none; }
-.chat-card.chat-new-note { align-items: center; background: var(--primary-soft); border-color: var(--app-primary-border); display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 8px 8px 8px 12px; }
-.chat-new-note-tag { background: var(--primary-light); border-radius: 999px; color: var(--surface); flex: none; font-size: 10.5px; font-weight: 800; padding: 2px 8px; }
-.chat-new-note-text { color: var(--text); flex: 0 1 auto; font-size: 13px; font-weight: 600; min-width: 0; }
-.chat-new-note-try { background: none; border: 0; color: var(--primary-light); cursor: pointer; flex: none; font: inherit; font-size: 13px; font-weight: 750; min-height: 28px; padding: 0 2px; text-decoration: underline; text-underline-offset: 3px; }
-.chat-new-note-close { flex: none; margin-left: auto; }
 .chat-prompt-card > .chat-card-head { flex: 0 0 auto; margin-bottom: 8px; }
 .chat-prompt-card > .chat-textarea { flex: 1 1 0; min-height: 0 !important; resize: none; }
 .chat-config-panel.is-rail { flex: none; min-height: 0; }
@@ -1234,7 +1276,7 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
 export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const router = useRouter();
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
-  const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
+  const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn, userId } = useAuth();
 
   const [chatAgents, setChatAgents, hasCachedAgents] = useCachedState<ApiChatAgent[]>("chat-agents", []);
   // Which part of the editor is on screen. Cached per agent because a thread
@@ -1270,6 +1312,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const [numberLogin, setNumberLogin] = useState<ApiPhoneNumber | null>(null);
   const [numberLoginError, setNumberLoginError] = useState("");
   const [isStartingLogin, setIsStartingLogin] = useState(false);
+  // Whose QR login was asked for. The QR code is only shown, and only kept
+  // fresh, after someone presses "Scan QR code"; the pairing code comes first.
+  const [qrOwner, setQrOwner] = useState("");
   const [isRefreshingNumbers, setIsRefreshingNumbers] = useState(false);
   // One login is started per state it can be started from — keyed by the agent
   // and the session it saw — so a failed start is not retried in a loop while
@@ -1277,9 +1322,12 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const autoLoginKey = useRef("");
   // Automatic reissues so far, per agent, against maxAutoLogins.
   const autoLoginRuns = useRef({ agentId: "", count: 0 });
-  // An account with no agents is taken straight to linking a number, once per
-  // visit, so cancelling leaves them on the empty list rather than reopening.
-  const openedFirstAgentSetup = useRef(false);
+  // True once the server has returned the agent list in this visit. A cached or
+  // failed list proves nothing about whether the account has an agent.
+  const [isListFromServer, setIsListFromServer] = useState(false);
+  const knownAgentCount = useChatAgentCount(userId);
+  // "Go to dashboard" was pressed on the setup page in this tab.
+  const setupSkipped = useFirstAgentSetupSkipped(userId);
   // Saves waiting out their debounce, with the save itself so leaving the page
   // can send it at once instead of dropping it.
   const saveTimers = useRef<
@@ -1318,9 +1366,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       .then((agents) => {
         if (cancelled) return;
         setChatAgents(agents);
-        // Only on the server's word: a failed load or a cached list proves nothing.
-        if (!agentId && agents.length === 0 && !openedFirstAgentSetup.current) {
-          openedFirstAgentSetup.current = true;
+        setIsListFromServer(true);
+        // No agent: the page is the setup flow, which starts on linking a number.
+        if (!agentId && agents.length === 0) {
           setCreateForm((current) => current ?? newCreateForm(1));
         }
       })
@@ -1345,6 +1393,21 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       cancelled = true;
     };
   }, [agentId, getToken, isAuthenticated, setChatAgents, setKnowledgeBases, setPhoneNumbers, setTools]);
+
+  // Every dashboard page holds an account with no chat agent on the setup page
+  // (FirstAgentGate), so the count is reported each time the list changes:
+  // creating the first agent opens the dashboard, deleting the last closes it.
+  useEffect(() => {
+    if (isListFromServer && userId) reportChatAgentCount(userId, chatAgents.length);
+  }, [chatAgents.length, isListFromServer, userId]);
+
+  // With no agent the list page is only the setup flow: link a number, then
+  // name the agent. Before this visit's list arrives, a count another page
+  // already learned decides, so the full dashboard doesn't flash first.
+  const isSetupOnly =
+    !agentId &&
+    !setupSkipped &&
+    (isListFromServer ? chatAgents.length === 0 : knownAgentCount === 0);
 
   // Going back to the list, or on to another agent, unmounts this page. An
   // edit still inside its debounce is sent then rather than lost; its answer
@@ -1599,6 +1662,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 
     setIsStartingLogin(true);
     setNumberLoginError("");
+    setQrOwner(loginOwner);
     try {
       console.log("[wa-login] starting login", { agentId: loginOwner, restartId: spentId });
       const started = spentId
@@ -1628,6 +1692,8 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     async (phone: string) => {
       setNumberLoginError("");
       setIsStartingLogin(true);
+      // Chose the code over a scan: a code that runs out is not replaced by a QR.
+      setQrOwner("");
       try {
         const started = await apiStartPhoneNumberCodeLogin({ phone_number: phone }, getToken);
         setNumberLogin(started);
@@ -1643,29 +1709,28 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const startNumberQrLogin = useCallback(async () => {
     setNumberLoginError("");
     setIsStartingLogin(true);
+    setQrOwner(loginOwner);
     try {
       const started = await apiStartPhoneNumberQrLogin({}, getToken);
       setNumberLogin(started);
     } finally {
       setIsStartingLogin(false);
     }
-  }, [getToken]);
+  }, [getToken, loginOwner]);
 
-  // A chat agent with no number gets its QR code without being asked: opening
-  // the editor or the create modal starts the login, and a session that runs out
-  // of codes is reissued, so what is on screen is always a scannable code.
+  // Once "Scan QR code" is pressed, a session that runs out of codes is
+  // reissued, so what is on screen is always a scannable code.
   //
   // WhatsApp owns the rotation itself — it hands the session a series of codes
   // (roughly one a minute, then one every 20s) which the server stores as they
   // arrive and the poll above picks up. This only has to keep a live session
   // there to receive them.
   //
-  // A phone gets none: it can't scan its own screen, so its codes only ever ran
-  // out unscanned. The card offers it the number form instead.
-  const isPhone = useIsPhone();
+  // Nothing starts before that button: the card leads with the pairing code,
+  // which links far more often, and an unasked-for QR session only runs out.
   useEffect(() => {
     if (!isAuthenticated || !loginOwner || isStartingLogin) return;
-    if (isPhone) return;
+    if (qrOwner !== loginOwner) return;
 
     // A live session already has a code on screen, and it serves this agent as
     // readily as the one it was started from: the scan is assigned to whichever
@@ -1686,7 +1751,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 
     autoLoginKey.current = key;
     void startNumberLogin();
-  }, [isAuthenticated, isPhone, isStartingLogin, loginOwner, numberLogin, startNumberLogin]);
+  }, [isAuthenticated, isStartingLogin, loginOwner, numberLogin, qrOwner, startNumberLogin]);
 
   // The pick-a-number half of the setup card. A number another chat agent
   // already holds stays listed, but says who holds it and cannot be picked —
@@ -1747,6 +1812,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     setCreateError("");
     setNumberLogin(null);
     setNumberLoginError("");
+    setQrOwner("");
   }, []);
 
   // The linking step's other way forward: a number already on the account.
@@ -1782,7 +1848,14 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       // unmount with the list before anyone read it.
       router.push(`/dashboard/chat/${created.id}`);
     } catch (error) {
-      if (isChatAgentLimitError(error)) {
+      if (isChatAgentLimitError(error) && chatAgents.length === 0) {
+        // The account has an agent this page never saw (made in another tab),
+        // so there is nothing to set up: load it, which opens the dashboard.
+        setCreateForm(null);
+        listDashboardChatAgents(getToken)
+          .then((agents) => setChatAgents(agents))
+          .catch(() => setCreateError("Your account already has a chat agent. Reload the page."));
+      } else if (isChatAgentLimitError(error)) {
         // The server saw an agent this page hadn't loaded yet.
         setCreateForm(null);
         setIsUpgradeOpen(true);
@@ -1792,7 +1865,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     } finally {
       setIsCreating(false);
     }
-  }, [createForm, getToken, isCreating, router, setChatAgents]);
+  }, [chatAgents.length, createForm, getToken, isCreating, router, setChatAgents]);
 
   const deleteAgent = useCallback(async () => {
     if (!deleteTarget) return;
@@ -1803,6 +1876,10 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       saveTimers.current.delete(deleteTarget.id);
       await deleteDashboardChatAgent(deleteTarget.id, getToken);
       setChatAgents((current) => current.filter((agent) => agent.id !== deleteTarget.id));
+      if (!chatAgents.some((agent) => agent.id !== deleteTarget.id)) {
+        // That was the last agent, so the account is back on the setup flow.
+        setCreateForm(newCreateForm(1));
+      }
       if (agentId) {
         // Back to the list, where the agent is gone; replace, so Back does not
         // return to the deleted agent's page.
@@ -1819,7 +1896,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       setIsDeleting(false);
       setDeleteTargetId("");
     }
-  }, [agentId, deleteTarget, getToken, router, setChatAgents]);
+  }, [agentId, chatAgents, deleteTarget, getToken, router, setChatAgents]);
 
   // Escape dismisses the delete confirmation. It listens in the capture phase
   // and stops the key there, so nothing behind it also acts on the key.
@@ -1834,6 +1911,90 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [isConfirmingDelete, isDeleting]);
+
+  if (isSetupOnly) {
+    // The whole dashboard for an account with no chat agent: no sidebar and no
+    // other pages, only linking a number and naming the agent. Creating it
+    // opens the agent's page and, with it, the rest of the dashboard.
+    return (
+      <div className="chat-shell chat-setup-shell app-accent-green">
+        <style dangerouslySetInnerHTML={{ __html: css }} />
+        <header className="chat-setup-top">
+          <span className="chat-setup-brand">
+            <span className="chat-setup-mark"><BrandMark priority /></span>
+            <span className="notranslate">Wapzen</span>
+          </span>
+          <div className="chat-setup-actions">
+            <a
+              aria-label="Trouble connecting? Chat with us on WhatsApp"
+              className="chat-btn chat-btn-whatsapp chat-btn-sm"
+              href={SUPPORT_WHATSAPP_URL}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <WhatsAppGlyph size={15} />
+              <span className="chat-btn-label">Trouble connecting?</span>
+              <span className="chat-btn-label-short">Need help?</span>
+            </a>
+            <button
+              className="chat-btn chat-btn-secondary chat-btn-sm"
+              onClick={() => {
+                // Ends the pairing in progress, as Cancel did in the pop-up, and
+                // opens the full dashboard with the empty agent list.
+                closeCreateModal();
+                if (userId) skipFirstAgentSetup(userId);
+              }}
+              type="button"
+            >
+              <Icon name="grid" size={14} sw={2.2} />
+              <span className="chat-btn-label">Go to dashboard</span>
+              <span className="chat-btn-label-short">Dashboard</span>
+            </button>
+            <SignOutButton redirectUrl="/">
+              <button className="chat-btn chat-btn-secondary chat-btn-sm" type="button">
+                Sign out
+              </button>
+            </SignOutButton>
+          </div>
+        </header>
+        <main className="chat-setup-main">
+          {createForm ? (
+            <CreateChatAgentModal
+              asPage
+              assignableNumbers={assignableNumbers}
+              error={createError}
+              form={createForm}
+              isRefreshingNumbers={isRefreshingNumbers}
+              isStartingLogin={isStartingLogin}
+              isSubmitting={isCreating}
+              login={numberLogin && numberLogin.status !== "connected" ? numberLogin : null}
+              loginError={numberLoginError}
+              onCancel={closeCreateModal}
+              onChangeNumber={changeCreateNumber}
+              onCreate={createAgent}
+              onRefreshNumbers={refreshPhoneNumbers}
+              onRequestCode={startNumberCodeLogin}
+              onRequestQr={startNumberQrLogin}
+              onSelectNumber={chooseCreateNumber}
+              onStartLogin={startNumberLogin}
+              phoneNumbers={phoneNumbers}
+              setForm={setCreateForm}
+            />
+          ) : (
+            <div aria-busy="true" className="chat-setup-loading">Loading...</div>
+          )}
+        </main>
+        {notice ? (
+          <div
+            className={`chat-toast ${notice.kind === "error" ? "chat-toast-error" : "chat-toast-success"}`}
+            role="status"
+          >
+            {notice.text}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="chat-shell app-accent-green">
@@ -2184,7 +2345,10 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
 // "New chat agent" opens this. It links a WhatsApp number first, by QR code or
 // pairing code, and only then asks for a name, so an agent is born answering on
 // a number instead of sitting idle until someone connects one.
+// `asPage` is the setup page an account with no agent is held on: the same two
+// steps, in the page instead of over it, and with no way to close them.
 function CreateChatAgentModal({
+  asPage = false,
   assignableNumbers,
   error,
   form,
@@ -2204,6 +2368,7 @@ function CreateChatAgentModal({
   phoneNumbers,
   setForm,
 }: {
+  asPage?: boolean;
   assignableNumbers: AssignableNumber[];
   error: string;
   form: CreateForm;
@@ -2234,12 +2399,16 @@ function CreateChatAgentModal({
   }, [isLinking]);
 
   useEffect(() => {
+    if (asPage) return;
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onCancel();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCancel]);
+  }, [asPage, onCancel]);
+
+  // On the setup page the card is the page's content, not a dialog over it.
+  const dialogProps = asPage ? {} : ({ "aria-modal": true, role: "dialog" } as const);
 
   const head = (
     <div className="chat-modal-head">
@@ -2254,31 +2423,34 @@ function CreateChatAgentModal({
             : "Your number is ready. The prompt, knowledge bases and tools are set in the editor once the agent exists."}
         </div>
       </div>
-      <button
-        aria-label="Close create chat agent"
-        className="chat-icon-btn"
-        onClick={onCancel}
-        type="button"
-      >
-        <Icon name="x" size={15} sw={2.2} />
-      </button>
+      {asPage ? null : (
+        <button
+          aria-label="Close create chat agent"
+          className="chat-icon-btn"
+          onClick={onCancel}
+          type="button"
+        >
+          <Icon name="x" size={15} sw={2.2} />
+        </button>
+      )}
     </div>
   );
 
   return (
     <div
-      className="chat-modal-backdrop"
+      className={asPage ? "chat-setup-card-wrap" : "chat-modal-backdrop"}
       // A stray click must not end a login someone is halfway through on their
       // phone, so only the naming step closes from the backdrop.
-      onMouseDown={(event) => !isLinking && event.currentTarget === event.target && onCancel()}
+      onMouseDown={(event) =>
+        !asPage && !isLinking && event.currentTarget === event.target && onCancel()
+      }
     >
       {/* Not a form on this step: the pairing code card holds a form of its own. */}
       {isLinking ? (
         <div
           aria-labelledby="chat-create-title"
-          aria-modal="true"
           className="chat-modal-card is-pairing"
-          role="dialog"
+          {...dialogProps}
         >
           {head}
           <div className="chat-modal-body">
@@ -2296,22 +2468,23 @@ function CreateChatAgentModal({
               onStartLogin={onStartLogin}
             />
           </div>
-          <div className="chat-modal-footer">
-            <button className="chat-btn chat-btn-secondary" onClick={onCancel} type="button">
-              Cancel
-            </button>
-          </div>
+          {asPage ? null : (
+            <div className="chat-modal-footer">
+              <button className="chat-btn chat-btn-secondary" onClick={onCancel} type="button">
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <form
           aria-labelledby="chat-create-title"
-          aria-modal="true"
           className="chat-modal-card"
           onSubmit={(event) => {
             event.preventDefault();
             onCreate();
           }}
-          role="dialog"
+          {...dialogProps}
         >
           {head}
           <div className="chat-modal-body">
@@ -2354,14 +2527,16 @@ function CreateChatAgentModal({
           </div>
 
           <div className="chat-modal-footer">
-            <button
-              className="chat-btn chat-btn-secondary"
-              disabled={isSubmitting}
-              onClick={onCancel}
-              type="button"
-            >
-              Cancel
-            </button>
+            {asPage ? null : (
+              <button
+                className="chat-btn chat-btn-secondary"
+                disabled={isSubmitting}
+                onClick={onCancel}
+                type="button"
+              >
+                Cancel
+              </button>
+            )}
             <button className="chat-btn chat-btn-primary" disabled={isSubmitting} type="submit">
               {isSubmitting ? "Creating..." : "Create chat agent"}
             </button>
@@ -2577,18 +2752,10 @@ function Editor({
 }) {
   const isDesktop = useIsDesktop();
   const shownTab = shownEditorTab(tab, isDesktop);
-  const filesCardRef = useRef<HTMLDivElement>(null);
-  const [filesOpen, setFilesOpen] = useState(true);
-  const [filesAvailable, setFilesAvailable] = useState(false);
+  // Starts closed, like Web Search; the header still shows how many files.
+  const [filesOpen, setFilesOpen] = useState(false);
   const filesCard = (
-    <FilesCard
-      agentId={agent.id}
-      cardRef={filesCardRef}
-      isOpen={filesOpen}
-      key={agent.id}
-      onAvailable={setFilesAvailable}
-      onOpenChange={setFilesOpen}
-    />
+    <FilesCard agentId={agent.id} isOpen={filesOpen} key={agent.id} onOpenChange={setFilesOpen} />
   );
   const websiteCard = <WebsiteCard agent={agent} key={`website-${agent.id}`} onPatch={onPatch} />;
 
@@ -2668,17 +2835,6 @@ function Editor({
 
       {/* On desktop the header draws these, in the middle of the top bar. */}
       {isDesktop ? null : <EditorTabs isDesktop={false} onSelect={onSelectTab} tab={tab} />}
-
-      {/* Only once the server has answered for files, so it never announces a
-          feature this server can't do yet. */}
-      {filesAvailable && shownTab === "agent" ? (
-        <NewFilesNote
-          onTry={() => {
-            setFilesOpen(true);
-            filesCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }}
-        />
-      ) : null}
 
       {shownTab === "conversation" ? (
         <div className="chat-card chat-card-conversations">
@@ -2891,11 +3047,11 @@ function PhoneNumberSetupCard({
   const canRestart = Boolean(login);
   // A code login still rotates QR codes underneath; the code is what to show.
   const showsCode = isPending && Boolean(login?.pairing_code);
-  // A phone can't scan its own screen, and almost nobody links from one by QR,
-  // so it gets the number form alone unless a second device is at hand.
-  const isPhone = useIsPhone();
+  // The pairing code links far more often than a scan, so the card leads with
+  // it alone and the QR code waits behind "Scan QR code". A QR login already
+  // running (asked for earlier) is shown straight away.
   const [wantsQr, setWantsQr] = useState(false);
-  const offersQr = !isPhone || wantsQr;
+  const offersQr = wantsQr || (isPending && !login?.pairing_code);
   const onConnect = forNewAgent
     ? "you name the agent the moment it connects"
     : "the number is assigned to this agent the moment it connects";
@@ -2956,6 +3112,24 @@ function PhoneNumberSetupCard({
             }
           />
 
+          {showsCode || offersQr ? null : (
+            <div className="chat-qr-reveal">
+              <span className="chat-qr-reveal-or">or</span>
+              <button
+                className="chat-btn chat-btn-secondary"
+                disabled={isStarting}
+                onClick={() => {
+                  setWantsQr(true);
+                  if (!isPending) onStartLogin();
+                }}
+                type="button"
+              >
+                <Icon name="qr" size={15} sw={2.2} />
+                Scan QR code
+              </button>
+            </div>
+          )}
+
           <div className="chat-number-status">
             {isStarting
               ? "Getting a fresh code…"
@@ -2972,19 +3146,7 @@ function PhoneNumberSetupCard({
 
           {/* The code is issued and reissued on its own; the button is only the
               way back from a login that stopped without one on screen. */}
-          {showsCode ? null : !offersQr ? (
-            <button
-              className="wa-link-text-btn"
-              disabled={isStarting}
-              onClick={() => {
-                setWantsQr(true);
-                if (!isPending) onStartLogin();
-              }}
-              type="button"
-            >
-              Scanning from another device? Show a QR code
-            </button>
-          ) : isPending || isStarting ? null : (
+          {showsCode || !offersQr ? null : isPending || isStarting ? null : (
             <button
               className="chat-btn chat-btn-primary chat-btn-sm"
               onClick={onStartLogin}
@@ -3393,28 +3555,23 @@ function formatFileSize(bytes: number) {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Images & Files on its own card under the prompt, open from the start. The
+// Images & Files on its own card under the prompt, closed until opened. The
 // section renders nothing on a server without the feature, and the css then hides
 // the empty card.
 function FilesCard({
   agentId,
-  cardRef,
   isOpen,
-  onAvailable,
   onOpenChange,
 }: {
   agentId: string;
-  cardRef: RefObject<HTMLDivElement | null>;
   isOpen: boolean;
-  onAvailable: (available: boolean) => void;
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <div className="chat-card chat-files-card is-rail" ref={cardRef}>
+    <div className="chat-card chat-files-card is-rail">
       <AgentFilesSection
         agentId={agentId}
         isOpen={isOpen}
-        onAvailable={onAvailable}
         onToggle={(next) => onOpenChange(next !== null)}
       />
     </div>
@@ -3445,7 +3602,8 @@ function WebsiteCard({
   agent: ApiChatAgent;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
 }) {
-  const [isOpen, setIsOpen] = useState(true);
+  // Starts closed; the header still says whether it is on.
+  const [isOpen, setIsOpen] = useState(false);
   const website = agent.website;
   if (!website) return null;
 
@@ -3507,56 +3665,15 @@ function WebsiteCard({
   );
 }
 
-const FILES_NOTE_CLOSED_KEY = "wapzen.agent-files-note-closed";
-
-function readFilesNoteClosed() {
-  try {
-    return window.localStorage.getItem(FILES_NOTE_CLOSED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-// Tells owners about Images & Files until they close it. The choice is kept per
-// browser. If storage is blocked the note still closes, for this visit.
-function NewFilesNote({ onTry }: { onTry: () => void }) {
-  const [closed, setClosed] = useState(readFilesNoteClosed);
-  if (closed) return null;
-
-  const close = () => {
-    setClosed(true);
-    try {
-      window.localStorage.setItem(FILES_NOTE_CLOSED_KEY, "1");
-    } catch {
-      // Storage unavailable: it stays closed until the page is opened again.
-    }
-  };
-
-  return (
-    <div className="chat-card chat-new-note">
-      <span className="chat-new-note-tag">New</span>
-      <span className="chat-new-note-text">Your agent can now send images to your customers.</span>
-      <button className="chat-new-note-try" onClick={onTry} type="button">
-        Try this feature
-      </button>
-      <button aria-label="Close this note" className="chat-icon-btn chat-new-note-close" onClick={close} type="button">
-        <Icon name="x" size={15} sw={2.2} />
-      </button>
-    </div>
-  );
-}
-
 // The images and documents the agent can send, each with a note saying when.
 // Unlike the rest of the panel these save straight away, not with the agent.
 function AgentFilesSection({
   agentId,
   isOpen,
-  onAvailable,
   onToggle,
 }: {
   agentId: string;
   isOpen: boolean;
-  onAvailable: (available: boolean) => void;
   onToggle: (next: ConfigSectionId | null) => void;
 }) {
   const { getToken } = useAuth();
@@ -3582,7 +3699,6 @@ function AgentFilesSection({
       .then((list) => {
         if (stale) return;
         setFiles(list);
-        onAvailable(true);
       })
       .catch((err: unknown) => {
         if (stale) return;
@@ -3593,7 +3709,7 @@ function AgentFilesSection({
     return () => {
       stale = true;
     };
-  }, [agentId, getToken, onAvailable]);
+  }, [agentId, getToken]);
 
   useEffect(
     () => () => {
