@@ -7,7 +7,12 @@ import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar, navIcons } from "@/components/nav/DashboardSidebar";
 import { navItemsForMode } from "@/components/nav/workspaceMode";
-import { FREE_TRIAL_WHATSAPP_URL, SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
+import {
+  FREE_TRIAL_WHATSAPP_URL,
+  MORE_AGENTS_WHATSAPP_URL,
+  SUPPORT_WHATSAPP_URL,
+  WhatsAppGlyph,
+} from "@/components/nav/supportWhatsApp";
 import ChatConversationsWorkspace from "@/components/chat/ChatConversationsWorkspace";
 import { listKnowledgeBases as apiListKnowledgeBases, type ApiKnowledgeBase } from "@/lib/knowledgeBases";
 import {
@@ -581,14 +586,15 @@ const css = `
 .chat-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 .chat-confirm-danger { background: var(--app-rose); border-color: transparent; color: #fff; }
 .chat-confirm-danger:hover { filter: brightness(1.08); }
+.chat-upgrade-icon { background: rgba(37, 211, 102, .12); border-color: rgba(37, 211, 102, .35); color: #25d366; }
 .chat-upgrade-whatsapp { background: #25d366; border-color: transparent; color: #fff; gap: 8px; text-decoration: none; }
 .chat-upgrade-whatsapp:hover { filter: brightness(1.06); }
 @keyframes chat-confirm-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes chat-confirm-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .chat-confirm-overlay, .chat-confirm { animation: none; } }
 @media (max-width: 760px) {
-  .chat-confirm-overlay { align-items: flex-end; padding: 0; }
-  .chat-confirm { border-radius: 18px 18px 0 0; max-width: none; padding: 20px 18px calc(18px + env(safe-area-inset-bottom)); }
+  .chat-confirm-overlay { align-items: center; padding: 16px; }
+  .chat-confirm { border-radius: 18px; max-width: none; padding: 20px 18px; }
   .chat-confirm-actions { flex-direction: column-reverse; }
   .chat-confirm-actions .chat-btn { width: 100%; }
 }
@@ -750,10 +756,14 @@ const css = `
 .chat-config-head { align-items: flex-start; }
 /* The agent list carries its own create button, as the voice workspace does,
    so the page needs no separate header row above the columns. */
-.chat-list-head { align-items: flex-start; }
+.chat-list-head { align-items: center; }
 .chat-list-head > div { min-width: 0; }
 .chat-list-head .chat-btn { flex: 0 0 auto; }
 .chat-list-actions { display: flex; flex: 0 0 auto; gap: 8px; }
+.chat-list-head > .chat-list-titlebar { flex: 1 1 auto; }
+.chat-list-titlebar { align-items: center; display: flex; gap: 16px; min-width: 0; }
+.chat-list-titleblock { flex: 0 0 auto; min-width: 0; }
+.chat-search-head { flex: 1 1 auto; margin: 0 auto; max-width: 440px; min-width: 0; }
 /* WhatsApp's own green, matching the sidebar's support card. */
 .chat-btn-whatsapp { background: #25d366; border-color: transparent; color: #fff; text-decoration: none; }
 .chat-btn-whatsapp:hover { background: #1fb956; }
@@ -1074,6 +1084,14 @@ const css = `
   .chat-content { padding: 12px; }
   .chat-panel-head { padding: 12px 14px; }
   .chat-panel-body { padding: 12px 14px; }
+  /* Phones: the title takes its own line and the two buttons share the row
+     below at full width, instead of squeezing the title into two lines. */
+  .chat-list-head { align-items: stretch; flex-direction: column; gap: 12px; }
+  .chat-list-head .chat-panel-title { white-space: nowrap; }
+  .chat-list-head .chat-panel-copy { margin-top: 2px; }
+  .chat-list-actions { width: 100%; }
+  .chat-search-head { margin: 0; max-width: none; }
+  .chat-list-actions .chat-btn { flex: 1 1 0; justify-content: center; min-width: 0; white-space: nowrap; }
   .chat-fields-2 { grid-template-columns: 1fr; }
   .chat-composer { grid-template-columns: 1fr; }
   .chat-modal-grid { grid-template-columns: 1fr; }
@@ -1101,11 +1119,11 @@ const css = `
   .chat-card-conversations { height: min(640px, calc(100dvh - 220px)); min-height: 380px; }
   .chat-toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); width: max-content; }
 }
-/* Narrow phones: the create button drops its label so the header fits; the
-   WhatsApp help button keeps a short one so it still says what it is for. */
+/* Narrow phones: the WhatsApp help button switches to its short label so both
+   buttons fit side by side with their text. */
 @media (max-width: 420px) {
-  .chat-list-head .chat-btn-label { display: none; }
-  .chat-list-head .chat-btn-label-short { display: inline; }
+  .chat-list-head .chat-btn-whatsapp .chat-btn-label { display: none; }
+  .chat-list-head .chat-btn-whatsapp .chat-btn-label-short { display: inline; }
   .chat-list-head .chat-btn { min-height: 36px; padding: 0 11px; }
   .chat-tab { padding: 0 6px; }
   .chat-avatar { height: 30px; width: 30px; }
@@ -1149,7 +1167,7 @@ function upsertPhoneNumber(current: ApiPhoneNumber[], updated: ApiPhoneNumber): 
 // opens, because the modal starts by linking a number: finding out after the
 // scan would leave someone with a linked number and no agent.
 const MAX_CHAT_AGENTS = 1;
-const CHAT_AGENT_LIMIT_MESSAGE = "Your account already has a chat agent. Edit that agent instead of creating a new one.";
+const CHAT_AGENT_LIMIT_MESSAGE = "Your account already has a chat agent.";
 
 // The auto-login effect's owner for a login the create modal started, which has
 // no agent to belong to yet.
@@ -1239,6 +1257,8 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const [createForm, setCreateForm] = useState<CreateForm | null>(null);
   const [createError, setCreateError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  // The "get more agents" modal, shown instead of the create flow at the cap.
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   // A delete button, on a list card or the agent's page, only asks; the agent
   // goes once the modal is confirmed.
   const [deleteTargetId, setDeleteTargetId] = useState("");
@@ -1705,10 +1725,12 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   }, [getToken, isAuthenticated, isRefreshingNumbers, setPhoneNumbers]);
 
   const openCreateModal = useCallback(() => {
-    // The server may let an account hold more than one agent
-    // (users.max_chat_agents), so the first extra agent is left to its 403.
+    // At the agent cap, "New chat agent" explains the paid plan instead. The
+    // default cap is one, but the server may allow an account more, so only
+    // the second agent onward is refused here; the first extra is decided by
+    // the server's 403 on create.
     if (chatAgents.length > MAX_CHAT_AGENTS) {
-      setNotice({ kind: "error", text: CHAT_AGENT_LIMIT_MESSAGE });
+      setIsUpgradeOpen(true);
       return;
     }
     setCreateError("");
@@ -1761,7 +1783,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       router.push(`/dashboard/chat/${created.id}`);
     } catch (error) {
       if (isChatAgentLimitError(error)) {
-        setCreateError(CHAT_AGENT_LIMIT_MESSAGE);
+        // The server saw an agent this page hadn't loaded yet.
+        setCreateForm(null);
+        setIsUpgradeOpen(true);
       } else {
         setCreateError(error instanceof Error ? error.message : "Could not create chat agent");
       }
@@ -1884,15 +1908,31 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
           <section className="chat-workspace" aria-label="Chat agents workspace">
             <div className="chat-panel chat-agent-browser">
               <div className="chat-panel-head chat-list-head">
-                <div>
-                  <h2 className="chat-panel-title">
-                    <span className="chat-panel-ic">
-                      <Icon name="chat" size={16} />
+                <div className="chat-list-titlebar">
+                  <div className="chat-list-titleblock">
+                    <h2 className="chat-panel-title">
+                      <span className="chat-panel-ic">
+                        <Icon name="chat" size={16} />
+                      </span>
+                      Chat agents
+                    </h2>
+                    <div className="chat-panel-copy">
+                      {showSkeleton ? "Loading chat agents..." : `${chatAgents.length} chat agent${chatAgents.length === 1 ? "" : "s"}`}
+                    </div>
+                  </div>
+                  {/* The search sits in the header beside the title, filling
+                      the space between it and the buttons. */}
+                  <div className="chat-search chat-search-head">
+                    <span className="chat-search-icon">
+                      <Icon name="search" size={15} sw={2.2} />
                     </span>
-                    Chat agents
-                  </h2>
-                  <div className="chat-panel-copy">
-                    {showSkeleton ? "Loading chat agents..." : `${chatAgents.length} chat agents`}
+                    <input
+                      aria-label="Search agents"
+                      className="chat-input"
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Search agents..."
+                      value={query}
+                    />
                   </div>
                 </div>
                 <div className="chat-list-actions">
@@ -1919,17 +1959,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                 </div>
               </div>
               <div className={`chat-panel-body${!showSkeleton && chatAgents.length === 0 ? " chat-panel-body-empty" : ""}`}>
-                <div className="chat-search">
-                  <span className="chat-search-icon">
-                    <Icon name="search" size={15} sw={2.2} />
-                  </span>
-                  <input
-                    className="chat-input"
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search agents..."
-                    value={query}
-                  />
-                </div>
                 {showSkeleton ? (
                   <div aria-busy="true" aria-label="Loading chat agents" className="chat-list">
                     {[0, 1, 2].map((row) => (
@@ -2059,6 +2088,58 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
               >
                 {isDeleting ? "Deleting…" : "Delete agent"}
               </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isUpgradeOpen ? (
+        <div
+          className="chat-confirm-overlay"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setIsUpgradeOpen(false);
+          }}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsUpgradeOpen(false);
+          }}
+        >
+          <div
+            aria-describedby="chat-upgrade-copy"
+            aria-labelledby="chat-upgrade-title"
+            aria-modal="true"
+            className="chat-confirm"
+            role="dialog"
+          >
+            <div className="chat-confirm-icon chat-upgrade-icon">
+              <WhatsAppGlyph size={20} />
+            </div>
+            <h2 className="chat-confirm-title" id="chat-upgrade-title">
+              Get more chat agents
+            </h2>
+            <p className="chat-confirm-copy" id="chat-upgrade-copy">
+              {CHAT_AGENT_LIMIT_MESSAGE} To create more agents you need a <strong>paid plan</strong>.
+              Message us on WhatsApp at <strong className="notranslate">+880 1701-750469</strong> and
+              we&apos;ll set it up for you.
+            </p>
+            <div className="chat-confirm-actions">
+              <button
+                className="chat-btn chat-btn-secondary"
+                onClick={() => setIsUpgradeOpen(false)}
+                type="button"
+              >
+                Not now
+              </button>
+              <a
+                autoFocus
+                className="chat-btn chat-upgrade-whatsapp"
+                href={MORE_AGENTS_WHATSAPP_URL}
+                onClick={() => setIsUpgradeOpen(false)}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <WhatsAppGlyph size={16} />
+                Message us on WhatsApp
+              </a>
             </div>
           </div>
         </div>

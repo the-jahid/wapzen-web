@@ -8,6 +8,11 @@ export const VOICE_EARLY_ACCESS_WHATSAPP_URL = `https://wa.me/8801701750469?text
   "Hi, I'd like early access to Wapzen voice agents.",
 )}`;
 
+/** Opens a WhatsApp chat with support to buy a paid plan for more chat agents. */
+export const MORE_AGENTS_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
+  "Hi, I'd like a paid plan on Wapzen so I can create more chat agents.",
+)}`;
+
 /** Opens a WhatsApp chat with support to buy a paid plan once the free trial is over. */
 export const FREE_TRIAL_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
   "Hi, my free trial on Wapzen has ended. I'd like to buy a paid plan.",
