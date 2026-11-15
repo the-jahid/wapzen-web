@@ -1294,7 +1294,7 @@ function TranscriptTurn({ message }: { message: ApiCallMessage }) {
       </span>
       <div className="demo-turn-bubble">
         <div className="demo-turn-role">{roleLabel}</div>
-        {message.content}
+        <span className="notranslate">{message.content}</span>
       </div>
     </div>
   );

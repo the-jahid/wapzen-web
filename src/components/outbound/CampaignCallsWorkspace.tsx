@@ -145,7 +145,7 @@ function CallDetailDrawer({ call, onClose }: { call: ApiCall; onClose: () => voi
       {error ? <div className="cc-error">{error}</div> : null}
       {!error && messages === null ? <p className="cc-drawer-note">Loading transcript…</p> : null}
       {messages !== null && messages.length === 0 ? <p className="cc-drawer-note">No transcript was saved for this call. A call that was never answered has nothing to transcribe.</p> : null}
-      {messages?.map((message, index) => <div className={`cc-turn cc-turn-${message.role === "assistant" ? "agent" : "user"}`} key={index}><span>{message.role === "assistant" ? "Agent" : "Lead"}</span><p>{message.content}</p></div>)}
+      {messages?.map((message, index) => <div className={`cc-turn cc-turn-${message.role === "assistant" ? "agent" : "user"}`} key={index}><span>{message.role === "assistant" ? "Agent" : "Lead"}</span><p className="notranslate">{message.content}</p></div>)}
     </div>
   </aside></div>;
 }

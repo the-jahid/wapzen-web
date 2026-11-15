@@ -8,7 +8,8 @@ import styles from "@/components/free-tools/FreeTools.module.css";
 // tools under /tools and the marketing pages (pricing, free chatbot, ...).
 // Translated pages pass their locale. <html lang> stays "en" from the root
 // layout, so the wrapper carries the page language (display: contents keeps
-// it out of the layout). Arabic pages also carry dir="rtl".
+// it out of the layout). Arabic pages also carry dir="rtl". translate="no" keeps
+// AutoTranslate off a page that is already written in the visitor's language.
 export function PublicShell({ children, locale = "en" }: { children: ReactNode; locale?: Locale }) {
   const { ui, htmlLang, dir } = locales[locale];
   const links = [
@@ -18,7 +19,7 @@ export function PublicShell({ children, locale = "en" }: { children: ReactNode; 
     ...(ui.blog ? [{ href: ui.blog.href, label: ui.blog.label }] : []),
     { href: ui.nav.faqHref, label: ui.nav.faq },
   ];
-  return <div lang={htmlLang} dir={dir} style={{ display: "contents" }}>
+  return <div lang={htmlLang} dir={dir} translate={locale === "en" ? undefined : "no"} style={{ display: "contents" }}>
     <LandingMotion>
       <SiteHeader links={links} brandHref="/" locale={locale} />
       {/* id="top" is the footer's "Back to top" target. */}

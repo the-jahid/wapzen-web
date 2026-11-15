@@ -15,7 +15,7 @@ import styles from "./CoreLanding.module.css";
 // which is still an in-page jump when already on "/".
 
 export function Brand({ href = "#top" }: { href?: string }) {
-  return <a href={href} className={styles.brand} aria-label="Wapzen home"><span><BrandMark priority /></span>wapzen<span className={styles.brandDot}>.</span></a>;
+  return <a href={href} className={`${styles.brand} notranslate`} aria-label="Wapzen home"><span><BrandMark priority /></span>wapzen<span className={styles.brandDot}>.</span></a>;
 }
 
 export function GetStarted({ label = "Create your agent", dark = false }: { label?: string; dark?: boolean }) {

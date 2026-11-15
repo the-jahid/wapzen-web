@@ -225,7 +225,7 @@ export default function ConversationThreadPage({
   }, [busy, confirmingDelete]);
 
   return (
-    <ConversationsShell activeLabel={fromAgentId ? "Chat Agents" : "Conversations"} flush label={`Conversation with ${title}`}>
+    <ConversationsShell activeLabel={fromAgentId ? "Chat Agents" : "Conversations"} flush label="Conversation">
       <div className="cv-thread">
         <style dangerouslySetInnerHTML={{ __html: conversationPartsCSS + threadCSS }} />
 
@@ -244,9 +244,9 @@ export default function ConversationThreadPage({
             </span>
           ) : null}
           <div className="cv-thread-identity">
-            <h1>{title}</h1>
+            <h1 className="notranslate">{title}</h1>
             <p>
-              <span className="cv-thread-phone">{thread ? conversationPhone(thread) : ""}</span>
+              <span className="cv-thread-phone notranslate">{thread ? conversationPhone(thread) : ""}</span>
               {thread?.last_message_at ? (
                 <span className="cv-thread-when"> · last message {formatDate(thread.last_message_at)}</span>
               ) : null}
@@ -311,7 +311,7 @@ export default function ConversationThreadPage({
                   </span>
                 )}
                 <div className={`cv-bubble cv-bubble-${entry.message.role}`}>
-                  <p>{entry.message.content}</p>
+                  <p className="notranslate">{entry.message.content}</p>
                   <span className="cv-bubble-time">{formatTime(entry.message.created_at)}</span>
                 </div>
               </div>
@@ -383,7 +383,7 @@ export default function ConversationThreadPage({
                 Delete conversation
               </h2>
               <p className="cv-modal-copy" id="cv-delete-copy">
-                The conversation with <strong>{title}</strong> and all of its messages will be deleted. This cannot be
+                The conversation with <strong className="notranslate">{title}</strong> and all of its messages will be deleted. This cannot be
                 undone.
               </p>
               <div className="cv-modal-actions">

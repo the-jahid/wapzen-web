@@ -387,10 +387,10 @@ export default function OrdersTab({
                       #{order.order_number}
                     </button>
                   </td>
-                  <td className="orders-strong">{order.customer_name || "—"}</td>
-                  <td className="tools-mono">{order.phone || "—"}</td>
-                  <td>{order.email ?? "—"}</td>
-                  <td className="orders-truncate" title={orderSummary(order)}>
+                  <td className="orders-strong notranslate">{order.customer_name || "—"}</td>
+                  <td className="tools-mono notranslate">{order.phone || "—"}</td>
+                  <td className="notranslate">{order.email ?? "—"}</td>
+                  <td className="orders-truncate notranslate" title={orderSummary(order)}>
                     {orderSummary(order) || "—"}
                   </td>
                   <td>{order.agent_name ?? "Deleted agent"}</td>
@@ -416,10 +416,10 @@ export default function OrdersTab({
                 <span className="tools-card-name">#{order.order_number}</span>
                 <StatusBadge status={order.status} />
               </span>
-              <span className="orders-strong">{order.customer_name || "—"}</span>
-              <span className="tools-card-desc">{orderSummary(order)}</span>
+              <span className="orders-strong notranslate">{order.customer_name || "—"}</span>
+              <span className="tools-card-desc notranslate">{orderSummary(order)}</span>
               <span className="tools-card-foot">
-                <span className="tools-chip-line tools-mono">{order.phone}</span>
+                <span className="tools-chip-line tools-mono notranslate">{order.phone}</span>
                 <span className="tools-chip-tail">{dateFormatter.format(new Date(order.created_at))}</span>
               </span>
             </button>
@@ -603,14 +603,14 @@ function OrderDrawer({
           {order.description ? (
             <div className="tools-field">
               <span className="tools-field-label">Description</span>
-              <p className="orders-text">{order.description}</p>
+              <p className="orders-text notranslate">{order.description}</p>
             </div>
           ) : null}
 
           {order.items.length > 0 ? (
             <div className="tools-field">
               <span className="tools-field-label">Items</span>
-              <ul className="orders-items">
+              <ul className="orders-items notranslate">
                 {order.items.map((item, index) => (
                   <li key={`${item.name}-${index}`}>
                     <span className="orders-strong">
@@ -694,7 +694,8 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="orders-fact">
       <dt className="tools-field-label">{label}</dt>
-      <dd>{children}</dd>
+      {/* Customer details: kept as typed, and out of what the page sends to Google. */}
+      <dd className="notranslate">{children}</dd>
     </div>
   );
 }

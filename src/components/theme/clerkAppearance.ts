@@ -31,6 +31,10 @@ const palettes = {
 export function clerkAppearance(theme: ResolvedTheme, avatarSize = 34) {
   return {
     variables: { colorPrimary: "#4f46e5", ...palettes[theme] },
-    elements: { avatarBox: { height: avatarSize, width: avatarSize } },
+    elements: {
+      avatarBox: { height: avatarSize, width: avatarSize },
+      // The account popover shows the person's name and email: not for Google Translate.
+      userPreviewTextContainer: "notranslate",
+    },
   };
 }

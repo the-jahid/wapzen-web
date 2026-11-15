@@ -933,12 +933,12 @@ export default function ApiKeysPage() {
                 >
                   <span className="api-row-icon"><Icon name="key" size={17} /></span>
                   <span className="api-row-identity">
-                    <span className="api-key-name">{key.name}</span>
-                    <span className="api-key-id">id {shortId(key.id)}</span>
+                    <span className="api-key-name notranslate">{key.name}</span>
+                    <span className="api-key-id notranslate">id {shortId(key.id)}</span>
                   </span>
                   <span className="api-row-meta">
                     <span className="api-row-label">Key</span>
-                    <span className="api-key-mask">{maskKey(key)}</span>
+                    <span className="api-key-mask notranslate">{maskKey(key)}</span>
                   </span>
                   <span className="api-row-meta api-row-last-used">
                     <span className="api-row-label">Last used</span>

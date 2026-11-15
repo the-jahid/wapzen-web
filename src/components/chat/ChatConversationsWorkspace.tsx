@@ -283,7 +283,7 @@ export default function ChatConversationsWorkspace({
                   </span>
                   <span className="cv-row-identity">
                     <Link
-                      className="cv-row-name cv-row-link"
+                      className="cv-row-name cv-row-link notranslate"
                       href={
                         agentId
                           ? `/dashboard/conversations/${conversation.id}?agent=${encodeURIComponent(agentId)}`
@@ -296,7 +296,7 @@ export default function ChatConversationsWorkspace({
                     >
                       {title}
                     </Link>
-                    <span className="cv-row-phone">{conversationPhone(conversation)}</span>
+                    <span className="cv-row-phone notranslate">{conversationPhone(conversation)}</span>
                   </span>
                   <span className="cv-row-meta">
                     <span className="cv-row-count">{conversation.message_count} messages</span>

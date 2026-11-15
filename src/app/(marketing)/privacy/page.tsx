@@ -13,7 +13,7 @@ import styles from "@/components/marketing/Marketing.module.css";
 const path = "/privacy";
 const title = "Privacy Policy";
 const description = "What Wapzen collects, how WhatsApp messages and calls are handled by our AI agents, which providers process them, and how to delete your data.";
-const updated = { iso: "2026-10-30", label: "30 October 2026" };
+const updated = { iso: "2026-11-04", label: "4 November 2026" };
 
 export const metadata: Metadata = pageMetadata({ title, description, path });
 
@@ -29,6 +29,7 @@ const providers: Array<{ name: string; href: string; use: string }> = [
   { name: "Anthropic", href: "https://www.anthropic.com/legal/privacy", use: "generates AI replies" },
   { name: "ElevenLabs", href: "https://elevenlabs.io/privacy-policy", use: "transcribes and speaks on calls" },
   { name: "Pinecone", href: "https://www.pinecone.io/privacy/", use: "stores the searchable index of knowledge bases" },
+  { name: "Google Translate", href: "https://policies.google.com/privacy", use: "translates the website's interface text for visitors outside English-speaking countries. It receives that text and your IP address, not your customers' messages, names or numbers" },
   { name: "WhatsApp (Meta)", href: "https://www.whatsapp.com/legal/privacy-policy", use: "carries messages and calls, under its own terms and privacy policy" },
 ];
 
@@ -73,6 +74,7 @@ const sections: Array<{ id: string; title: string; body: ReactNode }> = [
     title: "Cookies and browser storage",
     body: <>
       <p>We use the cookies Clerk needs to keep you signed in. Your browser also stores your theme, dashboard mode and any agent API key you choose to save there. These settings stay in your browser.</p>
+      <p>We check which country you are visiting from to show the site in its language. We don&apos;t save it on our servers. Your browser keeps your language choice, and a translation cookie while the site is translated.</p>
       <p>The free tools under <Link href="/tools">/tools</Link> run in your browser. Phone numbers and text you type into them aren&apos;t sent to us, and recent numbers are kept only on your device.</p>
     </>,
   },

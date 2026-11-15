@@ -102,8 +102,8 @@ export default function GroupsPage() {
                       >
                         <span className={`grp-dot${online ? " is-online" : ""}`} />
                         <span className="grp-number-text">
-                          <strong>{number.label || number.phone_number}</strong>
-                          <span>{online ? (number.label ? number.phone_number : "Connected") : "Offline"}</span>
+                          <strong className="notranslate">{number.label || number.phone_number}</strong>
+                          <span className={online && number.label ? "notranslate" : undefined}>{online ? (number.label ? number.phone_number : "Connected") : "Offline"}</span>
                         </span>
                       </button>
                     );
@@ -122,7 +122,7 @@ export default function GroupsPage() {
       </main>
 
       {notice ? (
-        <div className={`grp-toast ${notice.kind === "error" ? "grp-toast-error" : "grp-toast-success"}`} role="status">
+        <div className={`grp-toast notranslate ${notice.kind === "error" ? "grp-toast-error" : "grp-toast-success"}`} role="status">
           {notice.text}
         </div>
       ) : null}
@@ -284,7 +284,7 @@ function GroupRow({ busy, group, onToggle }: { busy: boolean; group: ApiWhatsApp
         <Users size={18} strokeWidth={1.8} />
       </span>
       <span className="grp-row-text">
-        <strong>{group.name}</strong>
+        <strong className="notranslate">{group.name}</strong>
         <span>
           {group.member_count} member{group.member_count === 1 ? "" : "s"}
           {group.can_send ? "" : " · Only admins can post, and this number isn't one"}
@@ -293,7 +293,7 @@ function GroupRow({ busy, group, onToggle }: { busy: boolean; group: ApiWhatsApp
       <button
         aria-checked={on}
         aria-label={`AI in ${group.name}`}
-        className={`grp-switch${on ? " is-on" : ""}`}
+        className={`grp-switch notranslate${on ? " is-on" : ""}`}
         disabled={busy || locked}
         onClick={onToggle}
         role="switch"

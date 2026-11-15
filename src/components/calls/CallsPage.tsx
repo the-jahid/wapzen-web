@@ -1167,7 +1167,7 @@ function CallList({
                   <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={16} sw={2.2} />
                 </span>
                 <span className="calls-card-identity">
-                  <span className="calls-row-peer">{peerLabel(call)}</span>
+                  <span className="calls-row-peer notranslate">{peerLabel(call)}</span>
                   <span className="calls-row-id">{call.call_id}</span>
                 </span>
               </span>
@@ -1207,7 +1207,7 @@ function CallList({
                 <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={15} sw={2.2} />
               </span>
               <span className="calls-row-identity">
-                <span className="calls-row-peer">{peerLabel(call)}</span>
+                <span className="calls-row-peer notranslate">{peerLabel(call)}</span>
                 <span className="calls-row-id">{call.call_id}</span>
               </span>
               <span className="calls-row-field calls-row-direction">
@@ -1274,7 +1274,7 @@ function CallDetail({
             <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={22} />
           </span>
           <div style={{ minWidth: 0 }}>
-            <div className="calls-summary-title">{peerLabel(call)}</div>
+            <div className="calls-summary-title notranslate">{peerLabel(call)}</div>
             <div className="calls-summary-id">
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{call.call_id}</span>
               <button
@@ -1430,7 +1430,7 @@ function TranscriptTurn({ message }: { message: ApiCallMessage }) {
       </span>
       <div className="calls-turn-bubble">
         <div className="calls-turn-role">{roleLabel}</div>
-        {message.content}
+        <span className="notranslate">{message.content}</span>
       </div>
     </div>
   );

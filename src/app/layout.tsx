@@ -5,6 +5,7 @@ import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import { siteConfig } from "@/lib/site";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { themeInitScript } from "@/components/theme/theme-constants";
+import { AutoTranslate } from "@/components/translate/AutoTranslate";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -98,6 +99,7 @@ export default function RootLayout({
         </head>
         <body className="min-h-full flex flex-col">
           <ThemeProvider>{children}</ThemeProvider>
+          <AutoTranslate />
           <Analytics />
         </body>
       </html>

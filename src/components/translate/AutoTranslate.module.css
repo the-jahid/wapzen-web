@@ -1,0 +1,78 @@
+.floating,
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.floating {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 30;
+  padding: 5px 8px 5px 10px;
+  border-radius: 999px;
+  background: var(--background, #fff);
+  color: var(--foreground, #111);
+  box-shadow: 0 2px 10px #0002;
+}
+
+.inline {
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.inline .select {
+  flex: 1;
+  max-width: none;
+}
+
+.select {
+  max-width: 130px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  outline-offset: 3px;
+}
+
+.select option {
+  color: #111;
+  background: #fff;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Pages already written in another language have nothing to translate. */
+:global(body:has(div[lang][translate="no"])) .floating {
+  display: none;
+}
+
+/* This switch replaces Google's banner, so the banner, the tooltip over
+   translated text and the space the banner pushes the page down by all go. */
+:global(iframe.skiptranslate),
+:global(.goog-te-banner-frame),
+:global(#goog-gt-tt),
+:global(.goog-te-balloon-frame) {
+  display: none !important;
+}
+
+:global(body) {
+  top: 0 !important;
+}
+
+:global(.goog-text-highlight) {
+  background: none !important;
+  box-shadow: none !important;
+}

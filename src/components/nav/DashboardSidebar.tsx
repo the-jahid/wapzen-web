@@ -35,6 +35,7 @@ import {
 } from "@/components/nav/workspaceMode";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import { useNewOrders } from "@/components/nav/useNewOrders";
+import { LanguageSwitch } from "@/components/translate/AutoTranslate";
 import styles from "./DashboardSidebar.module.css";
 
 export const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
@@ -97,7 +98,7 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
       <header className={styles.topbar}>
         <Link aria-label="Wapzen home" className={styles.topbarLogo} href="/">
           <span className={styles.logoMark}><BrandMark /></span>
-          <span className={styles.topbarName}>Wapzen</span>
+          <span className={`${styles.topbarName} notranslate`}>Wapzen</span>
         </Link>
         <span className={styles.topbarActions}>
           <a
@@ -182,7 +183,7 @@ function SidebarBody({
       <Link aria-label="Wapzen home" className={styles.logo} href="/" onClick={onNavigate}>
         <span className={styles.logoMark}><BrandMark /></span>
         <span className={styles.logoText}>
-          <span className={styles.logoName}>Wapzen</span>
+          <span className={`${styles.logoName} notranslate`}>Wapzen</span>
           <span className={styles.logoTagline}>AI Voice Agents</span>
         </span>
       </Link>
@@ -232,11 +233,12 @@ function SidebarBody({
         </a>
         <WorkspaceModeToggle />
         <ThemeToggle />
+        <LanguageSwitch />
         <div className={styles.userCard}>
           <UserButton appearance={clerkAppearance(resolvedTheme)} />
           <span className={styles.userText}>
-            <span className={styles.userName}>{user?.fullName || user?.username || "Account"}</span>
-            <span className={styles.userEmail}>{user?.primaryEmailAddress?.emailAddress ?? ""}</span>
+            <span className={`${styles.userName} notranslate`}>{user?.fullName || user?.username || "Account"}</span>
+            <span className={`${styles.userEmail} notranslate`}>{user?.primaryEmailAddress?.emailAddress ?? ""}</span>
           </span>
         </div>
       </div>
