@@ -1161,6 +1161,33 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-14",
     readingMinutes: 13,
   },
+  // Indonesia business posts (2026-11-15), picked by docs/seo-blog-indonesia-research.mjs:
+  // online shops ("admin online shop", "contoh format order whatsapp") and food businesses
+  // ("format order whatsapp makanan"), Indonesia's two largest UMKM groups. Q&A format.
+  {
+    href: "/id/blog/admin-online-shop-ai",
+    title: "Admin Online Shop AI: Chatbot WhatsApp Olshop Gratis (2026)",
+    name: "Admin online shop AI di WhatsApp",
+    description: "Admin AI gratis untuk online shop di WhatsApp: jawab stok, harga, ukuran dan ongkir 24 jam, kirim foto produk, catat pesanan COD, plus contoh format order.",
+    tag: "Explainer",
+    icon: ShoppingBag,
+    published: "2026-11-15",
+    updated: "2026-11-15",
+    readingMinutes: 13,
+    locale: "id",
+  },
+  {
+    href: "/id/blog/order-makanan-via-whatsapp",
+    title: "Order Makanan via WhatsApp: Chatbot Kuliner Gratis (2026)",
+    name: "Order makanan via WhatsApp",
+    description: "Chatbot WhatsApp gratis untuk warung, restoran dan katering: jawab menu dan ongkir 24 jam, catat pesanan ke WhatsApp dapur tanpa komisi, plus format order.",
+    tag: "Explainer",
+    icon: UtensilsCrossed,
+    published: "2026-11-15",
+    updated: "2026-11-15",
+    readingMinutes: 13,
+    locale: "id",
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);

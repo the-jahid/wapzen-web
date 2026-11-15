@@ -736,3 +736,16 @@ Built: `/blog/whatsapp-chatbot-for-gyms` (QaPost, 15 questions). Title takes "AI
 SERP (2026-11-14): vendor pages. "whatsapp chatbot for gyms": Pabbly, Aurora Inbox, Achiya, Gurusup, Conferbot, Palmate, Edesy. "ai receptionist for gyms": Zenoti, My AI Front Desk, ABC Fitness (Replify), Glofox, CloudTalk, SchedulingKit. Read 2026-11-14: Glofox and ABC/Replify list phone, SMS, email and web chat; Zenoti is phone-first plus text and web chat; none mentions WhatsApp or lists a price. Gymdesk returned 403.
 
 Honesty: the agent doesn't send renewal reminders or follow-ups (samples are for the owner to send), Take Order acts as an untested trial-request form, no class calendar or billing access, no medical or diet advice. "Free to start" because of the free trial.
+
+## Indonesia business posts (2026-11-15)
+
+Request: two more Indonesian posts on business types researched online. `node docs/seo-blog-indonesia-research.mjs` (Google + YouTube autocomplete hl=id gl=id, DuckDuckGo kl=id-en, rank-weighted, max 3/3 sources). Cluster totals: gratis 1,719 (generic, already covered by English free-agent posts), **olshop 1,049**, bisnis/API 915, wisata 588, **kuliner 551**, properti 477 (mostly noise: US "crm properties"), kesehatan 354, kecantikan 313, jasa 215.
+
+Top phrases used: "contoh format order whatsapp" 34 (2/3), "admin online shop" 30 (3/3), "cara pesan makanan di whatsapp" 30, "ai untuk jualan online" 20, "cara jualan di whatsapp (business)" 19, "admin olshop" 19, "contoh format order whatsapp makanan" 18, "chatbot hotel" 30 (3/3), "admin klinik" 30 (3/3), "admin klinik gigi" 26 (3/3).
+
+Three candidates: online shops, food businesses, clinics (dental + beauty). Built the first two:
+- `/id/blog/admin-online-shop-ai` (15 questions). Why: strongest business cluster; BPS Statistik E-Commerce 2023 (via GoodStats, 28 Feb 2025): 95.33% of 3.82 million e-commerce businesses sell through chat apps, COD used by 75.19%; marketplace fees rose in May 2026 (Katadata 22 May 2026 citing Bisnison: Shopee 10-18%, Tokopedia 5-15.8%, TikTok Shop with affiliates 20-35%).
+- `/id/blog/order-makanan-via-whatsapp` (14 questions). Why: accommodation + food and drink is the second-largest non-farm UMKM group, 6.41 of 30.21 million units on 31 Dec 2025 (Kementerian UMKM via Databoks, 22 Apr 2026); mandatory halal certification for UMK food and drink from 18 Oct 2026 (BPJPH, PP 42/2024); GoFood commission 20% + Rp 1,000 per item since 2021 (Kontan, 20 Mar 2021).
+
+Not built: clinics ("admin klinik" phrases are partly job searches), hotels/villas ("chatbot hotel" 30).
+Weak: 2026 food-delivery merchant commission not confirmed (Bisnis.com 403, Investortrust 429; only the 2021 figure, stated with its year); the 95.33% is the 2023 survey (2024 edition released 28 Nov 2025, channel share not read); the Katadata fee ranges come from a vendor-quoted article; Indonesian WhatsApp menu string "Tautkan dengan nomor telepon saja" not checked on a phone.
