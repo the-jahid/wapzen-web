@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, ChefHat, CircleDollarSign, ClipboardCheck, Coins, Columns3, Dumbbell, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Smile, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Dumbbell, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -1213,43 +1213,6 @@ export const blogPosts: BlogPostEntry[] = [
     icon: CircleDollarSign,
     published: "2026-11-15",
     updated: "2026-11-15",
-    readingMinutes: 11,
-  },
-  // Voice agent industry posts (2026-11-16), picked by docs/seo-blog-voice-industries-research.mjs:
-  // the three industry clusters with the most AI-receptionist searches that also fit WhatsApp calls
-  // (restaurants 1,415, dental 1,021, salons 621; trades scored 849 but has almost no WhatsApp
-  // demand, real estate already has /ai-calling-agent-for-real-estate). Q&A format.
-  {
-    href: "/blog/ai-phone-answering-for-restaurants",
-    title: "AI Phone Answering for Restaurants: Free WhatsApp Voice Agent",
-    name: "AI phone answering for restaurants",
-    description: "An AI receptionist for restaurants that answers WhatsApp calls 24/7: menu, hours, delivery, allergies, phone orders and table requests. Free to start.",
-    tag: "Explainer",
-    icon: ChefHat,
-    published: "2026-11-16",
-    updated: "2026-11-16",
-    readingMinutes: 12,
-  },
-  {
-    href: "/blog/dental-ai-receptionist",
-    title: "Dental AI Receptionist: Free WhatsApp Voice Agent (2026)",
-    name: "Dental AI receptionist",
-    description: "A dental AI receptionist for WhatsApp calls: fees, new patients and appointment requests 24/7, emergency wording, HIPAA facts, Arini and Viva AI compared.",
-    tag: "Explainer",
-    icon: Smile,
-    published: "2026-11-16",
-    updated: "2026-11-16",
-    readingMinutes: 11,
-  },
-  {
-    href: "/blog/ai-receptionist-for-salons",
-    title: "AI Receptionist for Salons & Spas: Free WhatsApp Voice Agent",
-    name: "AI receptionist for salons",
-    description: "An AI receptionist for hair, nail and beauty salons, barbers and spas that answers WhatsApp calls 24/7: prices, bookings, deposits. Free to start.",
-    tag: "Explainer",
-    icon: Scissors,
-    published: "2026-11-16",
-    updated: "2026-11-16",
     readingMinutes: 11,
   },
 ];
