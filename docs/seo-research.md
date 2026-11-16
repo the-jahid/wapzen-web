@@ -780,3 +780,29 @@ Not built: "whatsapp ai chatbot malaysia" / "whatsapp chatbot malaysia" (SERP he
 Facts (read 2026-11-15, recheck each quarter): Meta developer pricing page (1 Oct 2026 version) confirms MYR billing since 1 Apr 2026 (chosen at account creation), 1,000 free service messages per number a month, in-window utility charged since 1 Oct 2026, free entry point window up to 7 days, user-initiated calls free. MYR figures are in Meta's rate-card download, not the page text; respond.io (updated 13 Nov 2026) and ChatMaxima agree: marketing RM 0.3467, utility/authentication/service RM 0.0564, international authentication RM 0.1685; USD 0.0860 / 0.0140 (ChatMaxima only). ChatMaxima wrongly says in-window utility is free. Utility tiers start at 150,001 (RM 0.0536), authentication at 100,001 (respond.io). Malaysia business-initiated call rate not found. SleekFlow en-my: Pro RM 399/month billed yearly (RM 4,788), Premium RM 1,199 (RM 14,388), RM 50/month number hosting, 7-day trial. respond.io: Starter US$79 yearly / US$99 monthly, Growth 159/199, Advanced 279/349, WhatsApp fees not included. WATI: Growth US$39, Pro US$79, Business US$199 a month billed yearly; monthly-billed figures not captured. PDPA (Amendment) Act 2024: cross-border whitelist removed 1 Apr 2025; DPO and breach notification from 1 Jun 2025 (Sidley, Rajah & Tann). No reliable 2025-2026 figure for WhatsApp use in Malaysia was found (MCMC IUS has none in search results; ZenWeb 403), so neither post cites one.
 
 Unverified: WhatsApp Business menu names in Malay (each step also gives the English label); no Malaysian reader reviewed the Malay; SleekFlow's own message rate card vs Meta's list price.
+
+## Voice agent industry posts (2026-11-16)
+
+Request: three blog posts about the WhatsApp voice agent, each for a different industry, picked by keywords that can rank in Google and ChatGPT. `node docs/seo-blog-voice-industries-research.mjs` (Google + YouTube + DuckDuckGo autocomplete in the US, India and the UK, rank-weighted, max 9/9 sources) over 14 industry clusters. Cluster totals are swamped by generic phrases ("ai receptionist for small business" 395 shows up under every seed), so industries were scored on industry-specific phrases only:
+
+| Industry | Total | Top phrases (score, sources/9) |
+|---|---|---|
+| Restaurants | 1,415 | ai phone answering service for restaurants 122 (6), ai phone answering system for restaurants 96 (6), ai receptionist for restaurants 90 (9), ai voice agent for restaurants 81 (6), ai phone ordering 78 (9), ai phone ordering system 70 (6) |
+| Dental | 1,021 | dental ai receptionist 90 (9), ai receptionist for dental office 80 (6), ai receptionist for dental clinics 50 (6), ai front desk receptionist for dental office 44 |
+| Trades | 849 | ai receptionist for contractors 284 (3), ai receptionist for hvac 166 (9), ai receptionist for plumbers 60 (6) |
+| Legal | 758 | ai receptionist for law firm 293 (6), rest ≤ 30 |
+| E-commerce | 752 | ndr calling 87 (9), ai voice agent for ecommerce 60 (6), cod call verification 30 |
+| Real estate | 746 | ai voice agent for real estate 90 (9), ai receptionist for real estate 87 (9) |
+| Salons | 621 | ai receptionist for salon 80 (5), ai receptionist for hair salon 76 (6), nail salon 51 (6), beauty salon 51, med spa 41 (6) |
+| Hotels | 584 | noisy (job-interview searches); ai voice agent for hotels 30 |
+
+A second check of WhatsApp-specific phrases decided the fit: "whatsapp for restaurants" 60, "whatsapp ordering for restaurants" 50, "whatsapp marketing for restaurants" 41; "whatsapp api for salon" 27, "salon whatsapp marketing" 18; dental clinic WhatsApp searches are mostly clinic numbers; trades returned almost nothing ("whatsapp for tradesmen" had no suggestions). The voice agent answers WhatsApp calls only, so trades (US contractors get regular calls) and legal were skipped; real estate already has /ai-calling-agent-for-real-estate.
+
+Built (QaPost, 13 questions each, WhatsApp CTA via the new optional QaPost `action` prop):
+- `/blog/ai-phone-answering-for-restaurants`: vs Maple ($150 Voice / $350 Pro a month, $85 / $220 billed yearly, unlimited minutes; Pro does POS orders and OpenTable reservations) and Slang.ai (Core from $399, Premium from $599 per location, billing period not stated). Read from their pricing pages 2026-11-16.
+- `/blog/dental-ai-receptionist`: vs Arini (no price on its site, demo) and Viva AI (Gold $349, Platinum $899, Diamond $1,199 a month by credits, or Unlimited $350 for the first provider + $150 each; "fully HIPAA compliant, with a BAA signed for every practice"; live transfer on Platinum), plus Smith.ai (free 25 calls then $3, Pro $150). HIPAA facts as /industries/healthcare.
+- `/blog/ai-receptionist-for-salons`: vs Zenoti and Booksy AI receptionists (book into their own calendars, no price shown), Smith.ai, My AI Front Desk ($99 a month or $79 yearly for 200 minutes, then $0.25 a minute). Fresha's AI price came only from third-party posts, so it isn't cited.
+
+SERP (2026-11-16): WhatsApp-voice results are niche vendor pages (CallMissed, Thikaa, SleekFlow, Famulor, Hyperleap, Clarivo); the phone-line terms are owned by Maple, Slang.ai, Loman, Hostie, Smith.ai, My AI Front Desk. None of the phone-line vendors' pricing pages mentions WhatsApp.
+
+Honesty: WhatsApp calls only; no live transfer; about a 1-2 s pause per answer; no POS, reservation book or salon diary of its own (API tool, chat Take Order, or staff confirm); campaign leads carry only name, number and email, so recall/rebooking calls are generic, never per-appointment reminders; no CSV import, no auto redial; never claims concurrent calls; no BAA. "Free to start, no card", no per-minute fees; voice described as working and switched on by our team over WhatsApp.

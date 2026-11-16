@@ -4,7 +4,7 @@ import { ArrowRight, MessageCircleQuestion } from "lucide-react";
 import { blogPost, blogUi, formatPostDate, postsIn } from "@/lib/blogPosts";
 import { locales, type Locale } from "@/lib/locales";
 import { marketingPages } from "@/lib/marketingPages";
-import { GetStarted } from "@/components/landing/SiteChrome";
+import { GetStarted, WhatsAppButton } from "@/components/landing/SiteChrome";
 import { Section } from "@/components/marketing/MarketingPage";
 import tools from "@/components/free-tools/FreeTools.module.css";
 import marketing from "@/components/marketing/Marketing.module.css";
@@ -41,9 +41,11 @@ type QaPostProps = {
   /** A marketing page in the same language for the "keep reading" row, if there is one. */
   product?: string;
   cta: { heading: ReactNode; body: string };
+  /** Opens this WhatsApp chat from the closing CTA instead of sign-up (as BlogPost's `action`). */
+  action?: { href: string; label: string };
 };
 
-export function QaPost({ href, heading, lead, verdict, facts, indexTitle, answerLabel, questions, sources = [], related, product, cta }: QaPostProps) {
+export function QaPost({ href, heading, lead, verdict, facts, indexTitle, answerLabel, questions, sources = [], related, product, cta, action }: QaPostProps) {
   const post = blogPost(href);
   const locale = post.locale ?? "en";
   const { ui } = locales[locale];
@@ -102,7 +104,7 @@ export function QaPost({ href, heading, lead, verdict, facts, indexTitle, answer
     <section className={tools.cta} aria-labelledby="cta-title">
       <div className={tools.ctaInner}>
         <div><h2 id="cta-title">{cta.heading}</h2><p>{cta.body}</p></div>
-        <div><GetStarted label={ui.startFree} /></div>
+        <div>{action ? <WhatsAppButton href={action.href} label={action.label} /> : <GetStarted label={ui.startFree} />}</div>
       </div>
     </section>
   </>;
