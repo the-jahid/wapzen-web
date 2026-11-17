@@ -1215,6 +1215,43 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-15",
     readingMinutes: 11,
   },
+  // Industry playbooks (2026-11-17), a new post format (components/blog/PlaybookPost.tsx):
+  // a day on a timeline, a jobs board, setup steps, templates and an always-open FAQ. The
+  // industries were picked by docs/seo-blog-industry-pick-research.mjs, which ranked schools,
+  // hotels and car dealerships first of 16 on phrases that name the industry.
+  {
+    href: "/blog/ai-chatbot-for-hotels",
+    title: "AI Chatbot for Hotels: Free WhatsApp AI Front Desk (2026)",
+    name: "AI chatbot for hotels",
+    description: "Free AI chatbot for hotels on WhatsApp: an AI front desk that answers rates, rooms and check-in 24/7 in any language, takes booking requests and answers calls.",
+    tag: "Explainer",
+    icon: BedDouble,
+    published: "2026-11-17",
+    updated: "2026-11-17",
+    readingMinutes: 11,
+  },
+  {
+    href: "/blog/whatsapp-for-schools",
+    title: "WhatsApp for Schools: Free AI Chatbot for Admissions (2026)",
+    name: "WhatsApp for schools",
+    description: "Free WhatsApp AI chatbot for schools: answers admission enquiries and parent questions 24/7, takes the enquiry form in chat, plus fee reminder messages.",
+    tag: "Explainer",
+    icon: GraduationCap,
+    published: "2026-11-17",
+    updated: "2026-11-17",
+    readingMinutes: 11,
+  },
+  {
+    href: "/blog/ai-for-car-dealerships",
+    title: "AI for Car Dealerships: Free WhatsApp AI Chatbot & BDC (2026)",
+    name: "AI for car dealerships",
+    description: "Free AI for car dealerships on WhatsApp: answers stock and price questions 24/7, sends car photos, books test drives and trade-ins, and calls new leads.",
+    tag: "Explainer",
+    icon: Car,
+    published: "2026-11-17",
+    updated: "2026-11-17",
+    readingMinutes: 11,
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);

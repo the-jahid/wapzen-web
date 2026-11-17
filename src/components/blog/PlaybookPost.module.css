@@ -1,0 +1,112 @@
+/* PlaybookPost: industry playbooks. Shares Blog.module.css for the column, prose,
+ * headings and sources. `.page h2` / `.page h3` from CoreLanding set display sizes, so
+ * headings here are qualified with their block's class to outrank them. */
+
+/* The short answer: text on the left, facts on the right */
+.answer { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); overflow: hidden; border: 1px solid color-mix(in srgb, var(--landing-green) 30%, var(--site-border)); border-radius: 24px; background: var(--site-panel); }
+.answerText { padding: 28px 30px; }
+.answer .answerTitle { font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; line-height: 1.4; color: var(--landing-green); }
+.answerBody { margin-top: 12px; font-size: 17px; line-height: 1.7; letter-spacing: -.005em; color: var(--site-text); }
+.answerBody strong { font-weight: 650; }
+.specs { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 18px 22px; background: color-mix(in srgb, var(--landing-green) 8%, var(--site-panel)); border-left: 1px solid color-mix(in srgb, var(--landing-green) 22%, var(--site-border)); }
+.specs > div { padding: 10px 0; }
+.specs > div + div { border-top: 1px dashed color-mix(in srgb, var(--landing-green) 25%, var(--site-border)); }
+.specs dt { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--site-text-muted); }
+.specs dd { display: flex; align-items: flex-start; gap: 7px; margin-top: 4px; font-size: 15px; font-weight: 650; line-height: 1.4; color: var(--site-text); }
+.specs dd > svg { flex-shrink: 0; margin-top: 3px; color: var(--landing-green); }
+
+/* Chapter index: numbered chips */
+.chapters { margin-top: 30px; }
+.chapters .chaptersTitle { font-size: 12px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; line-height: 1.4; color: var(--site-text-muted); }
+.chapters ol { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chapters a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px 8px 9px; border: 1px solid var(--site-border); border-radius: 999px; background: var(--site-panel); font-size: 13px; font-weight: 550; line-height: 1.3; color: var(--site-text-soft); transition: border-color .15s, color .15s; }
+.chapters a:hover { border-color: var(--landing-green); color: var(--site-text); }
+.chapters a > span { display: grid; place-items: center; min-width: 24px; height: 22px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--landing-green) 14%, transparent); font-family: var(--font-geist-mono), monospace; font-size: 10.5px; color: var(--landing-green); }
+.kicker { margin-bottom: 8px; font-family: var(--font-geist-mono), monospace; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--landing-green); }
+
+/* A day on the timeline */
+.timeline { display: flex; flex-direction: column; gap: 12px; }
+.timeline ol { position: relative; display: grid; gap: 14px; }
+.timeline ol::before { content: ""; position: absolute; top: 8px; bottom: 8px; left: 77px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--landing-green) 25%, var(--site-border)); }
+.timeline li { --dot: var(--landing-green); position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 30px; }
+.timeline li[data-outcome="request"] { --dot: #d79a1e; }
+.timeline li[data-outcome="handover"] { --dot: #7a86f0; }
+.timeline li[data-outcome="call"] { --dot: #2aa4c9; }
+.timeline li::before { content: ""; position: absolute; top: 18px; left: 72px; width: 12px; height: 12px; border: 3px solid var(--site-bg, var(--site-panel)); border-radius: 50%; background: var(--dot); }
+.time { padding-top: 13px; text-align: right; font-family: var(--font-geist-mono), monospace; font-size: 13px; font-weight: 600; color: var(--site-text); white-space: nowrap; }
+.event { display: flex; flex-direction: column; gap: 9px; padding: 14px 16px; border: 1px solid var(--site-border); border-radius: 16px; background: var(--site-panel); }
+.from { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; letter-spacing: .03em; color: var(--site-text-muted); }
+.from > svg { color: var(--dot); }
+.message { align-self: flex-start; max-width: 100%; padding: 9px 13px; border-radius: 4px 14px 14px 14px; background: var(--site-fill-2); font-size: 14.5px; line-height: 1.55; color: var(--site-text); }
+.reply { font-size: 14px; line-height: 1.65; color: var(--site-text-soft); }
+.tag { display: inline-block; margin-right: 8px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--dot) 16%, transparent); font-size: 11px; font-weight: 650; letter-spacing: .02em; color: var(--site-text); vertical-align: 1px; }
+.timeline figcaption { font-size: 13px; line-height: 1.6; color: var(--site-text-muted); }
+
+/* Jobs board: three columns */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.column { --tone: var(--landing-green); padding: 20px 18px; border: 1px solid var(--site-border); border-top: 3px solid var(--tone); border-radius: 18px; background: var(--site-panel); }
+.column[data-tone="request"] { --tone: #d79a1e; }
+.column[data-tone="team"] { --tone: #7a86f0; }
+.column .columnTitle { font-size: 16px; line-height: 1.3; letter-spacing: -.02em; }
+.columnNote { margin-top: 6px; font-size: 12.5px; line-height: 1.55; color: var(--site-text-muted); }
+.column ul { display: grid; gap: 9px; margin-top: 14px; }
+.column li { position: relative; padding-left: 16px; font-size: 13.5px; line-height: 1.55; color: var(--site-text-soft); }
+.column li::before { content: ""; position: absolute; top: 8px; left: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--tone); }
+
+/* Setup steps */
+.steps { display: grid; gap: 4px; }
+.steps > li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px; padding: 16px 0; }
+.steps > li + li { border-top: 1px solid var(--site-border); }
+.stepNumber { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--landing-green); font-size: 15px; font-weight: 700; color: var(--landing-green); }
+.steps .stepTitle { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding-top: 8px; font-size: 17px; line-height: 1.35; letter-spacing: -.02em; }
+.stepTime { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--site-fill-2); font-family: var(--font-geist-mono), monospace; font-size: 11px; font-weight: 500; letter-spacing: 0; color: var(--site-text-muted); }
+.stepBody { margin-top: 6px; font-size: 15px; line-height: 1.75; color: var(--site-text-soft); }
+.stepBody a { color: var(--landing-green); text-decoration: underline; text-underline-offset: 3px; }
+.stepBody strong { font-weight: 650; color: var(--site-text); }
+
+/* Message templates: outgoing bubbles */
+.templates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.template { display: flex; flex-direction: column; gap: 12px; padding: 18px; border: 1px solid var(--site-border); border-radius: 18px; background: var(--site-panel); }
+.templateHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.template .templateTitle { font-size: 15px; line-height: 1.35; letter-spacing: -.015em; }
+.templateHead p { margin-top: 3px; font-size: 12px; line-height: 1.5; color: var(--site-text-muted); }
+.bubble { align-self: flex-end; max-width: 100%; padding: 11px 14px; border-radius: 14px 4px 14px 14px; background: color-mix(in srgb, var(--landing-green) 15%, var(--site-panel)); font-size: 14px; line-height: 1.6; color: var(--site-text); white-space: pre-line; }
+
+/* The instructions file */
+.file { overflow: hidden; border: 1px solid var(--site-border); border-radius: 16px; background: var(--site-fill); }
+.fileHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--site-border); background: var(--site-panel); }
+.fileHead > span { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-geist-mono), monospace; font-size: 12px; color: var(--site-text-muted); }
+.file pre { overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px 18px; font-size: 13px; line-height: 1.7; color: var(--site-text-soft); }
+
+/* Voice card: dark in both themes, like the CTAs */
+.voice { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 18px; padding: 26px; border-radius: 22px; background: #10281f; }
+.voiceIcon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: rgba(110, 231, 168, .14); color: #6ee7a8; }
+.voiceText { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.voiceTitle { font-size: 19px; font-weight: 650; line-height: 1.3; letter-spacing: -.02em; color: #fff; }
+.voiceText > p:not(.voiceTitle) { font-size: 14.5px; line-height: 1.65; color: #b4c8be; }
+.voiceText ul { display: grid; gap: 8px; margin: 4px 0 8px; }
+.voiceText li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.55; color: #e6f0eb; }
+.voiceText li > svg { flex-shrink: 0; margin-top: 3px; color: #6ee7a8; }
+
+/* FAQ, always open */
+.faq { display: grid; gap: 10px; }
+.faq > div { padding: 18px 20px; border: 1px solid var(--site-border); border-radius: 16px; background: var(--site-panel); }
+.faq dt { font-size: 16px; font-weight: 650; line-height: 1.4; letter-spacing: -.015em; color: var(--site-text); }
+.faq dd { margin-top: 8px; font-size: 15px; line-height: 1.75; color: var(--site-text-soft); }
+
+@media (max-width: 760px) {
+  .answer { grid-template-columns: minmax(0, 1fr); }
+  .specs { border-left: 0; border-top: 1px solid color-mix(in srgb, var(--landing-green) 22%, var(--site-border)); }
+  .board, .templates { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .answerText { padding: 22px 20px; }
+  .answerBody { font-size: 16px; }
+  .specs { padding: 12px 20px; }
+  .timeline ol::before { left: 5px; }
+  .timeline li { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-left: 24px; }
+  .timeline li::before { top: 2px; left: 0; }
+  .time { padding-top: 0; text-align: left; }
+  .voice { grid-template-columns: minmax(0, 1fr); padding: 22px 20px; }
+  .event, .faq > div { padding: 14px 15px; }
+}

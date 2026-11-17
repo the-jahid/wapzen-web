@@ -806,3 +806,24 @@ Built (QaPost, 13 questions each, WhatsApp CTA via the new optional QaPost `acti
 SERP (2026-11-16): WhatsApp-voice results are niche vendor pages (CallMissed, Thikaa, SleekFlow, Famulor, Hyperleap, Clarivo); the phone-line terms are owned by Maple, Slang.ai, Loman, Hostie, Smith.ai, My AI Front Desk. None of the phone-line vendors' pricing pages mentions WhatsApp.
 
 Honesty: WhatsApp calls only; no live transfer; about a 1-2 s pause per answer; no POS, reservation book or salon diary of its own (API tool, chat Take Order, or staff confirm); campaign leads carry only name, number and email, so recall/rebooking calls are generic, never per-appointment reminders; no CSV import, no auto redial; never claims concurrent calls; no BAA. "Free to start, no card", no per-minute fees; voice described as working and switched on by our team over WhatsApp.
+
+## Industry pick (2026-11-17)
+
+User asked for three posts for three different industries, "new type" (not the QaPost format), saying Wapzen is free and the WhatsApp voice agent works, with no limits mentioned. Search Console wasn't read (Chrome disconnected; user said decide without it).
+
+`docs/seo-blog-industry-pick-research.mjs` scored 16 industries not yet covered in English (the 2026-11-17 removed voice posts' restaurants, dental and salons left out on purpose) with 6 seed templates each ("whatsapp chatbot for X", "ai chatbot for X", "ai for X", "ai receptionist for X", "whatsapp for X", "X whatsapp") on Google US/IN/GB/NG/ZA + DuckDuckGo US/IN/UK. Generic fallbacks ("whatsapp chatbot for business") leak into every industry, so totals were re-scored on phrases that name the industry:
+
+| Industry | WhatsApp or AI phrases | WhatsApp only | Top buyer phrases |
+|---|---|---|---|
+| Schools | 3,191 | 1,454 | whatsapp for schools 178 (8/8), ai chatbot for school 127, ai receptionist for schools 100 |
+| Hotels | 2,783 | 1,149 | ai chatbot for hotels 160 (8/8), whatsapp chatbot for hotels 100, ai receptionist for hotels 100, ai front desk 90 |
+| Car dealers | 2,573 | 874 | ai for car dealerships 282 (8/8), ai receptionist for car dealerships 160, ai chatbot for car dealership 100 |
+| Law firms | 2,315 | 685 | ai receptionist for law firm 424 (3/8, US) |
+| Pharmacy | 2,305 | 1,163 | ai for pharmacy 110, pharmacy whatsapp 102 |
+| Home services | 2,088 | 367 | ai receptionist for contractors 467 (3/8, US) |
+
+Law firms and home services were skipped: US phone-line demand, and the voice agent answers WhatsApp calls only. Pharmacy skipped: medicine questions. `docs/seo-blog-three-industries-research.mjs` then pulled the long tail used for headings, templates and FAQs (school admission enquiry form 94, school fees reminder message 80, ai front desk for hotels 95, hotel booking confirmation message, whatsapp hotel reservation scam, ai bdc 80, test drive booking 80, car sales follow up template).
+
+Built as a new skeleton, `components/blog/PlaybookPost.tsx` (answer + specs, chapter chips, a DayTimeline of one day hour by hour, a JobBoard of AI / AI + staff / staff, SetupSteps with times, copyable Templates and PromptFile, VoiceCard, an always-open FAQ that is the FAQPage data): `/blog/ai-chatbot-for-hotels`, `/blog/whatsapp-for-schools`, `/blog/ai-for-car-dealerships`.
+
+Competitor facts read on their own pages 2026-11-17: Chatlab Hospitality Free (100 chatbot responses a month), Start $48 (20 rooms), Grow $95, Scale $360; Runnr.ai Pro from €100/month, 12-month agreement, WhatsApp fees on use; Trengo Base €149 yearly / €199 monthly (FAQ), AI agent playground only on Base; DealerAI (CAD per rooftop a month) Chatbot $599, Reach Lite $1,199, Reach $1,899, Reach Pro $2,499, voice add-on from $499 for 400 minutes, no WhatsApp on any plan. Matador, Impel, DriveCentric: no public prices; Nobi website-only from $29 for 500 messages (Nobi's own roundup).
