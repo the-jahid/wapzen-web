@@ -827,3 +827,26 @@ Law firms and home services were skipped: US phone-line demand, and the voice ag
 Built as a new skeleton, `components/blog/PlaybookPost.tsx` (answer + specs, chapter chips, a DayTimeline of one day hour by hour, a JobBoard of AI / AI + staff / staff, SetupSteps with times, copyable Templates and PromptFile, VoiceCard, an always-open FAQ that is the FAQPage data): `/blog/ai-chatbot-for-hotels`, `/blog/whatsapp-for-schools`, `/blog/ai-for-car-dealerships`.
 
 Competitor facts read on their own pages 2026-11-17: Chatlab Hospitality Free (100 chatbot responses a month), Start $48 (20 rooms), Grow $95, Scale $360; Runnr.ai Pro from €100/month, 12-month agreement, WhatsApp fees on use; Trengo Base €149 yearly / €199 monthly (FAQ), AI agent playground only on Base; DealerAI (CAD per rooftop a month) Chatbot $599, Reach Lite $1,199, Reach $1,899, Reach Pro $2,499, voice add-on from $499 for 400 minutes, no WhatsApp on any plan. Matador, Impel, DriveCentric: no public prices; Nobi website-only from $29 for 500 messages (Nobi's own roundup).
+
+## Freelancer reseller post (2026-11-17)
+
+`docs/seo-blog-reseller-research.mjs` (Google, YouTube and DuckDuckGo autocomplete, US/IN/GB, 9 source-market pairs, rank-weighted). Built as `/blog/whatsapp-chatbot-reseller` (PlaybookPost).
+
+| Score | Pairs | Phrase |
+|---|---|---|
+| 129 | 9/9 | how to start an ai automation agency |
+| 98 | 9/9 | whatsapp api reseller |
+| 90 | 9/9 | whatsapp automation agency |
+| 90 | 9/9 | how to sell ai agents to businesses |
+| 90 | 9/9 | whatsapp automation services |
+| 90 | 6/9 | white label whatsapp chatbot |
+| 90 | 9/9 | make money with ai agents |
+| 87 | 9/9 | white label ai agents |
+| 83 | 6/9 | whatsapp api reseller panel |
+| 82 | 9/9 | selling chatbots to businesses |
+| 75 | 6/9 | chatbot freelance jobs |
+| 60 | 6/9 | ai agent freelance |
+| 45 | 6/9 | whatsapp ai automation agency |
+| 30 | 3/9 | whatsapp chatbot reseller, chatbot freelancer, whatsapp chatbot freelancer |
+
+The SERP for reseller phrases is vendor pages (BotPenguin, Wassenger, Robofy, BotSailor, Authkey), all selling a white-label panel or API reseller plan. The post's angle: setup-and-care reselling on the client's own number, no API, with the honest note that Wapzen isn't white label. There is no reseller program in the product, so the CTA is "message us to resell" with no terms (user's choice, 2026-11-17). "How to start an ai automation agency" is too broad and creator-heavy to target in the title; it sits in the body and FAQ.

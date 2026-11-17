@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Dumbbell, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, BriefcaseBusiness, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Dumbbell, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -1251,6 +1251,17 @@ export const blogPosts: BlogPostEntry[] = [
     published: "2026-11-17",
     updated: "2026-11-17",
     readingMinutes: 11,
+  },
+  {
+    href: "/blog/whatsapp-chatbot-reseller",
+    title: "WhatsApp Chatbot Reseller Guide for Freelancers (2026)",
+    name: "WhatsApp chatbot reseller guide",
+    description: "Resell WhatsApp AI chatbots as a freelancer: set up Wapzen agents on clients' own numbers, no API, what to charge, pitch messages and white label options.",
+    tag: "Explainer",
+    icon: BriefcaseBusiness,
+    published: "2026-11-17",
+    updated: "2026-11-17",
+    readingMinutes: 12,
   },
 ];
 
