@@ -24,9 +24,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteConfig.url}/tools` },
     ...freeTools.map((tool) => ({ url: `${siteConfig.url}${tool.href}` })),
     // Posts carry a real revision date, so they can state lastModified.
+    // A blog index changes when any of its posts does: use the newest date.
     ...(Object.keys(locales) as Locale[]).flatMap((locale) => {
       const href = locales[locale].ui.blog?.href;
-      return href ? [withAlternates(href, postsIn(locale)[0]?.updated)] : [];
+      const newest = postsIn(locale).map((post) => post.updated).sort().at(-1);
+      return href ? [withAlternates(href, newest)] : [];
     }),
     ...blogPosts.map((post) => withAlternates(post.href, post.updated)),
   ];

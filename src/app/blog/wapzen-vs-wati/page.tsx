@@ -21,7 +21,7 @@ const comparison = [
   ["WhatsApp message fees", "Per message for templates, from WATI's rate card", "None"],
   ["Setup", "Connect a number to the WhatsApp Business API", "Scan a QR code, like WhatsApp Web"],
   ["Meta review", "Message templates and display name", "None"],
-  ["AI chatbot", "Flow builder, AI Co-pilot credits, Astra AI agents (add-on)", "GPT or Claude agent with your knowledge base, included"],
+  ["AI chatbot", "Flow builder, AI Co-pilot credits, Astra AI agents (add-on)", "AI agent with your knowledge base, included"],
   ["WhatsApp calls", "Business Calling in the inbox, Astra voice AI agents", "AI voice agent answers and makes calls, included"],
   ["Broadcasts", "15k a month on Growth, unlimited on Pro", "Not built for bulk messaging"],
   ["Team seats", "3 users on Growth, 5 on Pro, then $24 per user", "One account; take over any chat yourself"],
@@ -62,7 +62,7 @@ const sections = [
       <p>The plan is only part of the bill. WhatsApp charges per message for marketing, utility, and authentication templates, at rates that depend on the recipient’s country, and WATI bills these from its own rate card. AI is metered too: Growth includes 250 AI Co-pilot credits a month and Pro 500, extra credits start at $20 a month, and Astra AI agents are priced separately.</p>
       <p>A five-person team on Pro pays $948 a year for the plan alone, before message charges and AI add-ons.</p>
       <h3>Wapzen</h3>
-      <p>Wapzen is currently free, with every feature included: the AI chatbot, the AI voice agent, outbound calling campaigns, knowledge bases, and API tools. The AI models (OpenAI GPT and Anthropic Claude) and the voices are included, so you don’t need your own API keys. Because your number is linked by QR code rather than the Business API, there are no per-message fees, and calls have no per-minute charge. See the <Link href="/pricing">pricing page</Link> for details.</p>
+      <p>Wapzen is currently free, with every feature included: the AI chatbot, the AI voice agent, outbound calling campaigns, knowledge bases, and API tools. The AI model and the voices are included, so you don’t need your own API keys. Because your number is linked by QR code rather than the Business API, there are no per-message fees, and calls have no per-minute charge. See the <Link href="/pricing">pricing page</Link> for details.</p>
       <Note>WATI’s prices are from its pricing page on the date at the top of this post. If Wapzen introduces paid plans, they’ll be listed on its pricing page.</Note>
     </>,
   },
@@ -71,7 +71,7 @@ const sections = [
     title: "AI chatbot: flows vs an AI agent",
     body: <>
       <p>WATI’s chatbot builder is flow-based: you design paths with keywords, buttons, and forms, with advanced chatbots on Pro. AI comes on top of that. <strong>AI Co-pilot</strong> helps your human agents write replies, and <strong>Astra</strong> lets you describe an AI agent in plain language and deploy it on WhatsApp once Astra is connected to your WATI account.</p>
-      <p>In Wapzen, the chatbot <em>is</em> an AI agent. You write its instructions, choose a GPT or Claude model, and attach knowledge bases built from text, PDF, or Word files. It answers free-text questions in the customer’s own words and language, and API tools let it look up an order or request a booking in your own systems. When you want to step in, you reply from the dashboard and take the conversation over.</p>
+      <p>In Wapzen, the chatbot <em>is</em> an AI agent. You write its instructions and attach knowledge bases built from text, PDF, or Word files. It answers free-text questions in the customer’s own words and language, and API tools let it look up an order or request a booking in your own systems. When you want to step in, you reply from the dashboard and take the conversation over.</p>
       <p>Which is better depends on the conversation. For strict, menu-driven journeys (“reply 1 for sales, 2 for support”), a flow builder like WATI’s gives you exact control. For open questions about prices, opening hours, delivery, or your services, an AI agent trained on your documents handles far more without you mapping every path. Wapzen’s <Link href="/free-whatsapp-chatbot">free WhatsApp chatbot guide</Link> shows the setup.</p>
     </>,
   },

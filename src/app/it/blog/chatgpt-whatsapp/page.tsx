@@ -107,8 +107,8 @@ const sections = [
     title: "ChatGPT per la tua attività: un’AI sul tuo numero",
     body: <>
       <p>1-800-ChatGPT è un assistente personale: risponde a te, dal numero di OpenAI. Non risponde ai tuoi clienti e non conosce prezzi, orari e regole della tua attività. Il divieto di Meta, del resto, non ha mai riguardato i <strong>chatbot aziendali</strong> che assistono i propri clienti: quelli si sono sempre potuti usare.</p>
-      <p>Se vuoi che un’AI come GPT risponda ai clienti sul <strong>tuo</strong> numero WhatsApp, ti serve un agente AI collegato al tuo account. Con Wapzen scegli il modello (GPT di OpenAI o Claude di Anthropic, entrambi inclusi), gli dai le informazioni della tua attività e colleghi il tuo WhatsApp con un codice QR.</p>
-      <InlineCta title="Un’AI che risponde ai tuoi clienti" body="Crea un agente con GPT o Claude, insegnagli come funziona la tua attività e collegalo al tuo WhatsApp con un codice QR. Al momento è gratis." label="Inizia gratis" />
+      <p>Se vuoi che un’AI come GPT risponda ai clienti sul <strong>tuo</strong> numero WhatsApp, ti serve un agente AI collegato al tuo account. Con Wapzen il modello AI è incluso (oggi un modello GPT di OpenAI): gli dai le informazioni della tua attività e colleghi il tuo WhatsApp con un codice QR.</p>
+      <InlineCta title="Un’AI che risponde ai tuoi clienti" body="Crea un agente AI, insegnagli come funziona la tua attività e collegalo al tuo WhatsApp con un codice QR. Al momento è gratis." label="Inizia gratis" />
       <p>Funziona con WhatsApp Business o con il WhatsApp normale, senza l’API ufficiale. Trovi i passaggi nella guida al <Link href="/it/blog/chatbot-whatsapp-business">chatbot WhatsApp Business</Link>, e se vuoi che l’AI risponda anche alle chiamate c’è il <Link href="/it/centralino-ai">centralino AI</Link>.</p>
     </>,
   },
@@ -126,7 +126,7 @@ export default function ChatGPTWhatsAppItPage() {
         <><strong>Il numero ufficiale è +1 800 242 8478</strong> (1-800-CHATGPT): salvalo e scrivi al profilo verificato.</>,
         <><strong>Si usa gratis</strong>, senza account OpenAI; collegando l’account hai limiti più alti.</>,
         <><strong>Meta AI</strong> in Italia non si può disattivare del tutto, ma puoi ignorarlo, silenziarlo ed eliminarne la cronologia.</>,
-        <><strong>Per la tua attività</strong> serve un’AI sul tuo numero, non 1-800-ChatGPT: Wapzen lo fa con GPT o Claude, gratis per ora.</>,
+        <><strong>Per la tua attività</strong> serve un’AI sul tuo numero, non 1-800-ChatGPT: Wapzen lo fa con un modello GPT di OpenAI incluso, gratis per ora.</>,
       ],
     }}
     sections={sections}
@@ -134,6 +134,6 @@ export default function ChatGPTWhatsAppItPage() {
     sources={sources}
     related={["/it/blog/chatbot-whatsapp-business", "/it/blog/whatsapp-business-costo"]}
     product="/it/chatbot-whatsapp-gratis"
-    cta={{ heading: <>L’AI sul WhatsApp della tua attività.<br /><span>Con GPT o Claude, gratis.</span></>, body: "Crea il tuo agente, dagli le informazioni della tua attività e collega il tuo numero WhatsApp con un codice QR." }}
+    cta={{ heading: <>L’AI sul WhatsApp della tua attività.<br /><span>Con l’AI inclusa, gratis.</span></>, body: "Crea il tuo agente, dagli le informazioni della tua attività e collega il tuo numero WhatsApp con un codice QR." }}
   />;
 }

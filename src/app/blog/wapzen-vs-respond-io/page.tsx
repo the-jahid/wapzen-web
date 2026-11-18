@@ -75,7 +75,7 @@ const sections = [
     body: <>
       <p><strong>respond.io</strong> supports Meta’s WhatsApp Business Calling API. Customers can call your business number for free, and your team (or respond.io’s AI agents for voice) can answer. Calling a customer has rules set by Meta: you first send a call permission request in the chat, at most once a day and twice a week, and the customer has to accept. Outgoing calls are billed per minute at Meta’s rates, and business-initiated calls aren’t allowed in several countries, including the US and Canada.</p>
       <p><strong>Wapzen</strong> places and answers calls on a number linked by QR code, so its calls work like any WhatsApp call: no permission request and no per-minute fee. Its AI voice agent answers incoming calls around the clock and calls people from outbound campaigns, such as leads who asked for a call-back or buyers confirming a <Link href="/blog/whatsapp-cod-order-confirmation">cash on delivery order</Link>.</p>
-      <p>That freedom comes with responsibility: call only people who expect to hear from you. WhatsApp restricts numbers that make unwanted calls, whatever tool places them.</p>
+      <p>That freedom comes with responsibility: call only people who expect to hear from you.</p>
     </>,
   },
   {
@@ -83,7 +83,7 @@ const sections = [
     title: "AI agents",
     body: <>
       <p>respond.io’s AI agents are part of a larger system: they work inside workflows, hand conversations to the right team, and use AI credits as they go. That’s powerful for a support or sales team routing hundreds of conversations a day across channels.</p>
-      <p>Wapzen’s AI agent is simpler to set up and has no credits to track. Write instructions, choose GPT or Claude, attach your documents as a knowledge base, and connect your number. Add API tools if the agent needs to look something up. Our <Link href="/blog/whatsapp-chatbot-without-business-api">chatbot guide</Link> shows the whole setup in five steps.</p>
+      <p>Wapzen’s AI agent is simpler to set up and has no credits to track. Write instructions, attach your documents as a knowledge base, and connect your number. Add API tools if the agent needs to look something up. Our <Link href="/blog/whatsapp-chatbot-without-business-api">chatbot guide</Link> shows the whole setup in five steps.</p>
     </>,
   },
   {

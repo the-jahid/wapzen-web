@@ -29,7 +29,6 @@ const faqs = [
   { q: "Can I make a WhatsApp chatbot without the Business API?", a: "Yes. Instead of registering your number with Meta's Business Platform, you link it as a device, the way WhatsApp Web works, and software answers the messages it receives. Wapzen does this with an AI agent: you create the agent, scan a QR code, and it starts replying." },
   { q: "Can I use my existing WhatsApp number?", a: "Yes. A regular WhatsApp or WhatsApp Business number works, and you keep using the app on your phone. The chatbot runs as a linked device next to it." },
   { q: "Do I need to know how to code?", a: "No. You write the agent's instructions in plain language, upload your documents to a knowledge base, and scan a QR code. Coding only comes in if you want the agent to call your own systems through an API tool, such as an order lookup." },
-  { q: "Can my number get banned?", a: "WhatsApp restricts numbers that send bulk or unwanted messages, or that many people report. An agent that only answers people who message you behaves like a fast, helpful reply, which keeps the risk low. A linked device isn't Meta's official route, though, so no unofficial tool can promise zero risk. If WhatsApp is business-critical at high volume, use the Business API." },
   { q: "How much does a WhatsApp chatbot without the API cost?", a: "Wapzen is currently free, including the AI models, the knowledge base, and the WhatsApp connection. Because there's no Business API, there are no per-message or template fees either." },
   { q: "What should go in the chatbot's knowledge base?", a: "Whatever customers ask about: your price list or catalogue, delivery and payment rules, return policy, opening hours, and a short FAQ. Plain text, PDF, and Word files all work, and you can add more sources whenever the agent can't answer something." },
 ];
@@ -76,10 +75,10 @@ const sections = [
       <p>Switch the dashboard to <strong>Chat</strong>, open <strong>Chat Agents</strong>, and click <strong>New chat agent</strong>. Three settings matter:</p>
       <ul>
         <li><strong>System prompt.</strong> Say who the agent works for, what it helps with, and its rules: reply in the customer’s language, keep it short, never invent prices or dates, and hand over to a person when it doesn’t know.</li>
-        <li><strong>Model.</strong> Choose an OpenAI GPT or Anthropic Claude model. Both are included, so you don’t need API keys of your own.</li>
+        <li><strong>Model.</strong> Nothing to choose: Wapzen runs the AI model, currently a GPT model from OpenAI, so you don’t need API keys of your own.</li>
         <li><strong>Knowledge Base.</strong> Attach the knowledge base from step 1.</li>
       </ul>
-      <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a store's system prompt, Claude model and an attached knowledge base" caption="The Sunleaf Support agent: a short system prompt, Claude as the model, and the store FAQ attached." />
+      <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a store's system prompt and an attached knowledge base" caption="The Sunleaf Support agent: a short system prompt and the store FAQ attached. This screenshot is from an earlier version of the editor, which had a model picker; Wapzen now picks and runs the model." />
       <p>Under <strong>Tools</strong> you can later give the agent actions, such as an API request that looks up an order in your store. Start without them and add tools once the basics work.</p>
     </>,
   },
@@ -125,7 +124,7 @@ const sections = [
         <li><strong>Very high volume</strong>, where your whole business depends on WhatsApp staying connected.</li>
       </ul>
       <p>For a side-by-side look at those platforms, read <Link href="/blog/wati-alternatives">the best WATI alternatives</Link> or <Link href="/blog/wapzen-vs-aisensy">Wapzen vs AiSensy</Link>, and for what Meta charges per message, <Link href="/blog/whatsapp-business-api-pricing">WhatsApp Business API pricing</Link>.</p>
-      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a linked device. WhatsApp restricts numbers that send bulk or unwanted messages, so use the chatbot to answer people who contact you, never to message people who didn’t.</Note>
+      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a linked device. Use the chatbot to answer people who contact you, never to message people who didn’t.</Note>
     </>,
   },
 ];

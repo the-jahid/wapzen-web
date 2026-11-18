@@ -34,7 +34,7 @@ const ways = [
 
 const steps = [
   { title: "Crea una cuenta gratis", body: "Regístrate en Wapzen. No necesitas tarjeta de crédito, cuenta de Meta ni la API oficial." },
-  { title: "Crea un agente de chat", body: "Ponle nombre y escribe sus instrucciones: quién es, qué tono usa, qué puede decir y cuándo pasar la conversación a una persona. Elige un modelo GPT de OpenAI o Claude de Anthropic." },
+  { title: "Crea un agente de chat", body: "Ponle nombre y escribe sus instrucciones: quién es, qué tono usa, qué puede decir y cuándo pasar la conversación a una persona. El modelo de IA lo pone Wapzen." },
   { title: "Agrega una base de conocimiento", body: "Pega tus preguntas frecuentes, precios, horarios y políticas, o sube archivos PDF y Word. La IA responde a partir de ahí." },
   { title: "Conecta tu WhatsApp", body: "Escanea el código QR con tu celular, igual que con WhatsApp Web. Funciona con WhatsApp Business o con WhatsApp normal." },
   { title: "Pruébalo y ajústalo", body: "Escríbele a tu número desde otro celular y hazle las preguntas de tus clientes. Si una respuesta no te convence, ajusta las instrucciones o la base de conocimiento." },
@@ -45,7 +45,7 @@ const faqs = [
   { q: "¿Cómo creo un bot de WhatsApp?", a: "Hay tres caminos: una plataforma que usa la API oficial de WhatsApp (como Kommo, ManyChat, Botmaker o WATI), un bot hecho por ti con n8n o código de GitHub, o una IA conectada a tu número con un código QR, como Wapzen. El último es el más rápido: unos 15 minutos y sin programar." },
   { q: "¿Hay un chatbot para WhatsApp Business gratis?", a: "Sí. Wapzen es gratis por ahora, con chatbot con IA, base de conocimiento y agente de voz incluidos, sin tarjeta de crédito. La app de WhatsApp Business también tiene mensajes automáticos gratis, pero son textos fijos que no contestan preguntas." },
   { q: "¿Necesito la API oficial para tener un chatbot en WhatsApp?", a: "No. La API sirve para envíos masivos, equipos grandes e integraciones. Para que una IA conteste a los clientes que te escriben, puedes conectar tu número como dispositivo con un código QR. Wapzen no es un producto oficial de Meta: si necesitas la plataforma oficial, elige un proveedor de la API." },
-  { q: "¿El chatbot contesta notas de voz y grupos?", a: "Depende de la plataforma. El agente de chat de Wapzen contesta mensajes de texto en chats individuales: grupos, notas de voz y fotos se quedan contigo. Para hablar con tus clientes por voz está el agente de voz, que contesta llamadas de WhatsApp." },
+  { q: "¿El chatbot contesta notas de voz y grupos?", a: "Depende de la plataforma. El agente de chat de Wapzen contesta mensajes de texto, transcribe notas de voz y lee fotos, y en grupos solo responde donde actives la IA. Para hablar con tus clientes por voz está el agente de voz, que contesta llamadas de WhatsApp." },
   { q: "¿Tengo que avisar que es una IA?", a: "Es buena práctica y genera confianza: basta una línea en el primer mensaje que diga que contesta un asistente virtual y que el cliente puede pedir una persona. Si guardas datos de tus clientes, menciónalo también en tu aviso de privacidad." },
 ];
 

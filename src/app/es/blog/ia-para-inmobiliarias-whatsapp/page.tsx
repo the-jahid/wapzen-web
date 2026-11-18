@@ -11,7 +11,7 @@ import { QaPost } from "@/components/blog/QaPost";
 // docs/seo-research.md, "Spain buyer posts"): el sector con más demanda limpia, 530: "ia
 // para inmobiliarias" (30, 3/3), "crm inmobiliario" (30, 3/3), "crm inmobiliario gratis"
 // (27), "captar clientes inmobiliaria" (20), "agente ia para inmobiliarias" (16),
-// "whatsapp business inmobiliaria" (16). A pedido del usuario (2026-11-04): siempre gratis,
+// "whatsapp business inmobiliaria" (16). A pedido del usuario (2026-11-04): totalmente gratis,
 // sin clave de API de Meta, agente de voz funcionando, sin nota sobre bloqueos de número y
 // sin mencionar el límite por hora. El servidor mantiene HOURLY_REPLY_LIMIT = 100, así que
 // el texto dice "conversaciones ilimitadas" y "sin límite mensual", nunca "respuestas
@@ -44,7 +44,7 @@ const crm = [
 
 const costs = [
   ["Plataforma", "Según el proveedor. En Callbell: 93 € al mes con un agente, cuenta de WhatsApp y creador de bots", "0 €, siempre"],
-  ["Respuestas a clientes", "1.000 gratis al mes por número; después, 0,0166 € cada una", "0 €, sin límite mensual"],
+  ["Respuestas a clientes", "1.000 gratis al mes por número; después, 0,0166 € cada una", "0 €"],
   ["Avisos de visita", "0,0166 € cada uno", "0 €"],
   ["Promociones a tu lista", "0,0585 € cada una", "0 €"],
   ["API de Meta y clave de acceso", "Necesarias", "No hacen falta"],
@@ -99,10 +99,10 @@ const questions = [
   {
     id: "gratis",
     q: "¿Hay una IA gratis para inmobiliarias en WhatsApp en España?",
-    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA siempre gratis para inmobiliarias y agentes: conversaciones ilimitadas, sin cuota, sin coste por mensaje y sin clave de API de Meta. Responde en segundos en tu propio número, contesta con la información de tus inmuebles, cualifica a compradores e inquilinos y recoge solicitudes de visita. Su agente de voz atiende las llamadas de WhatsApp.",
+    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA totalmente gratis para inmobiliarias y agentes: sin cuota, sin coste por mensaje y sin clave de API de Meta. Responde en segundos en tu propio número, contesta con la información de tus inmuebles, cualifica a compradores e inquilinos y recoge solicitudes de visita. Su agente de voz atiende las llamadas de WhatsApp.",
     body: <>
       <p>Una inmobiliaria encaja muy bien con un agente de IA, porque casi todas las consultas se parecen: “¿sigue disponible?”, “¿cuánto paga de comunidad?”, “¿tiene ascensor?”, “¿cuándo se puede ver?”. Esas respuestas ya están en tu ficha del inmueble, y el agente puede darlas a las once de la noche, cuando el comprador por fin tiene tiempo para mirar pisos.</p>
-      <p>No necesitas la API de WhatsApp Business, un proveedor ni la aprobación de Meta. <Link href="/es/chatbot-whatsapp-gratis">Wapzen</Link> vincula tu número actual como un dispositivo, igual que WhatsApp Web, así que los clientes ven el número de siempre y tú sigues usando WhatsApp en el móvil. Las conversaciones son ilimitadas, no hay tope mensual de respuestas y la IA viene incluida.</p>
+      <p>No necesitas la API de WhatsApp Business, un proveedor ni la aprobación de Meta. <Link href="/es/chatbot-whatsapp-gratis">Wapzen</Link> vincula tu número actual como un dispositivo, igual que WhatsApp Web, así que los clientes ven el número de siempre y tú sigues usando WhatsApp en el móvil. Es totalmente gratis y la IA viene incluida.</p>
     </>,
   },
   {
@@ -122,7 +122,7 @@ const questions = [
     body: <>
       <p>Hay tres maneras prácticas de hacerlo:</p>
       <ol>
-        <li><strong>Envía un primer mensaje a cada contacto.</strong> Hazlo desde el móvil o sube los contactos del día a Bulk Messages con una plantilla personalizada. Cuando el comprador responde, el agente sigue con la conversación.</li>
+        <li><strong>Envía un primer mensaje a cada contacto.</strong> Hazlo desde el móvil con un mensaje personalizado. Cuando el comprador responde, el agente sigue con la conversación.</li>
         <li><strong>Haz que te escriban a ti.</strong> Pon un <Link href="/tools/whatsapp-link-generator">enlace de WhatsApp</Link> en tu web, anuncios y redes, y un <Link href="/tools/whatsapp-qr-code-generator">código QR de WhatsApp</Link> en el escaparate y en el cartel de “Se vende”. Revisa las normas de cada portal antes de añadir un enlace a un anuncio.</li>
         <li><strong>Deja que el agente de voz llame.</strong> Añade a un contacto que haya pedido una llamada a una campaña de voz y el agente le llamará por WhatsApp al momento. Si tu CRM recibe los contactos de los portales, puede añadirlos mediante nuestra API.</li>
       </ol>
@@ -173,7 +173,7 @@ const questions = [
       </ol>
       <pre>{prompt}</pre>
       <p>Cada cuenta tiene un agente de chat, así que reúne toda tu cartera en su información y quita los inmuebles en cuanto se vendan o se alquilen, para que no ofrezca lo que ya no tienes.</p>
-      <InlineCta title="Responde a tu próximo contacto en segundos" body="Siempre gratis, sin clave de API de Meta, sin tarjeta y sin coste por mensaje." label="Empieza gratis" />
+      <InlineCta title="Responde a tu próximo contacto en segundos" body="Totalmente gratis, sin clave de API de Meta, sin tarjeta y sin coste por mensaje." label="Empieza gratis" />
     </>,
   },
   {
@@ -226,7 +226,7 @@ const questions = [
     answer: "Te da un canal abierto a todas horas allí donde te ven: un código QR de WhatsApp en el cartel de “Se vende”, en el escaparate y en tus buzoneos, y un enlace en tu web y tus redes. La IA recoge los datos del propietario que quiere vender y tu comercial le llama. A quien te consultó puedes avisarle de novedades si lo ha autorizado.",
     body: <>
       <p>Captar propietarios es el trabajo más valioso de muchas agencias, y a menudo empieza con una duda fuera de horario: “¿cuánto vale mi piso?”. El agente no debe dar una valoración, pero sí puede recoger la zona, el tipo de inmueble y la mejor hora para llamar.</p>
-      <p>Bulk Messages acepta una hoja de Excel o CSV y rellena los campos como <code>{"{{nombre}}"}</code> con tus columnas. Por ejemplo, para avisar de un inmueble nuevo:</p>
+      <p>Envía estos avisos desde el móvil, uno a uno, cambiando campos como <code>{"{{nombre}}"}</code>. Wapzen no envía mensajes masivos, pero el agente contesta a quien responde. Por ejemplo, para avisar de un inmueble nuevo:</p>
       <pre>{newListing}</pre>
       <p>Antes de enviar promociones, revisa la LSSI: en general necesitas una autorización previa o una relación contractual anterior con esa persona. No uses bases de datos compradas. Tienes más información en nuestra <Link href="/blog/whatsapp-bulk-message-sender-free">guía de envíos masivos</Link>, en inglés.</p>
     </>,
@@ -239,7 +239,7 @@ const questions = [
       <p>Esto es información general, no asesoramiento legal:</p>
       <ul>
         <li><strong>Datos exactos.</strong> Según el Real Decreto 515/1989, la publicidad debe ajustarse a las características reales de la vivienda, y sus datos son exigibles aunque no aparezcan en el contrato. Trata lo que diga el agente con el mismo cuidado que un anuncio y mantén sus fichas al día.</li>
-        <li><strong>Información previa.</strong> El artículo 31 de la Ley 12/2023 permite pedir, antes de pagar ninguna cantidad, el precio total, la superficie, el certificado energético, las cargas y otros datos. Ten a mano un enlace o documento para entregarlos: el agente de chat responde con texto.</li>
+        <li><strong>Información previa.</strong> El artículo 31 de la Ley 12/2023 permite pedir, antes de pagar ninguna cantidad, el precio total, la superficie, el certificado energético, las cargas y otros datos. Sube esos documentos al agente con una nota de cuándo enviarlos, y los mandará cuando el cliente los pida.</li>
         <li><strong>Alquiler de vivienda.</strong> Según el artículo 20 de la LAU, los gastos de gestión inmobiliaria y de formalización del contrato no se pueden repercutir al inquilino. Por eso aparece en las instrucciones de ejemplo.</li>
         <li><strong>Cataluña.</strong> La inscripción en el Registro de Agentes Inmobiliarios es obligatoria. Conviene añadir tu número a la información del agente.</li>
         <li><strong>IA y datos.</strong> El artículo 50 del Reglamento de IA exige que el cliente sepa que habla con una IA, salvo que resulte evidente, y Wapzen no añade el aviso por su cuenta. Nombres, teléfonos y solicitudes son datos personales sujetos al RGPD. La base de datos principal de Wapzen está en Singapur, sus servidores en Singapur y Alemania, y proveedores de IA como OpenAI pueden tratar los mensajes en Estados Unidos. Wapzen no publica un contrato estándar de encargado del tratamiento: si lo necesitas, pregúntanos antes de conectar el número. Más detalles en la <Link href="/privacy">política de privacidad</Link>, en inglés.</li>
@@ -249,7 +249,7 @@ const questions = [
   {
     id: "limites",
     q: "¿Qué no puede hacer una IA gratis en una inmobiliaria?",
-    answer: "Wapzen no envía PDF ni imágenes, no contesta en grupos, no se conecta directamente a los portales, no lleva cartera ni seguimientos, y no reserva una hora en un calendario sin una herramienta de API. Cada cuenta tiene un agente de chat. Tampoco usa la API oficial de Meta, así que no incluye insignia verde ni plantillas aprobadas.",
+    answer: "Wapzen no se conecta directamente a los portales, no lleva cartera ni seguimientos, no envía mensajes masivos y no reserva una hora en un calendario sin una herramienta de API. Cada cuenta tiene un agente de chat. Tampoco usa la API oficial de Meta, así que no incluye insignia verde ni plantillas aprobadas.",
     body: <>
       <Comparison caption="Para qué inmobiliarias encaja un chatbot de WhatsApp gratis" columns={["¿Te encaja?", "Por qué"]} rows={fit} />
       <ul>
@@ -266,19 +266,19 @@ const questions = [
 export default function IaParaInmobiliariasWhatsAppPage() {
   return <QaPost
     href={href}
-    heading={<>IA para inmobiliarias en WhatsApp.<br /><span>Siempre gratis, sin API de Meta y con agente de voz.</span></>}
+    heading={<>IA para inmobiliarias en WhatsApp.<br /><span>Totalmente gratis, sin API de Meta y con agente de voz.</span></>}
     lead="Quien te escribe por un piso a las nueve de la noche suele estar escribiendo también a otras agencias. Aquí respondemos, una a una, las dudas de las inmobiliarias y los agentes de España antes de poner una IA en su WhatsApp: cómo funciona con los contactos de Idealista y Fotocasa, qué preguntar, cuánto cuesta la alternativa y qué normas debe respetar, sin clave de API de Meta."
     verdict={{
       title: "La respuesta corta",
-      body: <><strong>Wapzen</strong> es una IA para inmobiliarias en WhatsApp, <strong>siempre gratis, con conversaciones ilimitadas y sin clave de API de Meta</strong>. Responde a cada consulta en segundos en tu número, contesta con tus fichas de inmuebles, pregunta presupuesto, zona y plazo, y anota las solicitudes de visita. Su agente de voz atiende las llamadas de WhatsApp. No sustituye a un CRM y no se conecta directamente a los portales.</>,
+      body: <><strong>Wapzen</strong> es una IA para inmobiliarias en WhatsApp, <strong>totalmente gratis y sin clave de API de Meta</strong>. Responde a cada consulta en segundos en tu número, contesta con tus fichas de inmuebles, pregunta presupuesto, zona y plazo, y anota las solicitudes de visita. Su agente de voz atiende las llamadas de WhatsApp. No sustituye a un CRM y no se conecta directamente a los portales.</>,
     }}
-    facts={[["Precio", "Siempre gratis"], ["Clave de API de Meta", "No hace falta"], ["Conversaciones", "Ilimitadas"], ["Llamadas", "Agente de voz funcionando"]]}
+    facts={[["Precio", "Totalmente gratis"], ["Clave de API de Meta", "No hace falta"], ["Llamadas", "Agente de voz funcionando"]]}
     indexTitle="Las 11 preguntas de esta guía"
     answerLabel="Respuesta corta"
     questions={questions}
     sources={sources}
     related={["/es/blog/chatbot-whatsapp-clinica-dental", "/es/blog/whatsapp-hoteles-apartamentos-turisticos"]}
     product="/es/llamadas-con-ia"
-    cta={{ heading: <>No pierdas compradores por tardar en responder.<br /><span>Siempre gratis, sin API de Meta.</span></>, body: "Crea tu cuenta, dale las fichas de tus inmuebles y vincula tu número en unos minutos. Sin tarjeta y sin coste por mensaje." }}
+    cta={{ heading: <>No pierdas compradores por tardar en responder.<br /><span>Totalmente gratis, sin API de Meta.</span></>, body: "Crea tu cuenta, dale las fichas de tus inmuebles y vincula tu número en unos minutos. Sin tarjeta y sin coste por mensaje." }}
   />;
 }

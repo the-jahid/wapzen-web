@@ -92,7 +92,7 @@ const questions = [
   {
     id: "existe",
     q: "¿Hay un chatbot para WhatsApp realmente gratis en México?",
-    answer: "Sí. Wapzen te da hoy un chatbot con IA gratis en tu propio número, con conversaciones ilimitadas, sin tarifa por mensaje y sin clave de API de Meta. Meta Business Agent también se puede empezar sin pago en la app de WhatsApp Business. Las demás opciones que revisamos cobran por usar WhatsApp en tu número o solo dan una prueba.",
+    answer: "Sí. Wapzen te da hoy un chatbot con IA gratis en tu propio número, totalmente gratis, sin tarifa por mensaje y sin clave de API de Meta. Meta Business Agent también se puede empezar sin pago en la app de WhatsApp Business. Las demás opciones que revisamos cobran por usar WhatsApp en tu número o solo dan una prueba.",
     body: <>
       <p>Si buscas “chatbot gratis para WhatsApp Business”, casi todo lo que aparece tiene letra chiquita:</p>
       <ul>
@@ -122,7 +122,7 @@ const questions = [
         <li><strong>Contestas primero.</strong> En un estudio publicado en Harvard Business Review, las empresas de EE. UU. que intentaban contactar en menos de una hora tenían casi siete veces más probabilidades de calificar al prospecto que las que tardaban más. Es de 2011 y no es de México, pero la lógica aplica: quien te escribe muchas veces le escribe también a tu competencia.</li>
         <li><strong>Tus anuncios rinden más.</strong> Si pagas anuncios de Facebook o Instagram que abren WhatsApp, cada mensaje sin contestar es un clic pagado que se desperdicia. Con el agente, quien da clic a las 11 de la noche recibe respuesta al momento.</li>
         <li><strong>Más puertas de entrada.</strong> Con el <Link href="/tools/whatsapp-link-generator">generador de ligas</Link> y el <Link href="/tools/whatsapp-qr-code-generator">generador de códigos QR</Link> gratis, pones tu WhatsApp en Instagram, en el mostrador, en el menú y en tus empaques.</li>
-        <li><strong>Vuelven los clientes de antes.</strong> En Bulk Messages subes un Excel o CSV y mandas un mensaje personalizado a cada cliente, con una pausa predeterminada de 30 segundos entre envíos. Úsalo solo con quienes aceptaron recibirlos.</li>
+        <li><strong>Vuelven los clientes de antes.</strong> Escríbeles tú desde el celular con un mensaje personalizado, y el agente atiende a quien responde. Hazlo solo con quienes aceptaron recibirlos.</li>
       </ul>
       <Note>El agente no ve el texto de los envíos masivos. Por eso las instrucciones de ejemplo le explican qué hacer cuando alguien contesta a una promoción.</Note>
       <h3>Atender a más clientes</h3>
@@ -244,7 +244,7 @@ const questions = [
   {
     id: "voz-fotos-llamadas",
     q: "¿El chatbot entiende notas de voz y fotos? ¿También contesta llamadas?",
-    answer: "Sí. Si activas cada opción, el agente de Wapzen transcribe las notas de voz y lee las fotos, y responde por texto. Ambas vienen apagadas. Su agente de voz contesta las llamadas de WhatsApp en español y puede llamar a quien pidió contacto, sin costo por minuto. Solo funciona con llamadas de WhatsApp y no transfiere la llamada a una persona.",
+    answer: "Sí. El agente de Wapzen transcribe las notas de voz y lee las fotos, y responde por texto. Ambas opciones vienen activadas y puedes apagarlas. Su agente de voz contesta las llamadas de WhatsApp en español y puede llamar a quien pidió contacto, sin costo por minuto. Solo funciona con llamadas de WhatsApp y no transfiere la llamada a una persona.",
     body: <>
       <ul>
         <li><strong>Notas de voz:</strong> las de más de 5 minutos no reciben respuesta automática.</li>
@@ -287,7 +287,7 @@ const questions = [
   {
     id: "limites",
     q: "¿Qué no puede hacer un chatbot gratis como Wapzen?",
-    answer: "El agente de chat no envía PDF ni imágenes, no confirma pagos por SPEI u OXXO, no tiene agenda propia, no escribe primero por su cuenta y no usa la API oficial de Meta, así que no trae insignia verde ni plantillas aprobadas. Cada cuenta tiene un agente de chat. En grupos, solo responde si activas la IA en ese grupo y alguien lo etiqueta o le contesta.",
+    answer: "El agente de chat no confirma pagos por SPEI u OXXO, no tiene agenda propia, no escribe primero por su cuenta y no usa la API oficial de Meta, así que no trae insignia verde ni plantillas aprobadas. Cada cuenta tiene un agente de chat. En grupos, solo responde si activas la IA en ese grupo y alguien lo etiqueta o le contesta.",
     body: <>
       <Comparison caption="Para quién sirve y para quién no un chatbot gratis como Wapzen" columns={["¿Te sirve?", "Por qué"]} rows={fit} />
       <ul>
@@ -307,9 +307,9 @@ export default function ChatbotGratisWhatsAppMxPage() {
     lead="Muchos chatbots “gratis” para WhatsApp son una prueba de 14 días, un plan sin WhatsApp o un menú sin IA. Aquí respondemos, una por una, las dudas de los negocios en México: qué es gratis de verdad, cuánto cuesta lo demás, cómo crear tu chatbot paso a paso y cómo puede ayudarte a vender más."
     verdict={{
       title: "La respuesta corta",
-      body: <>Sí hay un chatbot con IA gratis para WhatsApp en México. <strong>Wapzen</strong> funciona en el número que ya usas, personal o Business: contesta en segundos con la información de tu negocio, entiende notas de voz y fotos, anota pedidos y atiende llamadas de WhatsApp con un agente de voz. <strong>Todo es gratis por ahora, con conversaciones ilimitadas y sin clave de API de Meta.</strong> Si prefieres una herramienta oficial, revisa Meta Business Agent.</>,
+      body: <>Sí hay un chatbot con IA gratis para WhatsApp en México. <strong>Wapzen</strong> funciona en el número que ya usas, personal o Business: contesta en segundos con la información de tu negocio, entiende notas de voz y fotos, anota pedidos y atiende llamadas de WhatsApp con un agente de voz. <strong>Wapzen es totalmente gratis y no necesita clave de API de Meta.</strong> Si prefieres una herramienta oficial, revisa Meta Business Agent.</>,
     }}
-    facts={[["Precio", "Gratis por ahora"], ["Clave de API de Meta", "No hace falta"], ["Conversaciones", "Ilimitadas"], ["Llamadas", "Agente de voz funcionando"]]}
+    facts={[["Precio", "Totalmente gratis"], ["Clave de API de Meta", "No hace falta"], ["Llamadas", "Agente de voz funcionando"]]}
     indexTitle="Las 12 preguntas de esta guía"
     answerLabel="Respuesta corta"
     questions={questions}

@@ -35,10 +35,8 @@ const booking = [
 
 const limits = [
   ["Recordatorios", "El agente no escribe primero, así que no envía recordatorios", "Déjalos en tu software de agenda"],
-  ["Notas de voz", "No las escucha y no las contesta", "Pide texto en tu perfil y revisa los audios"],
-  ["Fotos", "No ve radiografías ni fotos. Solo lee su texto", "Si llegan, responde una persona del equipo"],
-  ["Memoria", "Recuerda solo los últimos minutos. Quien vuelve otro día parte de cero", "La conversación completa queda en el panel"],
-  ["Recepción en el chat", "El agente sigue contestando. No hay pausa por conversación", "Pausar el agente detiene todas las conversaciones"],
+  ["Fotos", "Lee las fotos que recibe, pero no debe opinar sobre radiografías ni lesiones", "Indícalo en las instrucciones o apaga la lectura de fotos, y que responda una persona del equipo"],
+  ["Recepción en el chat", "El agente no se detiene solo cuando escribe la recepción", "Apaga la IA para ese paciente y vuelve a encenderla al terminar"],
   ["Ficha clínica", "No tiene acceso a la ficha, y no debe tenerlo", "Las consultas de un tratamiento las responde la clínica"],
 ];
 

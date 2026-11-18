@@ -31,7 +31,7 @@ const fit = [
   ["Travel yang menerima puluhan chat calon jemaah per hari", "Ya", "Menjawab soal paket dalam hitungan detik, 24 jam"],
   ["Travel dengan banyak jemaah lansia yang lebih suka telepon", "Ya", "Agen suara menjawab telepon WhatsApp"],
   ["Travel yang butuh manifest, keuangan, dan kamar dalam satu aplikasi", "Tidak", "Itu tugas aplikasi manajemen travel umroh"],
-  ["Travel yang ingin bot membalas di grup jemaah", "Tidak", "Agen hanya membalas chat pribadi"],
+  ["Travel yang ingin bot membalas di grup jemaah", "Bisa", "AI menjawab di grup yang Anda nyalakan, saat nomor travel disebut atau dibalas"],
   ["Travel yang perlu centang hijau atau template resmi Meta", "Tidak", "Itu butuh WhatsApp Business API resmi"],
 ];
 
@@ -157,11 +157,11 @@ const questions = [
   {
     id: "jemaah-terdaftar",
     q: "Bisakah mengirim info manasik dan pengingat ke jemaah yang sudah daftar?",
-    answer: "Bisa, dengan pesan massal Wapzen yang gratis: unggah daftar jemaah dari Excel atau CSV, tulis pesan dengan nama masing-masing, dan kirim dengan jeda antar pesan. Jika jemaah membalas dengan pertanyaan, agen AI langsung menjawab. Agen tidak membalas di grup WhatsApp jemaah.",
+    answer: "Bisa, tetapi Anda yang mengirimnya: Wapzen tidak mengirim pesan massal. Kirim info manasik dari HP travel, misalnya lewat daftar siaran untuk jemaah yang menyimpan nomor Anda. Jika jemaah membalas dengan pertanyaan, agen AI langsung menjawab. Di grup WhatsApp jemaah, agen hanya menjawab jika Anda menyalakan AI untuk grup itu.",
     body: <>
       <ul>
         <li><strong>Jadwal manasik, pelunasan, dan perlengkapan:</strong> pesan personal lebih jarang terlewat daripada pengumuman di grup yang ramai.</li>
-        <li><strong>Voice note:</strong> aktifkan sakelar voice note di pengaturan agen (mati secara default), karena banyak jemaah lebih suka mengirim VN.</li>
+        <li><strong>Voice note:</strong> biarkan sakelar voice note menyala (sudah menyala secara default), karena banyak jemaah lebih suka mengirim VN.</li>
         <li><strong>Jaga nomor travel:</strong> kirim hanya ke jemaah yang terdaftar atau yang pernah menghubungi Anda, dan jangan membeli daftar nomor.</li>
       </ul>
     </>,
@@ -182,13 +182,12 @@ const questions = [
   {
     id: "batasan",
     q: "Apa batasan Wapzen yang perlu diketahui?",
-    answer: "Satu akun punya satu agen chat, dan setiap agen membalas hingga 100 balasan AI per jam. Agen hanya membalas chat pribadi, tidak bisa dijeda untuk satu chat saja, dan karena bukan API resmi, tidak ada centang hijau atau template resmi Meta.",
+    answer: "Satu akun punya satu agen chat. Agen membalas chat pribadi, dan di grup hanya jika Anda menyalakan AI untuk grup itu. AI bisa dimatikan untuk satu kontak saja, dan karena bukan API resmi, tidak ada centang hijau atau template resmi Meta.",
     body: <>
       <Comparison caption="Untuk travel umroh mana chatbot WhatsApp gratis seperti Wapzen cocok" columns={["Cocok?", "Alasannya"]} rows={fit} />
       <ul>
-        <li><strong>100 balasan AI per jam per agen.</strong> Jika batas tercapai, agen diam sampai jamnya habis, dan pesan masuk tetap tersimpan.</li>
         <li><strong>Terhubung sebagai perangkat tertaut</strong>, seperti WhatsApp Web, lewat kode QR atau kode tautan, di nomor travel yang sudah ada.</li>
-        <li><strong>Tidak ada jeda per chat.</strong> Menjeda agen berarti berhenti di semua chat. Balasan Anda dari dasbor masuk ke riwayat agen, balasan dari HP tidak.</li>
+        <li><strong>Bisa ambil alih satu chat.</strong> Matikan AI untuk kontak itu, balas sendiri, lalu nyalakan lagi.</li>
         <li><strong>Dasbor berbahasa Inggris</strong>, agen membalas dalam bahasa Indonesia.</li>
         <li>Wapzen adalah produk independen, bukan milik Meta atau WhatsApp.</li>
       </ul>

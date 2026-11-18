@@ -110,7 +110,7 @@ const questions = [
     body: <>
       <p>There are three practical ways to do this:</p>
       <ol>
-        <li><strong>Send a first message to each portal lead.</strong> Do it from your phone, or upload the day’s leads to Bulk Messages with a personalised template. When the buyer replies, the agent takes over.</li>
+        <li><strong>Send a first message to each portal lead.</strong> Do it from your phone with a personalised message. When the buyer replies, the agent takes over.</li>
         <li><strong>Get buyers to message you first.</strong> Put a free <Link href="/tools/whatsapp-link-generator">WhatsApp link</Link> on your website, ads and social posts, and a <Link href="/tools/whatsapp-qr-code-generator">WhatsApp QR code</Link> on site boards and brochures. Check each portal’s rules before adding a link to a listing.</li>
         <li><strong>Have the voice agent call them.</strong> Add a lead to a voice campaign and the agent calls on WhatsApp straight away. If your CRM receives the portal’s leads, it can add them through our API.</li>
       </ol>
@@ -206,7 +206,7 @@ const questions = [
     q: "What WhatsApp marketing works for a real estate broker?",
     answer: "Message people who enquired with you or bought from you, about things they’d want to hear: new launches, price revisions and site-visit reminders. Don’t buy lists. Personalise each message, include the RERA number on project messages, leave a gap between sends, and stop when someone asks.",
     body: <>
-      <p>Bulk Messages takes an Excel or CSV sheet and fills in placeholders such as <code>{"{{name}}"}</code> from your columns. Here are two messages you can adapt.</p>
+      <p>Send these from your phone, one person at a time, filling in placeholders such as <code>{"{{name}}"}</code>. Wapzen doesn’t send bulk messages, but the agent answers whoever replies. Here are two messages you can adapt.</p>
       <h3>New launch, to past enquiries</h3>
       <pre>{launch}</pre>
       <h3>Site-visit reminder</h3>
@@ -233,13 +233,12 @@ const questions = [
   {
     id: "limits",
     q: "What can’t a free real estate chatbot do?",
-    answer: "Wapzen can’t send PDFs or images, reply in groups, connect directly to portals, keep a pipeline or book a calendar slot without an API tool. It can send up to 100 AI replies an hour, and each account has one chat agent.",
+    answer: "Wapzen can’t connect directly to portals, keep a pipeline, send bulk campaigns or book a calendar slot without an API tool. It replies in groups only where you switch it on, and each account has one chat agent.",
     body: <>
       <Comparison caption="Who a free WhatsApp AI chatbot suits in Indian real estate" columns={["Good fit?", "Why"]} rows={fit} />
       <ul>
-        <li><strong>Brochures go as links.</strong> The agent can’t attach a PDF, so host your brochure online and put the link in its information.</li>
-        <li><strong>Property groups stay untouched.</strong> The agent ignores groups, so your channel-partner groups won’t get AI replies.</li>
-        <li><strong>A big campaign can hit the hourly limit.</strong> Past 100 AI replies in an hour, it goes quiet until the hour ends. Messages are still saved, so send campaigns in batches.</li>
+        <li><strong>Brochures go as files.</strong> Upload your brochure and floor plans with a note on when to send each, and the agent sends them when a buyer asks.</li>
+        <li><strong>Property groups stay untouched.</strong> The AI is off in every group unless you switch it on, so your channel-partner groups won’t get AI replies.</li>
         <li><strong>Check it’s saying the right things.</strong> Read your chats for the first few days, and update the documents when prices change.</li>
       </ul>
       <p>Wapzen is an independent product, not made by Meta or WhatsApp.</p>

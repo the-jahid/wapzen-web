@@ -15,7 +15,7 @@ import { BlogPost, Choose, InlineCta, Note } from "@/components/blog/BlogPost";
 // Preços da Bland e da Vapi conferidos em 25/10/2026 (post bland-ai-vs-vapi).
 const href = "/pt-br/blog/agente-de-voz-ia-whatsapp-gratis";
 const post = blogPost(href);
-const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Olá! Quero acesso antecipado ao agente de voz da Wapzen para minha empresa no Brasil.")}`;
+const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Olá! Quero configurar o agente de voz da Wapzen para minha empresa no Brasil.")}`;
 
 export const metadata: Metadata = pageMetadata({ title: post.title, description: post.description, path: href, locale: "pt-BR", article: { publishedTime: post.published, modifiedTime: post.updated } });
 
@@ -31,7 +31,7 @@ const does = [
 ];
 
 const costs = [
-  ["Como cobra", "US$ 0,14 por minuto no plano Start", "US$ 0,05 por minuto da Vapi, mais cada provedor", "Grátis para começar no acesso antecipado"],
+  ["Como cobra", "US$ 0,14 por minuto no plano Start", "US$ 0,05 por minuto da Vapi, mais cada provedor", "Grátis para começar, sem custo por minuto"],
   ["1.000 minutos", "Cerca de US$ 140", "Cerca de US$ 82 a US$ 129, pela calculadora da Vapi", "Sem custo por minuto"],
   ["Por onde liga", "Linha telefônica", "Linha telefônica (Twilio ou outra operadora)", "WhatsApp, no seu número"],
   ["Precisa programar?", "Fluxos no painel", "Sim, é feito para desenvolvedores", "Não"],
@@ -43,11 +43,11 @@ const limits = [
   ["Pausa antes de responder", "Cerca de um a dois segundos por resposta", "Peça frases curtas nas instruções"],
   ["Dispositivo vinculado", "Não é a API oficial da Meta", "Ligue só para quem espera a sua ligação, para não ter o número restrito"],
   ["Campanhas simples", "Sem rediscagem automática e sem importar planilha", "Adicione os leads um a um ou pela API"],
-  ["Acesso antecipado", "A voz é configurada com a nossa equipe", "Fale com a gente no WhatsApp para começar"],
+  ["Como começar", "A voz é configurada com a nossa equipe", "Fale com a gente no WhatsApp para começar"],
 ];
 
 const faqs = [
-  { q: "Existe agente de voz com IA grátis?", a: "Sim. O agente de voz da Wapzen está em acesso antecipado e é grátis para começar: as ligações passam pelo WhatsApp, sem custo por minuto. Para volume alto de ligações, combinamos um plano pago. Plataformas de ligação por telefone, como Bland AI e Vapi, cobram por minuto." },
+  { q: "Existe agente de voz com IA grátis?", a: "Sim. O agente de voz da Wapzen atende e faz ligações de WhatsApp e é grátis para começar: as ligações passam pelo WhatsApp, sem custo por minuto. Para volume alto de ligações, combinamos um plano pago. Plataformas de ligação por telefone, como Bland AI e Vapi, cobram por minuto." },
   { q: "Uma IA consegue fazer ligações pelo WhatsApp?", a: "Sim. Com a Wapzen, a IA liga pelo WhatsApp do seu número para cada lead que você adiciona a uma campanha, e atende as ligações de WhatsApp que os clientes fazem para você. Ela não liga para fixo nem para celular comum." },
   { q: "Qual a diferença entre agente de voz e URA?", a: "A URA tradicional pede para o cliente apertar números ou dizer palavras fixas. O agente de voz conversa: entende a pergunta falada e responde com as informações da sua empresa, sem menu." },
   { q: "Quanto custa um agente de voz com IA?", a: "Plataformas de ligação telefônica cobram por minuto, em dólar. A Bland AI cobra US$ 0,14 por minuto no plano Start, e a calculadora da Vapi estima de US$ 82 a US$ 129 por 1.000 minutos. Na Wapzen, as ligações passam pelo WhatsApp, e o agente é grátis para começar." },
@@ -128,7 +128,7 @@ const sections = [
       <Comparison caption="Bland AI, Vapi e Wapzen comparados em custo e forma de ligar" columns={["Bland AI", "Vapi", "Wapzen"]} rows={costs} />
       <p>Bland e Vapi ligam para qualquer telefone, e isso tem valor: se o seu cliente não usa WhatsApp, você precisa de uma linha telefônica. Mas, no Brasil, quase todo cliente está no WhatsApp, e lá a ligação não tem custo de operadora.</p>
       <p>Existe ainda a rota oficial da Meta, a <Link href="/blog/whatsapp-business-calling-api">WhatsApp Business Calling API</Link> (em inglês): ligações que o cliente faz para você são grátis, mas as ligações que a empresa faz são cobradas por minuto, exigem permissão prévia do cliente e precisam de um provedor e de desenvolvimento.</p>
-      <InlineCta href={earlyAccess} title="Quer testar o agente de voz?" body="A voz da Wapzen está em acesso antecipado e é grátis para começar. Fale com a gente no WhatsApp e configuramos com você." label="Pedir acesso antecipado" />
+      <InlineCta href={earlyAccess} title="Quer testar o agente de voz?" body="O agente de voz da Wapzen já atende e faz ligações de WhatsApp, e é grátis para começar. Fale com a gente no WhatsApp e configuramos com você." label="Configurar pelo WhatsApp" />
     </>,
   },
   {
@@ -149,7 +149,7 @@ const sections = [
     id: "como-comecar",
     title: "Como começar com o agente de voz da Wapzen",
     body: <>
-      <p>A voz está em acesso antecipado, então a configuração é feita junto com a nossa equipe. O caminho:</p>
+      <p>A configuração do agente de voz é feita junto com a nossa equipe. O caminho:</p>
       <h3>1. Fale com a gente no WhatsApp</h3>
       <p>Conte o seu segmento, quantas ligações recebe e se quer também ligar para leads.</p>
       <h3>2. Escreva as instruções e a saudação</h3>
@@ -189,7 +189,7 @@ export default function AgenteDeVozIaWhatsAppPage() {
         <><strong>Por que agora:</strong> 77% dos usuários do WhatsApp no Brasil fazem mais ligações pelo app do que pela operadora (Panorama Mobile Time/Opinion Box, 2025).</>,
         <><strong>Quanto custa:</strong> plataformas de telefonia cobram por minuto, em dólar. Na Wapzen, a ligação passa pelo WhatsApp, e o agente é grátis para começar.</>,
         <><strong>O que não faz:</strong> não liga para fixo, não transfere a ligação e não deve ligar para quem não pediu.</>,
-        <><strong>Como começar:</strong> a voz está em acesso antecipado. Fale com a gente no WhatsApp.</>,
+        <><strong>Como começar:</strong> fale com a gente no WhatsApp e configuramos o agente de voz com você.</>,
       ],
     }}
     sections={sections}
@@ -197,7 +197,7 @@ export default function AgenteDeVozIaWhatsAppPage() {
     sources={sources}
     related={["/pt-br/blog/ia-para-imobiliaria-whatsapp", "/pt-br/blog/chatbot-whatsapp-clinica-odontologica"]}
     product="/pt-br/ligacao-com-ia"
-    cta={{ heading: <>Nenhuma ligação sem resposta.<br /><span>Teste o agente de voz no seu WhatsApp.</span></>, body: "A voz da Wapzen está em acesso antecipado e é grátis para começar. Fale com a gente no WhatsApp e configuramos o seu agente." }}
-    action={{ href: earlyAccess, label: "Pedir acesso antecipado" }}
+    cta={{ heading: <>Nenhuma ligação sem resposta.<br /><span>Teste o agente de voz no seu WhatsApp.</span></>, body: "O agente de voz da Wapzen atende e faz ligações de WhatsApp, e é grátis para começar. Fale com a gente no WhatsApp e configuramos o seu agente." }}
+    action={{ href: earlyAccess, label: "Configurar pelo WhatsApp" }}
   />;
 }

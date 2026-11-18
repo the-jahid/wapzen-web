@@ -95,7 +95,7 @@ const sections = [
         <li><strong>The facts people ask about</strong>: prices, area, hours, how fast you reply.</li>
         <li><strong>What not to promise</strong>: dates, discounts, anything you want to confirm yourself.</li>
       </ul>
-      <Screenshot src={img("agent-instructions.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt for a photographer's WhatsApp auto reply" caption="The chat agent’s system prompt and model. Pick an OpenAI GPT or Anthropic Claude model; both are included." />
+      <Screenshot src={img("agent-instructions.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt for a photographer's WhatsApp auto reply" caption="The chat agent’s system prompt. This screenshot is from an earlier version of the editor, which had a model picker; Wapzen now picks and runs the model." />
 
       <h3>3. Link your WhatsApp number with a QR code</h3>
       <p>Open <strong>Phone Numbers</strong>, click <strong>New Number</strong>, give it a label, and click Create. A QR code appears. On your phone, open WhatsApp and go to <strong>Settings › Linked devices</strong> on iPhone, or <strong>⋮ › Linked devices</strong> on Android, tap <strong>Link a device</strong>, and scan it. In the same window, pick your chat agent under <strong>Selected Agents</strong>.</p>

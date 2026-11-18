@@ -73,7 +73,7 @@ const sections = [
       <p><strong>WATI</strong> includes its chatbot builder in every plan, with advanced chatbots, forms, and integrations on Pro. AI Co-pilot helps your team reply, and Astra lets you create AI agents in plain language and deploy them on WhatsApp.</p>
       <p><strong>AiSensy</strong> sells chatbots and AI separately from the platform plan. Its AI agent builder answers from a knowledge base, keeps long-term user memory, and can call tools and APIs, which makes it capable, as long as you budget for it.</p>
       <p><strong>Interakt</strong> includes a basic linear chatbot on Growth and branching flows with API calls on Advanced. Its AI agents, offered as Sales, Lead Qualification, and Customer Support agents, are an add-on.</p>
-      <p>On all three, AI is something you add to a messaging platform. If AI answers are the whole point, Wapzen includes an AI agent with your choice of GPT or Claude, trained on your own documents, at no cost. See <Link href="/whatsapp-ai-customer-service">WhatsApp AI customer service</Link> for how that works.</p>
+      <p>On all three, AI is something you add to a messaging platform. If AI answers are the whole point, Wapzen includes an AI agent trained on your own documents, with the AI model included, at no cost. See <Link href="/whatsapp-ai-customer-service">WhatsApp AI customer service</Link> for how that works.</p>
     </>,
   },
   {

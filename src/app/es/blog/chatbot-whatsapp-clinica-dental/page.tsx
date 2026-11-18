@@ -11,7 +11,7 @@ import { QaPost } from "@/components/blog/QaPost";
 // docs/seo-research.md, "Spain buyer posts"): "marketing clinica dental" (30), "software
 // clinica dental" (20), "chatbot clinica dental", "ia para clinicas dentales", "whatsapp
 // clinica dental", "como captar pacientes para clinica dental" (10 cada una). A pedido del
-// usuario (2026-11-04): Wapzen se presenta como siempre gratis y sin clave de API de Meta,
+// usuario (2026-11-04): Wapzen se presenta como totalmente gratis y sin clave de API de Meta,
 // el agente de voz como funcionando, sin nota sobre bloqueos de número y sin mencionar el
 // límite por hora. El servidor mantiene HOURLY_REPLY_LIMIT = 100, así que el texto dice
 // "conversaciones ilimitadas" y "sin límite mensual", nunca "respuestas ilimitadas". El CTA
@@ -44,7 +44,7 @@ const software = [
 
 const costs = [
   ["Plataforma", "Según el proveedor. En Callbell: 93 € al mes con un agente, cuenta de WhatsApp y creador de bots", "0 €, siempre"],
-  ["Respuestas a pacientes", "1.000 gratis al mes por número; después, 0,0166 € cada una", "0 €, sin límite mensual"],
+  ["Respuestas a pacientes", "1.000 gratis al mes por número; después, 0,0166 € cada una", "0 €"],
   ["Recordatorios de cita", "0,0166 € cada uno", "0 €"],
   ["Promociones", "0,0585 € cada una", "0 €"],
   ["API de Meta y clave de acceso", "Necesarias", "No hacen falta"],
@@ -93,10 +93,10 @@ const questions = [
   {
     id: "gratis",
     q: "¿Existe un chatbot de WhatsApp gratis para clínicas dentales en España?",
-    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA siempre gratis para clínicas dentales: conversaciones ilimitadas, sin cuota mensual, sin coste por mensaje, sin tarjeta y sin clave de API de Meta. Responde a los pacientes a cualquier hora en tu propio número, con tus tratamientos, precios y horarios, y su agente de voz contesta las llamadas de WhatsApp.",
+    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA totalmente gratis para clínicas dentales: sin cuota mensual, sin coste por mensaje, sin tarjeta y sin clave de API de Meta. Responde a los pacientes a cualquier hora en tu propio número, con tus tratamientos, precios y horarios, y su agente de voz contesta las llamadas de WhatsApp.",
     body: <>
       <p>Al buscar un “chatbot para clínicas dentales” casi siempre aparece una prueba de pocos días, un menú de botones sin IA o una plataforma de pago a la que se suman las tarifas de Meta. <Link href="/es/chatbot-whatsapp-gratis">Wapzen</Link> funciona de otra manera: vincula el número que ya usa tu clínica como un dispositivo, igual que WhatsApp Web. Por eso no necesitas la API de WhatsApp Business, un proveedor ni la aprobación de Meta.</p>
-      <p>Los pacientes siguen escribiendo al número de siempre y tú sigues usando WhatsApp en el móvil. El modelo de IA viene incluido, así que tampoco necesitas una clave de OpenAI ni un programador. Las conversaciones son ilimitadas y no hay tope mensual de respuestas: una clínica no paga más porque le escriban más pacientes.</p>
+      <p>Los pacientes siguen escribiendo al número de siempre y tú sigues usando WhatsApp en el móvil. El modelo de IA viene incluido, así que tampoco necesitas una clave de OpenAI ni un programador. Es totalmente gratis: una clínica no paga más porque le escriban más pacientes.</p>
     </>,
   },
   {
@@ -154,7 +154,7 @@ const questions = [
   {
     id: "ausencias",
     q: "¿Sirve para reducir las ausencias y los no-shows en una clínica dental?",
-    answer: "Puede ayudar, porque hace muy fácil confirmar o cambiar una cita por WhatsApp. Cada tarde subes la lista de citas de mañana a Bulk Messages, cada paciente recibe un recordatorio con su nombre y su hora, y el agente atiende a quien responde. Un portavoz del sector estima que entre el 12 % y el 19 % de las citas no se atienden.",
+    answer: "Puede ayudar, porque hace muy fácil confirmar o cambiar una cita por WhatsApp. Wapzen no envía recordatorios masivos: mándalos desde tu programa de gestión o desde el móvil de la clínica, y el agente atiende a quien responde. Un portavoz del sector estima que entre el 12 % y el 19 % de las citas no se atienden.",
     body: <>
       <p>Esa estimación, y la de que las ausencias cuestan entre 2.500 y 7.500 € al mes por clínica, vienen de Enrique Pizarro, consejero delegado de Klinikare, una empresa que vende software a clínicas. Se refieren a clínicas privadas en general y no son un estudio dental, así que lo más útil es medir tu propia tasa antes y después.</p>
       <p>Esta plantilla funciona con una hoja de Excel o CSV con las columnas <code>nombre</code> y <code>hora</code>:</p>
@@ -176,7 +176,7 @@ const questions = [
         <li><strong>Pruébalo.</strong> Escribe desde otro número lo que preguntan tus pacientes, incluidas las preguntas difíciles, como “¿qué me tomo para el dolor?”.</li>
       </ol>
       <pre>{prompt}</pre>
-      <InlineCta title="Pon a tu clínica a responder esta misma noche" body="Siempre gratis, sin clave de API de Meta, sin tarjeta y sin coste por mensaje." label="Empieza gratis" />
+      <InlineCta title="Pon a tu clínica a responder esta misma noche" body="Totalmente gratis, sin clave de API de Meta, sin tarjeta y sin coste por mensaje." label="Empieza gratis" />
     </>,
   },
   {
@@ -216,7 +216,7 @@ const questions = [
   {
     id: "audios",
     q: "¿El chatbot entiende audios y fotos?",
-    answer: "Sí, si lo activas. En el agente hay dos interruptores, audios y fotos, que vienen apagados. Con el primero, transcribe la nota de voz y la contesta. Con el segundo, lee la imagen. En una clínica dental conviene activar los audios y dejar las fotos apagadas, porque una foto de la boca o una radiografía son datos de salud.",
+    answer: "Sí. En el agente hay dos interruptores, audios y fotos, que vienen encendidos. Con el primero, transcribe la nota de voz y la contesta. Con el segundo, lee la imagen. En una clínica dental conviene dejar los audios y apagar las fotos, porque una foto de la boca o una radiografía son datos de salud.",
     body: <>
       <p>En España se envían muchas notas de voz, así que el interruptor de audios suele merecer la pena. Ten en cuenta que un paciente también puede contar sus síntomas en un audio: las instrucciones deben indicar que no los valore y que proponga una visita.</p>
       <p>Si dejas las fotos apagadas, el agente no las interpreta. Tu equipo puede verlas en el móvil y decidir qué hacer.</p>
@@ -242,7 +242,7 @@ const questions = [
   {
     id: "limites",
     q: "¿Qué no puede hacer Wapzen en una clínica dental?",
-    answer: "No sustituye a tu programa de gestión: no lleva historia clínica, agenda de gabinetes ni facturación. Responde con texto, no envía PDF ni imágenes, no contesta en grupos y cada cuenta tiene un agente de chat. Tampoco usa la API oficial de Meta, así que no incluye insignia verde ni plantillas aprobadas.",
+    answer: "No sustituye a tu programa de gestión: no lleva historia clínica, agenda de gabinetes ni facturación. No envía recordatorios por su cuenta, en grupos solo responde si activas la IA y cada cuenta tiene un agente de chat. Tampoco usa la API oficial de Meta, así que no incluye insignia verde ni plantillas aprobadas.",
     body: <>
       <Comparison caption="Para qué clínicas dentales encaja un chatbot de WhatsApp gratis" columns={["¿Te encaja?", "Por qué"]} rows={fit} />
       <ul>
@@ -258,13 +258,13 @@ const questions = [
 export default function ChatbotWhatsAppClinicaDentalPage() {
   return <QaPost
     href={href}
-    heading={<>Chatbot de WhatsApp para clínicas dentales.<br /><span>Siempre gratis, sin API de Meta y con agente de voz.</span></>}
+    heading={<>Chatbot de WhatsApp para clínicas dentales.<br /><span>Totalmente gratis, sin API de Meta y con agente de voz.</span></>}
     lead="“¿Cuánto cuesta un implante?”, “¿trabajáis con mi seguro?”, “¿tenéis hueco el jueves?”. Estas preguntas llegan al WhatsApp de la clínica mientras recepción atiende el mostrador y el teléfono, y también de noche. Aquí respondemos, una a una, las dudas de las clínicas dentales españolas antes de poner una IA en su número: qué puede decir, cómo se configura sin clave de API de Meta, cuánto cuesta la alternativa y qué pide el RGPD."
     verdict={{
       title: "La respuesta corta",
-      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para clínicas dentales en España, <strong>siempre gratis, con conversaciones ilimitadas y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora con tus tratamientos y precios, recoge solicitudes de cita y su agente de voz contesta las llamadas de WhatsApp. Se configura en unos minutos. No sustituye a tu programa de gestión y no da consejo clínico.</>,
+      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para clínicas dentales en España, <strong>totalmente gratis y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora con tus tratamientos y precios, recoge solicitudes de cita y su agente de voz contesta las llamadas de WhatsApp. Se configura en unos minutos. No sustituye a tu programa de gestión y no da consejo clínico.</>,
     }}
-    facts={[["Precio", "Siempre gratis"], ["Clave de API de Meta", "No hace falta"], ["Conversaciones", "Ilimitadas"], ["Llamadas", "Agente de voz funcionando"]]}
+    facts={[["Precio", "Totalmente gratis"], ["Clave de API de Meta", "No hace falta"], ["Llamadas", "Agente de voz funcionando"]]}
     indexTitle="Las 11 preguntas de esta guía"
     answerLabel="Respuesta corta"
     questions={questions}

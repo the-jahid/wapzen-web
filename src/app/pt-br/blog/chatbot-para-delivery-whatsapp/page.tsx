@@ -35,13 +35,11 @@ const tasks = [
 ];
 
 const limits = [
-  ["Áudio", "O agente não ouve áudio e não responde a ele", "Peça “mande por texto” na bio, no status e nos anúncios, e tenha alguém olhando os áudios no pico"],
-  ["Comprovante do Pix", "Foto é ignorada: só a legenda é lida", "A equipe confere o pagamento no banco antes de produzir"],
+  ["Comprovante do Pix", "O agente lê a foto, mas não confere o pagamento no banco", "A equipe confere o pagamento no banco antes de produzir"],
   ["Soma do pedido", "O total é calculado por IA e pode sair errado", "Escreva preços e taxas de forma simples e confira cada total"],
   ["Mudança depois do resumo", "Trocar a quantidade logo após o resumo pode salvar o pedido sem novo resumo", "Confira a conversa antes de produzir"],
-  ["Memória", "O agente lembra só dos últimos minutos da conversa", "Quem volta depois recomeça do zero. O histórico fica no painel para a equipe"],
   ["Avisos de saída", "O agente só responde. Não escreve primeiro", "Mande “saiu para entrega” pelo celular ou pelo painel"],
-  ["Equipe no mesmo chat", "O agente continua respondendo mesmo se a equipe entrar", "Não existe pausa por conversa. Pausar o agente interrompe todas"],
+  ["Equipe no mesmo chat", "O agente não para sozinho quando a equipe entra", "Desligue a IA só para aquele cliente e ligue de novo ao terminar"],
   ["Cozinha", "O pedido fica na lista do painel. Não vai para impressora nem PDV", "Deixe o painel aberto em uma tela ou conecte seu sistema por API"],
 ];
 
@@ -57,7 +55,7 @@ const faqs = [
   { q: "Qual é o melhor chatbot para delivery?", a: "Depende de como os pedidos chegam. Se você precisa de cardápio digital, gestão de pedidos e operação de alto volume, um sistema feito para restaurantes, como o Anota AI, tende a encaixar melhor. Se a maior parte dos pedidos já chega como conversa de texto no WhatsApp e você quer um agente que entenda frases soltas, vale testar um agente de IA como o Wapzen." },
   { q: "Existe chatbot para delivery grátis?", a: "O Wapzen é grátis para começar e não pede cartão de crédito. O início grátis tem limite de uso e volumes maiores pedem um plano pago. Quando o limite acaba, o agente para de responder, então a equipe precisa continuar olhando o WhatsApp." },
   { q: "O robô do WhatsApp é uma alternativa ao iFood?", a: "Não para conseguir clientes novos: o iFood tem a vitrine, e o WhatsApp não. O robô faz sentido para quem já conhece seu restaurante, porque um pedido direto não paga a comissão de 12% a 23% do iFood. O caminho mais realista é usar os dois." },
-  { q: "O chatbot para delivery entende áudio?", a: "O agente do Wapzen não: ele lê mensagens de texto e legendas de foto ou vídeo. Quem manda áudio não recebe resposta. Avise que os pedidos são por texto e mantenha alguém olhando os áudios no horário de pico." },
+  { q: "O chatbot para delivery entende áudio?", a: "Sim. O agente do Wapzen transcreve o áudio e responde por texto, e também lê fotos. Áudios com mais de 5 minutos ficam sem resposta automática, então mantenha alguém olhando as conversas no horário de pico." },
   { q: "Dá para receber Pix pelo chatbot?", a: "O agente pode enviar a chave Pix que estiver nas instruções, mas não processa pagamentos nem confirma se o Pix caiu. Ele também não enxerga o comprovante enviado por foto. A equipe confere o recebimento." },
   { q: "O pedido vai direto para a cozinha?", a: "No Wapzen, não. O pedido fica na lista de pedidos do painel, que também exporta em CSV. Para mandar a outro sistema, é preciso conectar uma ferramenta de API, e uma ferramenta de API não roda em toda mensagem que deveria acioná-la." },
   { q: "Preciso da API oficial do WhatsApp?", a: "Para o Wapzen, não: ele conecta o número por QR Code ou código de pareamento, como um dispositivo vinculado. Essa conexão não é a API oficial, então avalie as condições de uso do WhatsApp e o risco de restrição antes de usar o número principal da loja." },
@@ -176,7 +174,7 @@ export default function ChatbotParaDeliveryWhatsAppPage() {
         <><strong>O que é:</strong> um agente de IA no WhatsApp do restaurante que responde sobre o cardápio, monta o pedido por texto e salva os dados para a equipe.</>,
         <><strong>Por que vale pagar:</strong> no iFood, a comissão vai de 12% a 23%, mais 3,2% no pagamento on-line. Um pedido direto no WhatsApp não paga essa comissão.</>,
         <><strong>Quem já compra:</strong> o Anota AI, comprado pelo iFood em 2022, chegou a 70.000 restaurantes cadastrados.</>,
-        <><strong>Limite principal:</strong> o agente do Wapzen lê texto, não áudio. Quem manda áudio fica sem resposta.</>,
+        <><strong>Áudio:</strong> o agente do Wapzen transcreve os áudios e responde por texto.</>,
         <><strong>Como testar:</strong> o Wapzen é grátis para começar, com limite de uso, e não exige programação.</>,
       ],
     }}

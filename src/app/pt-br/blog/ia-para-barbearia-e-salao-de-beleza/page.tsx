@@ -53,7 +53,7 @@ const software = [
   ["Atender ligações de WhatsApp por voz", "Não vimos nas páginas consultadas", "Sim"],
   ["Agenda por profissional", "Sim", "Não"],
   ["Página para o cliente agendar", "Sim", "Não"],
-  ["Lembretes ligados à agenda", "Sim. Na Trinks, a rotina no WhatsApp é um adicional", "Não. Você envia uma planilha pelo Bulk Messages"],
+  ["Lembretes ligados à agenda", "Sim. Na Trinks, a rotina no WhatsApp é um adicional", "Não. Você envia os lembretes pelo celular"],
   ["Caixa, comissão e estoque", "Em geral, sim", "Não"],
   ["Preço de entrada", "Trinks: a partir de R$ 38 por mês. Booksy: R$ 99,99 por mês mais impostos", "R$ 0 agora"],
 ];
@@ -68,7 +68,7 @@ const systems = [
 
 const costs = [
   ["Plataforma", "Depende da empresa. No BotConversa Pro: R$ 199 por mês no plano anual", "R$ 0"],
-  ["Respostas às clientes", "1.000 grátis por mês por número, depois R$ 0,035 cada", "R$ 0, sem limite mensal"],
+  ["Respostas às clientes", "1.000 grátis por mês por número, depois R$ 0,035 cada", "R$ 0"],
   ["Lembretes", "R$ 0,035 cada", "R$ 0"],
   ["Promoções", "R$ 0,3217 cada", "R$ 0"],
   ["API da Meta e chave de acesso", "Necessárias", "Não precisa"],
@@ -122,7 +122,7 @@ const questions = [
   {
     id: "existe",
     q: "Existe IA para barbearia e salão de beleza no WhatsApp?",
-    answer: "Sim. O Wapzen é um agente de IA grátis para barbearias, salões de beleza, manicures e esteticistas: responde no seu número de WhatsApp sobre preços, duração e horários, recebe pedidos de agendamento e atende ligações de WhatsApp. Não precisa de chave de API da Meta nem de cartão. Tudo é grátis agora, com conversas ilimitadas.",
+    answer: "Sim. O Wapzen é um agente de IA grátis para barbearias, salões de beleza, manicures e esteticistas: responde no seu número de WhatsApp sobre preços, duração e horários, recebe pedidos de agendamento e atende ligações de WhatsApp. Não precisa de chave de API da Meta nem de cartão. O Wapzen é totalmente grátis.",
     body: <>
       <p>Um agente de IA é diferente de uma mensagem automática. A <Link href="/pt-br/blog/mensagem-de-saudacao-whatsapp-business">mensagem de saudação</Link> do WhatsApp Business envia sempre o mesmo texto. O agente lê “quanto fica corte e barba?” e responde com o preço da sua tabela.</p>
       <p>O <Link href="/pt-br/chatbot-whatsapp-com-ia">Wapzen</Link> conecta o número que você já usa como dispositivo, igual ao WhatsApp Web. Você continua com o WhatsApp no celular, e o cliente chama no mesmo número de sempre. Não é um produto oficial da Meta, e por isso não precisa de cadastro na API.</p>
@@ -199,7 +199,7 @@ const questions = [
       <ul>
         <li><strong>Resposta na hora.</strong> Quem procura um horário costuma chamar mais de um lugar. Ganha vantagem quem responde primeiro.</li>
         <li><strong>Instagram que vira conversa.</strong> Coloque um <Link href="/tools/whatsapp-link-generator">link do WhatsApp</Link> na bio e um <Link href="/tools/whatsapp-qr-code-generator">QR Code</Link> no espelho ou no balcão. O agente responde quem chegar por ali.</li>
-        <li><strong>Cliente sumido volta.</strong> Com o Bulk Messages, você envia uma mensagem personalizada para quem não aparece há um tempo. Use só com quem autorizou o contato.</li>
+        <li><strong>Cliente sumido volta.</strong> Mande você mesmo, pelo celular, uma mensagem personalizada para quem não aparece há um tempo, e o agente atende quem responder. Faça isso só com quem autorizou o contato.</li>
         <li><strong>Mais tempo para atender.</strong> O agente cuida das perguntas repetidas, e você fica com o cliente na cadeira.</li>
       </ul>
       <p>Um modelo para clientes sumidos:</p>
@@ -216,7 +216,7 @@ const questions = [
   {
     id: "faltas",
     q: "A IA reduz faltas? Ela envia lembretes?",
-    answer: "Pode ajudar, mas não envia sozinha lembretes ligados a uma agenda. Com o Bulk Messages, você envia lembretes a partir de uma planilha com telefone, nome, data e hora, e o agente atende quem responder para remarcar. Para lembretes automáticos, é preciso um sistema. Não encontramos dado brasileiro confiável sobre faltas, então não prometemos percentual.",
+    answer: "Pode ajudar, mas não envia lembretes sozinha: o Wapzen não faz envios em massa. Você manda os lembretes pelo celular, e o agente atende quem responder para remarcar. Para lembretes automáticos, é preciso um sistema. Não encontramos dado brasileiro confiável sobre faltas, então não prometemos percentual.",
     body: <>
       <p>O jeito mais simples é preparar toda noite a planilha dos horários do dia seguinte:</p>
       <pre>{reminder}</pre>
@@ -342,9 +342,9 @@ export default function IaParaBarbeariaESalaoPage() {
     lead="“Quanto fica corte e barba?”, “tem horário sábado?”, “vocês fazem progressiva?”. As mensagens chegam com a máquina na mão ou a tinta no cabelo da cliente, e à noite sobra uma fila para responder. Aqui respondemos, uma a uma, as dúvidas de barbeiros, cabeleireiras, manicures e esteticistas: o que a IA faz, como fica a agenda, quanto custa e o que ela não substitui."
     verdict={{
       title: "A resposta curta",
-      body: <><strong>O Wapzen</strong> é um agente de IA para barbearia e salão de beleza que funciona no número de WhatsApp que você já usa. Ele responde preços, duração e horários, envia sua tabela e fotos, entende áudios e recebe pedidos de agendamento que você confirma. O agente de voz atende ligações de WhatsApp. <strong>Tudo é grátis agora, com conversas ilimitadas e sem chave de API da Meta.</strong> Ele não é um sistema de gestão: não tem agenda, caixa nem comissão.</>,
+      body: <><strong>O Wapzen</strong> é um agente de IA para barbearia e salão de beleza que funciona no número de WhatsApp que você já usa. Ele responde preços, duração e horários, envia sua tabela e fotos, entende áudios e recebe pedidos de agendamento que você confirma. O agente de voz atende ligações de WhatsApp. <strong>O Wapzen é totalmente grátis e não precisa de chave de API da Meta.</strong> Ele não é um sistema de gestão: não tem agenda, caixa nem comissão.</>,
     }}
-    facts={[["Preço", "Grátis agora"], ["Chave de API da Meta", "Não precisa"], ["Conversas", "Ilimitadas"], ["Ligações", "Agente de voz funcionando"]]}
+    facts={[["Preço", "Totalmente grátis"], ["Chave de API da Meta", "Não precisa"], ["Ligações", "Agente de voz funcionando"]]}
     indexTitle="As 14 perguntas deste guia"
     answerLabel="Resposta curta"
     questions={questions}

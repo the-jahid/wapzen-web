@@ -34,11 +34,8 @@ const qualify = [
 ];
 
 const limits = [
-  ["Áudio", "O agente não ouve áudio e não responde a ele", "Peça texto nos anúncios e acompanhe os áudios no celular"],
-  ["Fotos", "O agente não envia fotos nem enxerga as que recebe", "Inclua o link do anúncio em cada imóvel da base de conhecimento"],
-  ["Memória", "Lembra só dos últimos minutos da conversa. Quem volta no dia seguinte recomeça", "O corretor lê o histórico completo no painel"],
   ["Retorno", "Só responde. Não escreve primeiro nem faz follow-up", "O follow-up continua com o corretor ou com o seu CRM"],
-  ["Corretor no mesmo chat", "O agente continua respondendo se o corretor entrar. Não existe pausa por conversa", "Use um número só para leads e encaminhe para o WhatsApp do corretor"],
+  ["Corretor no mesmo chat", "O agente não para sozinho quando o corretor entra", "Desligue a IA só para aquele cliente e ligue de novo ao terminar"],
   ["Agenda", "Sem integração, não vê a agenda real", "Registre a preferência de dia e horário. Quem confirma é o corretor"],
 ];
 
@@ -125,7 +122,7 @@ const sections = [
       <h3>2. Suba a carteira na base de conhecimento</h3>
       <p>Para cada imóvel, escreva uma linha com código, tipo, bairro, quartos, vagas, metragem, valor, condomínio, IPTU, status e link do anúncio. Texto simples funciona melhor que um folder em PDF. <strong>Vendeu ou alugou? Tire da base no mesmo dia</strong>, senão o agente continua oferecendo o imóvel.</p>
       <h3>3. Conecte um número só para leads</h3>
-      <p>Use esse número nos portais e anúncios, conectado por QR Code ou código de pareamento. Como não existe pausa por conversa, separar o número do agente do número do corretor evita duas pessoas, ou uma pessoa e um robô, respondendo ao mesmo cliente.</p>
+      <p>Use esse número nos portais e anúncios, conectado por QR Code ou código de pareamento. Quando o corretor assumir uma conversa, desligue a IA só para aquele cliente, para que uma pessoa e um robô não respondam ao mesmo tempo.</p>
       <h3>4. Decida onde o lead fica salvo</h3>
       <p>Todas as conversas ficam no painel. Se quiser cada pedido de visita como um registro, ative a ferramenta Take Order com campos próprios (nome, imóvel, dia preferido) e escreva nas instruções que “pedido” significa pedido de visita. Ela foi feita para pedidos de compra, então teste bem antes. Para enviar ao seu CRM, use uma ferramenta de API.</p>
       <h3>5. Teste com leads difíceis</h3>

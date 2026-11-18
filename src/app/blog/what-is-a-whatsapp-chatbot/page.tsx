@@ -39,7 +39,7 @@ const faqs = [
   { q: "How does a WhatsApp chatbot work?", a: "A customer messages your number. The message reaches the chatbot software, either through Meta's WhatsApp Business API or through a linked device. A rule-based bot matches a keyword or button and sends a stored reply; an AI bot searches your knowledge base and writes an answer with a language model. The reply goes back to the customer in the same WhatsApp chat." },
   { q: "Is a WhatsApp chatbot free?", a: "WhatsApp doesn't charge for chatbots as such, but the official Business API charges per message: for templates, and since 1 October 2026 also for service replies beyond 1,000 a month per number. Providers add their own plans. Wapzen is currently free, including the AI models, and it doesn't use the Business API, so there are no Meta message fees." },
   { q: "Do I need the WhatsApp Business API for a chatbot?", a: "No. You can link an existing WhatsApp or WhatsApp Business number as a device with a QR code, and an AI agent answers the messages it receives. The API is the better route if you need bulk broadcasts, a large team inbox, or Meta's official platform." },
-  { q: "Can a WhatsApp chatbot answer voice notes and calls?", a: "Most text chatbots answer text only. Wapzen's chat agent answers one-to-one text messages, not voice notes, images, or group chats. For calls, a separate AI voice agent can answer and make WhatsApp calls on the same number." },
+  { q: "Can a WhatsApp chatbot answer voice notes and calls?", a: "Many text chatbots answer text only. Wapzen's chat agent answers text, transcribes voice notes and reads photos, and replies in WhatsApp groups only where you switch it on. For calls, a separate AI voice agent can answer and make WhatsApp calls on the same number." },
   { q: "Is a WhatsApp chatbot the same as Meta AI?", a: "No. Meta AI is Meta's own general assistant inside WhatsApp for personal use. A business chatbot answers your customers on your number, using your prices, policies, and instructions." },
   { q: "Will customers know they're talking to a bot?", a: "They should. Tell the chatbot to introduce itself as your store's assistant and to say when a person will follow up. Customers mind slow or wrong answers far more than they mind a clearly labelled assistant." },
 ];
@@ -106,7 +106,7 @@ const sections = [
     body: <>
       <ProsCons
         pros={["Replies in seconds, day and night", "Gives the same correct answer every time", "Answers in the customer’s language", "Clears the repeat questions so people handle the hard ones", "Keeps every conversation saved and searchable"]}
-        cons={["Only as good as its knowledge base: missing info means vague answers", "Upset customers usually want a person", "Needs a weekly read-through to stay sharp", "Unofficial routes put a number at risk if you use them to spam", "Text bots don’t answer voice notes or images"]}
+        cons={["Only as good as its knowledge base: missing info means vague answers", "Upset customers usually want a person", "Needs a weekly read-through to stay sharp", "Text bots don’t answer voice notes or images"]}
       />
       <p>The failure that hurts most is a confident wrong answer. Prevent it with one line in the instructions, “if the knowledge base doesn’t say, tell the customer a person will reply”, and by adding an answer to the knowledge base every time you spot a gap.</p>
     </>,
@@ -121,7 +121,7 @@ const sections = [
         <li><strong>Meta’s message fees,</strong> if the platform uses the Business API. Meta charges per delivered template message, and since <strong>1 October 2026</strong> also for service replies beyond 1,000 a month per number. The rates by country are in <Link href="/blog/whatsapp-business-api-pricing">WhatsApp Business API pricing</Link>.</li>
         <li><strong>AI usage.</strong> Some platforms count AI replies separately or ask for your own OpenAI key, so a busy month costs more.</li>
       </ul>
-      <p><strong>Wapzen is currently free</strong>, with the AI models (GPT and Claude) included and no keys of your own. It links your number by QR code rather than the Business API, so Meta’s message fees don’t apply either. See the <Link href="/pricing">pricing page</Link>.</p>
+      <p><strong>Wapzen is currently free</strong>, with the AI model included and no keys of your own. It links your number by QR code rather than the Business API, so Meta’s message fees don’t apply either. See the <Link href="/pricing">pricing page</Link>.</p>
       <InlineCta title="Try an AI chatbot on your own number" body="Create a free chat agent, upload your price list, scan a QR code. No credit card, no Business API." />
     </>,
   },
@@ -132,11 +132,11 @@ const sections = [
       <p>With Wapzen, the whole setup is four steps:</p>
       <ol>
         <li><strong>Make a knowledge base.</strong> Paste or upload your price list, delivery and payment rules, return policy, and FAQ (text, PDF, or Word).</li>
-        <li><strong>Create a chat agent.</strong> Write a short system prompt: who it works for, what it helps with, and its rules. Pick a GPT or Claude model and attach the knowledge base.</li>
+        <li><strong>Create a chat agent.</strong> Write a short system prompt: who it works for, what it helps with, and its rules. Attach the knowledge base; Wapzen runs the AI model.</li>
         <li><strong>Connect your number.</strong> Scan a QR code from WhatsApp’s Linked devices screen and choose the agent for that number.</li>
         <li><strong>Test it,</strong> by messaging your number from another phone with the questions customers ask most.</li>
       </ol>
-      <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt, a Claude model and an attached knowledge base" caption="A chat agent: instructions, model, and knowledge base on one screen. Wapzen dashboard, demo data." />
+      <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt and an attached knowledge base" caption="A chat agent: instructions and knowledge base on one screen. This screenshot is from an earlier version of the editor, which had a model picker; Wapzen now picks and runs the model. Wapzen dashboard, demo data." />
       <p>The step-by-step version with every screen is <Link href="/blog/whatsapp-chatbot-without-business-api">How to create a WhatsApp chatbot without the Business API</Link>. If you’d rather build it yourself, <Link href="/blog/n8n-whatsapp-ai-agent">the n8n guide</Link> shows that route.</p>
     </>,
   },
@@ -152,7 +152,7 @@ const sections = [
         <li>You get questions in <strong>more than one language</strong>.</li>
       </ul>
       <p>If you get a handful of messages a day and each one is a custom quote, the free <Link href="/whatsapp-auto-reply">away message in WhatsApp Business</Link> and a good <Link href="/blog/whatsapp-business-greeting-message">greeting message</Link> may be all you need for now.</p>
-      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a linked device. Use the chatbot to answer people who message you, never to message people who didn’t: WhatsApp restricts numbers that send bulk or unwanted messages.</Note>
+      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a linked device. Use the chatbot to answer people who message you, never to message people who didn’t.</Note>
     </>,
   },
 ];

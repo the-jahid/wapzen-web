@@ -86,7 +86,7 @@ const sections = [
         <li><strong>Registra la solicitud</strong> en una hoja de Google con una herramienta de API, para que tú confirmes después. No necesitas sistema de citas.</li>
         <li><strong>Agenda en tu sistema</strong>, si tiene API: con una herramienta consulta los horarios libres del día que pide el cliente y con otra crea la cita en el horario que eligió.</li>
       </ul>
-      <Note>El agente no ve el número de WhatsApp del cliente, así que pídele en las instrucciones que lo solicite. Tampoco sabe la fecha de hoy: si tu sistema devuelve la fecha actual junto con los horarios libres, entiende bien “el próximo martes”. Y lee los primeros 3,000 caracteres de cada respuesta: devuelve una lista corta de horarios, no toda la agenda.</Note>
+      <Note>El agente no ve el número de WhatsApp del cliente, así que pídele en las instrucciones que lo solicite. Sí conoce la fecha y la hora de hoy en la zona horaria de tu número, así que entiende bien “el próximo martes”. Y lee los primeros 3,000 caracteres de cada respuesta: devuelve una lista corta de horarios, no toda la agenda.</Note>
       <InlineCta title="Que la IA agende tus citas por WhatsApp" body="Wapzen contesta dudas y toma citas en tu número de siempre, por chat o por llamada de WhatsApp, a cualquier hora. Gratis por ahora." label="Empieza gratis" />
       <p>Muchos clientes prefieren llamar. Un agente de voz de Wapzen contesta las llamadas de WhatsApp en el mismo número y puede usar las mismas herramientas para tomar la cita en voz alta. Conoce cómo funciona un <Link href="/es-mx/blog/chatbot-para-whatsapp-business">chatbot para WhatsApp Business</Link>.</p>
     </>,

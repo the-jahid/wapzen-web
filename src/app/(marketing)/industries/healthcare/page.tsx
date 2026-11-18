@@ -16,7 +16,7 @@ import { ChatExample, InlineCta, JumpTags, MoreLink, Note, Sources, Stats } from
 // HIPAA compliant, and Wapzen signs no BAA. Recheck the sources before editing.
 const path = "/industries/healthcare";
 const title = "WhatsApp Chatbot for Healthcare: Free AI Agent for Clinics";
-const description = "A free WhatsApp AI agent for clinics and doctors: answers patient questions 24/7, takes appointment requests, sends reminders, and picks up WhatsApp calls.";
+const description = "A free WhatsApp AI agent for clinics and doctors: answers patient questions 24/7, takes appointment requests, and picks up WhatsApp calls.";
 
 export const metadata: Metadata = pageMetadata({ title, description, path });
 
@@ -57,8 +57,8 @@ const appointments = [
 ];
 
 const reminders = [
-  { icon: FileSpreadsheet, title: "Upload tomorrow's list", body: "Export upcoming appointments to Excel or CSV, upload the file, and write one message with placeholders such as {{name}} and {{time}}." },
-  { icon: Timer, title: "Sent one at a time", body: "Messages go out from your clinic's number one by one, 30 seconds apart by default. You can pause or cancel a send at any time." },
+  { icon: FileSpreadsheet, title: "Work from tomorrow's list", body: "Each afternoon, send every patient on tomorrow's list the reminder below from the clinic's WhatsApp, or use a broadcast list of patients who saved your number. Wapzen doesn't send bulk messages." },
+  { icon: Timer, title: "Or let your booking system send them", body: "Many booking and practice systems send WhatsApp reminders through the official Business API, with Meta's fee per message. Patients reply on the same number." },
   { icon: MessageSquareReply, title: "Replies land in the same chat", body: "When a patient answers \"can we move it?\", the reply arrives in their usual chat with you, where the agent answers and your team can see it." },
 ];
 
@@ -75,7 +75,7 @@ const samples = [
 ];
 
 const trust = [
-  { icon: ShieldAlert, title: "Front-desk work only", body: "Use the agent for hours, fees, directions, appointment requests and reminders. Keep diagnoses, test results and prescriptions off WhatsApp." },
+  { icon: ShieldAlert, title: "Front-desk work only", body: "Use WhatsApp for hours, fees, directions, appointment requests and reminders. Keep diagnoses, test results and prescriptions off WhatsApp." },
   { icon: Siren, title: "Not a clinician", body: "The agent follows your written instructions, but it is an AI and can be wrong. Read the conversations, and never make it the only way to reach you in an emergency." },
   { icon: ScrollText, title: "WhatsApp's own rules", body: "WhatsApp's Business Messaging Policy says not to use it for telemedicine, or to send or request health information where your regulations require a compliant system." },
   { icon: Landmark, title: "United States: HIPAA", body: "Wapzen signs no business associate agreement. For a HIPAA covered entity, even a name with an appointment time can be protected health information, so ask your compliance officer first." },
@@ -88,19 +88,19 @@ const integrations = ["n8n", "Make", "Zapier", "Google Sheets", "Cal.com", "Your
 const comparison = [
   ["Answers patient questions", "Greeting and away messages; Meta Business Agent if your account is eligible", "Chatbot flows, with AI on many plans", "An AI agent that answers from your clinic's documents"],
   ["Setup", "Built into the app", "A number on Meta's API through a provider, and approved templates for reminders", "Scan a QR code on your current number"],
-  ["Reminders to a list", "Broadcast lists, delivered only to people who saved your number", "Template messages, with Meta's fee per message", "Bulk Messages from a spreadsheet"],
+  ["Reminders to a list", "Broadcast lists, delivered only to people who saved your number", "Template messages, with Meta's fee per message", "Not built in: send them yourself or from your booking system, and the agent answers the replies"],
   ["Cost", "Free app", "A monthly plan plus Meta's per-message fees", "Free right now"],
   ["WhatsApp calls", "Answered by your staff", "Calling on some platforms", "An AI voice agent can answer"],
   ["HIPAA", "Not HIPAA compliant", "Meta's terms say not HIPAA compliant", "Not HIPAA compliant"],
 ];
 
 const faqs = [
-  { q: "What is an AI agent for healthcare?", a: "An AI agent for healthcare is software that answers patients the way a front desk would. It replies to questions, takes appointment requests and sends reminders without a person typing each answer. Wapzen runs one on a clinic's WhatsApp number, for administrative conversations, not clinical advice." },
+  { q: "What is an AI agent for healthcare?", a: "An AI agent for healthcare is software that answers patients the way a front desk would. It replies to questions and takes appointment requests without a person typing each answer. Wapzen runs one on a clinic's WhatsApp number, for administrative conversations, not clinical advice." },
   { q: "Can clinics and doctors use a WhatsApp chatbot?", a: "Yes, for front-desk work: opening hours, which doctor is in, fees, directions, appointment requests and reminders. WhatsApp's own policy says not to use it for telemedicine, or to request health information where your regulations require a compliant system, so keep clinical conversations on the systems you already use for them." },
   { q: "Is WhatsApp HIPAA compliant?", a: "No. Meta's terms for the WhatsApp Business Platform say it is not HIPAA compliant and that Meta is not a business associate, so Meta does not sign business associate agreements (BAAs) for WhatsApp. The WhatsApp and WhatsApp Business apps don't come with one either." },
   { q: "Is Wapzen HIPAA compliant?", a: "No. Wapzen doesn't sign business associate agreements and isn't built for protected health information. US practices covered by HIPAA should ask their compliance officer before using it with patients, because even a name with an appointment time can count as protected health information." },
   { q: "Can the AI agent book patient appointments?", a: "It takes the request: the patient's name, the type of visit and a preferred day and time. To book straight into your calendar or practice software, connect an API request tool. Otherwise your staff confirm the slot by replying in the saved chat from the dashboard." },
-  { q: "Can it send appointment reminders on WhatsApp?", a: "Yes. Upload a spreadsheet of upcoming appointments to Bulk Messages and write one message with placeholders like {{name}} and {{time}}. Messages go out one at a time from your clinic's number. Only message patients who gave you their number and agreed to hear from you on WhatsApp." },
+  { q: "Can it send appointment reminders on WhatsApp?", a: "Not by itself: Wapzen doesn't send bulk messages. Send reminders from the clinic's phone, using a broadcast list for patients who saved your number, or from a booking system that sends them through the WhatsApp Business API. When a patient replies, the agent answers in the same chat. Only message patients who gave you their number and agreed to hear from you on WhatsApp." },
   { q: "Does it integrate with our EHR or practice management software?", a: "Not directly: there are no built-in EHR integrations. If your software, or an automation tool such as n8n, Make or Zapier, accepts requests at a public HTTPS address, an API request tool can send it the details the agent collects." },
   { q: "What does the agent do if a patient describes symptoms or an emergency?", a: "It does what your instructions say. We suggest telling it never to diagnose, to pass medical questions to staff, and to tell anyone describing an emergency to call your local emergency number. It is an AI following instructions, so read the conversations and keep a phone line open for urgent care." },
   { q: "Do we need the WhatsApp Business API?", a: "No. Wapzen links to your existing WhatsApp or WhatsApp Business number with a QR code or pairing code, the way WhatsApp Web does. There is no Meta approval or template review. Wapzen is not an official Meta product." },
@@ -128,7 +128,7 @@ export default function HealthcarePage() {
     description={description}
     eyebrow="Healthcare"
     heading={<>A WhatsApp AI agent for healthcare.<br /><span>Fewer missed messages, more booked visits.</span></>}
-    lead="Wapzen puts an AI agent on your clinic's WhatsApp number. It answers patient questions about hours, fees, doctors and directions at any hour, takes appointment requests, and sends reminders to patients who asked for them. It does front-desk work, never diagnosis."
+    lead="Wapzen puts an AI agent on your clinic's WhatsApp number. It answers patient questions about hours, fees, doctors and directions at any hour, takes appointment requests, and answers patients who reply to your reminders. It does front-desk work, never diagnosis."
     perks={["Free right now", "No Business API", "Works on your current number", "Voice calls too"]}
     ctaLabel="Set up my clinic's agent"
     secondary={{ href: "#setup", label: "See how it works" }}
@@ -159,7 +159,7 @@ export default function HealthcarePage() {
 
     <InlineCta title="How many WhatsApp messages wait for your clinic overnight?" body="Let the agent answer them while you're closed. It's free right now, and linking your number takes a minute." label="Start free" />
 
-    <Section id="reminders" heading={<>Appointment reminders on WhatsApp.<br /><span>Sent from a spreadsheet.</span></>} intro="In a Cochrane review, text reminders raised attendance about 14% over no reminder at all. Bulk Messages sends yours from your clinic's own WhatsApp number.">
+    <Section id="reminders" heading={<>Appointment reminders on WhatsApp.<br /><span>You send them, the agent answers replies.</span></>} intro="In a Cochrane review, text reminders raised attendance about 14% over no reminder at all. Wapzen doesn't send bulk messages, so send reminders yourself or from your booking system, and let the agent answer the patients who reply.">
       <Cards items={reminders} />
       <Note>Only message patients who gave you their number and agreed to hear from you on WhatsApp: WhatsApp&apos;s Business Messaging Policy requires that opt-in. Keep reminders to the date, time and practical details, not the reason for the visit.</Note>
     </Section>
@@ -172,7 +172,7 @@ export default function HealthcarePage() {
       <Steps items={setup} />
     </Section>
 
-    <Section id="samples" heading={<>Copy these into your agent.<br /><span>Instructions and a reminder.</span></>} intro="Paste the ground rules into your agent's instructions and fill in the brackets. The reminder works in Bulk Messages, where {{name}}, {{date}} and {{time}} come from your spreadsheet's columns.">
+    <Section id="samples" heading={<>Copy these into your agent.<br /><span>Instructions and a reminder.</span></>} intro="Paste the ground rules into your agent's instructions and fill in the brackets. Fill in the reminder's brackets before you send it, or use it as the template in your booking system.">
       <Samples items={samples} />
     </Section>
 

@@ -5,6 +5,12 @@
 .facts tr + tr { border-top: 1px solid var(--site-border); }
 .facts th { width: 26%; font-weight: 600; color: var(--site-text); }
 .facts td { color: var(--site-text-soft); }
+.facts th a { color: var(--site-text); text-decoration: underline; text-decoration-color: var(--landing-green); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.facts th a:hover { text-decoration-thickness: 2px; }
+
+/* "Wapzen fits" / "Pick something else for" above each list. */
+.subhead { margin: 0 0 12px; font-size: 16px; font-weight: 650; color: var(--site-text); }
+.subhead:not(:first-child) { margin-top: 26px; }
 
 @media (max-width: 560px) {
   .facts tr { display: grid; gap: 4px; padding: 14px 18px; }

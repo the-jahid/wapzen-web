@@ -8,7 +8,7 @@ import { GetStarted, WhatsAppButton } from "@/components/landing/SiteChrome";
 import { Section } from "@/components/marketing/MarketingPage";
 import tools from "@/components/free-tools/FreeTools.module.css";
 import marketing from "@/components/marketing/Marketing.module.css";
-import { postJsonLd, PostMeta } from "./BlogPost";
+import { AboutWapzen, postJsonLd, PostMeta } from "./BlogPost";
 import styles from "./Blog.module.css";
 import qa from "./QaPost.module.css";
 
@@ -50,7 +50,7 @@ export function QaPost({ href, heading, lead, verdict, facts, indexTitle, answer
   const locale = post.locale ?? "en";
   const { ui } = locales[locale];
   const t = blogUi(locale);
-  const checked = formatPostDate(post.updated, t.dateLocale);
+  const checked = formatPostDate(post.checked ?? post.updated, t.dateLocale);
   const others = related ? related.map(blogPost) : postsIn(locale).filter((entry) => entry.href !== href).slice(0, 2);
   const page = marketingPages.find((entry) => entry.href === product);
   const faq = questions.map(({ q, answer }) => ({ q, a: answer }));
@@ -73,6 +73,8 @@ export function QaPost({ href, heading, lead, verdict, facts, indexTitle, answer
           <div className={qa.verdictBody}>{verdict.body}</div>
           <dl className={qa.facts}>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
         </section>
+
+        <AboutWapzen locale={locale} />
 
         <nav className={qa.index} aria-labelledby="index-title">
           <h2 id="index-title" className={qa.indexTitle}>{indexTitle}</h2>

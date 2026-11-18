@@ -41,13 +41,13 @@ const extras = [
 
 const faqs = [
   { q: "How much does WATI cost per month?", a: "WATI's plans are Growth at $49 a month, Pro at $99 and Business at $249 when billed monthly, or $39, $79 and $199 a month billed annually. WhatsApp message charges, extra users and AI add-ons are charged on top." },
-  { q: "Does WATI have a free plan?", a: "No. WATI offers a 7-day free trial with no setup fee, then a paid plan. If you need something free for AI replies, Wapzen is free with no cap on AI replies, though it isn't a Business API platform." },
+  { q: "Does WATI have a free plan?", a: "No. WATI offers a 7-day free trial with no setup fee, then a paid plan. If you need something free for AI replies, Wapzen is fully free, though it isn't a Business API platform." },
   { q: "Is WATI cheaper billed annually?", a: "Yes, about 20% cheaper: Growth drops from $49 to $39 a month, Pro from $99 to $79 and Business from $249 to $199. Annual plans also include free dedicated onboarding. WATI doesn't refund payments for existing subscriptions or credits if you cancel." },
   { q: "Does WATI charge per message?", a: "Yes. Marketing, utility and authentication messages are charged per delivered message, by the recipient's country, from WATI's rate card, on top of the plan. Service replies are free for the first 1,000 a month per number under Meta's rules, then charged too." },
   { q: "How much does WATI charge for extra users?", a: "Growth includes 3 users and can't add more. Pro includes 5 and charges $24 per extra user a month; Business includes 5 and charges $59 per extra user a month." },
   { q: "Does WATI include AI?", a: "Each plan includes Wati AI credits: 250 a month on Growth, 500 on Pro and 1,500 on Business, with more from $20 a month. Astra, WATI's AI agents for WhatsApp, web and voice, is a separately priced add-on from Pro up." },
   { q: "What is WATI's pricing in India?", a: "WATI's pricing page showed prices in US dollars when we checked: $49, $99 and $249 a month billed monthly. Message charges for Indian numbers follow WATI's rate card; Meta's own India rates are ₹0.8631 per marketing message and ₹0.115 per utility or service message." },
-  { q: "What's a free alternative to WATI?", a: "If your main need is AI that answers customers, Wapzen is free: it links your WhatsApp number by QR code and answers chats and calls with AI, with no message fees and no reply cap. For big broadcast campaigns, AiSensy and Interakt are cheaper Business API alternatives." },
+  { q: "What's a free alternative to WATI?", a: "If your main need is AI that answers customers, Wapzen is free: it links your WhatsApp number by QR code and answers chats and calls with AI, with no message fees, fully free. For big broadcast campaigns, AiSensy and Interakt are cheaper Business API alternatives." },
 ];
 
 const sources = [
@@ -116,10 +116,10 @@ const sections = [
       <ul>
         <li><strong>AiSensy:</strong> a Free Forever plan for API access and Basic at $45 a month, with AI and chatbots as add-ons. See <Link href="/blog/aisensy-vs-interakt">AiSensy vs Interakt</Link>.</li>
         <li><strong>Interakt:</strong> Growth at $55 a month plus taxes, with unlimited agents, strong for Shopify stores.</li>
-        <li><strong>Wapzen:</strong> free, with no cap on AI replies and no message fees. It links your number by QR code and answers chats and WhatsApp calls with AI. It isn’t an official API platform, so it doesn’t replace WATI for large broadcasts.</li>
+        <li><strong>Wapzen:</strong> fully free, with no message fees. It links your number by QR code and answers chats and WhatsApp calls with AI. It isn’t an official API platform, so it doesn’t replace WATI for large broadcasts.</li>
       </ul>
       <p>For a longer list, see <Link href="/blog/wati-alternatives">7 best WATI alternatives</Link> or the head-to-head <Link href="/blog/wapzen-vs-wati">Wapzen vs WATI</Link>.</p>
-      <InlineCta title="Answer customers without a WATI bill" body="Wapzen’s AI agent answers your WhatsApp chats and calls on your existing number. Free, no reply cap, no credit card." />
+      <InlineCta title="Answer customers without a WATI bill" body="Wapzen’s AI agent answers your WhatsApp chats and calls on your existing number. Fully free, no credit card." />
     </>,
   },
 ];
@@ -134,7 +134,7 @@ export default function WatiPricingPage() {
       items: [
         <><strong>WATI’s plans:</strong> Growth $49 a month ($39 billed annually), Pro $99 ($79), Business $249 ($199), in US dollars, with a 7-day free trial and no free plan.</>,
         <><strong>On top:</strong> per-message charges from WATI’s rate card, extra users ($24 or $59 each; none on Growth), AI credit packs from $20 a month, and Astra AI agents priced separately.</>,
-        <><strong>Free alternative:</strong> if you mostly answer customers, Wapzen’s AI agent is free, with no reply cap and no message fees.</>,
+        <><strong>Free alternative:</strong> if you mostly answer customers, Wapzen’s AI agent is fully free, with no message fees.</>,
       ],
     }}
     sections={sections}

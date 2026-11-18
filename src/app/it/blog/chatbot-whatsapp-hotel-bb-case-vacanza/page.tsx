@@ -30,7 +30,7 @@ const voiceAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Ciao
 export const metadata: Metadata = pageMetadata({ title: post.title, description: post.description, path: href, locale: "it", article: { publishedTime: post.published, modifiedTime: post.updated } });
 
 const free = [
-  ["Wapzen", "Chat AI con conversazioni illimitate, senza canone e senza costo a messaggio", "Non è una prova a tempo"],
+  ["Wapzen", "Chat AI completamente gratis, senza canone e senza costo a messaggio", "Non è una prova a tempo"],
   ["BuddyChat", "500 messaggi, senza carta", "9 € al mese per unità, fino a 10 unità"],
   ["Chat4Hotel", "Prova di 60 giorni", "Piani a pagamento, con i prezzi su una pagina a parte"],
   ["Spoki", "Piano Free con API ufficiale, tariffe Meta a parte", "Il piano Service con AI parte da 39 € al mese con pagamento annuale"],
@@ -38,11 +38,8 @@ const free = [
 ];
 
 const limits = [
-  ["Conversazioni e contatti", "Illimitati"],
-  ["Risposte AI al mese", "Nessun limite mensile"],
   ["Costo a messaggio o a risposta", "Nessuno"],
-  ["Risposte AI all’ora", "100 per agente"],
-  ["Risposte AI nei gruppi", "50 all’ora per agente, in totale. I gruppi sono spenti di default"],
+  ["Risposte AI nei gruppi", "Solo nei gruppi dove accendi l’AI, che di default è spenta"],
   ["Agenti di chat", "1 per account"],
 ];
 
@@ -68,7 +65,7 @@ const pms = [
 
 const costs = [
   ["Piattaforma", "Dipende dal fornitore. In Callbell: 93 € al mese con agente, account WhatsApp e creatore di bot", "0 €"],
-  ["Risposte agli ospiti", "1.000 gratis al mese per numero, poi 0,0248 € l’una", "0 €, nessun limite mensile"],
+  ["Risposte agli ospiti", "1.000 gratis al mese per numero, poi 0,0248 € l’una", "0 €"],
   ["Avvisi prima dell’arrivo", "0,0248 € l’uno", "0 €"],
   ["Offerte ai vecchi ospiti", "0,0658 € l’una", "0 €"],
   ["API di Meta e chiave di accesso", "Necessarie", "Non servono"],
@@ -121,7 +118,7 @@ const questions = [
   {
     id: "gratis",
     q: "Esiste un chatbot WhatsApp gratis per hotel, B&B e case vacanza?",
-    answer: "Sì. Wapzen è un chatbot WhatsApp con AI gratis per hotel, B&B, case vacanza e agriturismi in Italia: conversazioni illimitate, nessun canone, nessun costo a messaggio e nessuna chiave API di Meta. Risponde agli ospiti a qualsiasi ora e nella loro lingua, sul tuo numero, e il suo agente vocale risponde alle chiamate WhatsApp.",
+    answer: "Sì. Wapzen è un chatbot WhatsApp con AI gratis per hotel, B&B, case vacanza e agriturismi in Italia, completamente gratis: nessun canone, nessun costo a messaggio e nessuna chiave API di Meta. Risponde agli ospiti a qualsiasi ora e nella loro lingua, sul tuo numero, e il suo agente vocale risponde alle chiamate WhatsApp.",
     body: <>
       <p>Molti strumenti per le strutture ricettive sono gratis per un certo periodo o per un certo numero di messaggi. <Link href="/it/chatbot-whatsapp-gratis">Wapzen</Link> collega il numero che la tua struttura usa già come un dispositivo, proprio come WhatsApp Web. Per questo non servono l’API di WhatsApp Business, un fornitore o l’approvazione di Meta.</p>
       <Comparison caption="Cosa significa gratis nei chatbot WhatsApp per strutture ricettive" columns={["Cosa è gratis", "Dopo"]} rows={free} />
@@ -131,12 +128,11 @@ const questions = [
   },
   {
     id: "limiti",
-    q: "Ci sono limiti nascosti?",
-    answer: "No. Su Wapzen la chat è gratis, con conversazioni e contatti illimitati, nessun limite mensile di risposte e nessun costo a messaggio. I limiti che esistono li scriviamo qui: 100 risposte AI all’ora per agente, 50 all’ora in totale nei gruppi e un agente di chat per account. Passata l’ora, l’agente riprende da solo.",
+    q: "Quanto costa davvero?",
+    answer: "Niente: Wapzen è completamente gratis, senza canone, senza costo a messaggio e senza carta di credito. Ogni account ha un agente di chat, e nei gruppi l’AI risponde solo dove la accendi.",
     body: <>
-      <Comparison caption="Cosa è illimitato e cosa ha un limite su Wapzen" columns={["Su Wapzen"]} rows={limits} />
-      <p><strong>Cosa succede a quota 100.</strong> L’agente si ferma fino alla fine dell’ora e poi riprende da solo. Nel frattempo il pannello mostra il conto alla rovescia e chi scrive non riceve una risposta automatica: il messaggio resta salvato e puoi rispondere tu.</p>
-      <p><strong>Quanto sono 100 risposte l’ora.</strong> Con 8 risposte a conversazione sono circa 12 conversazioni ogni ora. Bastano a un B&B, a una casa vacanza o a un piccolo hotel. Un grande albergo con molte richieste nella stessa ora può arrivarci nei picchi, quindi è meglio saperlo prima.</p>
+      <Comparison caption="Cosa è gratis su Wapzen e cosa ha un limite" columns={["Su Wapzen"]} rows={limits} />
+      <p><strong>Nei gruppi.</strong> L’AI è spenta in ogni gruppo finché non la accendi. Accesa, risponde solo ai messaggi che menzionano il tuo numero o che rispondono a un suo messaggio.</p>
     </>,
   },
   {
@@ -176,7 +172,7 @@ const questions = [
     answer: "Orari di check-in e check-out, come arrivare, parcheggio, deposito bagagli, regole, servizi, tassa di soggiorno e consigli sui dintorni, sempre con le informazioni che le dai. Annota richieste come un late check-out o un guasto, così il tuo team le conferma. Non deve dare codici della porta, raccogliere documenti o chiudere prenotazioni da sola.",
     body: <>
       <Comparison caption="Cosa risponde un agente AI sul WhatsApp di una struttura ricettiva" columns={["Risponde?", "Come"]} rows={answers} />
-      <p>Prepara un unico documento con tutto ciò che chiedono i tuoi ospiti. Se gestisci più strutture, indica a quale si riferisce ogni dato e chiedi all’agente di domandare prima dove alloggia l’ospite. Aggiungi anche i link a mappe e foto, perché l’agente risponde solo con testo.</p>
+      <p>Prepara un unico documento con tutto ciò che chiedono i tuoi ospiti. Se gestisci più strutture, indica a quale si riferisce ogni dato e chiedi all’agente di domandare prima dove alloggia l’ospite. Aggiungi anche le foto e il link alla mappa: l’agente invia le foto quando un ospite le chiede.</p>
     </>,
   },
   {
@@ -241,7 +237,7 @@ const questions = [
       <ul>
         <li><strong>Prima della prenotazione.</strong> A chi arriva dal tuo sito, da Google Maps o da Instagram risponde subito e passa il tuo link.</li>
         <li><strong>Durante il soggiorno.</strong> Risolve le piccole cose e lascia un buon ricordo del tuo numero.</li>
-        <li><strong>Dopo.</strong> Con il loro consenso, puoi avvisare i vecchi ospiti di date o offerte dirette con Bulk Messages.</li>
+        <li><strong>Dopo.</strong> Con il loro consenso, puoi avvisare i vecchi ospiti di date o offerte dirette dal tuo telefono.</li>
       </ul>
       <p>Il 15% è un’ipotesi per l’esempio: controlla la tua commissione reale e cosa ti consente il contratto sul canale diretto.</p>
     </>,
@@ -289,7 +285,7 @@ const questions = [
         <li><strong>Provalo.</strong> Scrivi da un altro numero in inglese, tedesco e francese, e prova le domande delicate, come “what’s the door code?”.</li>
       </ol>
       <pre>{prompt}</pre>
-      <p>Qualche giorno prima dell’arrivo puoi anche mandare un avviso con Bulk Messages, così gli ospiti salvano il numero. Usa un file con le colonne Nome e Data, e scrivi solo a chi ha prenotato e aspetta quel messaggio:</p>
+      <p>Qualche giorno prima dell’arrivo puoi anche mandare un avviso dal tuo telefono, così gli ospiti salvano il numero. Scrivi solo a chi ha prenotato e aspetta quel messaggio:</p>
       <pre>{preArrival}</pre>
       <InlineCta title="Rispondi agli ospiti anche di notte" body="Gratis, senza chiave API di Meta, senza carta e senza costo a messaggio." label="Inizia gratis" />
     </>,
@@ -311,12 +307,12 @@ const questions = [
   {
     id: "non-fa",
     q: "Cosa non può fare Wapzen per una struttura ricettiva?",
-    answer: "Wapzen non sostituisce il PMS o il motore di prenotazione: non gestisce calendario, tariffe, incassi o Alloggiati Web, e non risponde dentro Booking o Airbnb. Risponde con testo, senza inviare file o immagini, e ogni account ha un agente di chat. Non usa l’API ufficiale di Meta, quindi non include il badge verde.",
+    answer: "Wapzen non sostituisce il PMS o il motore di prenotazione: non gestisce calendario, tariffe, incassi o Alloggiati Web, e non risponde dentro Booking o Airbnb. Non invia messaggi in massa, e ogni account ha un agente di chat. Non usa l’API ufficiale di Meta, quindi non include il badge verde.",
     body: <>
       <Comparison caption="Per quali strutture va bene un chatbot WhatsApp gratis" columns={["Fa per te?", "Perché"]} rows={fit} />
       <ul>
         <li><strong>Mappe e foto vanno con un link.</strong> Aggiungi i link alle informazioni dell’agente.</li>
-        <li><strong>Scrive prima l’ospite.</strong> L’agente risponde a chi gli scrive. Per scrivere tu per primo usa Bulk Messages, limitandoti a chi aspetta quel messaggio.</li>
+        <li><strong>Scrive prima l’ospite.</strong> L’agente risponde a chi gli scrive. Per scrivere tu per primo fallo dal tuo telefono, limitandoti a chi aspetta quel messaggio.</li>
         <li><strong>Controlla cosa dice.</strong> Leggi le conversazioni dei primi giorni, soprattutto nelle lingue che non conosci.</li>
         <li><strong>Il pannello è in inglese.</strong> L’agente risponde nella lingua dei tuoi ospiti.</li>
       </ul>
@@ -328,13 +324,13 @@ const questions = [
 export default function ChatbotWhatsAppHotelPage() {
   return <QaPost
     href={href}
-    heading={<>Chatbot WhatsApp con AI per hotel, B&B e case vacanza.<br /><span>Gratis, senza limiti nascosti e con agente vocale.</span></>}
+    heading={<>Chatbot WhatsApp con AI per hotel, B&B e case vacanza.<br /><span>Completamente gratis e con agente vocale.</span></>}
     lead="“What time is check-in?”, “dove parcheggio?”, “wo lassen wir das Gepäck?”. Gli ospiti scrivono a qualsiasi ora e in più lingue, anche quando in reception non c’è nessuno. Qui trovi, domanda per domanda, cosa può fare l’intelligenza artificiale su WhatsApp per hotel, B&B, case vacanza e agriturismi in Italia, senza chiave API di Meta."
     verdict={{
       title: "La risposta breve",
-      body: <><strong>Wapzen</strong> è un chatbot WhatsApp con AI per hotel, B&B e case vacanza in Italia: <strong>gratis, con conversazioni illimitate, nessun limite nascosto e senza chiave API di Meta</strong>. Risponde sul tuo numero a qualsiasi ora e nella lingua di ogni ospite, annota le richieste per il tuo team e condivide il tuo link di prenotazione. L’agente vocale funziona e risponde alle chiamate WhatsApp. I limiti che esistono li dichiariamo: 100 risposte AI all’ora per agente e un agente di chat per account. Non sostituisce il PMS e non risponde dentro Booking o Airbnb.</>,
+      body: <><strong>Wapzen</strong> è un chatbot WhatsApp con AI per hotel, B&B e case vacanza in Italia: <strong>completamente gratis e senza chiave API di Meta</strong>. Risponde sul tuo numero a qualsiasi ora e nella lingua di ogni ospite, annota le richieste per il tuo team e condivide il tuo link di prenotazione. L’agente vocale funziona e risponde alle chiamate WhatsApp. I limiti che esistono li dichiariamo: un agente di chat per account. Non sostituisce il PMS e non risponde dentro Booking o Airbnb.</>,
     }}
-    facts={[["Prezzo", "Gratis"], ["Conversazioni", "Illimitate"], ["Limiti nascosti", "Nessuno"], ["Agente vocale", "Funzionante"]]}
+    facts={[["Prezzo", "Completamente gratis"], ["Chiave API di Meta", "Non serve"], ["Agente vocale", "Funzionante"]]}
     indexTitle="Le 14 domande di questa guida"
     answerLabel="Risposta breve"
     questions={questions}

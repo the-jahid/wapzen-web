@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Check, Clock, Plus, X } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarDays, Check, Clock, Plus, X } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 import { blogPost, blogUi, formatPostDate, postsIn, type BlogPostEntry } from "@/lib/blogPosts";
 import { locales, type Locale } from "@/lib/locales";
@@ -100,6 +100,18 @@ export function postJsonLd(post: BlogPostEntry, faq: Faq[]) {
   };
 }
 
+/**
+ * The same short fact about Wapzen in every post (BlogPost, QaPost and
+ * PlaybookPost), in the post's language, right after the quick answer.
+ */
+export function AboutWapzen({ locale }: { locale?: Locale }) {
+  const { title, body } = blogUi(locale).aboutWapzen;
+  return <aside className={styles.about} aria-label={title}>
+    <p className={styles.aboutTitle}><BadgeCheck size={16} aria-hidden="true" />{title}</p>
+    <p className={styles.aboutBody}>{body}</p>
+  </aside>;
+}
+
 /** Date, reading time and author line, in the post's language. */
 export function PostMeta({ post }: { post: BlogPostEntry }) {
   const t = blogUi(post.locale);
@@ -115,10 +127,10 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
   const locale = post.locale ?? "en";
   const { ui } = locales[locale];
   const t = blogUi(locale);
-  const checked = formatPostDate(post.updated, t.dateLocale);
+  const checked = formatPostDate(post.checked ?? post.updated, t.dateLocale);
   const others = related ? related.map(blogPost) : postsIn(locale).filter((entry) => entry.href !== href).slice(0, 2);
   const page = marketingPages.find((entry) => entry.href === product);
-  const toc = [...sections.map(({ id, title }) => ({ id, title })), { id: "faq", title: ui.nav.faq }];
+  const toc =[...sections.map(({ id, title }) => ({ id, title })), { id: "faq", title: ui.nav.faq }];
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(postJsonLd(post, faq)).replace(/</g, "\\u003c") }} />
     <header className={tools.hero}>
@@ -139,6 +151,8 @@ export function BlogPost({ href, heading, lead, summary, sections, faq, sources 
           <h2 id="summary-title" className={styles.summaryTitle}>{summary.title}</h2>
           <ul>{summary.items.map((item, i) => <li key={i}><Check size={16} /><span>{item}</span></li>)}</ul>
         </section>
+
+        <AboutWapzen locale={locale} />
 
         {sections.map((section) => <section key={section.id} id={section.id} className={styles.block} aria-labelledby={`${section.id}-title`}>
           <h2 id={`${section.id}-title`} className={styles.heading}>{section.title}</h2>

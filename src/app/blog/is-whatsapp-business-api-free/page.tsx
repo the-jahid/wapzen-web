@@ -37,7 +37,7 @@ const offers = [
   ["AiSensy Free Forever", "The API on your number, Blue Tick application, sign-up credits, live chat inbox", "No broadcasts; chatbot flows ($80 a month) and the AI agent ($50 a month for 1,000 AI messages) are add-ons; message fees apply"],
   ["WATI", "7-day free trial", "Then from $49 a month ($39 billed annually), plus message charges"],
   ["Interakt", "Free trial", "Then Growth at $55 a month plus taxes; AI agents are an add-on"],
-  ["Wapzen", "AI chat agent with no reply cap, AI voice agent, knowledge base, bulk messages", "Not the official API: it links your number as a device, like WhatsApp Web"],
+  ["Wapzen", "Fully free AI chat agent, AI voice agent, knowledge base, file sending", "Not the official API: it links your number as a device, like WhatsApp Web"],
 ];
 
 const faqs = [
@@ -48,7 +48,7 @@ const faqs = [
   { q: "Can I download the WhatsApp Business API for free?", a: "There's nothing to download. The API is a service you reach through Meta's developer platform or a provider, not an app. What you can download for free is the WhatsApp Business app for Android and iPhone, which has no per-message fees but also no API." },
   { q: "Is there a free WhatsApp API on GitHub?", a: "There are open-source libraries that automate WhatsApp Web, and the code is free. They aren't Meta's API: you host and maintain them yourself, they break when WhatsApp changes, and using them for bulk or automated messaging goes against WhatsApp's terms and can get a number restricted." },
   { q: "Do I pay for messages customers send me?", a: "No. Meta doesn't charge for messages from users to businesses. Check your provider, though: a few charge their own fee per message in both directions." },
-  { q: "What's the cheapest way to answer customers on WhatsApp?", a: "If you mostly answer people who message you, skip the API. Wapzen links your existing number by QR code and answers with a free AI agent, with no Meta message fees and no cap on AI replies. If you need big broadcast campaigns, the API is still the right tool." },
+  { q: "What's the cheapest way to answer customers on WhatsApp?", a: "If you mostly answer people who message you, skip the API. Wapzen links your existing number by QR code and answers with a free AI agent, with no Meta message fees, fully free. If you need big broadcast campaigns, the API is still the right tool." },
 ];
 
 const sources = [
@@ -137,14 +137,14 @@ const sections = [
     id: "no-api",
     title: "How to answer customers with no message fees",
     body: <>
-      <p>Wapzen puts a free AI agent on the WhatsApp number you already have. You link it by QR code or pairing code, the same way you’d open WhatsApp Web, and the agent answers every customer from your instructions and knowledge base. Because it doesn’t use the API, there are <strong>no Meta fees and no cap on AI replies</strong>.</p>
+      <p>Wapzen puts a free AI agent on the WhatsApp number you already have. You link it by QR code or pairing code, the same way you’d open WhatsApp Web, and the agent answers every customer from your instructions and knowledge base. Because it doesn’t use the API, there are <strong>no Meta fees</strong>, and Wapzen is fully free.</p>
       <ul>
         <li>Answers chats 24/7 in the customer’s language, from your FAQ, price list and documents.</li>
         <li>Takes orders and saves them to your dashboard once the customer confirms.</li>
-        <li>Sends personalised bulk messages to your customer list, with a gap between each.</li>
+        <li>Sends your price lists, brochures and product photos when a customer asks.</li>
         <li>Answers WhatsApp calls with an AI voice agent.</li>
       </ul>
-      <InlineCta title="Skip the per-message bill" body="Put a free AI agent on your existing WhatsApp number. No Business API, no Meta fees, no reply cap." />
+      <InlineCta title="Skip the per-message bill" body="Put a free AI agent on your existing WhatsApp number. No Business API, no Meta fees, fully free." />
       <Note>Wapzen is an independent product, not made by Meta or WhatsApp. Use it to answer people who contact you and to message customers who expect to hear from you, never for cold bulk messaging.</Note>
       <p>The full walkthrough is in <Link href="/blog/free-whatsapp-ai-agent">free WhatsApp AI agent</Link>.</p>
     </>,
@@ -161,7 +161,7 @@ export default function IsWhatsAppBusinessApiFreePage() {
       items: [
         <><strong>No, not entirely.</strong> API access is free and incoming messages are free, but Meta charges for every delivered marketing, utility and authentication message.</>,
         <><strong>Still free:</strong> the first 1,000 service replies a month per number (since 1 October 2026), and every message in the 7-day window after a Click to WhatsApp ad.</>,
-        <><strong>No API, no fees:</strong> Wapzen links your number by QR code and answers with a free AI agent, with no Meta message fees and no cap on AI replies.</>,
+        <><strong>No API, no fees:</strong> Wapzen links your number by QR code and answers with a free AI agent, with no Meta message fees, fully free.</>,
       ],
     }}
     sections={sections}
@@ -169,6 +169,6 @@ export default function IsWhatsAppBusinessApiFreePage() {
     sources={sources}
     related={["/blog/whatsapp-business-api-pricing", "/blog/free-whatsapp-ai-agent"]}
     product="/whatsapp-business-api-alternative"
-    cta={{ heading: <>Answer customers on WhatsApp.<br /><span>No API, no message fees.</span></>, body: "Link your number with a QR code and let a free AI agent reply to every chat, with no cap on replies." }}
+    cta={{ heading: <>Answer customers on WhatsApp.<br /><span>No API, no message fees.</span></>, body: "Link your number with a QR code and let a fully free AI agent reply to every chat." }}
   />;
 }

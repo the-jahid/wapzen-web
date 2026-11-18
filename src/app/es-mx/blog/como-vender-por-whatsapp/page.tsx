@@ -107,7 +107,7 @@ const sections = [
         <li><strong>Pide permiso</strong> antes de mandar promociones, y respeta a quien te pide no escribirle más.</li>
         <li><strong>Da seguimiento una vez</strong> a quien preguntó y no compró: “¿Te quedó alguna duda sobre el pedido?” funciona mejor que tres recordatorios.</li>
       </ul>
-      <p>Si mucha gente te bloquea o reporta, WhatsApp puede restringir tu número. Para promociones a miles de clientes existe la API oficial, que cobra por mensaje; los números están en <Link href="/es-mx/blog/whatsapp-business-precio">la guía de precios</Link>.</p>
+      <p>Para promociones a miles de clientes existe la API oficial, que cobra por mensaje; los números están en <Link href="/es-mx/blog/whatsapp-business-precio">la guía de precios</Link>.</p>
     </>,
   },
   {

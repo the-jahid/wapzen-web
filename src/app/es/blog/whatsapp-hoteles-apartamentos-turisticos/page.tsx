@@ -12,7 +12,7 @@ import { QaPost } from "@/components/blog/QaPost";
 // hoteles" (20), "chatbot whatsapp hotel", "whatsapp casa rural", "software apartamentos
 // turisticos" (10 cada una). Demanda menor (219) que otros sectores: elegido por capacidad
 // de pago (comisiones de Booking, reclamación de CEHAT) y encaje (huéspedes extranjeros a
-// cualquier hora). A pedido del usuario (2026-11-04): siempre gratis, sin clave de API de
+// cualquier hora). A pedido del usuario (2026-11-04): totalmente gratis, sin clave de API de
 // Meta, agente de voz funcionando, sin nota sobre bloqueos de número y sin mencionar el
 // límite por hora. El servidor mantiene HOURLY_REPLY_LIMIT = 100, así que el texto dice
 // "conversaciones ilimitadas" y "sin límite mensual", nunca "respuestas ilimitadas". RD
@@ -45,7 +45,7 @@ const pms = [
 
 const costs = [
   ["Plataforma", "Según el proveedor. En Callbell: 93 € al mes con un agente, cuenta de WhatsApp y creador de bots", "0 €, siempre"],
-  ["Respuestas a huéspedes", "1.000 gratis al mes por número; después, 0,0166 € cada una", "0 €, sin límite mensual"],
+  ["Respuestas a huéspedes", "1.000 gratis al mes por número; después, 0,0166 € cada una", "0 €"],
   ["Avisos antes de la llegada", "0,0166 € cada uno", "0 €"],
   ["Ofertas a antiguos huéspedes", "0,0585 € cada una", "0 €"],
   ["API de Meta y clave de acceso", "Necesarias", "No hacen falta"],
@@ -92,10 +92,10 @@ const questions = [
   {
     id: "gratis",
     q: "¿Hay un chatbot de WhatsApp gratis para hoteles y apartamentos turísticos?",
-    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA siempre gratis para hoteles, apartamentos turísticos, hostales y casas rurales: conversaciones ilimitadas, sin cuota, sin coste por mensaje y sin clave de API de Meta. Responde a tus huéspedes a cualquier hora y en su idioma, en tu propio número, y su agente de voz contesta las llamadas de WhatsApp.",
+    answer: "Sí. Wapzen es un chatbot de WhatsApp con IA totalmente gratis para hoteles, apartamentos turísticos, hostales y casas rurales: sin cuota, sin coste por mensaje y sin clave de API de Meta. Responde a tus huéspedes a cualquier hora y en su idioma, en tu propio número, y su agente de voz contesta las llamadas de WhatsApp.",
     body: <>
       <p>Las herramientas para hoteles suelen venderse con presupuesto a medida o suman una plataforma y las tarifas de Meta. <Link href="/es/chatbot-whatsapp-gratis">Wapzen</Link> vincula el número que ya usa tu alojamiento como un dispositivo, igual que WhatsApp Web. Por eso no necesitas la API de WhatsApp Business, un proveedor ni la aprobación de Meta.</p>
-      <p>Tu equipo sigue usando WhatsApp en el móvil, y los huéspedes escriben al número de siempre. La IA viene incluida, las conversaciones son ilimitadas y no hay tope mensual de respuestas: una temporada alta con más preguntas no te cuesta más.</p>
+      <p>Tu equipo sigue usando WhatsApp en el móvil, y los huéspedes escriben al número de siempre. La IA viene incluida y es totalmente gratis: una temporada alta con más preguntas no te cuesta más.</p>
     </>,
   },
   {
@@ -113,7 +113,7 @@ const questions = [
     answer: "Horarios de entrada y salida, cómo llegar, aparcamiento, consigna de equipaje, normas, servicios, tasa turística y recomendaciones de la zona, siempre con la información que le des. Anota peticiones como una salida tardía o una avería para que tu equipo las confirme. No debe dar códigos de puerta ni cerrar reservas por su cuenta.",
     body: <>
       <Comparison caption="Qué responde un agente de IA en el WhatsApp de un alojamiento turístico" columns={["¿Responde?", "Cómo"]} rows={answers} />
-      <p>Prepara un único documento con todo lo que preguntan tus huéspedes. Si tienes varios alojamientos, indica a cuál corresponde cada dato y pide al agente que pregunte primero en cuál se aloja el huésped. Sube también enlaces a tus mapas y fotos, porque el agente responde con texto.</p>
+      <p>Prepara un único documento con todo lo que preguntan tus huéspedes. Si tienes varios alojamientos, indica a cuál corresponde cada dato y pide al agente que pregunte primero en cuál se aloja el huésped. Sube también tus fotos y un enlace a tu mapa: el agente envía las fotos cuando un huésped las pide.</p>
     </>,
   },
   {
@@ -162,7 +162,7 @@ const questions = [
       <ul>
         <li><strong>Antes de reservar.</strong> Si alguien llega por tu web, Google Maps o Instagram, responde sus dudas y le pasa tu enlace de reservas.</li>
         <li><strong>Durante la estancia.</strong> Resuelve lo cotidiano y deja una buena impresión con tu propio número.</li>
-        <li><strong>Después.</strong> Con su autorización, puedes avisar a antiguos huéspedes de fechas o promociones directas con Bulk Messages.</li>
+        <li><strong>Después.</strong> Con su autorización, puedes avisar a antiguos huéspedes de fechas o promociones directas desde tu móvil.</li>
       </ul>
       <p>El 15 % es un supuesto para el ejemplo: mira tu contrato para saber tu comisión real y lo que te permite ofrecer en tu canal directo.</p>
     </>,
@@ -186,7 +186,7 @@ const questions = [
       <p>El Real Decreto 933/2021 exige a los alojamientos registrar estos datos, conservarlos tres años y comunicarlos en un plazo máximo de 24 horas. Según Chekin, esa comunicación se hace a través de SES.Hospedajes desde el 2 de diciembre de 2024. Los huéspedes suelen preguntar por qué se les pide tanta información, y ahí el agente sí ayuda: puede explicar el motivo en su idioma y enviar el enlace correcto.</p>
       <ul>
         <li><strong>No pidas pasaportes ni tarjetas por WhatsApp.</strong> Las instrucciones de ejemplo se lo prohíben al agente.</li>
-        <li><strong>Deja las fotos apagadas.</strong> Los interruptores de audios y fotos vienen apagados. Activa los audios si los usan tus huéspedes, pero con las fotos podrías recibir un pasaporte.</li>
+        <li><strong>Valora apagar las fotos.</strong> Los interruptores de audios y fotos vienen encendidos. Deja los audios si los usan tus huéspedes, pero con las fotos podrías recibir un pasaporte.</li>
         <li><strong>Avisa de que es una IA.</strong> El artículo 50 del Reglamento de IA lo exige salvo que resulte evidente, y Wapzen no añade el aviso por su cuenta: inclúyelo en las instrucciones.</li>
         <li><strong>Debes saber dónde están los datos.</strong> La base de datos principal de Wapzen está en Singapur, sus servidores en Singapur y Alemania, y proveedores de IA como OpenAI pueden tratar los mensajes en Estados Unidos. Wapzen no publica un contrato estándar de encargado del tratamiento: si lo necesitas, pregúntanos antes de conectar el número. Más detalles en la <Link href="/privacy">política de privacidad</Link>, en inglés.</li>
       </ul>
@@ -206,9 +206,9 @@ const questions = [
         <li><strong>Pruébalo.</strong> Escribe desde otro número en inglés, francés y alemán, y prueba las preguntas delicadas, como “what’s the door code?”.</li>
       </ol>
       <pre>{prompt}</pre>
-      <p>También puedes enviar un aviso unos días antes de la llegada con Bulk Messages, para que tus huéspedes guarden el número:</p>
+      <p>También puedes enviar desde tu móvil un aviso unos días antes de la llegada, para que tus huéspedes guarden el número:</p>
       <pre>{preArrival}</pre>
-      <InlineCta title="Atiende a tus huéspedes también de madrugada" body="Siempre gratis, sin clave de API de Meta, sin tarjeta y sin coste por mensaje." label="Empieza gratis" />
+      <InlineCta title="Atiende a tus huéspedes también de madrugada" body="Totalmente gratis, sin clave de API de Meta, sin tarjeta y sin coste por mensaje." label="Empieza gratis" />
     </>,
   },
   {
@@ -246,12 +246,12 @@ const questions = [
   {
     id: "limites",
     q: "¿Qué no puede hacer Wapzen en un alojamiento turístico?",
-    answer: "Wapzen no sustituye a tu PMS ni a tu motor de reservas: no gestiona calendario, tarifas, cobros ni registro de viajeros, y no responde dentro de Booking o Airbnb. Contesta con texto, no envía archivos ni imágenes, no atiende grupos y cada cuenta tiene un agente de chat. Tampoco usa la API oficial de Meta, así que no incluye insignia verde.",
+    answer: "Wapzen no sustituye a tu PMS ni a tu motor de reservas: no gestiona calendario, tarifas, cobros ni registro de viajeros, y no responde dentro de Booking o Airbnb. No envía mensajes masivos, en grupos solo responde si activas la IA y cada cuenta tiene un agente de chat. Tampoco usa la API oficial de Meta, así que no incluye insignia verde.",
     body: <>
       <Comparison caption="Para qué alojamientos encaja un chatbot de WhatsApp gratis" columns={["¿Te encaja?", "Por qué"]} rows={fit} />
       <ul>
         <li><strong>Los mapas y las fotos van por enlace.</strong> Añade los enlaces a la información del agente.</li>
-        <li><strong>Escribe el huésped primero.</strong> El agente contesta a quien le escribe. Para escribir tú primero, usa Bulk Messages y limítate a huéspedes que esperen ese aviso.</li>
+        <li><strong>Escribe el huésped primero.</strong> El agente contesta a quien le escribe. Para escribir tú primero, hazlo desde tu móvil y limítate a huéspedes que esperen ese aviso.</li>
         <li><strong>Revisa lo que dice.</strong> Lee las conversaciones durante los primeros días, sobre todo en los idiomas que no dominas.</li>
         <li><strong>El panel está en inglés.</strong> El agente responde en el idioma de tus huéspedes.</li>
       </ul>
@@ -263,19 +263,19 @@ const questions = [
 export default function WhatsAppHotelesApartamentosPage() {
   return <QaPost
     href={href}
-    heading={<>WhatsApp con IA para hoteles y apartamentos turísticos.<br /><span>Siempre gratis, sin API de Meta y con agente de voz.</span></>}
+    heading={<>WhatsApp con IA para hoteles y apartamentos turísticos.<br /><span>Totalmente gratis, sin API de Meta y con agente de voz.</span></>}
     lead="“What time is check-in?”, “¿dónde aparco?”, “wo lassen wir das Gepäck?”. Tus huéspedes preguntan a cualquier hora y en varios idiomas, también cuando no hay nadie en recepción. Aquí respondemos, una a una, las dudas de hoteles, gestores de apartamentos turísticos, hostales y casas rurales de España antes de poner una IA en su WhatsApp, sin clave de API de Meta."
     verdict={{
       title: "La respuesta corta",
-      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para hoteles y apartamentos turísticos en España, <strong>siempre gratis, con conversaciones ilimitadas y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora y en el idioma de cada huésped, anota peticiones para tu equipo y comparte tu enlace de reservas. Su agente de voz contesta las llamadas de WhatsApp. No sustituye a tu PMS y no responde dentro de Booking ni de Airbnb.</>,
+      body: <><strong>Wapzen</strong> es un chatbot de WhatsApp con IA para hoteles y apartamentos turísticos en España, <strong>totalmente gratis y sin clave de API de Meta</strong>. Responde en tu número a cualquier hora y en el idioma de cada huésped, anota peticiones para tu equipo y comparte tu enlace de reservas. Su agente de voz contesta las llamadas de WhatsApp. No sustituye a tu PMS y no responde dentro de Booking ni de Airbnb.</>,
     }}
-    facts={[["Precio", "Siempre gratis"], ["Clave de API de Meta", "No hace falta"], ["Conversaciones", "Ilimitadas"], ["Llamadas", "Agente de voz funcionando"]]}
+    facts={[["Precio", "Totalmente gratis"], ["Clave de API de Meta", "No hace falta"], ["Llamadas", "Agente de voz funcionando"]]}
     indexTitle="Las 12 preguntas de esta guía"
     answerLabel="Respuesta corta"
     questions={questions}
     sources={sources}
     related={["/es/blog/ia-para-inmobiliarias-whatsapp", "/es/blog/chatbot-whatsapp-clinica-dental"]}
     product="/es/llamadas-con-ia"
-    cta={{ heading: <>Tus huéspedes reciben respuesta a cualquier hora.<br /><span>Siempre gratis, sin API de Meta.</span></>, body: "Crea tu cuenta, dale la información de tu alojamiento y vincula tu número en unos minutos. Sin tarjeta y sin coste por mensaje." }}
+    cta={{ heading: <>Tus huéspedes reciben respuesta a cualquier hora.<br /><span>Totalmente gratis, sin API de Meta.</span></>, body: "Crea tu cuenta, dale la información de tu alojamiento y vincula tu número en unos minutos. Sin tarjeta y sin coste por mensaje." }}
   />;
 }

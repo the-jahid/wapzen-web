@@ -158,12 +158,12 @@ const questions = [
   {
     id: "audios",
     q: "¿Entiende audios y fotos?",
-    answer: "Sí, si lo activas. En la configuración del agente hay dos interruptores, audios y fotos, que vienen apagados. Con el de audios, el agente transcribe la nota de voz y la responde; con el de fotos, lee la imagen y contesta según lo que ve.",
+    answer: "Sí. En la configuración del agente hay dos interruptores, audios y fotos, que vienen encendidos. Con el de audios, el agente transcribe la nota de voz y la responde; con el de fotos, lee la imagen y contesta según lo que ve.",
     body: <>
-      <p>En Perú se mandan muchísimos audios, así que vale la pena activar ese interruptor. Con las fotos ten cuidado en una clínica: un paciente puede enviar una receta, un resultado o una foto de una lesión, que son datos de salud.</p>
+      <p>En Perú se mandan muchísimos audios, así que conviene dejar ese interruptor encendido. Con las fotos ten cuidado en una clínica: un paciente puede enviar una receta, un resultado o una foto de una lesión, que son datos de salud.</p>
       <ul>
-        <li>Activa los <strong>audios</strong> si tus pacientes los usan.</li>
-        <li>Deja las <strong>fotos</strong> apagadas, o actívalas con una instrucción clara: “No comentes recetas, resultados ni fotos médicas; pide al paciente que los traiga a su consulta”.</li>
+        <li>Deja encendidos los <strong>audios</strong> si tus pacientes los usan.</li>
+        <li>Apaga las <strong>fotos</strong>, o déjalas encendidas con una instrucción clara: “No comentes recetas, resultados ni fotos médicas; pide al paciente que los traiga a su consulta”.</li>
       </ul>
     </>,
   },
@@ -185,13 +185,12 @@ const questions = [
   {
     id: "limites",
     q: "¿Qué límites tiene Wapzen?",
-    answer: "Cada cuenta tiene un agente de chat, y cada agente envía hasta 100 respuestas de IA por hora. Contesta chats individuales, no grupos, y no se puede pausar en una sola conversación. Como no usa la API oficial, no trae insignia verde ni plantillas aprobadas.",
+    answer: "Cada cuenta tiene un agente de chat. Contesta chats individuales, y en grupos solo si activas la IA en ese grupo. Puedes apagar la IA para un solo paciente y contestar tú. Como no usa la API oficial, no trae insignia verde ni plantillas aprobadas.",
     body: <>
       <Comparison caption="Para qué clínicas sirve un chatbot de WhatsApp gratis como Wapzen" columns={["¿Te sirve?", "Por qué"]} rows={fit} />
       <ul>
-        <li><strong>100 respuestas por hora por agente.</strong> Si se llega al límite, el agente espera a que pase la hora; los mensajes entrantes se guardan igual.</li>
-        <li><strong>Se conecta como dispositivo vinculado</strong>, igual que WhatsApp Web, con código QR o código de vinculación, en el número que ya tienes. WhatsApp puede restringir números que se comportan de forma rara: no escribas a quien no te lo pidió.</li>
-        <li><strong>Sin pausa por chat.</strong> Pausar el agente lo detiene en todos los chats. Lo que respondes desde el panel entra en el historial del agente; lo que respondes desde el celular, no.</li>
+        <li><strong>Se conecta como dispositivo vinculado</strong>, igual que WhatsApp Web, con código QR o código de vinculación, en el número que ya tienes.</li>
+        <li><strong>Puedes tomar un chat.</strong> Apaga la IA solo para ese paciente, contesta tú y vuelve a encenderla al terminar.</li>
         <li><strong>El panel está en inglés</strong>; el agente responde en español.</li>
         <li>Wapzen es un producto independiente, no es de Meta ni de WhatsApp.</li>
       </ul>

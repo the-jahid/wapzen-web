@@ -3,7 +3,7 @@ import Link from "next/link";
 import { pageMetadata } from "@/lib/pageMetadata";
 import { blogPost } from "@/lib/blogPosts";
 import { Comparison, Samples } from "@/components/marketing/MarketingPage";
-import { BlogPost, InlineCta, Note } from "@/components/blog/BlogPost";
+import { BlogPost, Note } from "@/components/blog/BlogPost";
 
 // Targets "whatsapp bulk message sender free" (117, 6/6 sources), "whatsapp
 // bulk message sender free extension" (69), "free whatsapp bulk sender" (60),
@@ -22,14 +22,14 @@ const post = blogPost(href);
 export const metadata: Metadata = pageMetadata({ title: post.title, description: post.description, path: href, article: { publishedTime: post.published, modifiedTime: post.updated } });
 
 const options = [
-  ["Cost", "Free", "Free tiers, paid upgrades", "Per delivered message (₹0.8631 per marketing message in India) plus a plan", "Free"],
-  ["How many", "256 contacts per list", "Varies", "Rises with your number’s quality rating", "Up to 5,000 numbers per send"],
-  ["Who receives it", "Only people who saved your number", "Anyone on WhatsApp", "Anyone who opted in", "Anyone on WhatsApp"],
-  ["Personalised", "No", "Usually a name field", "Template variables", "Any column from your sheet"],
-  ["Needs approval", "No", "No", "Each template, by Meta", "No"],
-  ["Runs with your computer off", "Sent from your phone", "No: the browser tab must stay open", "Yes", "Yes"],
-  ["Replies answered by AI", "No", "No", "With a chatbot add-on", "Yes, by your AI agent"],
-  ["Risk to your number", "Low", "High", "Low with opt-in", "Real: send only to people who expect you"],
+  ["Cost", "Free", "Free tiers, paid upgrades", "Per delivered message (₹0.8631 per marketing message in India) plus a plan"],
+  ["How many", "256 contacts per list", "Varies", "Rises with your number’s quality rating"],
+  ["Who receives it", "Only people who saved your number", "Anyone on WhatsApp", "Anyone who opted in"],
+  ["Personalised", "No", "Usually a name field", "Template variables"],
+  ["Needs approval", "No", "No", "Each template, by Meta"],
+  ["Runs with your computer off", "Sent from your phone", "No: the browser tab must stay open", "Yes"],
+  ["Replies answered by AI", "No, unless Wapzen’s AI agent is on your number", "No", "With a chatbot add-on"],
+  ["Risk to your number", "Low", "High", "Low with opt-in"],
 ];
 
 const templates = [
@@ -44,13 +44,13 @@ const templates = [
 ];
 
 const faqs = [
-  { q: "Can I send bulk WhatsApp messages for free?", a: "Yes. WhatsApp Business broadcast lists are free but reach only people who saved your number, 256 per list. Wapzen's Bulk Messages is free too: upload a contact sheet and it sends a personalised message to up to 5,000 numbers, one at a time, from your own number. The official Business API charges per message." },
-  { q: "How many WhatsApp messages can I send at once?", a: "A WhatsApp Business broadcast list holds 256 contacts. Wapzen sends up to 5,000 numbers per send, one message at a time with a gap you choose, 30 seconds by default. On the Business API, Meta sets a daily limit for each number that rises as its quality stays high." },
-  { q: "Can I send bulk messages without saving numbers?", a: "Not with broadcast lists, which deliver only to people who saved your number. Wapzen sends to the numbers in your spreadsheet without saving them as contacts, and so does the Business API. People who don't know your number are more likely to block or report you, so keep to your own customers." },
+  { q: "Can I send bulk WhatsApp messages for free?", a: "Yes. WhatsApp Business broadcast lists are free but reach only people who saved your number, 256 per list. The official Business API charges per message. Wapzen, which is fully free, doesn't send bulk messages, but its AI agent answers everyone who replies." },
+  { q: "How many WhatsApp messages can I send at once?", a: "A WhatsApp Business broadcast list holds 256 contacts. On the Business API, Meta sets a daily limit for each number that rises as its quality stays high." },
+  { q: "Can I send bulk messages without saving numbers?", a: "Not with broadcast lists, which deliver only to people who saved your number. The Business API sends to numbers without saving them as contacts. People who don't know your number are more likely to block or report you, so keep to your own customers." },
   { q: "Will I get banned for sending bulk WhatsApp messages?", a: "You can be. WhatsApp's terms forbid bulk and automated messaging outside its Business Platform, and numbers that many people block or report get restricted. The risk is lowest when you message your own customers, personalise each message, leave a gap between sends, and stop when people ask." },
-  { q: "What's a safe gap between bulk messages?", a: "WhatsApp doesn't publish one. Wapzen defaults to 30 seconds between messages and accepts anything from 10 seconds to an hour. For a new number or a list you haven't messaged before, a longer gap and a smaller first batch are safer." },
-  { q: "Can I send images or PDFs in bulk?", a: "Wapzen's Bulk Messages sends text for now, up to 4,096 characters, with links if you need them. To share a catalogue or PDF, send a text that invites a reply, and send the file to the people who answer." },
-  { q: "Is there an unlimited free WhatsApp bulk sender?", a: "No option is truly unlimited and safe. Wapzen charges nothing and has no monthly message cap, but each send holds up to 5,000 numbers and goes out one at a time, because sending faster is what gets numbers restricted." },
+  { q: "What's a safe gap between bulk messages?", a: "WhatsApp doesn't publish one. Many senders leave 30 seconds or more between messages. For a new number or a list you haven't messaged before, a longer gap and a smaller first batch are safer." },
+  { q: "Can I send images or PDFs in bulk?", a: "A broadcast list can send images and PDFs, but only to people who saved your number. To share a catalogue more widely, send a text that invites a reply, then send the file to the people who answer; Wapzen's AI agent can send your PDF to each person who asks." },
+  { q: "Is there an unlimited free WhatsApp bulk sender?", a: "No option is truly unlimited. Broadcast lists are free but reach only people who saved your number, 256 per list; browser extensions break WhatsApp's terms; and the Business API charges per message." },
 ];
 
 const sources = [
@@ -65,7 +65,7 @@ const sections = [
     title: "Four ways to send bulk WhatsApp messages",
     body: <>
       <p>There are four ways to send one message to many people on WhatsApp. Three of them can be free. They differ in how many people you reach, whether the message is personal, and how much risk you put on your number.</p>
-      <Comparison caption="Ways to send bulk WhatsApp messages compared" columns={["Broadcast lists", "Browser extensions", "Business API", "Wapzen Bulk Messages"]} rows={options} />
+      <Comparison caption="Ways to send bulk WhatsApp messages compared" columns={["Broadcast lists", "Browser extensions", "Business API"]} rows={options} />
     </>,
   },
   {
@@ -102,26 +102,10 @@ const sections = [
     </>,
   },
   {
-    id: "wapzen",
-    title: "4. Send bulk messages free with Wapzen",
-    body: <>
-      <p>Wapzen’s <strong>Bulk Messages</strong> sends one personalised message to everyone on a contact sheet, from your own WhatsApp number, one at a time. It runs on Wapzen’s servers, so you can close your laptop. It’s free, like the rest of Wapzen.</p>
-      <ol>
-        <li><strong>Link your WhatsApp number</strong> by QR code or pairing code, if you haven’t already.</li>
-        <li><strong>Upload your contacts:</strong> Excel (.xlsx or .xls), CSV, OpenDocument, or a text file with one number per line. Wapzen finds the phone column and adds your country code to local numbers.</li>
-        <li><strong>Write the message</strong> with placeholders from your sheet’s columns, such as <code>{"{{Name}}"}</code> or <code>{"{{Order}}"}</code>. Save it as a template to reuse.</li>
-        <li><strong>Pick the gap</strong> between messages: 30 seconds by default, anywhere from 10 seconds to an hour.</li>
-        <li><strong>Start the send.</strong> Watch each recipient’s status, and pause, resume or cancel at any time. Numbers that aren’t on WhatsApp are marked failed instead of retried.</li>
-      </ol>
-      <p>At the default gap, 500 contacts take a little over four hours. Each send holds up to 5,000 numbers, and every message is saved to that contact’s conversation in your dashboard.</p>
-      <InlineCta title="Send your first bulk message free" body="Upload a contact sheet, personalise the message, and let your AI agent answer the replies." />
-    </>,
-  },
-  {
     id: "avoid-ban",
     title: "How to send bulk messages without getting banned",
     body: <>
-      <p>WhatsApp’s terms forbid bulk and automated messaging outside its Business Platform. That covers browser extensions, linked-device tools and Wapzen alike, so no free sender is risk-free. What gets numbers restricted in practice is people blocking and reporting them. This checklist keeps that low:</p>
+      <p>WhatsApp’s terms forbid bulk and automated messaging outside its Business Platform. That covers browser extensions and other unofficial senders, so no free sender is risk-free. What gets numbers restricted in practice is people blocking and reporting them. This checklist keeps that low:</p>
       <ul>
         <li><strong>Message only people who know you:</strong> customers, enquiries, members, people who gave you their number for this.</li>
         <li><strong>Personalise every message.</strong> Use the person’s name and something specific to them. A thousand identical messages look like spam, because they are.</li>
@@ -133,7 +117,7 @@ const sections = [
         <li><strong>Fill in your business profile</strong> with your name, logo and address, so people recognise you.</li>
         <li><strong>Don’t send late at night,</strong> and stop if blocks or angry replies pile up.</li>
       </ul>
-      <Note>For large marketing campaigns to people who opted in, use the official Business API. Wapzen’s Bulk Messages is built for messaging your own customers, not for cold lists.</Note>
+      <Note>For large marketing campaigns to people who opted in, use the official Business API.</Note>
     </>,
   },
   {
@@ -159,13 +143,13 @@ export default function WhatsAppBulkMessageSenderFreePage() {
   return <BlogPost
     href={href}
     heading={<>Free WhatsApp bulk message sender.<br /><span>Without losing your number.</span></>}
-    lead="You can send one message to hundreds of customers on WhatsApp without paying per message, but the free routes differ a lot in reach and in risk. Here are the four options, how to avoid a ban, eight templates to copy, and how to let AI answer the replies."
+    lead="You can send one message to hundreds of customers on WhatsApp without paying per message, but the free routes differ a lot in reach and in risk. Here are the three options, how to avoid a ban, eight templates to copy, and how to let AI answer the replies."
     summary={{
       title: "Quick answer",
       items: [
-        <><strong>Free options:</strong> WhatsApp Business broadcast lists (256 per list, only people who saved your number), browser extensions (risky), and Wapzen Bulk Messages (up to 5,000 numbers per send, personalised). The official API charges per message.</>,
+        <><strong>Free options:</strong> WhatsApp Business broadcast lists (256 per list, only people who saved your number), and browser extensions (risky). The official API charges per message. Wapzen, which is fully free, answers the replies with AI.</>,
         <><strong>Ban risk is real:</strong> WhatsApp’s terms forbid bulk messaging outside its Business Platform, and numbers get restricted when people block or report them. Message only your own customers.</>,
-        <><strong>Send it safely:</strong> personalise each message, keep a gap between sends (Wapzen defaults to 30 seconds), start small, and let people opt out.</>,
+        <><strong>Send it safely:</strong> personalise each message, keep a gap between sends, start small, and let people opt out.</>,
       ],
     }}
     sections={sections}

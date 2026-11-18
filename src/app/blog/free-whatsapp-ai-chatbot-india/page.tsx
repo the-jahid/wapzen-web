@@ -167,14 +167,14 @@ const questions = [
   {
     id: "features",
     q: "What can Wapzen’s WhatsApp chatbot do?",
-    answer: "It answers one-to-one messages from your information, remembers the chat, takes orders, reads photos, replies to voice notes, sends personalised bulk messages, connects to your own systems and keeps every chat in one dashboard. You can also switch the AI off for any single customer.",
+    answer: "It answers one-to-one messages from your information, remembers the chat, takes orders, reads photos, replies to voice notes, sends your price lists and photos, connects to your own systems and keeps every chat in one dashboard. You can also switch the AI off for any single customer.",
     body: <>
       <ul>
         <li><strong>Answers from your information.</strong> Upload FAQs, price lists and policies as text, PDF or Word. The agent searches them for each message, and you can tell it to say so when something isn’t there.</li>
         <li><strong>Remembers the conversation.</strong> It keeps the last 20 exchanges word for word and a summary of anything earlier, so customers don’t have to repeat themselves.</li>
         <li><strong>Takes orders.</strong> The Take Order tool collects the details, repeats the order, and saves it to your Orders page once the customer confirms.</li>
-        <li><strong>Handles voice notes and photos.</strong> Two switches, off by default, let it transcribe voice notes and read photos such as a product screenshot. It always replies in text.</li>
-        <li><strong>Sends bulk messages.</strong> Upload an Excel or CSV sheet and send a personalised message to up to 5,000 numbers, 30 seconds apart by default. Only use it for customers who expect to hear from you.</li>
+        <li><strong>Handles voice notes and photos.</strong> It transcribes voice notes and reads photos such as a product screenshot, and each can be switched off for the agent. It replies in text.</li>
+        <li><strong>Sends your files.</strong> Upload price lists, brochures and product photos with a note on when to send each, and the agent sends the right one when a customer asks.</li>
         <li><strong>Connects to your systems.</strong> API tools can check an order’s status or send a lead to your CRM during the chat.</li>
         <li><strong>Lets you step in.</strong> Read every chat in the dashboard and reply yourself. Each conversation has its own switch to turn the AI off for that customer.</li>
         <li><strong>Knows the date and time.</strong> It works in your number’s time zone, so “tomorrow” and “open now” come out right.</li>
@@ -231,10 +231,10 @@ const questions = [
   {
     id: "meta-ai",
     q: "How is Wapzen different from Meta’s Business AI?",
-    answer: "Meta’s agent, launched in India as Business AI in May 2026 and now called Meta Business Agent, lives inside the WhatsApp Business app and is rolling out to eligible businesses, with paid subscriptions planned. Wapzen isn’t made by Meta, but it also works on personal numbers and adds API tools, bulk messages and voice calls.",
+    answer: "Meta’s agent, launched in India as Business AI in May 2026 and now called Meta Business Agent, lives inside the WhatsApp Business app and is rolling out to eligible businesses, with paid subscriptions planned. Wapzen isn’t made by Meta, but it also works on personal numbers and adds API tools, file sending and voice calls.",
     body: <>
       <Comparison caption="Meta Business Agent in the WhatsApp Business app compared with Wapzen" columns={["Meta Business Agent", "Wapzen"]} rows={metaAi} />
-      <p>If Meta’s agent already appears in your Tools tab, it’s worth trying: it’s official and free to start, and it says it covers all native Indian languages. Choose Wapzen if you don’t have it yet, you use a personal number, or you need calls, bulk messages or a link to your own systems. Details are in our guide to the <Link href="/blog/whatsapp-business-ai-agent">WhatsApp Business AI agent</Link>.</p>
+      <p>If Meta’s agent already appears in your Tools tab, it’s worth trying: it’s official and free to start, and it says it covers all native Indian languages. Choose Wapzen if you don’t have it yet, you use a personal number, or you need calls, file sending or a link to your own systems. Details are in our guide to the <Link href="/blog/whatsapp-business-ai-agent">WhatsApp Business AI agent</Link>.</p>
     </>,
   },
   {
@@ -250,11 +250,11 @@ const questions = [
   {
     id: "limits",
     q: "What are the limits of Wapzen’s free chatbot?",
-    answer: "Each account has one chat agent, which can send up to 100 AI replies an hour. It answers one-to-one chats, not groups, and its replies are text, so it shares links rather than sending PDFs or images. There’s no monthly reply quota and no per-message charge.",
+    answer: "Each account has one chat agent. It answers one-to-one chats, and WhatsApp groups only where you switch the AI on. It sends your PDFs and images, but it can’t take payments in the chat. There’s no monthly reply quota and no per-message charge.",
     body: <>
       <ul>
-        <li><strong>100 AI replies an hour per agent.</strong> Past that, the agent stays quiet until the hour is up. Incoming messages are still saved, so you can answer them yourself.</li>
-        <li><strong>Groups stay untouched.</strong> The agent doesn’t reply in groups, broadcasts or channels.</li>
+        <li><strong>One chat agent per account.</strong> It answers on the WhatsApp number you link to it.</li>
+        <li><strong>Groups stay untouched unless you choose.</strong> The AI is off in every group by default. Switch it on for a group and it answers messages that tag your number or reply to it. It never answers Status updates or channels.</li>
         <li><strong>No payments in chat.</strong> It can share your UPI ID or payment link, but it can’t see whether the customer has paid.</li>
         <li><strong>Check the sensitive answers.</strong> Like any AI, it can get things wrong. Read your chats in the first few days and tighten the prompt.</li>
       </ul>

@@ -33,7 +33,7 @@ const quotas = [
   ["Interakt", "Free trial", "AI agents add-on: $74.99 a month with 100 AI messages, on Growth or Advanced", "$0.011 per extra AI message"],
   ["WATI", "7-day trial", "250 AI credits a month on Growth ($49 a month)", "Credit packs from $20 a month; Astra agents priced separately"],
   ["Meta’s Business API", "1,000 service replies a month per number", "Every AI reply is a service message", "Utility rate per reply: ₹0.115 in India, $0.0034 in the US"],
-  ["Wapzen", "Everything", "No cap on AI replies", "No message fees"],
+  ["Wapzen", "Everything", "Included, fully free", "No message fees"],
 ];
 
 const prompt = `You are the WhatsApp assistant for Sunleaf Skincare, an online store in Pune.
@@ -46,14 +46,13 @@ If someone is upset or asks for a person, say a team member will reply between
 10am and 7pm, Monday to Saturday.`;
 
 const faqs = [
-  { q: "Is there a free WhatsApp AI agent?", a: "Yes. Wapzen gives you a free AI agent that answers the WhatsApp messages on your own number, from your instructions and knowledge base, with no cap on AI replies. Most other tools sell AI as a paid add-on with a monthly message allowance." },
-  { q: "Is Wapzen really free, with no message limit?", a: "Yes. Wapzen is free right now: no plan fee, no per-message fee and no cap on the number of AI replies. The AI models are included, so you don't need an OpenAI or other API key, and there's no credit card at sign-up." },
+  { q: "Is there a free WhatsApp AI agent?", a: "Yes. Wapzen gives you a free AI agent that answers the WhatsApp messages on your own number, from your instructions and knowledge base, and it's fully free. Most other tools sell AI as a paid add-on with a monthly message allowance." },
+  { q: "Is Wapzen really free?", a: "Yes. Wapzen is fully free: no plan fee and no per-message fee. The AI model is included, so you don't need an OpenAI or other API key, and there's no credit card at sign-up." },
   { q: "Do I need the WhatsApp Business API for an AI agent?", a: "No. Wapzen links your number as a device, the way WhatsApp Web does, by QR code or pairing code. There's no Meta application, no template approval and no per-message fee. The trade-off is that it isn't Meta's official platform." },
   { q: "Can the AI agent work on my personal WhatsApp number?", a: "Yes. You can link a personal WhatsApp or a WhatsApp Business number. You keep using WhatsApp on your phone as usual, and the agent answers alongside you." },
   { q: "Which languages does the AI agent speak?", a: "It replies in the language the customer writes in, including English, Hindi, Bengali, Urdu, Arabic, Spanish, Portuguese and Italian. You can write its instructions in one language and still serve customers in others." },
   { q: "Can the AI agent answer WhatsApp calls too?", a: "Yes. Wapzen's AI voice agent answers incoming WhatsApp calls in a natural voice and can call leads back. It works for WhatsApp calls only, not regular phone lines." },
   { q: "What happens when the AI doesn't know an answer?", a: "It says it doesn't have that information instead of guessing. It only states prices, stock, delivery times and policies that are in its instructions, its knowledge base or a tool result, so add the facts you want it to use." },
-  { q: "Will my WhatsApp number get banned?", a: "Answering people who message you is normal WhatsApp use. The risk comes from messaging people who didn't ask to hear from you, which WhatsApp restricts. Keep bulk messages to customers who expect them, and give people a way to opt out." },
 ];
 
 const sources = [
@@ -85,7 +84,7 @@ const sections = [
         <li><strong>Interakt:</strong> 100 included, then 11,900 × $0.011 = <strong>$130.90</strong>, on top of the $74.99 add-on and the $55 Growth plan.</li>
         <li><strong>AiSensy:</strong> the $50 add-on covers 1,000, a twelfth of the month, and the rest is charged separately.</li>
         <li><strong>Meta’s fees on the API:</strong> 11,000 replies past the free 1,000 cost about <strong>₹1,265</strong> in India or <strong>$37.40</strong> in the US, before any provider fee.</li>
-        <li><strong>Wapzen:</strong> <strong>$0</strong>. There is no reply cap and no Meta message fee, because it doesn’t use the API.</li>
+        <li><strong>Wapzen:</strong> <strong>$0</strong>. It’s fully free, with no Meta message fee, because it doesn’t use the API.</li>
       </ul>
       <Note>Prices are from each vendor’s pricing page on the date at the top of this post, in the currency they show outside India. You may see local prices. See <Link href="/blog/is-whatsapp-business-api-free">is the WhatsApp Business API free?</Link> for Meta’s side of the bill.</Note>
     </>,
@@ -102,7 +101,7 @@ const sections = [
         <li><strong>Doesn’t make things up.</strong> If a price, delivery time or policy isn’t in its instructions or knowledge, it says so instead of guessing.</li>
         <li><strong>Takes orders.</strong> With the built-in Take Order tool, it collects the items, name and address, reads the order back, and saves it once the customer confirms. See the <Link href="/blog/whatsapp-order-taking-chatbot">order-taking guide</Link>.</li>
         <li><strong>Calls your systems.</strong> API request tools let it check an order status or a free slot in your own software.</li>
-        <li><strong>Sends bulk messages.</strong> Upload a contact sheet and send one personalised message to each person, with a gap between sends. See the <Link href="/blog/whatsapp-bulk-message-sender-free">bulk message guide</Link>.</li>
+        <li><strong>Sends your files.</strong> Upload price lists, menus and product photos with a note on when to send each, and the agent sends the right one when a customer asks.</li>
         <li><strong>Answers calls.</strong> The AI voice agent picks up WhatsApp calls in a natural voice and can call leads back. See the <Link href="/free-ai-calling-agent">free AI calling agent</Link>.</li>
         <li><strong>Saves every chat</strong> in your dashboard, where you can read along and reply yourself.</li>
       </ul>
@@ -141,14 +140,6 @@ const sections = [
     </>,
   },
   {
-    id: "safe",
-    title: "Is it safe for your number?",
-    body: <>
-      <p>Answering people who message you is ordinary WhatsApp use, and that’s most of what an AI agent does. The risk comes from the other direction: messaging people who didn’t ask to hear from you. WhatsApp’s terms forbid bulk and automated messaging outside its Business Platform, and numbers that get blocked or reported are restricted.</p>
-      <p>So keep any bulk messages to customers who know you and expect them, leave a gap between sends, and give people a way to opt out. The <Link href="/blog/whatsapp-bulk-message-sender-free">bulk sending checklist</Link> covers it in detail.</p>
-    </>,
-  },
-  {
     id: "other-tools",
     title: "When another tool is the better pick",
     body: <>
@@ -166,14 +157,14 @@ const sections = [
 export default function FreeWhatsAppAiAgentPage() {
   return <BlogPost
     href={href}
-    heading={<>Free WhatsApp AI agent.<br /><span>No cap on AI replies.</span></>}
-    lead="Most WhatsApp AI agents are free only until you reach a message quota. This guide covers what a WhatsApp AI agent does, what those quotas cost, and how to put one on your own number with Wapzen for free, with no limit on AI replies."
+    heading={<>Free WhatsApp AI agent.<br /><span>Fully free, on your own number.</span></>}
+    lead="Most WhatsApp AI agents are free only until you reach a message quota. This guide covers what a WhatsApp AI agent does, what those quotas cost, and how to put one on your own number with Wapzen, which is fully free."
     summary={{
       title: "Quick answer",
       items: [
         <><strong>A WhatsApp AI agent</strong> reads each customer message, answers from your instructions and knowledge base, and can act, for example by saving an order, at any hour.</>,
         <><strong>Most tools cap AI replies:</strong> AiSensy’s AI agent is $50 a month for 1,000 AI messages, Interakt’s includes 100, and Meta charges for API replies after 1,000 a month per number.</>,
-        <><strong>Wapzen is free with no cap on AI replies.</strong> It links to your existing number by QR code, so there are no Meta message fees, and its voice agent answers WhatsApp calls too.</>,
+        <><strong>Wapzen is fully free.</strong> It links to your existing number by QR code, so there are no Meta message fees, and its voice agent answers WhatsApp calls too.</>,
       ],
     }}
     sections={sections}

@@ -24,7 +24,7 @@ export const metadata: Metadata = pageMetadata({ title: post.title, description:
 
 const costs = [
   ["Cuota mensual", "$29.990", "US$49 (US$39 pagando anual)", "No hay: pagas por mensaje", "$0"],
-  ["Respuestas de IA incluidas", "Hasta 500 al mes", "250 créditos de IA al mes", "No trae IA: la pones tú", "Ilimitadas"],
+  ["Respuestas de IA incluidas", "Hasta 500 al mes", "250 créditos de IA al mes", "No trae IA: la pones tú", "Incluidas, gratis"],
   ["Tarifas de Meta", "Aparte, si usa la API oficial", "Aparte", "1.000 respuestas gratis al mes por número, luego US$0,02 cada una", "No aplican"],
   ["Agente de voz", "No aparece en sus precios", "Astra, con precio aparte", "Llamadas que recibes, gratis; las que haces, US$0,0121 por minuto. Más la plataforma de voz", "Incluido"],
 ];
@@ -60,7 +60,7 @@ const questions = [
   {
     id: "existe",
     q: "¿Existe un chatbot de WhatsApp con IA realmente gratis en Chile?",
-    answer: "Sí. Wapzen te da un chatbot de WhatsApp con IA gratis, con respuestas ilimitadas y sin tarifas por mensaje. Contesta en tu propio número, con tu información, y también atiende llamadas de WhatsApp con un agente de voz. La mayoría de las otras opciones son gratis solo como prueba o cobran la IA por cupo de respuestas.",
+    answer: "Sí. Wapzen te da un chatbot de WhatsApp con IA totalmente gratis y sin tarifas por mensaje. Contesta en tu propio número, con tu información, y también atiende llamadas de WhatsApp con un agente de voz. La mayoría de las otras opciones son gratis solo como prueba o cobran la IA por cupo de respuestas.",
     body: <>
       <p>Si buscas “chatbot WhatsApp gratis”, casi todo lo que aparece tiene una trampa. Algunos son gratis solo por 7 o 14 días. Otros tienen un plan gratis sin IA, que solo envía menús con botones. Y los que sí traen IA la venden por cupo: 250, 500 o 1.000 respuestas al mes, y después pagas más.</p>
       <p>En Chile se suma otro costo: las tarifas de Meta. Quien usa la API oficial de WhatsApp paga por cada respuesta después de las primeras 1.000 del mes, y Chile tiene de las tarifas más altas de la región.</p>
@@ -69,16 +69,16 @@ const questions = [
   },
   {
     id: "ilimitado",
-    q: "¿Qué significa que sea ilimitado?",
-    answer: "Que no hay tope de respuestas de IA: el agente contesta cada mensaje que te llegue, sean 50 o 50.000 al mes, sin costo por mensaje. Lo que sí tiene un límite es la cantidad de agentes de chat: uno por cuenta.",
+    q: "¿Qué significa que sea totalmente gratis?",
+    answer: "Que no pagas nada: ni plan mensual, ni cobro por mensaje, ni tarjeta, y la IA viene incluida. Lo que sí tiene un límite es la cantidad de agentes de chat: uno por cuenta.",
     body: <>
-      <p>En la práctica, “ilimitado” quiere decir tres cosas:</p>
+      <p>En la práctica, “totalmente gratis” quiere decir tres cosas:</p>
       <ul>
-        <li><strong>Sin cupo de respuestas.</strong> No hay un contador que se acabe a mitad de mes y deje a tus clientes sin respuesta.</li>
+        <li><strong>Sin plan mensual.</strong> No hay una suscripción que pagar para que el agente responda.</li>
         <li><strong>Sin cobro por mensaje.</strong> No pagas a Wapzen ni a Meta por cada respuesta.</li>
         <li><strong>Sin horario.</strong> El agente contesta a las 3:00 de la madrugada igual que a mediodía, incluso un domingo o un feriado.</li>
       </ul>
-      <p>Para que sepas exactamente qué recibes: cada cuenta tiene <strong>un agente de chat</strong>, que contesta los chats uno a uno (no los grupos). Lee mensajes de texto y el texto que acompaña a fotos y videos, pero no escucha notas de voz.</p>
+      <p>Para que sepas exactamente qué recibes: cada cuenta tiene <strong>un agente de chat</strong>, que contesta los chats uno a uno, y en grupos solo si activas la IA en ese grupo. Lee mensajes de texto, transcribe las notas de voz y entiende las fotos.</p>
     </>,
   },
   {
@@ -129,7 +129,7 @@ const questions = [
         <li><strong>Envía mensajes masivos.</strong> Sube una planilla con tus contactos y envía un mensaje personalizado a cada uno, con una pausa entre envíos.</li>
         <li><strong>Guarda cada chat</strong> en tu panel, donde puedes leer las conversaciones y responder tú mismo.</li>
       </ul>
-      <InlineCta title="Tu chatbot de WhatsApp con IA, gratis y sin tope" body="Sin cupo de respuestas, sin API de Meta y sin tarjeta. Conecta tu número y el agente empieza a responder." label="Empieza gratis" />
+      <InlineCta title="Tu chatbot de WhatsApp con IA, totalmente gratis" body="Sin plan mensual, sin API de Meta y sin tarjeta. Conecta tu número y el agente empieza a responder." label="Empieza gratis" />
     </>,
   },
   {
@@ -165,19 +165,6 @@ const questions = [
     </>,
   },
   {
-    id: "riesgo",
-    q: "¿Me pueden bloquear el número por usar un chatbot?",
-    answer: "Responder a quienes te escriben es un uso normal de WhatsApp. El riesgo aparece cuando envías mensajes a personas que no te los pidieron, algo que WhatsApp restringe. Escribe solo a clientes que esperan tu mensaje y dales una forma de no recibir más.",
-    body: <>
-      <p>Como Wapzen se conecta como dispositivo vinculado y no por la API oficial, WhatsApp puede aplicar restricciones a un número que se comporta de forma rara. Para cuidar el tuyo:</p>
-      <ul>
-        <li>Deja que el agente <strong>responda</strong>, que es lo que mejor hace.</li>
-        <li>En los envíos masivos, escribe solo a tus clientes, deja la pausa entre mensajes y no compres listas de contactos.</li>
-        <li>Si tu negocio depende de un solo número, pruébalo primero con un número secundario.</li>
-      </ul>
-    </>,
-  },
-  {
     id: "cuando-no",
     q: "¿Cuándo no te conviene Wapzen?",
     answer: "Cuando necesitas la API oficial de Meta: la insignia verde, plantillas aprobadas o escribir primero a miles de clientes. Tampoco si tu equipo necesita silenciar al bot en una sola conversación, porque hoy se pausa el agente completo.",
@@ -206,19 +193,19 @@ const questions = [
 export default function ChatbotWhatsAppGratisClPage() {
   return <QaPost
     href={href}
-    heading={<>Chatbot de WhatsApp gratis en Chile.<br /><span>Con IA, sin tope de respuestas y con agente de voz.</span></>}
+    heading={<>Chatbot de WhatsApp gratis en Chile.<br /><span>Con IA, totalmente gratis y con agente de voz.</span></>}
     lead="La mayoría de los chatbots “gratis” para WhatsApp son una prueba de 14 días, un menú sin IA o un cupo de respuestas que se acaba a mitad de mes. Aquí respondemos, una por una, las preguntas que hacen las pymes chilenas antes de elegir: qué es gratis de verdad, cuánto cuesta lo demás y qué hace Wapzen, incluido su agente de voz."
     verdict={{
       title: "La respuesta corta",
       body: <>Sí hay un chatbot de WhatsApp con IA gratis en Chile: <strong>Wapzen</strong>. No cobra cuota, no tiene tope de respuestas de IA y no paga tarifas de Meta, porque conecta tu número como dispositivo vinculado. Responde mensajes, toma pedidos y, con su agente de voz, contesta las llamadas de WhatsApp.</>,
     }}
-    facts={[["Precio", "$0"], ["Respuestas de IA", "Ilimitadas"], ["Tarifas de Meta", "No aplican"], ["Llamadas", "Agente de voz incluido"]]}
+    facts={[["Precio", "$0, totalmente gratis"], ["Tarifas de Meta", "No aplican"], ["Llamadas", "Agente de voz incluido"]]}
     indexTitle="Las 10 preguntas de esta guía"
     answerLabel="Respuesta"
     questions={questions}
     sources={sources}
     related={["/es-cl/blog/chatbot-whatsapp-clinica-dental", "/es-mx/blog/agente-de-voz-ia-whatsapp-gratis"]}
     product="/es/chatbot-whatsapp-gratis"
-    cta={{ heading: <>Tu WhatsApp, respondiendo solo.<br /><span>Gratis y sin tope de respuestas.</span></>, body: "Crea tu agente de IA, súbele la información de tu negocio y conecta tu número en minutos. Sin tarjeta y sin API de Meta." }}
+    cta={{ heading: <>Tu WhatsApp, respondiendo solo.<br /><span>Totalmente gratis.</span></>, body: "Crea tu agente de IA, súbele la información de tu negocio y conecta tu número en minutos. Sin tarjeta y sin API de Meta." }}
   />;
 }

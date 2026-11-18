@@ -44,8 +44,6 @@ const options = [
 const included = [
   ["Kuukausimaksu", "Ei ole"],
   ["Maksu viestistä tai vastauksesta", "Ei ole"],
-  ["Keskustelut ja yhteystiedot", "Rajattomasti"],
-  ["Tekoälyvastaukset kuukaudessa", "Ei kuukausirajaa"],
   ["Luottokortti", "Ei tarvita"],
   ["Metan API-avain", "Ei tarvita"],
 ];
@@ -128,7 +126,7 @@ const questions = [
   {
     id: "ilmainen",
     q: "Onko Wapzen oikeasti ilmainen?",
-    answer: "Kyllä, tällä hetkellä kaikki on ilmaista: ei kuukausimaksua, ei maksua viesteistä eikä luottokorttia. Keskusteluja ja yhteystietoja voi olla rajattomasti, eikä vastauksilla ole kuukausirajaa. Tämä koskee tekoälychattia, tilausten vastaanottoa, tietopankkia ja ääniagenttia. Kyse ei ole määräaikaisesta kokeilusta.",
+    answer: "Kyllä, tällä hetkellä kaikki on ilmaista: ei kuukausimaksua, ei maksua viesteistä eikä luottokorttia. Tämä koskee tekoälychattia, tilausten vastaanottoa, tietopankkia ja ääniagenttia. Kyse ei ole määräaikaisesta kokeilusta.",
     body: <>
       <Comparison caption="Mikä Wapzenissa on ilmaista" columns={["Wapzenissa"]} rows={included} />
       <p><strong>Miksi sanomme ”tällä hetkellä”.</strong> Maksullista tilausta ei nyt ole, mutta emme lupaa, että palvelu on ilmainen ikuisesti.</p>
@@ -284,9 +282,9 @@ export default function IlmainenWhatsAppChatbotPage() {
     lead="Moni ”ilmainen” WhatsApp-chatbot on kahden viikon kokeilu, versio ilman WhatsAppia tai valikko ilman tekoälyä. Käymme kysymys kerrallaan läpi, mikä on oikeasti ilmaista, mitä muu maksaa, minkä valitset ja miten luot oman chatbotin vaihe vaiheelta."
     verdict={{
       title: "Lyhyt vastaus",
-      body: <>Kyllä, ilmainen tekoälychatbot WhatsAppiin on olemassa. <strong>Wapzen</strong> toimii numerossa, jota jo käytät, tavallisessa WhatsAppissa tai WhatsApp Businessissa: se vastaa sekunneissa yrityksesi tiedoilla suomeksi, ymmärtää ääniviestit ja kuvat, kirjaa tilaukset ja vastaa WhatsApp-puheluihin ääniagentilla. <strong>Kaikki on nyt ilmaista, keskusteluja voi olla rajattomasti eikä Metan API-avainta tarvita.</strong> Wapzen on oma tuotteemme eikä Metan virallinen tuote: jos haluat virallisen reitin, katso Meta Business Agent.</>,
+      body: <>Kyllä, ilmainen tekoälychatbot WhatsAppiin on olemassa. <strong>Wapzen</strong> toimii numerossa, jota jo käytät, tavallisessa WhatsAppissa tai WhatsApp Businessissa: se vastaa sekunneissa yrityksesi tiedoilla suomeksi, ymmärtää ääniviestit ja kuvat, kirjaa tilaukset ja vastaa WhatsApp-puheluihin ääniagentilla. <strong>Wapzen on täysin ilmainen, eikä Metan API-avainta tarvita.</strong> Wapzen on oma tuotteemme eikä Metan virallinen tuote: jos haluat virallisen reitin, katso Meta Business Agent.</>,
     }}
-    facts={[["Hinta", "Ilmainen nyt"], ["Metan API-avain", "Ei tarvita"], ["Keskustelut", "Rajattomasti"], ["Kieli", "Vastaa suomeksi"]]}
+    facts={[["Hinta", "Täysin ilmainen"], ["Metan API-avain", "Ei tarvita"], ["Kieli", "Vastaa suomeksi"]]}
     indexTitle="Tämän oppaan 13 kysymystä"
     answerLabel="Lyhyt vastaus"
     questions={questions}

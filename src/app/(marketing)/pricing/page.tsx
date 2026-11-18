@@ -23,7 +23,7 @@ const included = [
   "Outbound AI calls and calling campaigns",
   "Knowledge bases from text, PDF, and Word files",
   "API request tools for bookings and orders",
-  "OpenAI GPT and Anthropic Claude models",
+  "AI model included, no API key needed",
   "Natural voices in dozens of languages",
   "Chat history, call transcripts, and analytics",
   "Personal or Business number, linked by QR code",
@@ -42,7 +42,7 @@ const comparison = [
   ["Monthly price", "Paid plans, often tiered", "Free right now"],
   ["WhatsApp Business API", "Usually required", "Not needed: link by QR code"],
   ["Per-message fees", "Meta’s message fees passed on", "None"],
-  ["AI models", "Often bring your own API key", "GPT and Claude included"],
+  ["AI model", "Often bring your own API key", "Included: Wapzen runs it, currently a GPT model from OpenAI"],
   ["AI voice calls on WhatsApp", "Rare, or a paid add-on", "Included, inbound and outbound"],
   ["Credit card to start", "Often required for a trial", "Not required"],
 ];
@@ -55,7 +55,7 @@ const faqs = [
   { q: "Do I need a credit card or a free trial?", a: "No. There is no card to enter and no trial to start. Sign up and every feature is available right away." },
   { q: "Do I need my own OpenAI or ElevenLabs API key?", a: "No. The AI models for chat and the speech and voices for calls are included, so you don't need to open or pay for your own AI accounts." },
   { q: "Are there WhatsApp Business API fees?", a: "No. Wapzen doesn't use the WhatsApp Business API. You link your personal or WhatsApp Business number by scanning a QR code, like WhatsApp Web, so there are no Business API message fees from Meta." },
-  { q: "Will Wapzen always be free?", a: "Wapzen is free right now, with every feature included. If paid plans are introduced in the future, they will be listed on this page." },
+  { q: "Will Wapzen always be free?", a: "Wapzen is fully free, with every feature included. Businesses that need more, such as a second chat agent, can arrange a paid plan with us on WhatsApp." },
 ];
 
 function PriceCard() {

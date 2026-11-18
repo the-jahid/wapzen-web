@@ -210,7 +210,7 @@ const sections = [
         <li><strong>Keep an eye on carts.</strong> The chat agent answers text messages, not voice notes or images, so if you also use the catalog, check carts yourself.</li>
       </ul>
       <p>Selling products rather than meals? The same pattern works for stores, and <Link href="/blog/whatsapp-cod-order-confirmation">COD order confirmation calls</Link> cut fake cash-on-delivery orders. For bookings instead of orders, see <Link href="/blog/whatsapp-appointment-booking">WhatsApp appointment booking</Link>.</p>
-      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a device. Use it to answer customers who message you, never to send bulk messages: WhatsApp restricts numbers that do.</Note>
+      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a device. Use it to answer customers who message you, never to send bulk messages.</Note>
     </>,
   },
 ];

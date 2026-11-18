@@ -35,7 +35,7 @@ const limits = [
 const faqs = [
   { q: "What is Wapzen?", a: "Wapzen is a no-code platform that connects AI chat and voice agents to a WhatsApp number, so a business can answer messages and calls around the clock." },
   { q: "Is Wapzen an official WhatsApp product?", a: "No. Wapzen isn't affiliated with or endorsed by WhatsApp or Meta. It links your number as a device, the same way WhatsApp Web does, and doesn't use the WhatsApp Business API." },
-  { q: "Is Wapzen free?", a: "Wapzen is free to start, with usage limits on the free plan. If you reach a limit, you can message us on WhatsApp about a paid plan." },
+  { q: "Is Wapzen free?", a: "Wapzen is free to start, with no credit card. Businesses that need more, such as a second chat agent, can arrange a paid plan with us on WhatsApp." },
   { q: "How does Wapzen handle my data?", a: "We run your agents through AI and infrastructure providers, and we don't sell personal data. The privacy policy explains what is stored, who processes it, and how to delete it." },
   { q: "How can I contact Wapzen?", a: `Message us on WhatsApp at ${siteConfig.whatsapp.label}.` },
 ];

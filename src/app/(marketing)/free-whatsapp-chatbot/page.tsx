@@ -14,7 +14,7 @@ export const metadata: Metadata = pageMetadata({ title, description, path: path 
 
 const steps = [
   { title: "Sign up for free", body: "Create a Wapzen account. There is no credit card to enter and no WhatsApp Business API application to file." },
-  { title: "Create a chat agent", body: "Name your chatbot, choose an OpenAI GPT or Anthropic Claude model, and write its instructions: who it speaks for, its tone, and what it should or shouldn't answer." },
+  { title: "Create a chat agent", body: "Name your chatbot and write its instructions: who it speaks for, its tone, and what it should or shouldn't answer. Wapzen runs the AI model for you." },
   { title: "Add your business knowledge", body: "Attach a knowledge base with your FAQs, prices, opening hours, or policies. Paste text or upload PDF and Word files, and the chatbot answers from them." },
   { title: "Connect your WhatsApp number", body: "Scan a QR code with WhatsApp on your phone, the same way you link WhatsApp Web. It works with a personal WhatsApp or a WhatsApp Business number." },
   { title: "Test it and go live", body: "Message your number from another phone. The AI chatbot replies right away, and every conversation is saved in your dashboard." },
@@ -43,7 +43,7 @@ const faqs = [
   { q: "Can I create a WhatsApp chatbot without coding?", a: "Yes. Wapzen is a no-code WhatsApp chatbot builder. You set up the chatbot with plain-language instructions and your own documents instead of flow diagrams or code." },
   { q: "Do I need the WhatsApp Business API for a chatbot?", a: "Not with Wapzen. It links your number by QR code, like WhatsApp Web, so there is no Business API application, template approval, or per-message fee." },
   { q: "Does it work with a personal WhatsApp account?", a: "Yes. You can link a personal WhatsApp or a WhatsApp Business number. The personal app has no built-in auto-reply, and Wapzen adds AI auto-reply to it." },
-  { q: "Which AI powers the chatbot?", a: "You choose for each chat agent: OpenAI GPT models, the model family behind ChatGPT, or Anthropic Claude models. Both are included, so you don't need your own API key." },
+  { q: "Which AI powers the chatbot?", a: "Wapzen chooses and runs the AI model for you. Chat agents currently run on a GPT model from OpenAI, the model family behind ChatGPT. It's included, so you don't need your own API key." },
   { q: "Can the chatbot also answer WhatsApp calls?", a: "Chat agents handle messages. For calls, create a free AI voice agent in the same account: it answers inbound WhatsApp calls in a natural voice and can make outbound calls." },
 ];
 

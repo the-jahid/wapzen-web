@@ -154,7 +154,7 @@ const sections = [
       <p>Yes, if you don’t need broadcasts. Meta’s fees apply to the Business API. A number linked as a device with a QR code, the way WhatsApp Web works, isn’t on the API, so there are no per-message charges at all.</p>
       <p>That’s how Wapzen works. An AI chat agent answers the messages your number receives, using your knowledge base, and an AI voice agent can answer and make WhatsApp calls. It’s <Link href="/pricing">currently free</Link>, with the AI models included.</p>
       <p>The trade-offs are real: no bulk broadcasts, no multi-agent team inbox, and it isn’t Meta’s official route. If campaigns to thousands of contacts are the core of your WhatsApp, pay for the API. If answering customers is, read <Link href="/blog/whatsapp-business-app-vs-api">WhatsApp Business app vs API</Link> or the <Link href="/whatsapp-business-api-alternative">Business API alternative</Link> page.</p>
-      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. Use it to answer people who contact you, never to message people who didn’t: WhatsApp restricts numbers that send bulk or unwanted messages.</Note>
+      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. Use it to answer people who contact you, never to message people who didn’t.</Note>
     </>,
   },
 ];

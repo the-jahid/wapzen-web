@@ -68,7 +68,7 @@ const sections = [
     title: "Chatbots and AI agents",
     body: <>
       <p><strong>Interakt</strong> includes a linear chatbot on Growth and branching chatbots that can call APIs on Advanced. Its AI add-on gives you three ready-made agents (Sales, Lead Qualification, and Customer Support) that run around the clock. The 100 AI messages included each month go quickly for a busy store, so budget for the per-message rate.</p>
-      <p><strong>Wapzen</strong> has no flow builder. Its chatbot is one AI agent that you instruct in plain language, with your choice of GPT or Claude and a knowledge base built from your own text, PDF, and Word files. It answers free-text questions in the customer’s language and can call your systems through API tools. There’s no AI message quota.</p>
+      <p><strong>Wapzen</strong> has no flow builder. Its chatbot is one AI agent that you instruct in plain language, with the AI model included and a knowledge base built from your own text, PDF, and Word files. It answers free-text questions in the customer’s language and can call your systems through API tools. It’s fully free.</p>
     </>,
   },
   {

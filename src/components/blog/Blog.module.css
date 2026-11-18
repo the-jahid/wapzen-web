@@ -57,6 +57,12 @@
 
 .note { padding: 14px 18px; border-left: 3px solid var(--landing-green); border-radius: 0 12px 12px 0; background: var(--site-fill); font-size: 13px; line-height: 1.7; color: var(--site-text-muted); }
 
+/* "About Wapzen": the one brand fact every post carries, after its quick answer. */
+.about { margin-top: 20px; padding: 18px 22px; border: 1px solid var(--site-border); border-radius: 18px; background: var(--site-panel); }
+.article .aboutTitle { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; line-height: 1.4; color: var(--landing-green); }
+.aboutTitle > svg { flex-shrink: 0; }
+.article .aboutBody { margin-top: 8px; font-size: 14px; line-height: 1.7; color: var(--site-text-soft); }
+
 /* Dashboard screenshots (always the dark dashboard, so the frame stays dark too) and code samples */
 .figure { display: flex; flex-direction: column; gap: 10px; margin: 4px 0; }
 .figureLink { display: block; overflow: hidden; border: 1px solid var(--site-border); border-radius: 16px; background: #0b0c0f; }

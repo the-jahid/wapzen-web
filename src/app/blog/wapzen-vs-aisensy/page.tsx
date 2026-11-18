@@ -19,7 +19,7 @@ const comparison = [
   ["What it is", "WhatsApp Business API platform for broadcasts, a team inbox, and chatbots", "AI agents that answer WhatsApp chats and calls on your own number"],
   ["Free plan", "Free Forever: Business API access, 1 agent, no broadcasts", "Free right now, every feature included"],
   ["Paid plans", "From ₹1,500/month (Basic)", "None at the moment"],
-  ["AI agent", "AI Agent Builder add-on, ₹1,350/month for 1,000 AI messages", "Included: GPT or Claude with your knowledge base"],
+  ["AI agent", "AI Agent Builder add-on, ₹1,350/month for 1,000 AI messages", "Included: an AI agent with your knowledge base, AI model included"],
   ["Chatbot flows", "Drag-and-drop builder add-on, ₹2,500/month", "No flow builder; the AI agent replies in free text"],
   ["WhatsApp calls", "Not listed on its pricing page", "AI voice agent answers and makes WhatsApp calls"],
   ["Message charges", "Per message, e.g. ₹1.09 marketing, ₹0.145 utility in India", "None"],
@@ -83,7 +83,7 @@ const sections = [
     title: "AI agents: an add-on vs the whole product",
     body: <>
       <p>AiSensy’s AI Agent Builder is capable: a no-code builder, answers from a knowledge base, memory of each customer, and tool calling to reach your APIs. Its 500 free AI messages let you test before paying. It sits inside a broadcast-first platform, so you’ll set it up alongside templates, campaigns, and flows.</p>
-      <p>In Wapzen, the AI agent is the product. You write its instructions, choose a GPT or Claude model, and attach knowledge bases built from text, PDF, or Word files. It answers in the customer’s language, and API tools let it look things up in your own systems. There’s no message quota to watch. Our <Link href="/blog/whatsapp-chatbot-without-business-api">step-by-step chatbot guide</Link> shows the whole setup with screenshots.</p>
+      <p>In Wapzen, the AI agent is the product. You write its instructions and attach knowledge bases built from text, PDF, or Word files, and Wapzen runs the AI model. It answers in the customer’s language, and API tools let it look things up in your own systems. It’s fully free. Our <Link href="/blog/whatsapp-chatbot-without-business-api">step-by-step chatbot guide</Link> shows the whole setup with screenshots.</p>
     </>,
   },
   {

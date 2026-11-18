@@ -190,7 +190,7 @@ const sections = [
       <p>Também simule situações em que o paciente solicita um ser humano ou faz perguntas clínicas que precisam ser encaminhadas a um profissional.</p>
       <p>No Wapzen, as conversas ficam registradas no painel, permitindo que a clínica revise o comportamento do agente.</p>
       <p><strong>A recomendação é começar automatizando apenas perguntas administrativas simples e ampliar o uso após os testes de qualidade e privacidade.</strong></p>
-      <Note>O agente de chat do Wapzen lê texto: não entende áudios nem o conteúdo de imagens e não responde em grupos. Ele lembra só dos últimos minutos de cada conversa, então um paciente que volta no dia seguinte começa do zero. Ele também não para quando a recepção responde pelo celular: não existe pausa por conversa, e pausar o agente interrompe todas as conversas. O Wapzen é um produto independente, não é da Meta nem do WhatsApp.</Note>
+      <Note>O agente de chat do Wapzen transcreve áudios e lê fotos, e em grupos só responde se você ligar a IA naquele grupo. Ele lembra das últimas 20 trocas de cada conversa, mesmo quando o paciente volta outro dia. Ele não para sozinho quando a recepção responde pelo celular: desligue a IA só para aquele paciente e ligue de novo ao terminar. O Wapzen é um produto independente, não é da Meta nem do WhatsApp.</Note>
     </>,
   },
   {

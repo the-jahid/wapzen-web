@@ -33,7 +33,7 @@ const voiceAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Ciao
 export const metadata: Metadata = pageMetadata({ title: post.title, description: post.description, path: href, locale: "it", article: { publishedTime: post.published, modifiedTime: post.updated } });
 
 const free = [
-  ["Wapzen", "Chat AI con conversazioni illimitate, senza canone e senza costo a messaggio", "Non è una prova a tempo"],
+  ["Wapzen", "Chat AI completamente gratis, senza canone e senza costo a messaggio", "Non è una prova a tempo"],
   ["Estetia", "Piano Free con un operatore, calendario e pagina pubblica, senza AI su WhatsApp", "L’AI su WhatsApp è nel piano Pro, 89,90 € al mese"],
   ["Welny", "Prova di 14 giorni, senza carta", "99 € al mese, con un’offerta di lancio a 79 €"],
   ["CutApp", "Prova gratuita, senza carta", "Abbonamento, con i prezzi su una pagina a parte"],
@@ -41,11 +41,8 @@ const free = [
 ];
 
 const limits = [
-  ["Conversazioni e contatti", "Illimitati"],
-  ["Risposte AI al mese", "Nessun limite mensile"],
   ["Costo a messaggio o a risposta", "Nessuno"],
-  ["Risposte AI all’ora", "100 per agente"],
-  ["Risposte AI nei gruppi", "50 all’ora per agente, in totale. I gruppi sono spenti di default"],
+  ["Risposte AI nei gruppi", "Solo nei gruppi dove accendi l’AI, che di default è spenta"],
   ["Agenti di chat", "1 per account"],
 ];
 
@@ -78,7 +75,7 @@ const software = [
 
 const costs = [
   ["Piattaforma", "Dipende dal fornitore. In Callbell: 93 € al mese con agente, account WhatsApp e creatore di bot", "0 €"],
-  ["Risposte alle clienti", "1.000 gratis al mese per numero, poi 0,0248 € l’una", "0 €, nessun limite mensile"],
+  ["Risposte alle clienti", "1.000 gratis al mese per numero, poi 0,0248 € l’una", "0 €"],
   ["Promemoria", "0,0248 € l’uno", "0 €"],
   ["Promozioni", "0,0658 € l’una", "0 €"],
   ["API di Meta e chiave di accesso", "Necessarie", "Non servono"],
@@ -131,7 +128,7 @@ const questions = [
   {
     id: "gratis",
     q: "Esiste un chatbot WhatsApp gratis per parrucchieri e centri estetici?",
-    answer: "Sì. Wapzen è un chatbot WhatsApp con AI gratis per parrucchieri, barbieri, estetiste e centri estetici in Italia: conversazioni illimitate, nessun canone, nessun costo a messaggio e nessuna chiave API di Meta. Risponde sul tuo numero anche quando hai le mani occupate, e il suo agente vocale risponde alle chiamate WhatsApp.",
+    answer: "Sì. Wapzen è un chatbot WhatsApp con AI gratis per parrucchieri, barbieri, estetiste e centri estetici in Italia, completamente gratis: nessun canone, nessun costo a messaggio e nessuna chiave API di Meta. Risponde sul tuo numero anche quando hai le mani occupate, e il suo agente vocale risponde alle chiamate WhatsApp.",
     body: <>
       <p>Molti strumenti per saloni offrono il chatbot WhatsApp solo in una prova o in un piano a pagamento. <Link href="/it/chatbot-whatsapp-gratis">Wapzen</Link> collega il numero che usi già come un dispositivo, proprio come WhatsApp Web. Per questo non servono l’API di WhatsApp Business, un fornitore o l’approvazione di Meta.</p>
       <Comparison caption="Cosa significa gratis nei chatbot WhatsApp per saloni" columns={["Cosa è gratis", "Dopo"]} rows={free} />
@@ -141,12 +138,11 @@ const questions = [
   },
   {
     id: "limiti",
-    q: "Ci sono limiti nascosti?",
-    answer: "No. Su Wapzen la chat è gratis, con conversazioni e contatti illimitati, nessun limite mensile di risposte e nessun costo a messaggio. I limiti che esistono li scriviamo qui: 100 risposte AI all’ora per agente, 50 all’ora in totale nei gruppi e un agente di chat per account. Passata l’ora, l’agente riprende da solo.",
+    q: "Quanto costa davvero?",
+    answer: "Niente: Wapzen è completamente gratis, senza canone, senza costo a messaggio e senza carta di credito. Ogni account ha un agente di chat, e nei gruppi l’AI risponde solo dove la accendi.",
     body: <>
-      <Comparison caption="Cosa è illimitato e cosa ha un limite su Wapzen" columns={["Su Wapzen"]} rows={limits} />
-      <p><strong>Cosa succede a quota 100.</strong> L’agente si ferma fino alla fine dell’ora e poi riprende da solo. Nel frattempo il pannello mostra il conto alla rovescia e chi scrive non riceve una risposta automatica: il messaggio resta salvato e puoi rispondere tu.</p>
-      <p><strong>Quanto sono 100 risposte l’ora.</strong> Con 5 risposte a conversazione sono circa 20 conversazioni ogni ora: per un salone è difficile arrivarci. Può succedere se mandi un promemoria a molte clienti e rispondono tutte insieme, quindi dividi gli invii durante la giornata.</p>
+      <Comparison caption="Cosa è gratis su Wapzen e cosa ha un limite" columns={["Su Wapzen"]} rows={limits} />
+      <p><strong>Nei gruppi.</strong> L’AI è spenta in ogni gruppo finché non la accendi. Accesa, risponde solo ai messaggi che menzionano il tuo numero o che rispondono a un suo messaggio.</p>
     </>,
   },
   {
@@ -243,7 +239,7 @@ const questions = [
   {
     id: "no-show",
     q: "Riduce i no-show? Può mandare promemoria?",
-    answer: "Può aiutare, ma non manda da solo promemoria legati all’agenda. Con Bulk Messages puoi inviare un promemoria a una lista, usando un file con nome, data e ora, e l’agente gestisce chi risponde per spostare o disdire. Per promemoria del tutto automatici serve un gestionale. Non abbiamo trovato dati indipendenti italiani sui no-show, quindi non promettiamo percentuali.",
+    answer: "Può aiutare, ma non manda promemoria da solo: Wapzen non fa invii di massa. Mandi tu il promemoria dal telefono, e l’agente gestisce chi risponde per spostare o disdire. Per promemoria del tutto automatici serve un gestionale. Non abbiamo trovato dati indipendenti italiani sui no-show, quindi non promettiamo percentuali.",
     body: <>
       <p>Il sistema più semplice è preparare ogni sera il file degli appuntamenti del giorno dopo:</p>
       <pre>{reminder}</pre>
@@ -303,7 +299,7 @@ const questions = [
     q: "Posso mandare offerte alle clienti su WhatsApp? Cosa dicono Garante e AI Act?",
     answer: "Solo a chi ha dato il consenso. Le linee guida del Garante del 2013 chiedono il consenso preventivo anche per i messaggi promozionali via app di messaggistica, e il “soft spam” per i clienti vale solo per l’email. Nel 2025 il Garante ha multato per 10.000 € una società che aveva inserito un utente in un gruppo WhatsApp promozionale senza consenso.",
     body: <>
-      <p>Quel gruppo aveva 47 membri, con i numeri visibili a tutti. Se raccogli le clienti in un gruppo per le promozioni, il rischio è lo stesso: chiedi prima il consenso e preferisci messaggi individuali, come quelli di Bulk Messages.</p>
+      <p>Quel gruppo aveva 47 membri, con i numeri visibili a tutti. Se raccogli le clienti in un gruppo per le promozioni, il rischio è lo stesso: chiedi prima il consenso e preferisci messaggi individuali.</p>
       <ul>
         <li><strong>Raccogli il consenso con chiarezza.</strong> Tienilo separato dalla prenotazione, e spiega cosa invierai.</li>
         <li><strong>Avvisa che è un’AI.</strong> L’articolo 50 dell’AI Act lo chiede dal 2 agosto 2026, salvo che sia evidente. Wapzen non aggiunge l’avviso da solo: scrivilo nelle istruzioni e nel saluto dell’agente vocale.</li>
@@ -315,12 +311,12 @@ const questions = [
   {
     id: "non-fa",
     q: "Cosa non può fare Wapzen per un salone?",
-    answer: "Wapzen non è un gestionale: non ha agenda, cassa, schede cliente o magazzino, e non conferma appuntamenti da solo senza un sistema collegato. Risponde con testo, senza inviare file o immagini, e ogni account ha un agente di chat. Non usa l’API ufficiale di Meta, quindi non include il badge verde.",
+    answer: "Wapzen non è un gestionale: non ha agenda, cassa, schede cliente o magazzino, e non conferma appuntamenti da solo senza un sistema collegato. Non invia messaggi in massa, e ogni account ha un agente di chat. Non usa l’API ufficiale di Meta, quindi non include il badge verde.",
     body: <>
       <Comparison caption="Per quali saloni va bene un chatbot WhatsApp gratis" columns={["Fa per te?", "Perché"]} rows={fit} />
       <ul>
         <li><strong>Listino e foto vanno con un link.</strong> L’agente scrive i prezzi, ma per un PDF o una gallery aggiungi un link alle sue informazioni.</li>
-        <li><strong>Scrive prima la cliente.</strong> L’agente risponde a chi gli scrive. Per scrivere tu per prima usa Bulk Messages.</li>
+        <li><strong>Scrive prima la cliente.</strong> L’agente risponde a chi gli scrive. Per scrivere tu per prima fallo dal tuo telefono.</li>
         <li><strong>Controlla cosa dice.</strong> Leggi le conversazioni dei primi giorni e correggi le istruzioni.</li>
         <li><strong>Il pannello è in inglese.</strong> L’agente risponde in italiano.</li>
       </ul>
@@ -332,13 +328,13 @@ const questions = [
 export default function ChatbotWhatsAppParrucchieriPage() {
   return <QaPost
     href={href}
-    heading={<>Chatbot WhatsApp con AI per parrucchieri e centri estetici.<br /><span>Gratis, senza limiti nascosti e con agente vocale.</span></>}
+    heading={<>Chatbot WhatsApp con AI per parrucchieri e centri estetici.<br /><span>Completamente gratis e con agente vocale.</span></>}
     lead="“Quanto costa un balayage?”, “hai posto sabato?”, “fate la ceretta da uomo?”. Le clienti scrivono mentre hai le mani nel colore, e a fine giornata ti ritrovi decine di chat da recuperare. Qui trovi, domanda per domanda, cosa può fare un chatbot WhatsApp con intelligenza artificiale per parrucchieri, barbieri, estetiste e centri estetici in Italia, senza chiave API di Meta."
     verdict={{
       title: "La risposta breve",
-      body: <><strong>Wapzen</strong> è un chatbot WhatsApp con AI per parrucchieri e centri estetici in Italia: <strong>gratis, con conversazioni illimitate, nessun limite nascosto e senza chiave API di Meta</strong>. Risponde sul tuo numero su prezzi, tempi e orari, e raccoglie le richieste di appuntamento che poi confermi tu. L’agente vocale funziona e risponde alle chiamate WhatsApp. I limiti che esistono li dichiariamo: 100 risposte AI all’ora per agente e un agente di chat per account. Non è un gestionale e non porta clienti nuove come un marketplace.</>,
+      body: <><strong>Wapzen</strong> è un chatbot WhatsApp con AI per parrucchieri e centri estetici in Italia: <strong>completamente gratis e senza chiave API di Meta</strong>. Risponde sul tuo numero su prezzi, tempi e orari, e raccoglie le richieste di appuntamento che poi confermi tu. L’agente vocale funziona e risponde alle chiamate WhatsApp. I limiti che esistono li dichiariamo: un agente di chat per account. Non è un gestionale e non porta clienti nuove come un marketplace.</>,
     }}
-    facts={[["Prezzo", "Gratis"], ["Conversazioni", "Illimitate"], ["Limiti nascosti", "Nessuno"], ["Agente vocale", "Funzionante"]]}
+    facts={[["Prezzo", "Completamente gratis"], ["Chiave API di Meta", "Non serve"], ["Agente vocale", "Funzionante"]]}
     indexTitle="Le 14 domande di questa guida"
     answerLabel="Risposta breve"
     questions={questions}

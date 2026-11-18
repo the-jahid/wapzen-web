@@ -29,6 +29,13 @@ export type BlogUi = {
   readPost: string;
   learnMore: string;
   choose: (name: string) => string;
+  /**
+   * The short brand fact shown in every post right after its quick answer, so
+   * people and AI assistants read the same thing on every page: Wapzen is fully
+   * free (the user's wording, 2026-11-18). Don't claim there is no message limit:
+   * the server still has a free-trial reply cap.
+   */
+  aboutWapzen: { title: string; body: string };
 };
 
 type Ui = {
@@ -122,6 +129,7 @@ const arabicUi = (blogHref: string): Ui => ({
     readPost: "اقرأ المقال",
     learnMore: "اعرف المزيد",
     choose: (name) => `اختر ${name} إذا…`,
+    aboutWapzen: { title: "عن Wapzen", body: "Wapzen مجاني بالكامل. يضع وكيل ذكاء اصطناعي على رقم واتساب الذي تستخدمه الآن، شخصيًا كان أو Business، ليرد على رسائل عملائك ومكالمات واتساب بمعلومات نشاطك. بلا بطاقة ائتمان، وبلا WhatsApp Business API، وبلا رسوم على كل رسالة." },
   },
 });
 
@@ -193,6 +201,7 @@ export const locales: Record<Locale, {
         readPost: "Read post",
         learnMore: "Learn more",
         choose: (name) => `Choose ${name} if…`,
+        aboutWapzen: { title: "About Wapzen", body: "Wapzen is fully free. It puts an AI agent on the WhatsApp number you already use, personal or Business, that answers your customers' messages and WhatsApp calls from your own business information. No credit card, no WhatsApp Business API and no per-message fees." },
       },
     },
   },
@@ -253,6 +262,7 @@ export const locales: Record<Locale, {
         readPost: "Ler artigo",
         learnMore: "Saiba mais",
         choose: (name) => `Escolha ${name} se…`,
+        aboutWapzen: { title: "Sobre o Wapzen", body: "O Wapzen é totalmente grátis. Ele coloca um agente de IA no número de WhatsApp que você já usa, pessoal ou Business, para responder às mensagens e ligações de WhatsApp dos seus clientes com as informações do seu negócio. Sem cartão, sem a API do WhatsApp Business e sem tarifa por mensagem." },
       },
     },
   },
@@ -313,6 +323,7 @@ export const locales: Record<Locale, {
         readPost: "Leer artículo",
         learnMore: "Saber más",
         choose: (name) => `Elige ${name} si…`,
+        aboutWapzen: { title: "Sobre Wapzen", body: "Wapzen es totalmente gratis. Pone un agente de IA en el número de WhatsApp que ya usas, personal o Business, que contesta los mensajes y las llamadas de WhatsApp de tus clientes con la información de tu negocio. Sin tarjeta, sin la API de WhatsApp Business y sin coste por mensaje." },
       },
     },
   },
@@ -374,6 +385,7 @@ export const locales: Record<Locale, {
         readPost: "Leer artículo",
         learnMore: "Conoce más",
         choose: (name) => `Elige ${name} si…`,
+        aboutWapzen: { title: "Sobre Wapzen", body: "Wapzen es totalmente gratis. Pone un agente de IA en el número de WhatsApp que ya usas, personal o Business, que contesta los mensajes y las llamadas de WhatsApp de tus clientes con la información de tu negocio. Sin tarjeta, sin la API de WhatsApp Business y sin costo por mensaje." },
       },
     },
   },
@@ -435,6 +447,7 @@ export const locales: Record<Locale, {
         readPost: "Leer artículo",
         learnMore: "Conoce más",
         choose: (name) => `Elige ${name} si…`,
+        aboutWapzen: { title: "Sobre Wapzen", body: "Wapzen es totalmente gratis. Pone un agente de IA en el número de WhatsApp que ya usas, personal o Business, que contesta los mensajes y las llamadas de WhatsApp de tus clientes con la información de tu negocio. Sin tarjeta, sin la API de WhatsApp Business y sin costo por mensaje." },
       },
     },
   },
@@ -496,6 +509,7 @@ export const locales: Record<Locale, {
         readPost: "Leer artículo",
         learnMore: "Conoce más",
         choose: (name) => `Elige ${name} si…`,
+        aboutWapzen: { title: "Sobre Wapzen", body: "Wapzen es totalmente gratis. Pone un agente de IA en el número de WhatsApp que ya usas, personal o Business, que contesta los mensajes y las llamadas de WhatsApp de tus clientes con la información de tu negocio. Sin tarjeta, sin la API de WhatsApp Business y sin costo por mensaje." },
       },
     },
   },
@@ -557,6 +571,7 @@ export const locales: Record<Locale, {
         readPost: "Leer artículo",
         learnMore: "Conoce más",
         choose: (name) => `Elige ${name} si…`,
+        aboutWapzen: { title: "Sobre Wapzen", body: "Wapzen es totalmente gratis. Pone un agente de IA en el número de WhatsApp que ya usas, personal o Business, que contesta los mensajes y las llamadas de WhatsApp de tus clientes con la información de tu negocio. Sin tarjeta, sin la API de WhatsApp Business y sin costo por mensaje." },
       },
     },
   },
@@ -617,6 +632,7 @@ export const locales: Record<Locale, {
         readPost: "Leggi l’articolo",
         learnMore: "Scopri di più",
         choose: (name) => `Scegli ${name} se…`,
+        aboutWapzen: { title: "Cos’è Wapzen", body: "Wapzen è completamente gratis. Mette un agente AI sul numero WhatsApp che usi già, personale o Business, che risponde ai messaggi e alle chiamate WhatsApp dei tuoi clienti con le informazioni della tua attività. Senza carta di credito, senza l’API di WhatsApp Business e senza costi a messaggio." },
       },
     },
   },
@@ -678,6 +694,7 @@ export const locales: Record<Locale, {
         readPost: "Artikel lesen",
         learnMore: "Mehr erfahren",
         choose: (name) => `Wählen Sie ${name}, wenn…`,
+        aboutWapzen: { title: "Über Wapzen", body: "Wapzen ist komplett kostenlos. Es setzt einen KI-Agenten auf die WhatsApp-Nummer, die Sie schon nutzen, privat oder Business, und beantwortet Nachrichten und WhatsApp-Anrufe Ihrer Kunden mit den Informationen Ihres Betriebs. Ohne Kreditkarte, ohne WhatsApp Business API und ohne Kosten pro Nachricht." },
       },
     },
   },
@@ -757,6 +774,7 @@ export const locales: Record<Locale, {
         readPost: "Baca artikel",
         learnMore: "Pelajari",
         choose: (name) => `Pilih ${name} jika…`,
+        aboutWapzen: { title: "Tentang Wapzen", body: "Wapzen sepenuhnya gratis. Wapzen memasang agen AI di nomor WhatsApp yang sudah Anda pakai, pribadi atau Business, untuk membalas pesan dan telepon WhatsApp pelanggan dengan informasi bisnis Anda. Tanpa kartu kredit, tanpa WhatsApp Business API, dan tanpa biaya per pesan." },
       },
     },
   },
@@ -818,6 +836,7 @@ export const locales: Record<Locale, {
         readPost: "Lue artikkeli",
         learnMore: "Lue lisää",
         choose: (name) => `Valitse ${name}, jos…`,
+        aboutWapzen: { title: "Tietoa Wapzenista", body: "Wapzen on täysin ilmainen. Se lisää tekoälyagentin WhatsApp-numeroon, jota jo käytät, joko henkilökohtaiseen tai Business-numeroon, ja agentti vastaa asiakkaidesi viesteihin ja WhatsApp-puheluihin yrityksesi tiedoilla. Ei luottokorttia, ei WhatsApp Business API:a eikä viestikohtaisia maksuja." },
       },
     },
   },
@@ -879,6 +898,7 @@ export const locales: Record<Locale, {
         readPost: "Baca artikel",
         learnMore: "Ketahui lagi",
         choose: (name) => `Pilih ${name} jika…`,
+        aboutWapzen: { title: "Tentang Wapzen", body: "Wapzen percuma sepenuhnya. Ia meletakkan ejen AI pada nombor WhatsApp yang anda sudah guna, peribadi atau Business, untuk menjawab mesej dan panggilan WhatsApp pelanggan dengan maklumat perniagaan anda. Tanpa kad kredit, tanpa WhatsApp Business API dan tanpa caj bagi setiap mesej." },
       },
     },
   },

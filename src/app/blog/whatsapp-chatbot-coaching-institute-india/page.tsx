@@ -36,7 +36,7 @@ const enquiries = [
 
 const software = [
   ["Answer admission enquiries with AI, day and night", "Depends on the product", "Yes"],
-  ["Send fee reminders on WhatsApp", "Often, usually as a paid or API feature", "Yes, with Bulk Messages"],
+  ["Send fee reminders on WhatsApp", "Often, usually as a paid or API feature", "No: you send them, and the agent answers parents who reply"],
   ["Answer parents’ WhatsApp calls", "Depends on the product", "Yes, with the voice agent"],
   ["Attendance and timetables", "Yes", "No"],
   ["Online tests and report cards", "Yes", "No"],
@@ -54,7 +54,7 @@ const rules = [
 
 const fit = [
   ["Tuition class or coaching centre flooded with the same questions", "Yes", "Answers fees, batches and demo classes in seconds, at any hour"],
-  ["Institute sending monthly fee reminders to parents", "Yes", "Bulk Messages personalises each one, at no charge per message"],
+  ["Institute sending monthly fee reminders to parents", "Partly", "You send reminders from your phone or a broadcast list; the agent answers parents who reply"],
   ["Parents who would rather call than type", "Yes", "The voice agent answers WhatsApp calls in Hindi and more"],
   ["Institute wanting attendance, tests and fee ledgers", "Use with software", "Wapzen handles only the WhatsApp conversation"],
   ["Anyone messaging bought student databases", "No", "Those people never asked to hear from you"],
@@ -149,9 +149,9 @@ const questions = [
   {
     id: "fee-reminder",
     q: "How do I send fee reminders on WhatsApp for free?",
-    answer: "Use Wapzen’s Bulk Messages: upload an Excel or CSV sheet of parents with their name, amount and due date, write one message with placeholders, and each parent gets a personalised reminder from your number, 30 seconds apart by default. There’s no per-message charge. Send reminders only to parents of enrolled students.",
+    answer: "Send them from your institute’s WhatsApp: use a broadcast list for parents who saved your number (up to 256 per list, free), or send each family its own message. Wapzen doesn’t send bulk messages, but when a parent replies, the agent answers their question in the same chat. Send reminders only to parents of enrolled students.",
     body: <>
-      <p>Your sheet’s column names become placeholders, so a column called <code>student</code> fills in <code>{"{{student}}"}</code>. Here are three fee reminder messages you can adapt.</p>
+      <p>Replace the placeholders, such as <code>{"{{student}}"}</code>, for each family before you send, or keep the reminder general for a broadcast list. Here are three fee reminder messages you can adapt.</p>
       <h3>Fee reminder before the due date (English)</h3>
       <pre>{feeEnglish}</pre>
       <h3>Fee reminder message in Hinglish</h3>
@@ -160,12 +160,12 @@ const questions = [
       <pre>{feeOverdue}</pre>
       <p>A few things to plan for:</p>
       <ul>
-        <li><strong>Allow time.</strong> At the default 30-second gap, 400 parents take about 3 hours and 20 minutes. Start in the morning.</li>
-        <li><strong>The agent doesn’t know individual dues.</strong> Your sheet goes to the sender, not to the agent’s knowledge. The sample prompt sends “how much do I owe?” to your office, and that’s the safe setup.</li>
-        <li><strong>Double-check the sheet.</strong> A wrong amount is awkward to fix after 400 messages, so send a small test batch first.</li>
+        <li><strong>Use one broadcast list per batch.</strong> A list reaches up to 256 parents who saved your number, and each parent gets it as a private message.</li>
+        <li><strong>The agent doesn’t know individual dues.</strong> Keep fee records out of its knowledge base. The sample prompt sends “how much do I owe?” to your office, and that’s the safe setup.</li>
+        <li><strong>Double-check amounts.</strong> A wrong amount is awkward to fix once it’s sent, so check each personalised reminder before you send it.</li>
         <li><strong>Keep it polite.</strong> Never mention a student’s dues in a group, and don’t use a tone that could embarrass a family.</li>
       </ul>
-      <Note>Fee reminders are cheap on API platforms too: 400 messages at AiSensy’s ₹0.145 is ₹58, plus GST, per round. The real saving is the monthly plan and the AI add-on. Read <Link href="/blog/whatsapp-bulk-message-sender-free">how to send bulk messages</Link> before your first send.</Note>
+      <Note>For hundreds of reminders a month, an API platform is the right tool, and the messages are cheap: 400 at AiSensy’s ₹0.145 is ₹58, plus GST, per round, on top of its monthly plan. Read <Link href="/blog/whatsapp-bulk-message-sender-free">how to send bulk messages</Link> before your first send.</Note>
     </>,
   },
   {
@@ -252,13 +252,13 @@ const questions = [
   {
     id: "limits",
     q: "What can’t a free coaching chatbot do?",
-    answer: "Wapzen can’t send PDFs or images, reply in groups, or take fee payments, and each account has one chat agent sending up to 100 AI replies an hour.",
+    answer: "Wapzen can’t take fee payments or send bulk reminders, it replies in batch groups only where you switch it on, and each account has one chat agent.",
     body: <>
       <Comparison caption="Who a free WhatsApp AI chatbot suits among Indian coaching institutes" columns={["Good fit?", "Why"]} rows={fit} />
       <ul>
-        <li><strong>Your batch groups stay as they are.</strong> The agent doesn’t reply in groups, so it won’t interrupt your class announcements.</li>
-        <li><strong>The prospectus goes as a link.</strong> The agent can’t attach a PDF, so host it online and put the link in its information.</li>
-        <li><strong>Result days can be busy.</strong> Past 100 AI replies in an hour the agent goes quiet until the hour ends. Messages are still saved, so you can catch up from the dashboard.</li>
+        <li><strong>Your batch groups stay as they are.</strong> The AI is off in every group unless you switch it on, so it won’t interrupt your class announcements.</li>
+        <li><strong>The prospectus goes as a PDF.</strong> Upload it with a note on when to send it, and the agent sends it when a parent asks.</li>
+        <li><strong>Some questions need a person.</strong> On result days, read the dashboard and answer what the agent can’t, such as a question about one student’s marks.</li>
         <li><strong>Multiple branches share one agent.</strong> Each account has one chat agent, so put all branches in its information and have it ask which one the parent means.</li>
         <li><strong>You can take over a chat.</strong> Flip that conversation’s AI switch off when a counsellor steps in. It doesn’t switch off on its own when you reply.</li>
       </ul>
@@ -274,7 +274,7 @@ export default function WhatsAppChatbotCoachingInstitutePage() {
     lead="In admission season, parents and students ask the same questions all day: fees, batch timings, faculty, results. Here’s how a coaching institute or tuition class in India can answer them for free with an AI agent on its own WhatsApp number, send fee reminders and stay within the CCPA’s advertising rules, with no Meta API key and about a minute of setup."
     verdict={{
       title: "The short answer",
-      body: <><strong>Wapzen</strong> is a free AI WhatsApp chatbot that works for coaching institutes and tuition classes in India. It answers fee, batch and demo-class questions in seconds on your own number, in Hindi, Hinglish or English, and collects each student’s details for your counsellor. Bulk Messages sends personalised fee reminders, the voice agent answers WhatsApp calls, and 1,000 businesses already use Wapzen. You don’t need a Meta API key. It doesn’t replace your management software.</>,
+      body: <><strong>Wapzen</strong> is a free AI WhatsApp chatbot that works for coaching institutes and tuition classes in India. It answers fee, batch and demo-class questions in seconds on your own number, in Hindi, Hinglish or English, and collects each student’s details for your counsellor. It sends your prospectus and fee PDFs when parents ask, the voice agent answers WhatsApp calls, and 1,000 businesses already use Wapzen. You don’t need a Meta API key. It doesn’t replace your management software.</>,
     }}
     facts={[["Price", "₹0 right now"], ["Meta API key", "Not needed"], ["Setup", "About 1 minute"], ["Parents’ calls", "Voice agent working"]]}
     indexTitle="The 11 questions in this guide"

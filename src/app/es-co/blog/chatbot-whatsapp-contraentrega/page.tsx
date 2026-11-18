@@ -45,13 +45,10 @@ const address = [
 
 const limits = [
   ["Pedidos de formulario", "No le escribe al comprador", "Usa Dropi, Lucid Bot o la API oficial para esa confirmación"],
-  ["Notas de voz", "No las escucha y no las contesta", "Pide “escríbenos” en el anuncio y revisa las notas de voz"],
-  ["Fotos", "No ve la foto. Solo lee su texto", "Si un cliente manda captura del anuncio, contesta tu equipo"],
   ["Subir a Dropi", "El pedido queda en el panel. No se sube solo", "Exporta el CSV y súbelo, o conecta una herramienta de API"],
   ["Novedades y guías", "Sin integración no ve el estado de la guía", "Tu equipo gestiona las novedades con la transportadora"],
-  ["Memoria", "Recuerda solo los últimos minutos del chat", "El historial completo queda en el panel para tu equipo"],
   ["Cambios tras el resumen", "Si cambian la cantidad, el pedido se puede guardar sin un resumen nuevo", "Revisa cada pedido antes de despachar"],
-  ["Tu equipo en el chat", "El agente sigue contestando. No hay pausa por conversación", "Pausar el agente detiene todas las conversaciones"],
+  ["Tu equipo en el chat", "El agente no se detiene solo cuando escribe tu equipo", "Apaga la IA para ese cliente y vuelve a encenderla al terminar"],
 ];
 
 const tools = [

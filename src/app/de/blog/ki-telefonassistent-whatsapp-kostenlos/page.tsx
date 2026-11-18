@@ -11,13 +11,13 @@ import { BlogPost, Choose, InlineCta, Note } from "@/components/blog/BlogPost";
 // rezeptionist" (30), „whatsapp ki agent" (30), „ki telefonassistent handwerk" (28),
 // „ki telefonassistent kosten" (27), „ki telefonassistent dsgvo" (25). Wer so sucht,
 // will meist die Festnetznummer beantwortet haben: Wapzen beantwortet nur
-// WhatsApp-Anrufe, das steht deshalb ganz oben. Die Sprachfunktion ist im Early Access,
+// WhatsApp-Anrufe, das steht deshalb ganz oben. Die Sprachfunktion läuft und wird mit dem Team eingerichtet,
 // darum führt der CTA zu WhatsApp statt zur Registrierung. Preise von IONOS (inkl.
 // MwSt.) und fonio (netto) am 01.11.2026 auf den Anbieterseiten geprüft. Kein AVV
 // veröffentlicht, kein Impressum: nichts davon behaupten.
 const href = "/de/blog/ki-telefonassistent-whatsapp-kostenlos";
 const post = blogPost(href);
-const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Hallo, ich möchte frühen Zugang zum Wapzen-Sprachagenten für mein Unternehmen in Deutschland.")}`;
+const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Hallo, ich möchte den Wapzen-Sprachagenten für mein Unternehmen in Deutschland einrichten.")}`;
 
 export const metadata: Metadata = pageMetadata({ title: post.title, description: post.description, path: href, locale: "de", article: { publishedTime: post.published, modifiedTime: post.updated } });
 
@@ -25,14 +25,14 @@ const routes = [
   ["Welche Anrufe", "Anrufe auf Ihre Festnetz- oder Mobilnummer", "WhatsApp-Anrufe auf Ihre WhatsApp-Nummer"],
   ["Wer erreicht Sie", "Jeder mit Telefon", "Nur Kunden mit WhatsApp"],
   ["Weiterleiten an Mitarbeiter", "Meist möglich", "Nicht möglich: Der Assistent schickt den Kontakt per Nachricht"],
-  ["Kosten", "Monatspreis, oft mit Anruf- oder Minutenkontingent", "Ohne Minutenpreis, kostenlos starten im Early Access"],
+  ["Kosten", "Monatspreis, oft mit Anruf- oder Minutenkontingent", "Ohne Minutenpreis, komplett kostenlos"],
   ["Einrichtung", "Rufumleitung beim Anbieter einstellen", "WhatsApp-Nummer als verknüpftes Gerät verbinden"],
 ];
 
 const prices = [
   ["IONOS KI-Telefonassistent", "Flex 39 € (30 Anrufe, danach 0,49 € pro Anruf), Flex Pro 69 € (100 Anrufe, danach 0,39 €), All-Flat Advanced 99 €", "Inkl. MwSt., monatlich kündbar, derzeit 1 Monat gratis testen"],
   ["fonio.ai", "Solo 99 € (1.000 Minuten), Team 299 € (3.600 Minuten), Scale ab 539 €", "Netto bei jährlicher Abrechnung, monatlich 119 € bzw. 359 €. 30 Tage Geld-zurück-Garantie"],
-  ["Wapzen", "Kostenlos starten im Early Access, ohne Minutenpreis", "Nur WhatsApp-Anrufe. Für hohes Anrufvolumen vereinbaren wir einen bezahlten Tarif"],
+  ["Wapzen", "Komplett kostenlos, ohne Minutenpreis", "Nur WhatsApp-Anrufe. Für hohes Anrufvolumen vereinbaren wir einen bezahlten Tarif"],
 ];
 
 const does = [
@@ -52,13 +52,13 @@ const limits = [
   ["Kurze Pause", "Etwa ein bis zwei Sekunden vor jeder Antwort", "Kurze Sätze in den Anweisungen verlangen"],
   ["Verknüpftes Gerät", "Nicht die offizielle API von Meta", "Nur Menschen anrufen, die Ihren Anruf erwarten, sonst droht eine Sperre der Nummer"],
   ["Einfache Kampagnen", "Keine automatische Wahlwiederholung, kein Tabellen-Import", "Kontakte einzeln oder per API hinzufügen"],
-  ["Early Access", "Die Sprachfunktion wird mit unserem Team eingerichtet", "Schreiben Sie uns auf WhatsApp"],
+  ["Einrichtung", "Die Sprachfunktion wird mit unserem Team eingerichtet", "Schreiben Sie uns auf WhatsApp"],
 ];
 
 const faqs = [
-  { q: "Gibt es einen KI-Telefonassistenten kostenlos?", a: "Für die Festnetznummer kaum dauerhaft: IONOS bietet derzeit einen Gratismonat, fonio eine 30-Tage-Geld-zurück-Garantie, danach zahlen Sie monatlich. Für WhatsApp-Anrufe können Sie den Sprachagenten von Wapzen im Early Access kostenlos starten, ohne Minutenpreis. Für hohes Anrufvolumen vereinbaren wir einen bezahlten Tarif." },
+  { q: "Gibt es einen KI-Telefonassistenten kostenlos?", a: "Für die Festnetznummer kaum dauerhaft: IONOS bietet derzeit einen Gratismonat, fonio eine 30-Tage-Geld-zurück-Garantie, danach zahlen Sie monatlich. Für WhatsApp-Anrufe können Sie den Sprachagenten von Wapzen kostenlos nutzen, ohne Minutenpreis. Für hohes Anrufvolumen vereinbaren wir einen bezahlten Tarif." },
   { q: "Kann ein KI-Telefonassistent meine Festnetznummer beantworten?", a: "Wapzen nicht: Der Sprachagent beantwortet nur WhatsApp-Anrufe auf Ihre WhatsApp-Nummer. Für das Festnetz brauchen Sie einen Anbieter mit Rufumleitung, etwa IONOS oder fonio. Viele Betriebe nutzen beides." },
-  { q: "Was kostet ein KI-Telefonassistent?", a: "Bei IONOS 39 € bis 99 € im Monat inklusive MwSt., je nach Anrufkontingent. Bei fonio ab 99 € netto im Monat bei jährlicher Abrechnung, mit 1.000 Minuten. Auf WhatsApp entfällt der Minutenpreis, und Wapzen ist im Early Access kostenlos zu starten." },
+  { q: "Was kostet ein KI-Telefonassistent?", a: "Bei IONOS 39 € bis 99 € im Monat inklusive MwSt., je nach Anrufkontingent. Bei fonio ab 99 € netto im Monat bei jährlicher Abrechnung, mit 1.000 Minuten. Auf WhatsApp entfällt der Minutenpreis, und Wapzen ist komplett kostenlos." },
   { q: "Ist ein KI-Telefonassistent DSGVO-konform?", a: "Das hängt vom Anbieter und von Ihrem Einsatz ab: Sie brauchen einen Auftragsverarbeitungsvertrag und müssen Anrufer informieren. Wapzen speichert Daten in Singapur, nutzt Server in Singapur und Deutschland und KI-Anbieter in den USA. Einen AVV veröffentlichen wir nicht. Fragen Sie uns auf WhatsApp, bevor Sie personenbezogene Daten verarbeiten." },
   { q: "Eignet sich ein KI-Telefonassistent für die Arztpraxis?", a: "Für allgemeine Auskünfte wie Sprechzeiten, Urlaubsvertretung oder Adresse ja. Gesundheitsdaten sind nach Art. 9 DSGVO besonders geschützt. Ohne AVV und Datenschutz-Folgenabschätzung sollte ein Assistent keine Symptome, Diagnosen oder Patientendaten aufnehmen." },
   { q: "Darf eine KI Kunden anrufen?", a: "Nur mit Einwilligung. Werbeanrufe bei Verbrauchern brauchen nach § 7 UWG eine vorherige ausdrückliche Einwilligung. Ruft eine KI selbstständig an, kann sie als automatische Anrufmaschine gelten, und dann gilt das auch gegenüber Unternehmen. Die Bundesnetzagentur kann Bußgelder bis 300.000 € verhängen. Rufen Sie nur an, wer darum gebeten hat, und dokumentieren Sie das." },
@@ -80,7 +80,7 @@ const sections = [
     title: "Gibt es einen KI-Telefonassistenten kostenlos?",
     body: <>
       <p>Für Ihre <strong>Festnetznummer</strong> kaum dauerhaft. Die bekannten Anbieter kosten monatlich: IONOS ab 39 € inklusive MwSt., fonio ab 99 € netto bei jährlicher Abrechnung. Kostenlos sind dort nur Testphasen, etwa ein Gratismonat bei IONOS.</p>
-      <p>Für <strong>WhatsApp-Anrufe</strong> sieht es anders aus. Dort fallen keine Telefonminuten an, und der Sprachagent von <strong>Wapzen</strong> lässt sich im Early Access kostenlos starten. Er nimmt WhatsApp-Anrufe auf Ihrer bestehenden Nummer an, antwortet mit dem Wissen Ihres Betriebs und ruft Interessenten per WhatsApp zurück. Ihr Festnetz beantwortet er nicht.</p>
+      <p>Für <strong>WhatsApp-Anrufe</strong> sieht es anders aus. Dort fallen keine Telefonminuten an, und der Sprachagent von <strong>Wapzen</strong> ist komplett kostenlos. Er nimmt WhatsApp-Anrufe auf Ihrer bestehenden Nummer an, antwortet mit dem Wissen Ihres Betriebs und ruft Interessenten per WhatsApp zurück. Ihr Festnetz beantwortet er nicht.</p>
       <p>Dieser Ratgeber zeigt, wann sich ein KI-Telefonassistent für WhatsApp lohnt, was er kann, was er kostet und was UWG, DSGVO und AI Act verlangen.</p>
     </>,
   },
@@ -100,7 +100,7 @@ const sections = [
       <p>Die Preise der bekannten Anbieter, geprüft am 1. November 2026:</p>
       <Comparison caption="Preise von IONOS, fonio und Wapzen im Vergleich" columns={["Tarife", "Hinweise"]} rows={prices} />
       <p>IONOS rechnet nach Anrufen ab, fonio nach Minuten. Bei 60 Anrufen im Monat zahlen Sie bei IONOS im Flex-Tarif 39 € plus 30 × 0,49 €, also 53,70 €. Ein KI-Telefonassistent fürs Festnetz bleibt sinnvoll, wenn viele Kunden klassisch anrufen. Die WhatsApp-Anrufe können Sie zusätzlich ohne Minutenpreis abdecken.</p>
-      <InlineCta href={earlyAccess} title="Sprachagent für WhatsApp testen" body="Die Sprachfunktion von Wapzen ist im Early Access und kostenlos zu starten. Schreiben Sie uns auf WhatsApp, wir richten sie mit Ihnen ein." label="Frühen Zugang anfragen" />
+      <InlineCta href={earlyAccess} title="Sprachagent für WhatsApp testen" body="Der Sprachagent von Wapzen nimmt WhatsApp-Anrufe an, ruft zurück und ist komplett kostenlos. Schreiben Sie uns auf WhatsApp, wir richten ihn mit Ihnen ein." label="Per WhatsApp einrichten" />
     </>,
   },
   {
@@ -152,7 +152,7 @@ const sections = [
     id: "einrichten",
     title: "So richten Sie den Sprachagenten ein",
     body: <>
-      <p>Die Sprachfunktion ist im Early Access und wird gemeinsam mit unserem Team eingerichtet:</p>
+      <p>Die Sprachfunktion wird gemeinsam mit unserem Team eingerichtet:</p>
       <h3>1. Schreiben Sie uns auf WhatsApp</h3>
       <p>Nennen Sie Ihre Branche, wie viele WhatsApp-Anrufe Sie bekommen und ob der Agent auch Interessenten zurückrufen soll.</p>
       <h3>2. Anweisungen und Begrüßung schreiben</h3>
@@ -188,7 +188,7 @@ export default function KiTelefonassistentWhatsAppPage() {
       title: "Das Wichtigste in Kürze",
       items: [
         <><strong>Festnetz:</strong> IONOS kostet 39 € bis 99 € im Monat inkl. MwSt., fonio ab 99 € netto. Kostenlos sind nur Testphasen.</>,
-        <><strong>WhatsApp:</strong> Der Sprachagent von Wapzen nimmt WhatsApp-Anrufe an und ist im Early Access kostenlos zu starten.</>,
+        <><strong>WhatsApp:</strong> Der Sprachagent von Wapzen nimmt WhatsApp-Anrufe an und ist komplett kostenlos.</>,
         <><strong>Grenzen:</strong> kein Festnetz, kein Durchstellen an Mitarbeiter, nur Kunden mit WhatsApp.</>,
         <><strong>Recht:</strong> Werbeanrufe nur mit Einwilligung (§ 7 UWG), KI-Hinweis in der Begrüßung (AI Act), Datenschutz vorab klären.</>,
       ],
@@ -198,7 +198,7 @@ export default function KiTelefonassistentWhatsAppPage() {
     sources={sources}
     related={["/de/blog/whatsapp-chatbot-handwerker-kostenlos", "/de/blog/whatsapp-ki-chatbot-autohaus-kfz-werkstatt"]}
     product="/free-ai-calling-agent"
-    cta={{ heading: <>Kein WhatsApp-Anruf mehr ohne Antwort.<br /><span>Testen Sie den Sprachagenten.</span></>, body: "Die Sprachfunktion von Wapzen ist im Early Access und kostenlos zu starten. Schreiben Sie uns auf WhatsApp, wir richten Ihren Agenten mit Ihnen ein." }}
-    action={{ href: earlyAccess, label: "Frühen Zugang anfragen" }}
+    cta={{ heading: <>Kein WhatsApp-Anruf mehr ohne Antwort.<br /><span>Testen Sie den Sprachagenten.</span></>, body: "Der Sprachagent von Wapzen nimmt WhatsApp-Anrufe an und ist komplett kostenlos. Schreiben Sie uns auf WhatsApp, wir richten Ihren Agenten mit Ihnen ein." }}
+    action={{ href: earlyAccess, label: "Per WhatsApp einrichten" }}
   />;
 }

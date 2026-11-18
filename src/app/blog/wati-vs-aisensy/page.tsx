@@ -26,7 +26,7 @@ const glance = [
   ["AI", "2,000 to 20,000 Wati AI credits a month; 1 Astra agent on Growth, 2 on Pro", "Add-on: $50 a month (₹1,350) for 1,000 AI messages", "AI chat agent included, free"],
   ["Chatbot builder", "Included, with advanced chatbots on Pro", "Add-on: $80 a month (₹2,500) for 5 flows", "AI agent instead of flows"],
   ["WhatsApp calling", "Listed, with no WATI markup on Meta’s rate", "Not listed on the pricing page", "AI voice agent answers and makes calls, free"],
-  ["Broadcasts", "15,000 a month on Growth; unlimited on Pro and Business, at message rates", "On paid plans", "Bulk Messages, one at a time with a gap"],
+  ["Broadcasts", "15,000 a month on Growth; unlimited on Pro and Business, at message rates", "On paid plans", "No: it answers people who message you"],
   ["Message charges", "Per message from WATI’s rate card", "Prepaid; in India ₹1.09 marketing, ₹0.145 utility and service", "None"],
   ["Official Meta platform", "Yes", "Yes", "No: links like WhatsApp Web"],
 ];
@@ -105,7 +105,7 @@ const sections = [
       </ul>
       <p>About <strong>₹7,500</strong> plus GST and the extra AI messages. The two end up close, so your AI volume and team size should decide it, not the headline price.</p>
       <h3>On Wapzen</h3>
-      <p>The AI replies cost <strong>₹0</strong>, with no plan and no message fees. Campaigns are where an API platform earns its fee: Wapzen’s Bulk Messages can send them, but one at a time, with a 30-second gap by default and without Meta’s template reporting.</p>
+      <p>The AI replies cost <strong>₹0</strong>, with no plan and no message fees. Campaigns are where an API platform earns its fee: Wapzen doesn’t send broadcasts or bulk messages.</p>
     </>,
   },
   {

@@ -44,8 +44,6 @@ const options = [
 const included = [
   ["Mensalidade", "Nenhuma"],
   ["Custo por mensagem ou por resposta", "Nenhum"],
-  ["Conversas e contatos", "Ilimitados"],
-  ["Respostas de IA por mês", "Sem limite mensal"],
   ["Cartão de crédito", "Não precisa"],
   ["Chave de API da Meta", "Não precisa"],
   ["Arquivos que o agente envia", "Até 20 por agente, com até 10 MB cada"],
@@ -56,10 +54,10 @@ const versus = [
   ["Como testar", "Garantia de devolução: 7 dias no mensal, 30 no anual", "Conta grátis, sem cartão"],
   ["Como conecta", "API oficial da Meta", "Como dispositivo conectado, igual ao WhatsApp Web. Não é oficial da Meta"],
   ["Como você monta", "Fluxos e agente de IA", "Instruções em texto e arquivos do negócio"],
-  ["Respostas de IA", "Até 5.000 interações por mês. O que passar sai da sua Carteira", "Sem limite mensal e sem custo por resposta"],
+  ["Respostas de IA", "Até 5.000 interações por mês. O que passar sai da sua Carteira", "Sem custo por resposta"],
   ["Áudio e imagem", "O agente entende texto, áudio e imagem", "O agente entende texto, áudio e foto"],
   ["Modelos aprovados pela Meta", "Sim, pela API", "Não"],
-  ["Mensagem em massa", "Pela API, com tarifa da Meta por mensagem", "Bulk Messages, sem tarifa, com pausa padrão de 30 segundos"],
+  ["Mensagem em massa", "Pela API, com tarifa da Meta por mensagem", "Não envia: o agente responde quem escreve"],
   ["Atender ligações por IA", "Não aparece na página de planos", "Agente de voz funcionando, sem cobrança por minuto"],
 ];
 
@@ -110,7 +108,7 @@ const questions = [
   {
     id: "existe",
     q: "Existe chatbot gratuito para WhatsApp Business?",
-    answer: "Sim. O Wapzen oferece hoje um chatbot com IA grátis no seu próprio número, com conversas ilimitadas, sem tarifa por mensagem e sem chave de API da Meta. O Meta Business Agent também é gratuito por enquanto, para empresas qualificadas. Nas outras sete opções que analisamos, não encontramos IA grátis no WhatsApp do seu número.",
+    answer: "Sim. O Wapzen oferece hoje um chatbot com IA totalmente grátis no seu próprio número, sem tarifa por mensagem e sem chave de API da Meta. O Meta Business Agent também é gratuito por enquanto, para empresas qualificadas. Nas outras sete opções que analisamos, não encontramos IA grátis no WhatsApp do seu número.",
     body: <>
       <p>Quem procura “chatbot gratuito para WhatsApp Business” encontra muita letra miúda:</p>
       <ul>
@@ -148,7 +146,7 @@ const questions = [
   {
     id: "gratuito",
     q: "O Wapzen é gratuito mesmo?",
-    answer: "Sim, hoje tudo é grátis: sem mensalidade, sem tarifa por mensagem e sem cartão. Conversas e contatos são ilimitados, e não há limite mensal de respostas. Isso vale para o chat com IA, os pedidos, a base de conhecimento, o envio em massa e o agente de voz. Não é um teste com prazo para acabar.",
+    answer: "Sim, hoje tudo é grátis: sem mensalidade, sem tarifa por mensagem e sem cartão. Isso vale para o chat com IA, os pedidos, a base de conhecimento, o envio em massa e o agente de voz. Não é um teste com prazo para acabar.",
     body: <>
       <Comparison caption="O que é grátis no Wapzen" columns={["No Wapzen"]} rows={included} />
       <p><strong>Por que dizemos “agora”.</strong> Hoje não há plano pago para contratar, mas não prometemos que será grátis para sempre.</p>
@@ -321,9 +319,9 @@ export default function ChatbotGratuitoWhatsAppBusinessPage() {
     lead="Muitos chatbots “grátis” para WhatsApp são um teste de 14 dias, um plano sem WhatsApp ou um menu sem IA. Aqui respondemos, uma a uma, as dúvidas de quem procura um chatbot no Brasil: o que é grátis de verdade, quanto custa o resto, qual escolher e como criar o seu passo a passo."
     verdict={{
       title: "A resposta curta",
-      body: <>Sim, existe chatbot com IA grátis para WhatsApp Business. <strong>O Wapzen</strong> funciona no número que você já usa, pessoal ou Business: responde em segundos com as informações do seu negócio, entende áudios e fotos, anota pedidos e atende ligações de WhatsApp com um agente de voz. <strong>Tudo é grátis agora, com conversas ilimitadas e sem chave de API da Meta.</strong> O Wapzen é nosso produto e não é oficial da Meta: se você prefere o caminho oficial, veja o Meta Business Agent.</>,
+      body: <>Sim, existe chatbot com IA grátis para WhatsApp Business. <strong>O Wapzen</strong> funciona no número que você já usa, pessoal ou Business: responde em segundos com as informações do seu negócio, entende áudios e fotos, anota pedidos e atende ligações de WhatsApp com um agente de voz. <strong>O Wapzen é totalmente grátis e não precisa de chave de API da Meta.</strong> O Wapzen é nosso produto e não é oficial da Meta: se você prefere o caminho oficial, veja o Meta Business Agent.</>,
     }}
-    facts={[["Preço", "Grátis agora"], ["Chave de API da Meta", "Não precisa"], ["Conversas", "Ilimitadas"], ["Ligações", "Agente de voz funcionando"]]}
+    facts={[["Preço", "Totalmente grátis"], ["Chave de API da Meta", "Não precisa"], ["Ligações", "Agente de voz funcionando"]]}
     indexTitle="As 14 perguntas deste guia"
     answerLabel="Resposta curta"
     questions={questions}

@@ -31,9 +31,8 @@ const costs = [
 const fit = [
   ["Sekolah swasta, pesantren, atau bimbel yang dibanjiri chat saat pendaftaran", "Ya", "Menjawab dalam hitungan detik, siang dan malam"],
   ["Sekolah yang orang tuanya sering telepon WA", "Ya", "Agen suara menjawab telepon dan pertanyaan umum"],
-  ["Sekolah yang ingin bot membalas di grup wali murid", "Tidak", "Agen hanya membalas chat pribadi, bukan grup"],
+  ["Sekolah yang ingin bot membalas di grup wali murid", "Bisa", "AI menjawab di grup yang Anda nyalakan, saat nomor sekolah disebut atau dibalas"],
   ["Yayasan yang butuh centang hijau atau template resmi Meta", "Tidak", "Itu butuh WhatsApp Business API resmi"],
-  ["Kampus dengan ribuan chat per jam saat pengumuman", "Belum tentu", "Batasnya 100 balasan AI per agen per jam"],
 ];
 
 const prompt = `Kamu adalah asisten virtual SMP Tunas Harapan, sekolah swasta di Bekasi Timur.
@@ -148,11 +147,11 @@ const questions = [
   {
     id: "grup",
     q: "Bagaimana dengan grup wali murid dan pengumuman sekolah?",
-    answer: "Agen AI hanya membalas chat pribadi, tidak membalas di grup, jadi grup wali murid tetap seperti biasa. Untuk pengumuman, fitur pesan massal Wapzen yang gratis mengirim pesan personal ke setiap orang tua dari daftar Excel atau CSV, dengan jeda antar pesan.",
+    answer: "AI mati di semua grup secara default, jadi grup wali murid tetap seperti biasa. Jika Anda menyalakannya untuk satu grup, agen hanya menjawab pesan yang menyebut nomor sekolah atau membalas pesannya. Wapzen tidak mengirim pesan massal: kirim pengumuman sendiri dari HP sekolah, dan agen menjawab orang tua yang membalas.",
     body: <>
       <ul>
-        <li><strong>Grup tetap dikelola wali kelas.</strong> Agen tidak ikut membalas, jadi tidak ada risiko bot menjawab di depan semua orang tua.</li>
-        <li><strong>Pengumuman personal.</strong> Unggah daftar orang tua, tulis pesan dengan nama masing-masing, lalu kirim. Jika orang tua membalas, agen siap menjawab.</li>
+        <li><strong>Grup tetap dikelola wali kelas.</strong> Selama AI di grup tidak dinyalakan, agen tidak ikut membalas, jadi bot tidak menjawab di depan semua orang tua.</li>
+        <li><strong>Pengumuman personal.</strong> Kirim sendiri dari HP sekolah, misalnya lewat daftar siaran untuk orang tua yang menyimpan nomor sekolah. Jika orang tua membalas, agen siap menjawab.</li>
         <li><strong>Jaga nomor sekolah.</strong> Kirim hanya ke orang tua yang memang terdaftar, biarkan jeda antar pesan, dan jangan membeli daftar nomor.</li>
       </ul>
     </>,
@@ -174,13 +173,12 @@ const questions = [
   {
     id: "batasan",
     q: "Apa batasan Wapzen yang perlu diketahui?",
-    answer: "Satu akun punya satu agen chat, dan setiap agen membalas hingga 100 balasan AI per jam. Agen hanya membalas chat pribadi, tidak bisa dijeda untuk satu chat saja, dan karena bukan API resmi, tidak ada centang hijau atau template resmi Meta.",
+    answer: "Satu akun punya satu agen chat. Agen membalas chat pribadi, dan di grup hanya jika Anda menyalakan AI untuk grup itu. AI bisa dimatikan untuk satu kontak saja, dan karena bukan API resmi, tidak ada centang hijau atau template resmi Meta.",
     body: <>
       <Comparison caption="Untuk siapa chatbot WhatsApp gratis seperti Wapzen cocok, dan untuk siapa tidak" columns={["Cocok?", "Alasannya"]} rows={fit} />
       <ul>
-        <li><strong>100 balasan AI per jam per agen.</strong> Jika batas tercapai, agen diam sampai jamnya habis. Pesan masuk tetap tersimpan untuk dibalas petugas.</li>
-        <li><strong>Terhubung sebagai perangkat tertaut</strong>, seperti WhatsApp Web, lewat kode QR atau kode tautan. Karena bukan API resmi, WhatsApp bisa membatasi nomor yang berperilaku tidak wajar.</li>
-        <li><strong>Tidak ada jeda per chat.</strong> Menjeda agen berarti berhenti di semua chat. Balasan Anda dari dasbor masuk ke riwayat agen, balasan dari HP tidak.</li>
+        <li><strong>Terhubung sebagai perangkat tertaut</strong>, seperti WhatsApp Web, lewat kode QR atau kode tautan.</li>
+        <li><strong>Bisa ambil alih satu chat.</strong> Matikan AI untuk kontak itu, balas sendiri, lalu nyalakan lagi.</li>
         <li><strong>Dasbor berbahasa Inggris</strong>, agen membalas dalam bahasa Indonesia.</li>
         <li>Wapzen adalah produk independen, bukan milik Meta atau WhatsApp.</li>
       </ul>

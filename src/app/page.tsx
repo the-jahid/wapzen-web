@@ -14,11 +14,11 @@ const faqs: Array<{ q: string; a: string }> = [
   },
   {
     q: "Is Wapzen free?",
-    a: "Yes. Wapzen is currently free to use, with every feature included: the WhatsApp AI chatbot, the AI voice agent for inbound and outbound WhatsApp calls, calling campaigns, knowledge bases, and API tools. You don't need a credit card, your own AI API keys, or the WhatsApp Business API, so there are no per-message fees either.",
+    a: "Yes. Wapzen is fully free, with every feature included: the WhatsApp AI chatbot, the AI voice agent for inbound and outbound WhatsApp calls, calling campaigns, knowledge bases, and API tools. You don't need a credit card, your own AI API keys, or the WhatsApp Business API, so there are no per-message fees either.",
   },
   {
     q: "How do I create a WhatsApp AI chatbot for my business?",
-    a: "Sign up for free, create a chat agent, choose an OpenAI or Anthropic model, and write its instructions. Attach a knowledge base with your FAQs, prices, or documents, then connect your WhatsApp number by scanning a QR code. The chatbot starts replying to incoming messages right away, with no coding required.",
+    a: "Sign up for free, create a chat agent, and write its instructions. Attach a knowledge base with your FAQs, prices, or documents, then connect your WhatsApp number by scanning a QR code or entering a pairing code. The chatbot starts replying to incoming messages right away, with no coding required.",
   },
   {
     q: "Can AI auto-answer my WhatsApp calls?",
@@ -62,7 +62,7 @@ const faqs: Array<{ q: string; a: string }> = [
   },
   {
     q: "Does Wapzen use ChatGPT or Claude?",
-    a: "Wapzen chat agents run on OpenAI GPT models, the model family behind ChatGPT, or on Anthropic Claude models. You choose the model for each chat agent, so you can balance reply quality, speed, and cost.",
+    a: "Wapzen chooses and runs the AI model for you. Chat agents currently run on a GPT model from OpenAI, the model family behind ChatGPT. There is no model to pick and no API key to bring, and the model's cost is covered by Wapzen.",
   },
   {
     q: "Where can I review WhatsApp chats and AI calls?",
@@ -137,7 +137,7 @@ const jsonLd = {
         "AI calling agent for outbound WhatsApp calls and call campaigns",
         "Knowledge base training from text, PDF, and Word documents",
         "API request tools for bookings, orders, and CRM actions",
-        "OpenAI and Anthropic models",
+        "AI model included, no API key needed",
         "Multilingual voice agents",
         "Connect your WhatsApp number by QR code, no Business API setup",
         "Chat history, call transcripts, and campaign analytics",

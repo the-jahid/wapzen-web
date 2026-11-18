@@ -138,7 +138,7 @@ const sections = [
     id: "no-code",
     title: "The no-code option: the same agent, without the build",
     body: <>
-      <p>If the goal is an AI agent that answers your WhatsApp from your own information, and not the workflow itself, Wapzen gives you that without a Meta app, webhooks, or a vector database. You create an agent, upload your documents, choose a GPT or Claude model, and scan a QR code with the number you already use.</p>
+      <p>If the goal is an AI agent that answers your WhatsApp from your own information, and not the workflow itself, Wapzen gives you that without a Meta app, webhooks, or a vector database. You create an agent, upload your documents, and scan a QR code with the number you already use; the AI model is included.</p>
       <Comparison caption="Building a WhatsApp AI agent in n8n compared with Wapzen" columns={["Build it in n8n", "Wapzen"]} rows={compared} />
       <p>You can also use both. A Wapzen <strong>API tool</strong> can call an n8n webhook mid-conversation, so n8n handles the back office (checking an order, adding a row to a sheet, notifying your team) while Wapzen handles WhatsApp.</p>
       <InlineCta title="Skip the build" body="Your AI agent on WhatsApp in about 15 minutes, with knowledge base, memory, and calls built in. Free right now." />

@@ -73,7 +73,7 @@ const sections = [
       <ToolReview rank={1} name="Wapzen" href="/" facts={[["Best for", "Free AI chats and calls"], ["Starting price", "Free right now"], ["Business API", "Not needed"]]}
         pros={["Free, with AI models and voices included", "No Business API, Meta approval, or template fees", "AI voice agent for incoming and outgoing WhatsApp calls, plus calling campaigns", "Keeps your existing number and WhatsApp app"]}
         cons={["Not an official Meta platform", "No bulk broadcasts or template campaigns", "No multi-seat team inbox with chat assignment", "Calls are WhatsApp calls only, not phone lines"]}>
-        <p>Wapzen links the WhatsApp or WhatsApp Business number you already use by QR code and runs two kinds of AI agents on it: a chatbot that replies to incoming messages and a voice agent that answers and makes WhatsApp calls. You write the instructions, choose a GPT or Claude model, attach knowledge bases from your documents, and add API tools for things like order lookups or booking requests.</p>
+        <p>Wapzen links the WhatsApp or WhatsApp Business number you already use by QR code and runs two kinds of AI agents on it: a chatbot that replies to incoming messages and a voice agent that answers and makes WhatsApp calls. You write the instructions, attach knowledge bases from your documents, and add API tools for things like order lookups or booking requests.</p>
         <p>It’s the best fit if WATI felt like more platform than you need, and what you want is for every customer who messages or calls to get a real answer. Full comparison: <Link href="/blog/wapzen-vs-wati">Wapzen vs WATI</Link>.</p>
       </ToolReview>
 

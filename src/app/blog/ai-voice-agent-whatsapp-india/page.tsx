@@ -9,18 +9,18 @@ import { BlogPost, Choose, InlineCta, Note } from "@/components/blog/BlogPost";
 // voice agent", "free ai voice agent", aimed at mid-size and enterprise sales and support
 // teams (the user's brief, 2026-11-01). /ai-calling-agent-india already ranks for "ai
 // calling agent india", so this post takes the telecalling-team angle and links to it
-// rather than repeating it. Voice is in early access, so the CTA opens WhatsApp. Bolna
+// rather than repeating it. Voice works (user, 2026-11-15) and is set up with the team, so the CTA opens WhatsApp. Bolna
 // prices read from bolna.ai/pricing on 2026-11-01; TRAI from PR No. 11/2025; DPDP dates
 // from secondary sources (check the Gazette before quoting them more precisely). Never
 // claim a concurrent-calls figure: the server doesn't enforce or verify one.
 const href = "/blog/ai-voice-agent-whatsapp-india";
 const post = blogPost(href);
-const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Hi, I'd like early access to Wapzen voice agents for my business in India.")}`;
+const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Hi, I'd like to set up a Wapzen voice agent for my business in India.")}`;
 
 export const metadata: Metadata = pageMetadata({ title: post.title, description: post.description, path: href, article: { publishedTime: post.published, modifiedTime: post.updated } });
 
 const compare = [
-  ["Price", "Per minute: ₹5.52 pay-as-you-go on Bolna (6¢), about ₹4.15 with larger top-ups, plus telephony and a platform fee", "Free to start in early access; no per-minute charge"],
+  ["Price", "Per minute: ₹5.52 pay-as-you-go on Bolna (6¢), about ₹4.15 with larger top-ups, plus telephony and a platform fee", "Free to start; no per-minute charge"],
   ["Calling number", "A telecom number; commercial calls must come from the 140 or 1600 series", "Your business WhatsApp number, the one customers already chat with"],
   ["Reach", "Any mobile or landline", "Anyone on WhatsApp"],
   ["Live transfer to an agent", "Usually available", "Not available: it sends your agent’s contact by message"],
@@ -42,17 +42,17 @@ const limits = [
   ["Short pause", "About one to two seconds before each answer", "Keep its answers short in the instructions"],
   ["Linked device", "Not Meta’s official API, so no guarantee against restrictions", "Call only customers who expect it, and spread volume across numbers we size with you"],
   ["Simple campaigns", "No automatic redial and no CSV import (CSV export only)", "Add leads by API from your CRM"],
-  ["Early access", "Voice is set up with our team", "Message us on WhatsApp to start"],
+  ["Getting started", "Voice is set up with our team", "Message us on WhatsApp to start"],
 ];
 
 const faqs = [
   { q: "What is an AI telecaller?", a: "An AI telecaller is a voice agent that does the calls a telecalling team makes and takes: calling back leads, confirming orders, sending reminders and answering enquiries, in a natural voice and in the customer's language. It reads from your information and logs every call, so your team spends its time on the calls that need a person." },
-  { q: "How much does an AI voice agent cost in India?", a: "Phone-line platforms charge per minute. Bolna's pricing page lists ₹5.52 a minute (6 US cents) pay-as-you-go, falling to about ₹4.15 with larger top-ups, with telephony and a platform fee added per minute. Wapzen's voice agent runs on WhatsApp, has no per-minute charge, and is free to start in early access; high-volume use is on a paid plan agreed with you." },
+  { q: "How much does an AI voice agent cost in India?", a: "Phone-line platforms charge per minute. Bolna's pricing page lists ₹5.52 a minute (6 US cents) pay-as-you-go, falling to about ₹4.15 with larger top-ups, with telephony and a platform fee added per minute. Wapzen's voice agent runs on WhatsApp, has no per-minute charge, and is free to start; high-volume use is on a paid plan agreed with you." },
   { q: "Can the AI voice agent speak Hindi and regional languages?", a: "Yes. It speaks Hindi, English (India), Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi and Urdu. Pick a voice that speaks the language, and write the instructions in the language the agent should use." },
   { q: "Do TRAI's 140 and 1600 series rules apply to WhatsApp calls?", a: "TRAI's rules require promotional calls on phone lines to come from the 140 series and service and transactional calls from the 1600 series. WhatsApp calls run over the app, and it isn't settled how these rules apply to them. Don't treat WhatsApp as a way around them: call only customers who asked, and keep your consent records." },
-  { q: "Can it handle high call volumes?", a: "Voice is in early access, so we size high-volume set-ups with you, including how many WhatsApp numbers to use. Spreading calls across numbers and calling only people who expect your call protects the numbers from restrictions." },
+  { q: "Can it handle high call volumes?", a: "We size high-volume set-ups with you, including how many WhatsApp numbers to use. Spreading calls across numbers and calling only people who expect your call protects the numbers from restrictions." },
   { q: "Can it update our CRM?", a: "Yes, with an API tool: the agent can send call details to your CRM or order system during the call. Leads can also be pushed in by API, so a form submission triggers a call within seconds. Test each tool a few times before relying on it." },
-  { q: "Is there a free AI calling agent for Indian businesses?", a: "Yes. Wapzen's voice agent is free to start in early access, with no per-minute charge, because calls run over WhatsApp on your own number. Message us on WhatsApp to get it set up." },
+  { q: "Is there a free AI calling agent for Indian businesses?", a: "Yes. Wapzen's voice agent is free to start, with no per-minute charge, because calls run over WhatsApp on your own number. Message us on WhatsApp to get it set up." },
 ];
 
 const sources = [
@@ -88,7 +88,7 @@ const sections = [
     body: <>
       <Comparison caption="AI voice agent use cases for Indian sales and support teams" columns={["Trigger", "What the agent does"]} rows={uses} />
       <p>Speed is the main win in lead call-back. When your website form or CRM adds a lead to a campaign by API, the agent calls on WhatsApp straight away, while the person is still on your page or in your ad’s app, instead of when a telecaller gets to the list. For COD, see the step-by-step <Link href="/blog/whatsapp-cod-order-confirmation">COD order confirmation on WhatsApp</Link> guide.</p>
-      <InlineCta href={earlyAccess} title="Run a pilot with your team" body="Wapzen’s voice agent is in early access and free to start. Message us on WhatsApp with your call volumes and we’ll set it up with you." label="Request early access" />
+      <InlineCta href={earlyAccess} title="Run a pilot with your team" body="Wapzen’s voice agent answers and makes WhatsApp calls, and it’s free to start. Message us on WhatsApp with your call volumes and we’ll set it up with you." label="Set up voice on WhatsApp" />
     </>,
   },
   {
@@ -108,7 +108,7 @@ const sections = [
     id: "rules",
     title: "TRAI, DPDP and RBI rules for AI calling in India",
     body: <>
-      <p><strong>TRAI (phone lines).</strong> Under the February 2025 amendments to the TCCCPR, commercial calls on telecom networks must come from designated number series: <strong>140</strong> for promotional calls and <strong>1600</strong> for service and transactional calls, and ordinary 10-digit numbers can no longer be used for telemarketing. WhatsApp calls run over the app, and it isn’t settled how these rules apply to them. Don’t treat WhatsApp as a loophole. WhatsApp itself restricts numbers that make unwanted calls, so cold-calling purchased lists risks your number.</p>
+      <p><strong>TRAI (phone lines).</strong> Under the February 2025 amendments to the TCCCPR, commercial calls on telecom networks must come from designated number series: <strong>140</strong> for promotional calls and <strong>1600</strong> for service and transactional calls, and ordinary 10-digit numbers can no longer be used for telemarketing. WhatsApp calls run over the app, and it isn’t settled how these rules apply to them. Don’t treat WhatsApp as a loophole: call only people who asked to hear from you.</p>
       <p><strong>DPDP Act and Rules.</strong> The Digital Personal Data Protection Rules were notified in November 2025 with an 18-month rollout. Consent-manager provisions start in November 2026, and most obligations, including notice and consent, apply from May 2027. Build call consent into your forms now: say that you’ll call on WhatsApp, who is calling, and why, and keep the record.</p>
       <p><strong>Collections.</strong> If you’re a lender or work for one, the RBI’s rules on recovery apply, including not calling borrowers before 8 a.m. or after 7 p.m. Keep reminders polite, and never threaten.</p>
       <p><strong>Tell people it’s an AI.</strong> Have the agent introduce itself as a virtual assistant and say the call is transcribed, as in the sample above. Wapzen doesn’t add that line for you.</p>
@@ -120,7 +120,7 @@ const sections = [
     title: "How a pilot works",
     body: <>
       <ol>
-        <li><strong>Message us on WhatsApp</strong> with your use case, monthly call volume, languages and CRM. Voice is in early access, so we set it up with you.</li>
+        <li><strong>Message us on WhatsApp</strong> with your use case, monthly call volume, languages and CRM, and we set the voice agent up with you.</li>
         <li><strong>Write the script as instructions:</strong> who the agent is, what it may and may not say, the questions to ask, and when to hand over to a person.</li>
         <li><strong>Add your knowledge:</strong> products, projects, prices, policies and FAQs, as text, PDF or Word files.</li>
         <li><strong>Connect your systems:</strong> push leads in by API and add API tools that write results back to your CRM.</li>
@@ -151,7 +151,7 @@ export default function AiVoiceAgentWhatsAppIndiaPage() {
       title: "Quick answer",
       items: [
         <><strong>What it is:</strong> an AI telecaller on your WhatsApp number that answers calls, calls back leads and logs every call.</>,
-        <><strong>Cost:</strong> phone-line platforms charge per minute (Bolna lists ₹5.52 pay-as-you-go). Wapzen’s voice agent is free to start in early access.</>,
+        <><strong>Cost:</strong> phone-line platforms charge per minute (Bolna lists ₹5.52 pay-as-you-go). Wapzen’s voice agent is free to start.</>,
         <><strong>Languages:</strong> Hindi, English and nine more Indian languages.</>,
         <><strong>Rules:</strong> TRAI’s number series govern phone lines; DPDP consent obligations apply from May 2027; call only people who asked.</>,
         <><strong>Limits:</strong> WhatsApp only, no live transfer, linked device rather than Meta’s API.</>,
@@ -162,7 +162,7 @@ export default function AiVoiceAgentWhatsAppIndiaPage() {
     sources={sources}
     related={["/blog/whatsapp-cod-order-confirmation", "/blog/whatsapp-business-calling-api"]}
     product="/ai-calling-agent-india"
-    cta={{ heading: <>More calls, no per-minute bill.<br /><span>Pilot the voice agent on WhatsApp.</span></>, body: "Wapzen’s voice agent is in early access and free to start. Message us on WhatsApp with your call volumes and we’ll set it up with your team." }}
-    action={{ href: earlyAccess, label: "Request early access" }}
+    cta={{ heading: <>More calls, no per-minute bill.<br /><span>Pilot the voice agent on WhatsApp.</span></>, body: "Wapzen’s voice agent answers and makes WhatsApp calls, and it’s free to start. Message us on WhatsApp with your call volumes and we’ll set it up with your team." }}
+    action={{ href: earlyAccess, label: "Set up voice on WhatsApp" }}
   />;
 }

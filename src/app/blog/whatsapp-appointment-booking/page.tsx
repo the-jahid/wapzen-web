@@ -168,7 +168,7 @@ const sections = [
         <li><strong>Reminder calls with Wapzen.</strong> Create an outbound campaign with a voice agent that confirms the visit, and add the next day’s patients as leads when you want the calls to go out. Adding a lead places the call straight away, so add them by hand or let your automation tool do it at a set time through the API.</li>
       </ul>
       <p>Know the limits of the third option: a lead carries a name and number, not the appointment, so the agent confirms “your appointment with us tomorrow” rather than reading out the time. Nobody answers? The lead is marked unsuccessful, and Wapzen doesn’t redial on its own. The same pattern is shown step by step in <Link href="/blog/whatsapp-cod-order-confirmation">COD order confirmation calls</Link>.</p>
-      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a device. Message and call only people who expect to hear from you: WhatsApp restricts numbers that send unwanted messages or calls.</Note>
+      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. It links your number as a device. Message and call only people who expect to hear from you.</Note>
     </>,
   },
 ];

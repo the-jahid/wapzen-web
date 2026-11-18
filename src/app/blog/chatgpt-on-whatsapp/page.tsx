@@ -96,9 +96,9 @@ const sections = [
       <ul>
         <li><strong>A Business API provider with an AI add-on.</strong> Official, with broadcasts and team inboxes, but you pay a plan, AI add-ons, and Meta’s per-message fees. See <Link href="/blog/whatsapp-business-api-pricing">what the API costs</Link>.</li>
         <li><strong>Build it yourself</strong> with the Cloud API, an automation tool, and an OpenAI key. Flexible, but you set up Meta’s developer side and maintain it. The <Link href="/blog/n8n-whatsapp-ai-agent">n8n guide</Link> walks through it.</li>
-        <li><strong>A no-code agent on your current number.</strong> With Wapzen you write instructions, upload your documents, choose an OpenAI GPT or Anthropic Claude model, and scan a QR code. The models are included, so you don’t need an OpenAI key.</li>
+        <li><strong>A no-code agent on your current number.</strong> With Wapzen you write instructions, upload your documents, and scan a QR code. Wapzen runs the AI model, currently a GPT model from OpenAI, so you don’t need an OpenAI key.</li>
       </ul>
-      <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt, a model picker and an attached knowledge base" caption="Each agent has its own model: an OpenAI GPT or an Anthropic Claude. This demo agent uses Claude. Wapzen dashboard, demo data." />
+      <Screenshot src={img("chat-agent.webp")} width={2392} height={1656} alt="Wapzen chat agent editor with a system prompt and an attached knowledge base" caption="A chat agent’s instructions and knowledge base. This screenshot is from an earlier version of the editor, which had a model picker; Wapzen now picks and runs the model. Wapzen dashboard, demo data." />
       <p>Unlike a general chatbot, your agent answers from your <strong>knowledge base</strong>, your prices, delivery rules, and FAQ, so it says what’s true for your business instead of what’s true in general. The full setup is in <Link href="/blog/whatsapp-chatbot-without-business-api">this step-by-step guide</Link>.</p>
       <InlineCta title="Give your customers a GPT-powered assistant" body="Free right now, with the AI models included. Set it up on your existing WhatsApp number in about 15 minutes." />
       <Note>Wapzen is an independent product, not made by Meta, WhatsApp, or OpenAI. It links your number as a device, not through the Business API.</Note>
@@ -124,6 +124,6 @@ export default function ChatGptOnWhatsAppPage() {
     sources={sources}
     related={["/blog/what-is-a-whatsapp-chatbot", "/blog/n8n-whatsapp-ai-agent"]}
     product="/free-whatsapp-chatbot"
-    cta={{ heading: <>ChatGPT-style answers.<br /><span>On your own number.</span></>, body: "Create a free AI chat agent with GPT or Claude, add your business info, and scan a QR code. No API key, no Business API." }}
+    cta={{ heading: <>ChatGPT-style answers.<br /><span>On your own number.</span></>, body: "Create a free AI chat agent, add your business info, and scan a QR code. The AI model is included: no API key, no Business API." }}
   />;
 }

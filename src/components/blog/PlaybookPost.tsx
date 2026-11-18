@@ -9,7 +9,7 @@ import { Section } from "@/components/marketing/MarketingPage";
 import { CopyButton } from "@/components/free-tools/CopyButton";
 import tools from "@/components/free-tools/FreeTools.module.css";
 import marketing from "@/components/marketing/Marketing.module.css";
-import { postJsonLd, PostMeta } from "./BlogPost";
+import { AboutWapzen, postJsonLd, PostMeta } from "./BlogPost";
 import styles from "./Blog.module.css";
 import pb from "./PlaybookPost.module.css";
 
@@ -48,7 +48,7 @@ export function PlaybookPost({ href, heading, lead, answer, chapters, faq, sourc
   const locale = post.locale ?? "en";
   const { ui } = locales[locale];
   const t = blogUi(locale);
-  const checked = formatPostDate(post.updated, t.dateLocale);
+  const checked = formatPostDate(post.checked ?? post.updated, t.dateLocale);
   const others = related ? related.map(blogPost) : postsIn(locale).filter((entry) => entry.href !== href).slice(0, 2);
   const page = marketingPages.find((entry) => entry.href === product);
   const number = (i: number) => String(i + 1).padStart(2, "0");
@@ -71,6 +71,8 @@ export function PlaybookPost({ href, heading, lead, answer, chapters, faq, sourc
           </div>
           <dl className={pb.specs}>{answer.specs.map(([label, value]) => <div key={label}><dt>{label}</dt><dd><Check size={15} />{value}</dd></div>)}</dl>
         </section>
+
+        <AboutWapzen locale={locale} />
 
         <nav className={pb.chapters} aria-labelledby="chapters-title">
           <h2 id="chapters-title" className={pb.chaptersTitle}>{labels.chapters}</h2>

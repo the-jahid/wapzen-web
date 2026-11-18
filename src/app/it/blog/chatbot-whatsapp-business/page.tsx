@@ -35,7 +35,7 @@ const ways = [
 
 const steps = [
   { title: "Crea un account gratis", body: "Registrati su Wapzen. Non servono carta di credito, account Meta o API ufficiale." },
-  { title: "Crea un agente di chat", body: "Dagli un nome e scrivi le istruzioni: chi è, che tono usa, cosa può dire e cosa no, quando passare la chat a una persona. Scegli un modello GPT di OpenAI o Claude di Anthropic." },
+  { title: "Crea un agente di chat", body: "Dagli un nome e scrivi le istruzioni: chi è, che tono usa, cosa può dire e cosa no, quando passare la chat a una persona. Il modello AI lo mette Wapzen." },
   { title: "Aggiungi una knowledge base", body: "Incolla domande frequenti, prezzi, orari e condizioni, o carica PDF e documenti Word. L’AI risponde a partire da qui." },
   { title: "Collega il tuo WhatsApp", body: "Inquadra il codice QR con il telefono, come per WhatsApp Web. Funziona con WhatsApp Business o con il WhatsApp normale." },
   { title: "Prova e correggi", body: "Scrivi al tuo numero da un altro telefono e fai le domande dei tuoi clienti. Se una risposta non va, sistema istruzioni o knowledge base e riprova." },

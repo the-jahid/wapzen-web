@@ -116,7 +116,7 @@ const questions = [
         <li><strong>Você responde primeiro.</strong> Em uma pesquisa publicada na Harvard Business Review, empresas dos EUA que tentavam contato em até uma hora tinham quase sete vezes mais chance de qualificar o lead do que as que demoravam mais. O estudo é de 2011 e não é do Brasil, mas a lógica vale: quem chama você muitas vezes chama o concorrente também.</li>
         <li><strong>Seu anúncio rende mais.</strong> Se você paga anúncios de clique para WhatsApp no Instagram ou no Facebook, cada mensagem sem resposta é um clique pago desperdiçado. Com o agente, quem clica às 23h recebe resposta na hora.</li>
         <li><strong>Mais portas de entrada.</strong> Com o <Link href="/tools/whatsapp-link-generator">gerador de link</Link> e o <Link href="/tools/whatsapp-qr-code-generator">gerador de QR Code</Link> grátis, você coloca o WhatsApp no Instagram, no balcão, no cardápio e na embalagem.</li>
-        <li><strong>Cliente antigo volta.</strong> Em Bulk Messages, você envia uma planilha Excel ou CSV e manda uma mensagem personalizada para cada cliente, com pausa padrão de 30 segundos entre os envios. Use só com quem autorizou o contato.</li>
+        <li><strong>Cliente antigo volta.</strong> Mande você mesmo, pelo celular, uma mensagem personalizada, e o agente atende quem responder. Faça isso só com quem autorizou o contato.</li>
       </ul>
       <Note>O agente não vê o texto dos envios em massa. Por isso, o modelo de instruções explica o que fazer quando alguém responde a uma promoção.</Note>
       <h3>Atender mais</h3>
@@ -206,7 +206,7 @@ const questions = [
   {
     id: "audio-foto",
     q: "A IA entende áudio e foto no WhatsApp?",
-    answer: "Sim, no Wapzen, depois que você liga cada opção. Com Reply to voice messages, o agente transcreve o áudio e responde por texto. Com Read photos, ele lê a imagem, como a foto de um produto. As duas opções vêm desligadas. Áudios com mais de 5 minutos ficam sem resposta automática.",
+    answer: "Sim, no Wapzen. Com Reply to voice messages, o agente transcreve o áudio e responde por texto. Com Read photos, ele lê a imagem, como a foto de um produto. As duas opções já vêm ligadas, e você pode desligar cada uma. Áudios com mais de 5 minutos ficam sem resposta automática.",
     body: <>
       <p>As duas opções ficam no cartão Voice &amp; Photos, no editor do agente. Antes de confiar nelas, teste com os áudios e as fotos que seus clientes costumam mandar.</p>
       <ul>
@@ -276,7 +276,7 @@ const questions = [
   {
     id: "limites",
     q: "O que a IA do Wapzen não faz?",
-    answer: "O agente de chat não envia PDF nem imagem, não confirma Pix, não tem agenda própria, não escreve primeiro por conta própria e não usa a API oficial da Meta, então não há selo verde nem modelos aprovados. Cada conta tem um agente de chat. Em grupos, ele só responde quando você liga a IA naquele grupo e alguém o marca ou responde a ele.",
+    answer: "O agente de chat não confirma Pix, não tem agenda própria, não escreve primeiro por conta própria e não usa a API oficial da Meta, então não há selo verde nem modelos aprovados. Cada conta tem um agente de chat. Em grupos, ele só responde quando você liga a IA naquele grupo e alguém o marca ou responde a ele.",
     body: <>
       <Comparison caption="Para quem serve e para quem não serve uma IA grátis como o Wapzen no WhatsApp" columns={["Serve?", "Por quê"]} rows={fit} />
       <ul>
@@ -296,9 +296,9 @@ export default function IaParaResponderWhatsAppPage() {
     lead="Quem manda mensagem às 22h e só recebe resposta no dia seguinte pode já ter comprado de outra loja. Aqui respondemos, uma a uma, as dúvidas de quem quer colocar IA no WhatsApp da empresa: como funciona, quanto custa cada opção, como isso ajuda a vender mais e o que a IA ainda não faz."
     verdict={{
       title: "A resposta curta",
-      body: <>Dá para ter IA respondendo seu WhatsApp hoje. <strong>O Wapzen</strong> é um agente de IA que funciona no número que você já usa, pessoal ou Business: responde em segundos com as informações do seu negócio, entende áudios e fotos, anota pedidos e atende ligações de WhatsApp com um agente de voz. <strong>Tudo é grátis agora, com conversas ilimitadas e sem chave de API da Meta.</strong> Se você prefere o caminho oficial, a alternativa mais simples é o Meta Business Agent.</>,
+      body: <>Dá para ter IA respondendo seu WhatsApp hoje. <strong>O Wapzen</strong> é um agente de IA que funciona no número que você já usa, pessoal ou Business: responde em segundos com as informações do seu negócio, entende áudios e fotos, anota pedidos e atende ligações de WhatsApp com um agente de voz. <strong>O Wapzen é totalmente grátis e não precisa de chave de API da Meta.</strong> Se você prefere o caminho oficial, a alternativa mais simples é o Meta Business Agent.</>,
     }}
-    facts={[["Preço", "Grátis agora"], ["Chave de API da Meta", "Não precisa"], ["Conversas", "Ilimitadas"], ["Ligações", "Agente de voz funcionando"]]}
+    facts={[["Preço", "Totalmente grátis"], ["Chave de API da Meta", "Não precisa"], ["Ligações", "Agente de voz funcionando"]]}
     indexTitle="As 12 perguntas deste guia"
     answerLabel="Resposta curta"
     questions={questions}

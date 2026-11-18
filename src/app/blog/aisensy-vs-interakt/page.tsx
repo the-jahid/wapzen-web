@@ -25,9 +25,9 @@ const glance = [
   ["First paid plan", "Basic: $45 a month (₹1,500 in India)", "Growth: $55 a month + taxes", "None"],
   ["Team seats", "Owner + 5 agents on Basic and Pro; $20 per extra seat", "Unlimited agents on every plan", "One account; reply from the dashboard"],
   ["Chatbot builder", "Add-on: $80 a month (₹2,500) for 5 flows", "Linear bot on Growth; branching with API calls on Advanced", "AI agent instead of flows"],
-  ["AI agent", "Add-on: $50 a month (₹1,350) with 1,000 AI messages", "Add-on: $74.99 a month (₹2,499 in India) with 100 AI messages, then $0.011 each", "Included, no cap on AI replies"],
+  ["AI agent", "Add-on: $50 a month (₹1,350) with 1,000 AI messages", "Add-on: $74.99 a month (₹2,499 in India) with 100 AI messages, then $0.011 each", "Included, fully free"],
   ["WhatsApp calling", "Not listed on the pricing page", "Inbox calling on Advanced; your team answers", "AI voice agent answers and makes calls"],
-  ["Broadcasts", "On paid plans, 40 messages a second on Basic", "Campaigns on every plan", "Bulk Messages, one at a time with a gap"],
+  ["Broadcasts", "On paid plans, 40 messages a second on Basic", "Campaigns on every plan", "No: it answers people who message you"],
   ["Shopify", "Shopify and WooCommerce notifications on Basic", "Order updates, abandoned checkout, COD-to-prepaid and winback flows", "No app; connect through API tools"],
   ["Message charges", "Prepaid per message; in India ₹1.09 marketing, ₹0.145 utility and service", "Templates above the free limit; no markup on Enterprise", "None"],
   ["Official Meta platform", "Yes", "Yes", "No: links like WhatsApp Web"],
@@ -40,7 +40,7 @@ const faqs = [
   { q: "Does Interakt have a free plan?", a: "Interakt offers a free trial rather than a free plan. Its WhatsApp plans start with Growth at $55 a month plus taxes, with 8% off quarterly and 20% off yearly billing." },
   { q: "How much do AI agents cost on AiSensy and Interakt?", a: "AiSensy's AI chat agent is $50 a month (₹1,350 in India) for 1,000 AI messages. Interakt's WhatsApp AI agents cost $74.99 a month (₹2,499 in India) with 100 AI messages, then $0.011 per message, and need the Growth or Advanced plan. WhatsApp's message charges apply on top of both." },
   { q: "Which one has WhatsApp calling?", a: "Interakt's Advanced plan lists outbound calling from the inbox and receiving inbound calls, answered by your team. AiSensy's pricing page doesn't list WhatsApp calling. Wapzen's AI voice agent answers and makes WhatsApp calls by itself." },
-  { q: "Is there a free alternative to AiSensy and Interakt?", a: "If you mainly need AI to answer customers, yes: Wapzen is free, with no cap on AI replies and no message fees, because it links your number by QR code instead of using the Business API. For large broadcast campaigns and a team inbox, an API platform is still the better fit." },
+  { q: "Is there a free alternative to AiSensy and Interakt?", a: "If you mainly need AI to answer customers, yes: Wapzen is fully free, with no message fees, because it links your number by QR code instead of using the Business API. For large broadcast campaigns and a team inbox, an API platform is still the better fit." },
 ];
 
 const sources = [
@@ -95,7 +95,7 @@ const sections = [
       </ul>
       <p>About <strong>$87 plus ₹6,181 a month</strong>, plus taxes and Interakt’s message markup. Interakt costs more here because its AI add-on includes far fewer messages. With a bigger team, its unlimited seats close the gap.</p>
       <h3>On Wapzen</h3>
-      <p>The 3,000 AI replies cost <strong>₹0</strong>: no plan, no AI quota and no message fees. The campaigns are where an API platform earns its fee. Wapzen’s Bulk Messages can send them, but at one message every 30 seconds by default and without Meta’s template reporting.</p>
+      <p>The 3,000 AI replies cost <strong>₹0</strong>: no plan, no AI quota and no message fees. The campaigns are where an API platform earns its fee: Wapzen doesn’t send broadcasts or bulk messages.</p>
     </>,
   },
   {
@@ -104,7 +104,7 @@ const sections = [
     body: <>
       <p><strong>AiSensy</strong> sells two separate add-ons. The chatbot builder makes keyword and button flows with cart management and catalog sharing. The AI agent builder answers in natural language from a knowledge base, keeps long-term memory of each user, can call tools and APIs, and includes 500 free AI messages for testing. It’s capable, as long as you budget for both add-ons.</p>
       <p><strong>Interakt</strong> includes a basic linear chatbot on Growth and branching chatbots that can call APIs on Advanced. Its AI add-on gives you three ready-made agents, for Sales, Lead Qualification and Customer Support, all running at once. With 100 AI messages included, a busy store will mostly pay the per-message rate.</p>
-      <p><strong>Wapzen</strong> has no flow builder. You instruct one AI agent in plain language, attach your documents, and it answers every chat with no message quota. See the <Link href="/blog/free-whatsapp-ai-agent">free WhatsApp AI agent guide</Link>.</p>
+      <p><strong>Wapzen</strong> has no flow builder. You instruct one AI agent in plain language, attach your documents, and it answers every chat, fully free. See the <Link href="/blog/free-whatsapp-ai-agent">free WhatsApp AI agent guide</Link>.</p>
     </>,
   },
   {
@@ -135,7 +135,7 @@ const sections = [
     id: "free-option",
     title: "A free option if you mainly need AI replies",
     body: <>
-      <p>Look again at the bills above: the AI add-ons and per-reply charges grow with every customer you serve. Wapzen takes that line to zero. It links your existing WhatsApp number by QR code, answers every chat with an AI agent trained on your documents, takes orders, and answers WhatsApp calls with an AI voice agent, all free, with no cap on AI replies.</p>
+      <p>Look again at the bills above: the AI add-ons and per-reply charges grow with every customer you serve. Wapzen takes that line to zero. It links your existing WhatsApp number by QR code, answers every chat with an AI agent trained on your documents, takes orders, and answers WhatsApp calls with an AI voice agent, all fully free.</p>
       <InlineCta title="Answer every customer for free" body="Link your WhatsApp number and let an AI agent reply, with no AI quota and no per-message fees." />
       <Note>Wapzen isn’t an official Business API platform and has no multi-agent team inbox. If broadcasts to large opted-in lists are central to your business, keep AiSensy or Interakt for those and let Wapzen answer the chats.</Note>
     </>,
@@ -152,7 +152,7 @@ export default function AiSensyVsInteraktPage() {
       items: [
         <><strong>Pick AiSensy</strong> for the lowest entry price: a Free Forever plan, Basic at $45 a month (₹1,500 in India), and AI ($50 for 1,000 AI messages) and chatbots ($80) as add-ons.</>,
         <><strong>Pick Interakt</strong> for Shopify and bigger teams: unlimited agents from Growth ($55 plus taxes), COD-to-prepaid flows, and WhatsApp calling on Advanced ($69).</>,
-        <><strong>If you mainly need AI replies,</strong> Wapzen is free, with no cap on AI replies and no message fees, but it isn’t an official API platform.</>,
+        <><strong>If you mainly need AI replies,</strong> Wapzen is fully free, with no message fees, but it isn’t an official API platform.</>,
       ],
     }}
     sections={sections}

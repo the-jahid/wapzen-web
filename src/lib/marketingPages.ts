@@ -88,7 +88,7 @@ export const marketingPages: MarketingPageEntry[] = [
   {
     href: "/industries/healthcare",
     name: "WhatsApp for healthcare",
-    description: "A free WhatsApp AI agent for clinics and doctors: patient questions, appointment requests and reminders, plus WhatsApp calls.",
+    description: "A free WhatsApp AI agent for clinics and doctors: patient questions and appointment requests, plus WhatsApp calls.",
     icon: Stethoscope,
   },
   // Brazil

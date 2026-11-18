@@ -32,7 +32,7 @@ const comparison = [
 
 const steps = [
   { title: "Sign up for free", body: "Create a Wapzen account. No Meta business verification, provider, or credit card needed." },
-  { title: "Create a chat agent", body: "Write its instructions, choose an OpenAI GPT or Anthropic Claude model, and attach a knowledge base with your FAQs and documents." },
+  { title: "Create a chat agent", body: "Write its instructions and attach a knowledge base with your FAQs and documents. The AI model is included." },
   { title: "Scan the QR code", body: "Link your WhatsApp or WhatsApp Business number from your phone, the same way you link WhatsApp Web." },
   { title: "Go live", body: "The AI chatbot replies to incoming messages. Add a voice agent to answer and make WhatsApp calls too." },
 ];

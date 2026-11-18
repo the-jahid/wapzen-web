@@ -15,7 +15,7 @@ export const metadata: Metadata = pageMetadata({ title, description, path, local
 
 const steps = [
   { title: "Crie sua conta grátis", body: "Cadastre-se no Wapzen. Não pedimos cartão de crédito e você não precisa contratar a API oficial do WhatsApp." },
-  { title: "Crie um agente de chat", body: "Dê um nome ao seu chatbot, escolha um modelo da OpenAI (GPT) ou da Anthropic (Claude) e escreva as instruções: tom de voz, o que ele pode responder e o que não deve." },
+  { title: "Crie um agente de chat", body: "Dê um nome ao seu chatbot e escreva as instruções: tom de voz, o que ele pode responder e o que não deve. O modelo de IA fica por conta do Wapzen." },
   { title: "Ensine sobre o seu negócio", body: "Adicione uma base de conhecimento com perguntas frequentes, preços, horários e políticas. Cole textos ou envie arquivos PDF e Word." },
   { title: "Conecte o seu WhatsApp", body: "Escaneie um QR Code com o WhatsApp do celular, do mesmo jeito que você conecta o WhatsApp Web. Funciona com o WhatsApp Business ou com o WhatsApp normal." },
   { title: "Teste e ative", body: "Mande uma mensagem de outro celular para o seu número. A IA responde na hora, e todas as conversas ficam salvas no painel." },
@@ -33,7 +33,7 @@ const features = [
 const comparison = [
   ["Preço", "Planos mensais e taxas da Meta por mensagem de modelo", "Grátis no momento"],
   ["Configuração", "Conta na Meta, número registrado e, em geral, um provedor", "Escanear um QR Code"],
-  ["Respostas", "Muitas vezes menus de botões; a IA costuma ser cobrada à parte", "IA incluída (GPT ou Claude)"],
+  ["Respostas", "Muitas vezes menus de botões; a IA costuma ser cobrada à parte", "IA incluída (um modelo GPT da OpenAI)"],
   ["Ligações com IA", "Raras ou pagas à parte", "Incluídas, recebidas e feitas"],
   ["Plataforma oficial da Meta", "Sim", "Não: conecta como o WhatsApp Web"],
 ];
@@ -43,7 +43,7 @@ const faqs = [
   { q: "Como colocar IA no WhatsApp da minha empresa?", a: "Crie uma conta no Wapzen, configure um agente de chat com as suas instruções e informações e conecte o seu número escaneando um QR Code. A partir daí, a IA responde as mensagens que chegam." },
   { q: "Funciona no WhatsApp Business?", a: "Sim. Você pode conectar um número do WhatsApp Business ou do WhatsApp normal. O WhatsApp normal não tem resposta automática, e o Wapzen adiciona respostas com IA a ele." },
   { q: "Preciso da API oficial do WhatsApp?", a: "Não. O Wapzen conecta o seu número por QR Code, como o WhatsApp Web, então não há cadastro na API oficial, aprovação de modelos de mensagem nem taxas da Meta por mensagem. Ele não é um produto oficial da Meta: para disparos em massa, a API oficial é a ferramenta certa." },
-  { q: "Qual IA o chatbot usa? É o ChatGPT?", a: "Você escolhe para cada agente: modelos GPT da OpenAI (a mesma família do ChatGPT) ou modelos Claude da Anthropic. Os dois estão incluídos, sem precisar de uma chave de API própria." },
+  { q: "Qual IA o chatbot usa? É o ChatGPT?", a: "O Wapzen escolhe e roda o modelo para você: hoje os agentes de chat usam um modelo GPT da OpenAI, a mesma família do ChatGPT. Ele está incluído, sem precisar de uma chave de API própria." },
   { q: "A IA consegue agendar horários?", a: "Ela coleta o nome, o serviço e o horário preferido do cliente durante a conversa. Para agendar direto na sua agenda ou sistema, conecte uma ferramenta de API; sem isso, a sua equipe confirma pelo histórico." },
   { q: "Consigo ver as conversas?", a: "Sim. Todas as conversas ficam salvas no painel do Wapzen, e as ligações ficam registradas com transcrição." },
 ];

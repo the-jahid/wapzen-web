@@ -34,7 +34,7 @@ const ways = [
 
 const steps = [
   { title: "Crie uma conta grátis", body: "Cadastre-se na Wapzen. Não precisa de cartão de crédito, conta na Meta nem API oficial." },
-  { title: "Crie um agente de chat", body: "Dê um nome e escreva as instruções: quem ele é, que tom usa, o que pode responder e quando passar a conversa para uma pessoa. Escolha um modelo GPT, da OpenAI, ou Claude, da Anthropic." },
+  { title: "Crie um agente de chat", body: "Dê um nome e escreva as instruções: quem ele é, que tom usa, o que pode responder e quando passar a conversa para uma pessoa. O modelo de IA fica por conta da Wapzen." },
   { title: "Adicione uma base de conhecimento", body: "Cole perguntas frequentes, preços, horários e políticas, ou envie arquivos PDF e Word. A IA responde a partir daí." },
   { title: "Conecte o seu WhatsApp", body: "Leia o QR Code com o celular, como no WhatsApp Web. Funciona com o WhatsApp Business ou com o WhatsApp normal." },
   { title: "Teste e ajuste", body: "Mande mensagem para o seu número de outro celular e faça as perguntas dos seus clientes. Se uma resposta não ficar boa, ajuste as instruções ou a base de conhecimento." },
@@ -44,7 +44,7 @@ const faqs = [
   { q: "Como criar um robô no WhatsApp?", a: "Existem três caminhos: uma plataforma que usa a API oficial do WhatsApp (como Blip, Zenvia ou Umbler Talk), um robô feito por você com n8n ou código, ou uma IA conectada ao seu número com um QR Code, como a Wapzen. O último é o mais rápido: uns 15 minutos, sem programar." },
   { q: "Existe robô para WhatsApp grátis?", a: "Sim. A Wapzen é grátis por enquanto, com robô de IA, base de conhecimento e agente de voz incluídos, sem cartão de crédito. O WhatsApp Business também tem mensagens automáticas grátis, mas são textos fixos que não respondem perguntas." },
   { q: "Preciso da API oficial para ter um robô no WhatsApp?", a: "Não. A API oficial serve para disparos em escala, equipes grandes e integrações. Para uma IA responder quem manda mensagem para você, dá para conectar o número como dispositivo, com um QR Code. A Wapzen não é um produto oficial da Meta: se você precisa da plataforma oficial, escolha um fornecedor da API." },
-  { q: "O robô responde áudios e grupos?", a: "Depende da plataforma. O agente de chat da Wapzen responde mensagens de texto em conversas individuais: grupos, áudios e fotos ficam com você. Para conversar por voz, existe o agente de voz, que atende as ligações do WhatsApp." },
+  { q: "O robô responde áudios e grupos?", a: "Depende da plataforma. O agente de chat da Wapzen responde mensagens de texto, transcreve áudios e lê fotos, e em grupos só responde onde você ligar a IA. Para conversar por voz, existe o agente de voz, que atende as ligações do WhatsApp." },
   { q: "Preciso avisar que é um robô?", a: "É uma boa prática e passa confiança: basta uma linha na primeira mensagem dizendo que quem responde é um assistente virtual e que o cliente pode pedir uma pessoa. Se você guarda dados dos clientes, siga a LGPD e informe isso na sua política de privacidade." },
 ];
 

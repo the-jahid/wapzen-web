@@ -35,11 +35,8 @@ const profile = [
 ];
 
 const limits = [
-  ["Notas de voz", "No las escucha y no las contesta", "Pide “escríbenos” en tus anuncios y revisa las notas de voz en el celular"],
-  ["Fotos", "No manda fotos ni ve las que le envían", "Incluye la liga del anuncio en cada propiedad de tu lista"],
-  ["Memoria", "Recuerda solo los últimos minutos del chat", "Tu asesor lee la conversación completa en el panel"],
   ["Seguimiento", "Solo contesta. No escribe primero", "El seguimiento sigue a cargo del asesor o de tu CRM"],
-  ["Asesor en el mismo chat", "El agente sigue contestando. No hay pausa por conversación", "Usa un número solo para prospectos y pasa al cliente al WhatsApp del asesor"],
+  ["Asesor en el mismo chat", "El agente no se detiene solo cuando escribe el asesor", "Apaga la IA para ese prospecto y vuelve a encenderla al terminar"],
   ["Agenda", "Sin integración no ve tu agenda", "Anota la preferencia. El asesor confirma"],
 ];
 
@@ -130,7 +127,7 @@ const sections = [
       <h3>2. Sube tu lista de propiedades</h3>
       <p>Para cada propiedad escribe una línea con código, tipo, colonia, recámaras, estacionamiento, metros, precio, mantenimiento, créditos que acepta, estado y liga del anuncio. El agente lee texto, PDF y Word. <strong>Si se vendió o se rentó, bórrala ese mismo día</strong>, o el agente la seguirá ofreciendo.</p>
       <h3>3. Conecta un número solo para prospectos</h3>
-      <p>Usa ese número en anuncios y portales, y conéctalo con código QR o código de vinculación. No existe una pausa por conversación, así que separar el número del agente y el del asesor evita que el cliente reciba dos respuestas.</p>
+      <p>Usa ese número en anuncios y portales, y conéctalo con código QR o código de vinculación. Cuando un asesor tome un chat, apaga la IA solo para ese prospecto, así el cliente no recibe dos respuestas.</p>
       <h3>4. Decide dónde guardar los prospectos</h3>
       <p>Todas las conversaciones quedan en el panel. Si quieres cada solicitud de cita como un registro, activa la herramienta Take Order con campos propios (nombre, propiedad, día preferido) y aclara en las instrucciones que “pedido” significa solicitud de cita. Está pensada para pedidos de compra, así que pruébala bien. Para mandar datos a tu CRM, usa una herramienta de API.</p>
       <h3>5. Pruébalo con preguntas difíciles</h3>

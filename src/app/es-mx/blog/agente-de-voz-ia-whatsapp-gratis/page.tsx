@@ -9,14 +9,14 @@ import { BlogPost, Choose, InlineCta, Note } from "@/components/blog/BlogPost";
 // "call center con ia" (39), "agente de ia gratis" (37), "llamadas con ia" (30), "bot de
 // llamadas" (30), "ia para prospectar clientes" (30), "cobranza por whatsapp" (30),
 // "desactivar llamadas whatsapp business" (28), "agente de voz ia gratis" (26). Sin
-// versión en inglés. La voz de Wapzen está en acceso anticipado, por eso el CTA abre
+// versión en inglés. La voz de Wapzen funciona y se configura con el equipo, por eso el CTA abre
 // WhatsApp y no el registro. Lo que se dice del agente sigue el servidor Go
 // (voicecall): no transfiere, sin remarcado, sin importar CSV, solo WhatsApp. Precios
 // de Bland y Vapi revisados el 25/10/2026 (post bland-ai-vs-vapi). La reforma contra el
 // acoso telefónico pasó el Senado el 8/10/2026: revisar si Diputados la aprobó.
 const href = "/es-mx/blog/agente-de-voz-ia-whatsapp-gratis";
 const post = blogPost(href);
-const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Hola, quiero acceso anticipado al agente de voz de Wapzen para mi negocio en México.")}`;
+const earlyAccess = `https://wa.me/8801701750469?text=${encodeURIComponent("Hola, quiero configurar el agente de voz de Wapzen para mi negocio en México.")}`;
 
 export const metadata: Metadata = pageMetadata({ title: post.title, description: post.description, path: href, locale: "es-MX", article: { publishedTime: post.published, modifiedTime: post.updated } });
 
@@ -32,7 +32,7 @@ const does = [
 ];
 
 const costs = [
-  ["Cómo cobra", "Personas con sueldo, por turno", "Por minuto, en dólares", "Gratis para empezar en acceso anticipado"],
+  ["Cómo cobra", "Personas con sueldo, por turno", "Por minuto, en dólares", "Gratis para empezar, sin costo por minuto"],
   ["Ejemplo de precio", "Depende de tu equipo", "Bland: US$0.14 por minuto. Vapi: unos US$82 a US$129 por 1,000 minutos", "Sin costo por minuto"],
   ["Por dónde llama", "Teléfono o WhatsApp", "Línea telefónica", "WhatsApp, en tu número"],
   ["Horario", "El de tu equipo", "24 horas", "24 horas"],
@@ -45,11 +45,11 @@ const limits = [
   ["Pausa antes de contestar", "De uno a dos segundos por respuesta", "Pide frases cortas en las instrucciones"],
   ["Dispositivo vinculado", "No es la API oficial de Meta", "Llama solo a quien espera tu llamada, para que no restrinjan tu número"],
   ["Campañas sencillas", "Sin remarcado automático y sin importar Excel", "Agrega prospectos uno por uno o por API"],
-  ["Acceso anticipado", "La voz se configura con nuestro equipo", "Escríbenos por WhatsApp para empezar"],
+  ["Cómo empezar", "La voz se configura con nuestro equipo", "Escríbenos por WhatsApp para empezar"],
 ];
 
 const faqs = [
-  { q: "¿Hay un agente de voz con IA gratis?", a: "Sí. El agente de voz de Wapzen está en acceso anticipado y es gratis para empezar: las llamadas pasan por WhatsApp, sin costo por minuto. Para volumen alto de llamadas acordamos un plan de pago. Las plataformas de llamadas telefónicas, como Bland AI y Vapi, cobran por minuto." },
+  { q: "¿Hay un agente de voz con IA gratis?", a: "Sí. El agente de voz de Wapzen contesta y hace llamadas de WhatsApp y es gratis para empezar: las llamadas pasan por WhatsApp, sin costo por minuto. Para volumen alto de llamadas acordamos un plan de pago. Las plataformas de llamadas telefónicas, como Bland AI y Vapi, cobran por minuto." },
   { q: "¿Una IA puede hacer llamadas por WhatsApp?", a: "Sí. Con Wapzen, la IA llama desde el WhatsApp de tu número a cada prospecto que agregas a una campaña, y contesta las llamadas de WhatsApp que te hacen tus clientes. No marca a teléfonos fijos ni a celulares fuera de WhatsApp." },
   { q: "¿Qué es un bot de llamadas?", a: "Es un programa que hace o contesta llamadas por sí solo. Los antiguos reproducían grabaciones o menús de “marque 1”. Un agente de voz con IA conversa: entiende lo que dice la persona y le responde con la información de tu negocio." },
   { q: "¿Un call center con IA reemplaza a mis asesores?", a: "No del todo. La IA contesta lo repetitivo, devuelve llamadas al instante y deja los datos ordenados. Negociar, resolver quejas y cerrar ventas sigue en manos de tu equipo, que recibe el contacto por WhatsApp." },
@@ -130,7 +130,7 @@ const sections = [
       <Comparison caption="Call center humano, plataformas de IA telefónica y Wapzen comparados" columns={["Call center con personas", "IA por teléfono (Bland, Vapi)", "Wapzen"]} rows={costs} />
       <p>Bland y Vapi marcan a cualquier teléfono, y eso vale si tus clientes no usan WhatsApp. Pero cobran cada minuto en dólares, más la línea telefónica. Si casi todos tus clientes ya están en WhatsApp, ahí la llamada no tiene costo de operador.</p>
       <p>También existe la ruta oficial de Meta, la <Link href="/blog/whatsapp-business-calling-api">WhatsApp Business Calling API</Link> (en inglés): las llamadas que te hacen los clientes son gratis, pero las que hace tu negocio se cobran por minuto, necesitan permiso previo del cliente y requieren un proveedor y desarrollo.</p>
-      <InlineCta href={earlyAccess} title="¿Quieres probar el agente de voz?" body="La voz de Wapzen está en acceso anticipado y es gratis para empezar. Escríbenos por WhatsApp y la configuramos contigo." label="Pedir acceso anticipado" />
+      <InlineCta href={earlyAccess} title="¿Quieres probar el agente de voz?" body="El agente de voz de Wapzen ya contesta y hace llamadas de WhatsApp, y es gratis para empezar. Escríbenos por WhatsApp y lo configuramos contigo." label="Configurarlo por WhatsApp" />
     </>,
   },
   {
@@ -148,7 +148,7 @@ const sections = [
     id: "como-empezar",
     title: "Cómo empezar con el agente de voz de Wapzen",
     body: <>
-      <p>La voz está en acceso anticipado, así que la configuramos contigo:</p>
+      <p>El agente de voz se configura con nuestro equipo:</p>
       <h3>1. Escríbenos por WhatsApp</h3>
       <p>Cuéntanos tu giro, cuántas llamadas recibes y si también quieres llamar a prospectos.</p>
       <h3>2. Escribe las instrucciones y el saludo</h3>
@@ -188,7 +188,7 @@ export default function AgenteDeVozIaWhatsAppMxPage() {
         <><strong>Por qué en México:</strong> el 88% de los 101.9 millones de internautas manda mensajes por apps de mensajería (Asociación de Internet MX, 2024).</>,
         <><strong>Cuánto cuesta:</strong> las plataformas telefónicas cobran por minuto, en dólares. En Wapzen la llamada pasa por WhatsApp y el agente es gratis para empezar.</>,
         <><strong>Qué no hace:</strong> no marca a fijos, no transfiere la llamada y no debe llamar a quien no lo pidió.</>,
-        <><strong>Cómo empezar:</strong> la voz está en acceso anticipado. Escríbenos por WhatsApp.</>,
+        <><strong>Cómo empezar:</strong> escríbenos por WhatsApp y configuramos el agente de voz contigo.</>,
       ],
     }}
     sections={sections}
@@ -196,7 +196,7 @@ export default function AgenteDeVozIaWhatsAppMxPage() {
     sources={sources}
     related={["/es-mx/blog/ia-para-inmobiliarias-whatsapp", "/es-mx/blog/agendar-citas-por-whatsapp"]}
     product="/es/llamadas-con-ia"
-    cta={{ heading: <>Ninguna llamada sin contestar.<br /><span>Prueba el agente de voz en tu WhatsApp.</span></>, body: "La voz de Wapzen está en acceso anticipado y es gratis para empezar. Escríbenos por WhatsApp y configuramos tu agente." }}
-    action={{ href: earlyAccess, label: "Pedir acceso anticipado" }}
+    cta={{ heading: <>Ninguna llamada sin contestar.<br /><span>Prueba el agente de voz en tu WhatsApp.</span></>, body: "El agente de voz de Wapzen contesta y hace llamadas de WhatsApp, y es gratis para empezar. Escríbenos por WhatsApp y configuramos tu agente." }}
+    action={{ href: earlyAccess, label: "Configurarlo por WhatsApp" }}
   />;
 }

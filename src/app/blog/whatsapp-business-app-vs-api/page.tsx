@@ -111,7 +111,7 @@ const sections = [
       </ul>
       <p>What it doesn’t do: bulk broadcasts, a large team inbox, or Meta’s official platform. If those are what you need, the API is the right call.</p>
       <InlineCta title="Keep your app. Add an AI agent." body="Link your WhatsApp Business number with a QR code and let AI answer messages and calls. Free right now." />
-      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. Use the agent to answer people who contact you, never to message people who didn’t: WhatsApp restricts numbers that send bulk or unwanted messages.</Note>
+      <Note>Wapzen is an independent product, not made by Meta or WhatsApp. Use the agent to answer people who contact you, never to message people who didn’t.</Note>
     </>,
   },
   {
