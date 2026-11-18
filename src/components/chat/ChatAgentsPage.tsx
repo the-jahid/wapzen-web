@@ -1337,6 +1337,10 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const saveTimers = useRef<
     Map<string, { timer: ReturnType<typeof setTimeout>; run: () => void }>
   >(new Map());
+  // The save in flight per agent, and a counter naming the newest save asked
+  // for, so saves of one agent never overlap (see queueSave).
+  const saveChains = useRef<Map<string, Promise<void>>>(new Map());
+  const saveTickets = useRef<Map<string, number>>(new Map());
   // Every edit bumps its agent.s revision. A save only adopts the server echo
   // when the revision it was issued with is still current, so a PATCH that is
   // answered mid-sentence can never overwrite the keystrokes typed since.
@@ -1487,6 +1491,21 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       const revision = editRevisions.current.get(agent.id) ?? 0;
       const run = async () => {
         saveTimers.current.delete(agent.id);
+        // One save per agent at a time. Every save carries the whole agent, so
+        // while one is in flight only the newest waiting save is worth sending:
+        // overlapping saves queued on the agent's row lock on the server until
+        // they timed out (2026-11-18) and failed for everyone sharing the pool.
+        const ticket = (saveTickets.current.get(agent.id) ?? 0) + 1;
+        saveTickets.current.set(agent.id, ticket);
+        const prior = saveChains.current.get(agent.id) ?? Promise.resolve();
+        const chain = prior.then(() =>
+          saveTickets.current.get(agent.id) === ticket ? send() : undefined
+        );
+        saveChains.current.set(agent.id, chain);
+        await chain;
+        if (saveChains.current.get(agent.id) === chain) saveChains.current.delete(agent.id);
+      };
+      const send = async () => {
         try {
           const payload = toChatAgentPayload(agent);
           console.log("[wa-login] saving chat agent", {
