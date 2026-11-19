@@ -5,6 +5,7 @@ import { AccountBlockedScreen } from "@/components/nav/AccountBlockedScreen";
 import { FirstAgentGate } from "@/components/nav/FirstAgentGate";
 import { MaintenanceScreen } from "@/components/nav/MaintenanceScreen";
 import { SignedOutGate } from "@/components/nav/SignedOutGate";
+import { VoiceComingSoonGate } from "@/components/nav/VoiceComingSoonGate";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -34,7 +35,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       <SignedOutGate>
-        <FirstAgentGate>{children}</FirstAgentGate>
+        <FirstAgentGate>
+          <VoiceComingSoonGate>{children}</VoiceComingSoonGate>
+        </FirstAgentGate>
       </SignedOutGate>
       <MaintenanceScreen />
       <AccountBlockedScreen />
