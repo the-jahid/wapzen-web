@@ -1,4 +1,4 @@
-import DemoCallPage from "@/components/demo-call/DemoCallPage";
+import { DemoCallPage } from "@/components/nav/voicePages";
 
 export default function Page() {
   return <DemoCallPage />;

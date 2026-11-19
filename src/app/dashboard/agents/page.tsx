@@ -1,4 +1,4 @@
-import AgentsPage from "@/components/agents/AgentsPage";
+import { AgentsPage } from "@/components/nav/voicePages";
 
 export default function Page() {
   return <AgentsPage />;

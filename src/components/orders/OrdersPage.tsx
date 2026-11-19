@@ -5,7 +5,7 @@ import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import { newOrdersCacheKey } from "@/components/nav/useNewOrders";
 import { useWorkspaceMode } from "@/components/nav/workspaceMode";
 import OrdersTab from "@/components/tools/OrdersTab";
-import { toolsCss } from "@/components/tools/ToolsPage";
+import { toolsCss } from "@/components/tools/toolsCss";
 import { useCachedState } from "@/lib/pageCache";
 
 type Notice = { kind: "success" | "error"; text: string };

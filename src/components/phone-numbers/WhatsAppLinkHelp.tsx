@@ -1,8 +1,52 @@
 "use client";
 
-import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { useEffect, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import type { ApiPhoneNumber } from "@/lib/phoneNumbers";
+
+// libphonenumber is ~115 KB, and only linking a number by code needs it. It is
+// fetched when a form that takes a number appears (usePhoneNumberLib), so the
+// pages around that form (an agent with a number already, the numbers list)
+// don't download it, and it is in by the time anyone has typed a number.
+type PhoneNumberLib = typeof import("libphonenumber-js/min");
+
+let phoneNumberLib: PhoneNumberLib | null = null;
+let phoneNumberLibLoad: Promise<PhoneNumberLib | null> | null = null;
+const phoneNumberLibListeners = new Set<() => void>();
+
+// Resolves to null if the download fails (offline, a stale deploy); callers
+// then take the number as typed, as they do with one the library can't parse.
+function loadPhoneNumberLib(): Promise<PhoneNumberLib | null> {
+  phoneNumberLibLoad ??= import("libphonenumber-js/min").then(
+    (lib) => {
+      phoneNumberLib = lib;
+      phoneNumberLibListeners.forEach((notify) => notify());
+      return lib;
+    },
+    () => {
+      phoneNumberLibLoad = null; // The next form to appear tries again.
+      return null;
+    }
+  );
+  return phoneNumberLibLoad;
+}
+
+function subscribePhoneNumberLib(onLoad: () => void) {
+  phoneNumberLibListeners.add(onLoad);
+  return () => {
+    phoneNumberLibListeners.delete(onLoad);
+  };
+}
+
+/**
+ * Starts fetching libphonenumber (once `load` is true), and re-renders with it
+ * once it is in.
+ */
+export function usePhoneNumberLib(load = true): PhoneNumberLib | null {
+  useEffect(() => {
+    if (load) void loadPhoneNumberLib();
+  }, [load]);
+  return useSyncExternalStore(subscribePhoneNumberLib, () => phoneNumberLib, () => null);
+}
 
 // WhatsApp closes a login's socket when its QR codes run out — 60s, then five
 // more of 20s — and a pairing code dies with it.
@@ -47,8 +91,9 @@ export function useIsPhone() {
 
 // normalizePhone turns what people type ("+880 1639-726992", "8801639726992")
 // into E.164, or explains what is missing. A leading 0 is a local number, which
-// WhatsApp can't resolve without the country code.
-export function normalizePhone(value: string): { phone: string } | { error: string } {
+// WhatsApp can't resolve without the country code. It waits for libphonenumber,
+// which a form has normally fetched long before it is submitted.
+export async function normalizePhone(value: string): Promise<{ phone: string } | { error: string }> {
   const compact = value.replace(/[\s().-]/g, "");
   if (!compact) return { error: "Enter the WhatsApp number on your phone." };
   const digits = compact.startsWith("+") ? compact.slice(1) : compact.replace(/^00/, "");
@@ -58,8 +103,13 @@ export function normalizePhone(value: string): { phone: string } | { error: stri
   // A local 0 kept after the country code (+880 01639…) is a different number,
   // and WhatsApp gives out a code for it that no phone can use. This only ever
   // corrects: it calls some working numbers invalid, so those go through as typed.
-  const parsed = parsePhoneNumberFromString(`+${digits}`);
-  return { phone: parsed?.isValid() ? parsed.number : `+${digits}` };
+  const lib = await loadPhoneNumberLib();
+  try {
+    const parsed = lib?.parsePhoneNumberFromString(`+${digits}`);
+    return { phone: parsed?.isValid() ? parsed.number : `+${digits}` };
+  } catch {
+    return { phone: `+${digits}` };
+  }
 }
 
 function formatCountdown(ms: number) {
@@ -90,6 +140,7 @@ export function WhatsAppLinkHelp({
   qr: ReactNode;
 }) {
   const isPhone = useIsPhone();
+  const phoneNumberLib = usePhoneNumberLib();
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [isRequesting, setIsRequesting] = useState(false);
@@ -142,15 +193,18 @@ export function WhatsAppLinkHelp({
   }, [pairingCode, codeExpiresIn, issuedAt]);
 
   async function requestCode(value: string) {
-    const normalized = normalizePhone(value);
+    // Busy from the first moment, so a second press while libphonenumber is
+    // still arriving can't ask for two codes.
+    setIsRequesting(true);
+    const normalized = await normalizePhone(value);
     if ("error" in normalized) {
       setError(normalized.error);
+      setIsRequesting(false);
       return;
     }
     setPhone(normalized.phone);
     setError("");
     setResent(false);
-    setIsRequesting(true);
     try {
       await onRequestCode(normalized.phone);
       setIssuedAt(Date.now());
@@ -189,7 +243,7 @@ export function WhatsAppLinkHelp({
     const canSwitch = !disabled && !isRequesting && !isRequestingQr;
     const canRenew = canSwitch && Boolean(number);
     const renew = () => void requestCode(number);
-    const parsedNumber = number ? parsePhoneNumberFromString(number) : undefined;
+    const parsedNumber = number ? phoneNumberLib?.parsePhoneNumberFromString(number) : undefined;
     const shownNumber = parsedNumber?.formatInternational() ?? number;
     const half = Math.ceil(pairingCode.length / 2);
     const codeHalves = [pairingCode.slice(0, half), pairingCode.slice(half)];

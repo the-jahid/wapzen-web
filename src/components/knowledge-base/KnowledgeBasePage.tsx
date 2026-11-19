@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
+import { LazyLayoutMotion } from "@/components/motion/LazyLayoutMotion";
 import {
   useWorkspaceMode,
 } from "@/components/nav/workspaceMode";
@@ -1235,6 +1236,7 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
   }
 
   return (
+    <LazyLayoutMotion>
     <div className={`kb-shell${mode === "chat" ? " app-accent-green" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Knowledge Base" badges={{ "Knowledge Base": bases.length }} stackBelow={900} />
@@ -1491,7 +1493,7 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
                       0
                     );
                     return (
-                      <motion.button
+                      <m.button
                         className="kb-row"
                         key={base.knowledge_base_id}
                         layoutId={`knowledge-base-${base.knowledge_base_id}`}
@@ -1527,14 +1529,14 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
                         <span className="kb-row-chevron">
                           <Icon name="chevron" size={16} sw={2.3} />
                         </span>
-                      </motion.button>
+                      </m.button>
                     );
                   })}
                 </div>
               ) : (
                 <div className="kb-grid">
                   {filtered.map((base) => (
-                    <motion.button
+                    <m.button
                       className="kb-card kb-card-item"
                       key={base.knowledge_base_id}
                       layoutId={`knowledge-base-${base.knowledge_base_id}`}
@@ -1566,7 +1568,7 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
                           {formatShortTimestamp(base.last_refreshed_timestamp)}
                         </span>
                       </span>
-                    </motion.button>
+                    </m.button>
                   ))}
 
                   <button className="kb-add-card" onClick={openCreate} type="button">
@@ -1718,6 +1720,7 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
         </div>
       ) : null}
     </div>
+    </LazyLayoutMotion>
   );
 }
 

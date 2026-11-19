@@ -6,7 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { motion } from "motion/react";
+import * as m from "motion/react-m";
+import { LazyLayoutMotion } from "@/components/motion/LazyLayoutMotion";
 import {
   type WorkspaceMode,
   useWorkspaceMode,
@@ -36,7 +37,12 @@ import {
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
-import { normalizePhone, useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
+import {
+  normalizePhone,
+  useIsPhone,
+  usePhoneNumberLib,
+  WhatsAppLinkHelp,
+} from "@/components/phone-numbers/WhatsAppLinkHelp";
 
 type IconName =
   | "grid"
@@ -1713,6 +1719,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
   }
 
   return (
+    <LazyLayoutMotion>
     <div className={`phone-shell${mode === "chat" ? " app-accent-green" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Phone Numbers" stackBelow={900} />
@@ -1779,6 +1786,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
         </div>
       ) : null}
     </div>
+    </LazyLayoutMotion>
   );
 }
 
@@ -2113,7 +2121,7 @@ function PhoneNumberCard({ onSelect, ...rest }: BrowseItemProps) {
   const { phoneNumber } = rest;
 
   return (
-    <motion.div className="phone-card-item" layoutId={`phone-number-${phoneNumber.id}`}>
+    <m.div className="phone-card-item" layoutId={`phone-number-${phoneNumber.id}`}>
       <span className="phone-card-top">
         <span className="phone-card-avatar">
           <Icon name="phone" size={18} />
@@ -2136,7 +2144,7 @@ function PhoneNumberCard({ onSelect, ...rest }: BrowseItemProps) {
         </span>
       </span>
       <OpenOverlay label={displayName(phoneNumber)} onSelect={onSelect} />
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -2144,7 +2152,7 @@ function PhoneNumberRow({ onSelect, ...rest }: BrowseItemProps) {
   const { phoneNumber } = rest;
 
   return (
-    <motion.div className="phone-row" layoutId={`phone-number-${phoneNumber.id}`}>
+    <m.div className="phone-row" layoutId={`phone-number-${phoneNumber.id}`}>
       <span className="phone-card-avatar">
         <Icon name="phone" size={18} />
       </span>
@@ -2161,7 +2169,7 @@ function PhoneNumberRow({ onSelect, ...rest }: BrowseItemProps) {
       </span>
       <StatusChip compact status={phoneNumber.status} />
       <OpenOverlay label={displayName(phoneNumber)} onSelect={onSelect} />
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -2663,19 +2671,27 @@ function CreatePhoneNumberModal({
   const byCode = isPhone && !wantsQr;
   const [number, setNumber] = useState("");
   const [numberError, setNumberError] = useState("");
+  // Fetched as soon as the number field shows, so it is checked at once on submit.
+  usePhoneNumberLib(byCode);
+  // True while a submitted number is being checked, so a second press in that
+  // moment doesn't start a second login.
+  const checkingNumber = useRef(false);
 
   return (
     <div className="phone-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && onCancel()}>
       <form
         className="phone-modal-card"
         noValidate
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
           if (!byCode) {
             onStart();
             return;
           }
-          const normalized = normalizePhone(number);
+          if (checkingNumber.current) return;
+          checkingNumber.current = true;
+          const normalized = await normalizePhone(number);
+          checkingNumber.current = false;
           if ("error" in normalized) {
             setNumberError(normalized.error);
             return;

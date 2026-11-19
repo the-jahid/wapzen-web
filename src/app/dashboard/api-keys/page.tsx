@@ -1,4 +1,4 @@
-import ApiKeysPage from "@/components/api-keys/ApiKeysPage";
+import { ApiKeysPage } from "@/components/nav/voicePages";
 
 export default function Page() {
   return <ApiKeysPage />;
