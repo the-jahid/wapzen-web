@@ -159,7 +159,55 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
           />
         </div>
       </aside>
+      <BottomTabs activeLabel={activeLabel} newOrders={newOrders} />
     </div>
+  );
+}
+
+// Phone-width names for the bottom bar, where each tab is only ~50-60px wide.
+const shortTabLabels: Partial<Record<string, string>> = {
+  "Chat Agents": "Agents",
+  Conversations: "Chats",
+  "Phone Numbers": "Numbers",
+  "Knowledge Base": "Knowledge",
+};
+
+/**
+ * The menu's pages as one row of tabs pinned to the bottom of the screen, like
+ * an app's tab bar. It only shows while the sidebar is folded into the drawer
+ * (the same breakpoint as the top bar), so desktop is unchanged.
+ */
+function BottomTabs({ activeLabel, newOrders }: { activeLabel: string; newOrders: number }) {
+  const { mode } = useWorkspaceMode();
+
+  return (
+    <nav aria-label="Pages" className={styles.tabbar}>
+      {navItemsForMode(mode).map((item) => {
+        const Icon = navIcons[item.icon];
+        const active = item.label === activeLabel;
+        const short = shortTabLabels[item.label];
+        const ordersWaiting = item.label === "Orders" && newOrders > 0;
+        return (
+          <Link
+            aria-current={active ? "page" : undefined}
+            aria-label={ordersWaiting ? `${item.label}, ${newOrders} new` : item.label}
+            className={styles.tab}
+            data-active={active || undefined}
+            href={item.href ?? "#"}
+            key={item.label}
+          >
+            <span className={styles.tabIcon}>
+              <Icon aria-hidden="true" size={19} strokeWidth={1.9} />
+              {ordersWaiting ? <span className={styles.tabDot} /> : null}
+            </span>
+            <span aria-hidden="true" className={styles.tabLabel}>
+              <span className={short ? styles.tabLabelFull : undefined}>{item.label}</span>
+              {short ? <span className={styles.tabLabelShort}>{short}</span> : null}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 

@@ -384,6 +384,8 @@ const css = `
    page scrolls as a whole. */
 @media (max-width: 900px) {
   .grp-shell { display: block; height: auto; max-height: none; max-width: 100%; min-height: 100dvh; overflow: visible; width: 100%; }
+  /* Toasts rise above the sidebar's bottom tab bar. */
+  .grp-toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
   .grp-main { height: auto; overflow: visible; }
   .grp-content { overflow: visible; padding: 16px; }
 }

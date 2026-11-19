@@ -6,14 +6,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { SignOutButton, useAuth, useUser } from "@clerk/nextjs";
 import { BrandMark } from "@/components/brand/BrandMark";
-import { DashboardSidebar, navIcons } from "@/components/nav/DashboardSidebar";
+import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
   reportChatAgentCount,
   skipFirstAgentSetup,
   useChatAgentCount,
   useFirstAgentSetupSkipped,
 } from "@/lib/chatAgentCount";
-import { navItemsForMode } from "@/components/nav/workspaceMode";
 import {
   FREE_TRIAL_WHATSAPP_URL,
   MORE_AGENTS_WHATSAPP_URL,
@@ -690,9 +689,6 @@ const css = `
   padding: 16px;
 }
 .chat-card-grow { min-height: 245px; }
-.chat-page-links { display: none; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.chat-page-link { min-height: 34px; text-decoration: none; }
-.chat-page-link > svg { color: var(--muted); flex: none; }
 .chat-card.chat-order-shortcut {
   align-items: center;
   color: var(--text);
@@ -1118,7 +1114,8 @@ const css = `
   .chat-agent-page { overflow: visible; }
   .chat-agent-expanded-grid { overflow: visible; }
   .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
-  .chat-page-links { display: flex; }
+  /* Toasts rise above the sidebar's bottom tab bar. */
+  .chat-toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
 /* Phones: one column everywhere, the agent editor goes full screen, and
    touch targets grow a little. */
@@ -2271,7 +2268,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
             </div>
           </section>
           )}
-          <PageLinks />
         </div>
       </main>
 
@@ -4239,26 +4235,6 @@ function ConfigSection({
       </button>
       {isOpen ? <div className="chat-accordion-body">{children}</div> : null}
     </div>
-  );
-}
-
-// Small buttons to the menu's other pages, for screens where the menu is folded
-// away behind the top bar's button. The css hides them once the sidebar is showing.
-function PageLinks() {
-  return (
-    <nav aria-label="Other pages" className="chat-page-links">
-      {navItemsForMode("chat")
-        .filter((item) => item.href !== "/dashboard/chat")
-        .map((item) => {
-          const LinkIcon = navIcons[item.icon];
-          return (
-            <Link className="chat-chip chat-page-link" href={item.href ?? "#"} key={item.label}>
-              <LinkIcon aria-hidden="true" size={14} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-    </nav>
   );
 }
 
