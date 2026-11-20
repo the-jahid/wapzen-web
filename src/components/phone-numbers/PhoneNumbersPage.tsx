@@ -1289,6 +1289,11 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
   // The selected number comes from the URL: /dashboard/phone-numbers/<id>
   // opens it on its own page, the bare list route shows the grid.
   const selectedId = phoneNumberId ?? null;
+  // Read by the list load only, so opening another number doesn't refetch it.
+  const selectedIdRef = useRef(selectedId);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
   const openNumber = useCallback(
     (id: string, replace = false) => {
       const href = `/dashboard/phone-numbers/${encodeURIComponent(id)}`;
@@ -1356,13 +1361,23 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
     if (!isAuthenticated) return;
 
     let cancelled = false;
+    // The list never includes a login nobody has scanned yet (the server hides
+    // drafts), so a number opened on its own page that the list lacks is asked
+    // for by id. Without this, Create opened the new login's page, this load
+    // replaced the list, and the page said "not found" with no QR on it.
+    const withOpenedNumber = async (rows: ApiPhoneNumber[]) => {
+      const openedId = selectedIdRef.current;
+      if (!openedId || rows.some((row) => row.id === openedId)) return rows;
+      const opened = await apiGetPhoneNumber(openedId, getToken).catch(() => null);
+      return opened ? upsertPhoneNumber(rows, opened) : rows;
+    };
     (async () => {
       setLoadState("loading");
       setLoadError("");
       try {
         if (mode === "chat") {
           const [rows, agentRows] = await Promise.all([
-            apiListPhoneNumbers(getToken),
+            apiListPhoneNumbers(getToken).then(withOpenedNumber),
             apiListChatAgents(getToken),
           ]);
           if (cancelled) return;
@@ -1370,7 +1385,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
           setChatAgents(agentRows);
         } else {
           const [rows, agentRows] = await Promise.all([
-            apiListPhoneNumbers(getToken),
+            apiListPhoneNumbers(getToken).then(withOpenedNumber),
             apiListAgents(getToken),
           ]);
           if (cancelled) return;
