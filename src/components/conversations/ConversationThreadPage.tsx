@@ -140,9 +140,12 @@ export default function ConversationThreadPage({
   const toggleAiReply = useCallback(async () => {
     if (!thread || aiSaving) return;
     const next = thread.ai_reply_enabled === false;
+    // Switching the AI back on clears the red flag on the server too.
+    const flagged = thread.needs_attention === true;
     const apply = (ai_reply_enabled: boolean) => {
-      setThread((current) => (current ? { ...current, ai_reply_enabled } : current));
-      patchCachedLists(thread.id, (conversation) => ({ ...conversation, ai_reply_enabled }));
+      const needs_attention = ai_reply_enabled ? false : flagged;
+      setThread((current) => (current ? { ...current, ai_reply_enabled, needs_attention } : current));
+      patchCachedLists(thread.id, (conversation) => ({ ...conversation, ai_reply_enabled, needs_attention }));
     };
     setAiSaving(true);
     setError("");
@@ -271,7 +274,12 @@ export default function ConversationThreadPage({
         </div>
 
         {error ? <div className="cv-error cv-error-inline">{error}</div> : null}
-        {thread && !aiOn ? (
+        {thread && !aiOn && thread.needs_attention ? (
+          <div className="cv-human-needed-note" role="alert">
+            <strong>Human needed.</strong> The agent called a person for this customer and stopped replying. Answer them
+            from the box below, then turn the AI back on when you&apos;re done.
+          </div>
+        ) : thread && !aiOn ? (
           <div className="cv-ai-off-note">
             AI replies are off for this contact. Their messages still arrive here; answer them from the box below.
           </div>
@@ -512,6 +520,8 @@ const threadCSS = `
 
 .cv-error-inline{border-radius:0;border-width:0 0 1px}
 .cv-avatar-lg{font-size:14px;height:38px;width:38px}
+.cv-human-needed-note{background:var(--app-rose-soft);border-bottom:1px solid var(--app-rose-border-strong);color:var(--app-rose-text);flex:0 0 auto;font-size:12px;line-height:1.5;padding:9px 14px}
+.cv-human-needed-note strong{color:var(--app-rose);font-weight:800}
 .cv-ai-off-note{background:var(--app-slate-soft);border-bottom:1px solid var(--app-line);color:var(--app-text-soft);flex:0 0 auto;font-size:11.5px;line-height:1.5;padding:8px 14px}
 
 .cv-thread-head{align-items:center;background:var(--app-surface);border-bottom:1px solid var(--app-line);display:flex;flex:0 0 auto;gap:10px;padding:11px 14px}

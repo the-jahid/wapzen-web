@@ -63,6 +63,26 @@ export type ChatWebsiteSection = {
   website_url: string;
 };
 
+// Human intervention: when a chat matches the description, the agent calls a
+// person in, messaging the optional WhatsApp number from its own. The number is
+// saved only once WhatsApp says it has an account. Absent from servers that predate it, so, like website, it is
+// only sent back when the server returned it. Both stored as typed.
+export type ChatHumanInterventionSection = {
+  // Its own on/off switch. Absent from servers that predate it.
+  human_intervention_enabled?: boolean;
+  human_intervention_description: string;
+  human_intervention_phone: string;
+  // After a sent alert, turn the AI off for that customer so a person takes
+  // over. Absent from servers that predate it.
+  human_intervention_pause_ai?: boolean;
+};
+
+// Whether the agent sends the owner's uploaded images and files. Absent from
+// servers that predate the switch, so it is only sent back when returned.
+export type ChatFilesSection = {
+  files_enabled: boolean;
+};
+
 // What the running server reports about serving the agent. Never saved: it is
 // read-only and absent from older servers.
 export type ChatRuntimeSection = {
@@ -84,6 +104,8 @@ export type ApiChatAgent = {
   order?: ChatOrderSection;
   media?: ChatMediaSection;
   website?: ChatWebsiteSection;
+  files?: ChatFilesSection;
+  human_intervention?: ChatHumanInterventionSection;
   // True once the account has sent every reply it is allowed; the agent stays
   // silent until the limit is lifted. Read-only.
   reply_limit_reached?: boolean;
@@ -105,6 +127,8 @@ export type CreateChatAgentPayload = {
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions" | "order_notify_phone">;
   media?: ChatMediaSection;
   website?: ChatWebsiteSection;
+  files?: ChatFilesSection;
+  human_intervention?: ChatHumanInterventionSection;
 };
 
 // Every section and every field inside a supplied section is optional on
@@ -119,6 +143,8 @@ export type UpdateChatAgentPayload = {
   order?: Pick<ChatOrderSection, "order_enabled" | "order_instructions" | "order_notify_phone">;
   media?: Partial<ChatMediaSection>;
   website?: Partial<ChatWebsiteSection>;
+  files?: Partial<ChatFilesSection>;
+  human_intervention?: Partial<ChatHumanInterventionSection>;
 };
 
 // The defaults the OpenAPI document declares for a new chat agent, so the

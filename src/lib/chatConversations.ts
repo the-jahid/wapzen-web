@@ -19,6 +19,10 @@ export type ApiChatConversation = {
   status: ChatConversationStatus;
   // Off: the agent stays quiet for this contact and a person answers.
   ai_reply_enabled: boolean;
+  // Red "Human needed": the agent called a person (human intervention) and
+  // turned the AI off. Cleared by switching the AI back on. Absent from older
+  // servers.
+  needs_attention?: boolean;
   message_count: number;
   last_message_role: ChatMessageRole | null;
   last_message_at: string | null;

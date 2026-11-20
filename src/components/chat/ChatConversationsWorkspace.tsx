@@ -166,8 +166,16 @@ export default function ChatConversationsWorkspace({
       const id = conversation.id;
       if (aiSaving.includes(id)) return;
       const next = conversation.ai_reply_enabled === false;
+      // Switching the AI back on clears the red flag on the server too.
+      const flagged = conversation.needs_attention === true;
       const apply = (ai_reply_enabled: boolean) => {
-        setConversations((current) => current.map((item) => (item.id === id ? { ...item, ai_reply_enabled } : item)));
+        setConversations((current) =>
+          current.map((item) =>
+            item.id === id
+              ? { ...item, ai_reply_enabled, needs_attention: ai_reply_enabled ? false : flagged }
+              : item
+          )
+        );
       };
       setAiSaving((current) => [...current, id]);
       setListError("");
@@ -277,7 +285,7 @@ export default function ChatConversationsWorkspace({
                 // The contact's name is the link, stretched over the whole row,
                 // because the AI switch inside it is a button of its own and a
                 // button can't nest in a link. New-tab clicks work this way too.
-                <div className="cv-row" key={conversation.id}>
+                <div className={`cv-row${conversation.needs_attention ? " is-human-needed" : ""}`} key={conversation.id}>
                   <span className="cv-avatar" style={{ background: avatarColor(conversation.id) }}>
                     {title.slice(0, 1).toUpperCase()}
                   </span>
@@ -299,6 +307,7 @@ export default function ChatConversationsWorkspace({
                     <span className="cv-row-phone notranslate">{conversationPhone(conversation)}</span>
                   </span>
                   <span className="cv-row-meta">
+                    {conversation.needs_attention ? <span className="cv-human-chip">Human needed</span> : null}
                     <span className="cv-row-count">{conversation.message_count} messages</span>
                     {/* Only the account-wide inbox needs to say who answered:
                         inside one agent's tab, every thread is that agent's. */}
@@ -402,6 +411,10 @@ const workspaceCSS = `
 .cv-row:hover .cv-row-chevron{color:var(--app-primary-text);transform:translateX(2px)}
 /* Above the stretched link, so the switch answers its own clicks. */
 .cv-row-ai{grid-area:ai;position:relative;z-index:1}
+/* The agent called a person and turned the AI off: red until it's back on. */
+.cv-row.is-human-needed{background:var(--app-rose-soft);border-color:var(--app-rose-border-strong)}
+.cv-row.is-human-needed:hover{border-color:var(--app-rose)}
+.cv-human-chip{background:var(--app-rose);border-radius:999px;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.3px;padding:3px 8px;text-transform:uppercase;white-space:nowrap}
 
 /* Tablet: the list gives up its comfort. */
 @media(max-width:1100px){

@@ -56,6 +56,7 @@ import {
   type ApiAgentFile,
   type ApiChatAgent,
   type ChatMediaSection,
+  type ChatHumanInterventionSection,
   type ChatWebsiteSection,
   type CreateChatAgentPayload,
 } from "@/lib/chatAgents";
@@ -78,6 +79,7 @@ type IconName =
   | "bag"
   | "paperclip"
   | "globe"
+  | "person"
   | "pencil"
   | "plus"
   | "trash"
@@ -92,7 +94,15 @@ type IconName =
 
 // The collapsible parts of the configuration panel, one per section of the
 // chat-agent contract.
-type ConfigSectionId = "phone-number" | "knowledge-base" | "tools" | "orders" | "files" | "website" | "voice-photos";
+type ConfigSectionId =
+  | "phone-number"
+  | "knowledge-base"
+  | "tools"
+  | "orders"
+  | "files"
+  | "website"
+  | "human-intervention"
+  | "voice-photos";
 
 // The editor's tabs. "agent" is what the agent says and answers on, "conversation"
 // the record of what it has already said, and "configuration" what it can reach.
@@ -248,6 +258,13 @@ function iconPaths(name: IconName): ReactNode {
           <circle cx="12" cy="12" r="9" />
           <path d="M3 12h18" />
           <path d="M12 3a14 14 0 010 18M12 3a14 14 0 000 18" />
+        </>
+      );
+    case "person":
+      return (
+        <>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0116 0" />
         </>
       );
     case "plus":
@@ -1076,6 +1093,9 @@ const css = `
 .chat-prompt-card { display: flex; flex: 0 0 50%; flex-direction: column; min-width: 0; padding: 14px; }
 .chat-card.chat-files-card { padding: 0 14px; }
 .chat-card.chat-files-card:empty { display: none; }
+/* The cards under the prompt, as a grid on desktop: three across where they
+   fit, fewer on a narrower window. Each keeps its own height when opened. */
+.chat-editor-cards { align-items: start; display: grid; flex: none; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .chat-prompt-card > .chat-card-head { flex: 0 0 auto; margin-bottom: 8px; }
 .chat-prompt-card > .chat-textarea { flex: 1 1 0; min-height: 0 !important; resize: none; }
 .chat-config-panel.is-rail { flex: none; min-height: 0; }
@@ -1271,6 +1291,8 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
       : undefined,
     media: agent.media ? { ...agent.media } : undefined,
     website: agent.website ? { ...agent.website } : undefined,
+    files: agent.files ? { ...agent.files } : undefined,
+    human_intervention: agent.human_intervention ? { ...agent.human_intervention } : undefined,
   };
 }
 
@@ -2818,12 +2840,17 @@ function Editor({
 }) {
   const isDesktop = useIsDesktop();
   const shownTab = shownEditorTab(tab, isDesktop);
-  // Starts closed, like Web Search; the header still shows how many files.
-  const [filesOpen, setFilesOpen] = useState(false);
+  // Starts open on desktop, where the cards sit side by side, and closed on
+  // phones; the header still shows how many files. null = not touched yet.
+  const [filesChoice, setFilesOpen] = useState<boolean | null>(null);
+  const filesOpen = filesChoice ?? isDesktop;
   const filesCard = (
-    <FilesCard agentId={agent.id} isOpen={filesOpen} key={agent.id} onOpenChange={setFilesOpen} />
+    <FilesCard agent={agent} isOpen={filesOpen} key={agent.id} onOpenChange={setFilesOpen} onPatch={onPatch} />
   );
   const websiteCard = <WebsiteCard agent={agent} key={`website-${agent.id}`} onPatch={onPatch} />;
+  const humanCard = (
+    <HumanInterventionCard agent={agent} key={`human-${agent.id}`} onPatch={onPatch} />
+  );
 
   // Below desktop the Agent tab stays short: Voice & Photos sits in the
   // Configuration tab, and Take Order is a small card leading there.
@@ -2919,8 +2946,12 @@ function Editor({
               {promptHead}
               {promptField}
             </div>
-            {filesCard}
-            {websiteCard}
+            {/* Side by side on desktop; each opens in place. */}
+            <div className="chat-editor-cards">
+              {humanCard}
+              {filesCard}
+              {websiteCard}
+            </div>
           </div>
           <ConfigPanel
             agent={agent}
@@ -2948,6 +2979,7 @@ function Editor({
             {promptField}
           </div>
 
+          {humanCard}
           {filesCard}
           {websiteCard}
 
@@ -3624,20 +3656,29 @@ function formatFileSize(bytes: number) {
 // Images & Files on its own card under the prompt, closed until opened. The
 // section renders nothing on a server without the feature, and the css then hides
 // the empty card.
+// Its on/off switch saves with the agent; the files themselves save at once.
 function FilesCard({
-  agentId,
+  agent,
   isOpen,
   onOpenChange,
+  onPatch,
 }: {
-  agentId: string;
+  agent: ApiChatAgent;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
 }) {
+  // Undefined on a server without the switch: no switch is shown, files on.
+  const enabled = agent.files?.files_enabled;
   return (
     <div className="chat-card chat-files-card is-rail">
       <AgentFilesSection
-        agentId={agentId}
+        agentId={agent.id}
+        enabled={enabled}
         isOpen={isOpen}
+        onEnabledChange={(next) =>
+          onPatch((current) => ({ ...current, files: { ...current.files, files_enabled: next } }))
+        }
         onToggle={(next) => onOpenChange(next !== null)}
       />
     </div>
@@ -3668,8 +3709,11 @@ function WebsiteCard({
   agent: ApiChatAgent;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
 }) {
-  // Starts closed; the header still says whether it is on.
-  const [isOpen, setIsOpen] = useState(false);
+  // Starts open on desktop, where the cards sit side by side, and closed on
+  // phones; the header still says whether it is on. null = not touched yet.
+  const isDesktop = useIsDesktop();
+  const [openChoice, setIsOpen] = useState<boolean | null>(null);
+  const isOpen = openChoice ?? isDesktop;
   const website = agent.website;
   if (!website) return null;
 
@@ -3705,6 +3749,12 @@ function WebsiteCard({
         title="Web Search"
       >
         <div className="chat-website">
+          <MediaToggle
+            hint={hint}
+            label="Web Search"
+            on={website.website_enabled}
+            onToggle={() => setWebsite({ website_enabled: !website.website_enabled })}
+          />
           <label className="chat-field">
             <span className="chat-control-label">Website address</span>
             <input
@@ -3719,27 +3769,277 @@ function WebsiteCard({
               value={typed}
             />
           </label>
-          <MediaToggle
-            hint={hint}
-            label="Let the agent read this website"
-            on={website.website_enabled}
-            onToggle={() => setWebsite({ website_enabled: !website.website_enabled })}
-          />
         </div>
       </ConfigSection>
     </div>
   );
 }
 
+// Human Intervention on its own card, first under the prompt: when a chat matches the
+// description, the agent calls a person in. Its own switch turns it on and off.
+// The WhatsApp number is optional and saved only once WhatsApp says it has an
+// account (HumanAlertNumberField); without one, the chat is just flagged red and
+// the AI turned off for that customer. Only shown when the server returns the
+// section.
+function HumanInterventionCard({
+  agent,
+  onPatch,
+}: {
+  agent: ApiChatAgent;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+}) {
+  // Starts open on desktop, where it is the first card under the prompt, and
+  // closed on phones like every other card. null = not touched yet, so the
+  // default follows the screen (useIsDesktop is false until hydrated).
+  const isDesktop = useIsDesktop();
+  const [openChoice, setIsOpen] = useState<boolean | null>(null);
+  const isOpen = openChoice ?? isDesktop;
+  const human = agent.human_intervention;
+  if (!human) return null;
+
+  // Older servers had no switch: there it was on whenever it was filled in.
+  const enabled = human.human_intervention_enabled ?? true;
+  const description = human.human_intervention_description;
+  const phone = human.human_intervention_phone;
+  const pauseAi = human.human_intervention_pause_ai;
+  const doesSomething = phone.trim() !== "" || pauseAi === true;
+  const on = enabled && description.trim() !== "" && doesSomething;
+  const setHuman = (change: Partial<ChatHumanInterventionSection>) =>
+    onPatch((current) => ({
+      ...current,
+      human_intervention: {
+        human_intervention_description: current.human_intervention?.human_intervention_description ?? "",
+        human_intervention_phone: current.human_intervention?.human_intervention_phone ?? "",
+        // Sent back only when the server reported them; older ones refuse them.
+        ...(current.human_intervention?.human_intervention_enabled !== undefined
+          ? { human_intervention_enabled: current.human_intervention.human_intervention_enabled }
+          : {}),
+        ...(current.human_intervention?.human_intervention_pause_ai !== undefined
+          ? { human_intervention_pause_ai: current.human_intervention.human_intervention_pause_ai }
+          : {}),
+        ...change,
+      },
+    }));
+
+  let hint: string;
+  if (!enabled) hint = "Off: the agent never calls a person in.";
+  else if (!description.trim()) hint = "Describe below when a person should step in, or nothing will happen.";
+  else if (!doesSomething)
+    hint = "No one will be told: add a WhatsApp number, or turn on the switch at the bottom so the chat is flagged red.";
+  else hint = "On: when a chat matches what you describe, the agent calls a person in.";
+
+  return (
+    <div className="chat-card chat-files-card is-rail">
+      <ConfigSection
+        icon="person"
+        id="human-intervention"
+        isOpen={isOpen}
+        meta={on ? "On" : "Off"}
+        onToggle={(next) => setIsOpen(next !== null)}
+        title="Human Intervention"
+      >
+        <div className="chat-website">
+          {human.human_intervention_enabled !== undefined ? (
+            <MediaToggle
+              hint={hint}
+              label="Human intervention"
+              on={enabled}
+              onToggle={() => setHuman({ human_intervention_enabled: !enabled })}
+            />
+          ) : null}
+          <label className="chat-field">
+            <span className="chat-control-label">When should a person step in?</span>
+            <textarea
+              className="chat-textarea"
+              disabled={!enabled}
+              maxLength={1000}
+              onChange={(event) => setHuman({ human_intervention_description: event.target.value })}
+              placeholder="e.g. The customer is angry, asks for a refund, or wants to talk to a person."
+              style={{ minHeight: 88 }}
+              value={description}
+            />
+          </label>
+          <HumanAlertNumberField agent={agent} disabled={!enabled} onPatch={onPatch} />
+          {pauseAi !== undefined ? (
+            <MediaToggle
+              disabled={!enabled}
+              hint={
+                pauseAi
+                  ? "When a person is called, the AI stops replying to that customer and the chat turns red on Conversations (Human needed) until you turn the AI back on for them."
+                  : "The AI keeps replying to that customer after a person is called, and the chat isn't flagged."
+              }
+              label="Turn the AI off for that customer after calling a person"
+              on={pauseAi}
+              onToggle={() => setHuman({ human_intervention_pause_ai: !pauseAi })}
+            />
+          ) : null}
+        </div>
+      </ConfigSection>
+    </div>
+  );
+}
+
+// The optional number told when the agent calls a person in. Like the
+// order-alert number, it's saved on its own, not with the agent's autosave:
+// the server asks WhatsApp whether it has an account first and refuses it if
+// not, so it is added with a button and shows the checked E.164 form once saved.
+function HumanAlertNumberField({
+  agent,
+  disabled,
+  onPatch,
+}: {
+  agent: ApiChatAgent;
+  disabled: boolean;
+  onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
+}) {
+  const { getToken } = useAuth();
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  // The check takes a moment, so its answer goes through the newest onPatch:
+  // edits made meanwhile elsewhere in the panel are kept.
+  const onPatchRef = useRef(onPatch);
+  useEffect(() => {
+    onPatchRef.current = onPatch;
+  });
+
+  const saved = agent.human_intervention?.human_intervention_phone ?? "";
+  const hasNumber = Boolean(agent.agent.phone_number_id);
+  const fieldId = `human-alert-${agent.id}`;
+
+  const save = async (value: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      const updated = await updateDashboardChatAgent(
+        agent.id,
+        { human_intervention: { human_intervention_phone: value } },
+        getToken
+      );
+      const phone = updated.human_intervention?.human_intervention_phone ?? "";
+      onPatchRef.current((current) => ({
+        ...current,
+        human_intervention: current.human_intervention
+          ? { ...current.human_intervention, human_intervention_phone: phone }
+          : current.human_intervention,
+      }));
+      setDraft("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save this number. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const add = () => {
+    const value = draft.trim();
+    if (!value || busy) return;
+    if (phoneLooksWrong(value)) {
+      setError("That isn't a valid phone number. Use digits with the country code, like +8801712345678.");
+      return;
+    }
+    void save(value);
+  };
+
+  const message = error ? (
+    <span className="chat-file-error" role="alert">
+      {error}
+    </span>
+  ) : (
+    <span className="chat-field-hint">
+      {saved.trim()
+        ? "When a person is needed, this number gets a WhatsApp message from this agent's number: who the customer is, what they need and a link to their chat. One per chat every 30 minutes."
+        : hasNumber
+          ? "Optional. The number is checked with WhatsApp before it's added. Without one, no message is sent."
+          : "Optional. Link a WhatsApp number to this agent first: the message is sent from it."}
+    </span>
+  );
+
+  if (saved.trim()) {
+    return (
+      <div className="chat-field">
+        <span className="chat-control-label">WhatsApp number to tell (optional)</span>
+        <div className="chat-alert-row">
+          <span className="chat-input chat-alert-saved" title={saved}>
+            {saved}
+          </span>
+          <button
+            className="chat-btn chat-btn-secondary chat-btn-sm"
+            disabled={busy}
+            onClick={() => void save("")}
+            type="button"
+          >
+            {busy ? "Removing…" : "Remove"}
+          </button>
+        </div>
+        {message}
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat-field">
+      <label className="chat-control-label" htmlFor={fieldId}>
+        WhatsApp number to tell (optional)
+      </label>
+      <form
+        className="chat-alert-row"
+        onSubmit={(event) => {
+          event.preventDefault();
+          add();
+        }}
+      >
+        <input
+          aria-invalid={error ? true : undefined}
+          autoComplete="tel"
+          className="chat-input"
+          disabled={disabled || busy || !hasNumber}
+          id={fieldId}
+          inputMode="tel"
+          maxLength={40}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            if (error) setError("");
+          }}
+          placeholder="+8801712345678"
+          spellCheck={false}
+          type="tel"
+          value={draft}
+        />
+        <button
+          className="chat-btn chat-btn-primary chat-btn-sm"
+          disabled={disabled || busy || !hasNumber || !draft.trim()}
+          type="submit"
+        >
+          {busy ? "Checking…" : "Add"}
+        </button>
+      </form>
+      {message}
+    </div>
+  );
+}
+
+// Whether a typed number can't be one: something other than digits, spaces and
+// ()+.-/, or too few or too many digits. Blank isn't wrong, just empty.
+function phoneLooksWrong(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return phone.trim() !== "" && (/[^\d\s()+.\-/]/.test(phone) || digits.length < 7 || digits.length > 15);
+}
+
 // The images and documents the agent can send, each with a note saying when.
 // Unlike the rest of the panel these save straight away, not with the agent.
 function AgentFilesSection({
   agentId,
+  enabled,
   isOpen,
+  onEnabledChange,
   onToggle,
 }: {
   agentId: string;
+  // The Images & Files switch; undefined when the server has none.
+  enabled?: boolean;
   isOpen: boolean;
+  onEnabledChange: (enabled: boolean) => void;
   onToggle: (next: ConfigSectionId | null) => void;
 }) {
   const { getToken } = useAuth();
@@ -3868,11 +4168,25 @@ function AgentFilesSection({
       icon="paperclip"
       id="files"
       isOpen={isOpen}
-      meta={files === null ? "" : files.length ? `${files.length} uploaded` : "None"}
+      meta={
+        enabled === false ? "Off" : files === null ? "" : files.length ? `${files.length} uploaded` : "None"
+      }
       onToggle={onToggle}
       title="Images & Files"
     >
       <div className="chat-files">
+        {enabled !== undefined ? (
+          <MediaToggle
+            hint={
+              enabled
+                ? "On: the agent sends a file when the chat matches its note."
+                : "Off: the agent sends none of these files. They stay uploaded for when you turn it back on."
+            }
+            label="Images & Files"
+            on={enabled}
+            onToggle={() => onEnabledChange(!enabled)}
+          />
+        ) : null}
         {files?.length ? (
           <ul className="chat-file-list">
             {files.map((file) => (
@@ -4219,13 +4533,6 @@ function OrderAlertField({
       )}
     </div>
   );
-}
-
-// A typed number that can't be a phone number: stray characters, or too few or
-// too many digits.
-function phoneLooksWrong(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  return phone.trim() !== "" && (/[^\d\s()+.\-/]/.test(phone) || digits.length < 7 || digits.length > 15);
 }
 
 function MediaSettings({
