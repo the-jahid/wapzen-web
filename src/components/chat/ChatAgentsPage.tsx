@@ -632,6 +632,9 @@ const css = `
 .chat-field { display: grid; gap: 6px; min-width: 0; }
 .chat-field-label { color: var(--subtle); font-size: 11.5px; font-weight: 700; }
 .chat-field-hint { color: var(--faint); font-size: 11.5px; line-height: 1.45; }
+.chat-alert-row { align-items: center; display: flex; gap: 8px; min-width: 0; }
+.chat-alert-row .chat-input { flex: 1; min-width: 0; }
+.chat-alert-saved { align-items: center; display: flex; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-range-head { align-items: center; display: flex; justify-content: space-between; }
 .chat-range-value { color: var(--text); font-size: 12px; font-weight: 700; }
 .chat-range { accent-color: var(--primary); width: 100%; }
@@ -1257,14 +1260,13 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
       : undefined,
     tools: agent.tools ? { tool_ids: [...(agent.tools.tool_ids ?? [])] } : undefined,
     // Only a server that returned the section accepts it back: the API refuses
-    // a section it doesn't know, and orders_on is read-only.
+    // a section it doesn't know, and orders_on is read-only. The order-alert
+    // number is left out: OrderAlertField saves it on its own once WhatsApp has
+    // confirmed it, so an autosave never carries a stale or unchecked one.
     order: agent.order
       ? {
           order_enabled: agent.order.order_enabled,
           order_instructions: agent.order.order_instructions,
-          ...(agent.order.order_notify_phone !== undefined
-            ? { order_notify_phone: agent.order.order_notify_phone }
-            : {}),
         }
       : undefined,
     media: agent.media ? { ...agent.media } : undefined,
@@ -4077,8 +4079,9 @@ function OrderInstructionsField({
 
 // Optional: a WhatsApp number told about every order the agent places or
 // changes, sent from the agent's own number. Only offered by a server that
-// reports the field, since an older one refuses it on save. Stored as typed
-// (the page autosaves mid-typing), so a number that can't be one gets a hint.
+// reports the field. Not autosaved like the rest of the panel: Add sends the
+// number on its own, the server asks WhatsApp whether it has an account and
+// refuses it if not, so only a number that can get the alerts is ever saved.
 function OrderAlertField({
   agent,
   onPatch,
@@ -4086,39 +4089,143 @@ function OrderAlertField({
   agent: ApiChatAgent;
   onPatch: (patch: (agent: ApiChatAgent) => ApiChatAgent) => void;
 }) {
-  const phone = agent.order?.order_notify_phone;
-  if (phone === undefined) return null;
-  const digits = phone.replace(/D/g, "");
-  const looksWrong =
-    phone.trim() !== "" && (/[^ds()+.-/]/.test(phone) || digits.length < 7 || digits.length > 15);
+  const { getToken } = useAuth();
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  // onPatch applies to the agent as it was when it was handed down, so the
+  // answer of a check that took a moment goes through the newest one: edits
+  // made meanwhile elsewhere in the panel are kept.
+  const onPatchRef = useRef(onPatch);
+  useEffect(() => {
+    onPatchRef.current = onPatch;
+  });
+
+  const saved = agent.order?.order_notify_phone;
+  if (saved === undefined) return null;
+  const hasNumber = Boolean(agent.agent.phone_number_id);
+
+  const save = async (value: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      const updated = await updateDashboardChatAgent(
+        agent.id,
+        { order: { order_notify_phone: value } },
+        getToken
+      );
+      const phone = updated.order?.order_notify_phone ?? "";
+      onPatchRef.current((current) => ({
+        ...current,
+        order: { ...current.order, order_notify_phone: phone },
+      }));
+      setDraft("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save this number. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const add = () => {
+    const value = draft.trim();
+    if (!value || busy) return;
+    if (phoneLooksWrong(value)) {
+      setError("That isn't a valid phone number. Use digits with the country code, like +8801712345678.");
+      return;
+    }
+    void save(value);
+  };
+
+  if (saved.trim()) {
+    return (
+      <div className="chat-field">
+        <span className="chat-control-label">Order alerts on WhatsApp (optional)</span>
+        <div className="chat-alert-row">
+          <span className="chat-input chat-alert-saved" title={saved}>
+            {saved}
+          </span>
+          <button
+            className="chat-btn chat-btn-secondary chat-btn-sm"
+            disabled={busy}
+            onClick={() => void save("")}
+            type="button"
+          >
+            {busy ? "Removing…" : "Remove"}
+          </button>
+        </div>
+        {error ? (
+          <span className="chat-file-error" role="alert">
+            {error}
+          </span>
+        ) : (
+          <span className="chat-field-hint">
+            Every new or changed order is sent to this number on WhatsApp, from this agent&apos;s number.
+          </span>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <label className="chat-field">
-      <span className="chat-control-label">Order alerts on WhatsApp (optional)</span>
-      <input
-        autoComplete="tel"
-        className="chat-input"
-        inputMode="tel"
-        maxLength={40}
-        onChange={(event) =>
-          onPatch((current) => ({
-            ...current,
-            order: { ...current.order, order_notify_phone: event.target.value },
-          }))
-        }
-        placeholder="+8801712345678"
-        spellCheck={false}
-        type="tel"
-        value={phone}
-      />
-      <span className="chat-field-hint">
-        {looksWrong
-          ? "This doesn't look like a phone number, so no alerts will be sent. Use digits, with the country code."
-          : phone.trim()
-            ? "Every new or changed order is sent to this number on WhatsApp, from this agent's number."
-            : "Add a WhatsApp number to get each new or changed order there too, sent from this agent's number."}
-      </span>
-    </label>
+    <div className="chat-field">
+      <label className="chat-control-label" htmlFor={`order-alert-${agent.id}`}>
+        Order alerts on WhatsApp (optional)
+      </label>
+      <form
+        className="chat-alert-row"
+        onSubmit={(event) => {
+          event.preventDefault();
+          add();
+        }}
+      >
+        <input
+          aria-invalid={error ? true : undefined}
+          autoComplete="tel"
+          className="chat-input"
+          disabled={busy || !hasNumber}
+          id={`order-alert-${agent.id}`}
+          inputMode="tel"
+          maxLength={40}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            if (error) setError("");
+          }}
+          placeholder="+8801712345678"
+          spellCheck={false}
+          type="tel"
+          value={draft}
+        />
+        <button
+          className="chat-btn chat-btn-primary chat-btn-sm"
+          disabled={busy || !hasNumber || !draft.trim()}
+          type="submit"
+        >
+          {busy ? "Checking…" : "Add"}
+        </button>
+      </form>
+      {error ? (
+        <span className="chat-file-error" role="alert">
+          {error}
+        </span>
+      ) : (
+        <span className="chat-field-hint">
+          {!hasNumber
+            ? "Link a WhatsApp number to this agent first: order alerts are sent from it."
+            : busy
+              ? "Checking this number with WhatsApp…"
+              : "Add a WhatsApp number to get each new or changed order there too, sent from this agent's number. It's checked with WhatsApp before it's saved."}
+        </span>
+      )}
+    </div>
   );
+}
+
+// A typed number that can't be a phone number: stray characters, or too few or
+// too many digits.
+function phoneLooksWrong(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return phone.trim() !== "" && (/[^\d\s()+.\-/]/.test(phone) || digits.length < 7 || digits.length > 15);
 }
 
 function MediaSettings({

@@ -40,8 +40,9 @@ export type ChatOrderSection = {
   order_enabled?: boolean;
   order_instructions?: string;
   // Optional WhatsApp number the agent messages, from its own number, about
-  // every order it places or changes. Absent from servers that predate it,
-  // which refuse it on save, so it is only sent back when the server returned it.
+  // every order it places or changes, in E.164. Absent from servers that
+  // predate it. Saved on its own (never with the autosave): the server asks
+  // WhatsApp whether the number has an account and refuses it if not.
   order_notify_phone?: string;
   orders_on?: boolean;
 };
