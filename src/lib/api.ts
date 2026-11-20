@@ -86,27 +86,99 @@ function tokenClaim(token: string, claim: "iat" | "exp"): number | null {
   }
 }
 
+// Phones drop the network for a moment all the time: the page comes back from
+// the background and refreshes before the radio is up, the connection hops
+// between Wi-Fi and mobile data, or a deploy answers one request with a proxy
+// error that carries no CORS headers. Each of those used to surface as "could
+// not reach the server" while the server was fine, so a request is tried a few
+// more times before it fails. Reads are retried on any network failure; writes
+// only when the request never left (offline, or no token yet), so a message or
+// order is never sent twice.
+const networkRetryDelaysMs = [400, 1200, 2500];
+const retryableStatuses = new Set([502, 503, 504]);
+const waitForOnlineMs = 8000;
+
+function isReadRequest(init?: RequestInit): boolean {
+  const method = (init?.method ?? "GET").toUpperCase();
+  return method === "GET" || method === "HEAD";
+}
+
+function wasAborted(init?: RequestInit): boolean {
+  return Boolean(init?.signal?.aborted);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// While the browser says it is offline a request fails without being sent, so
+// wait a little for the connection to come back first.
+function waitUntilOnline(): Promise<void> {
+  if (typeof navigator === "undefined" || navigator.onLine !== false) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      window.removeEventListener("online", done);
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(done, waitForOnlineMs);
+    window.addEventListener("online", done);
+  });
+}
+
+async function resolveAuthTokenWithRetry(getter: AuthTokenGetter | null, skipCache = false): Promise<string | null> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await resolveAuthToken(getter, skipCache);
+    } catch (error) {
+      // Clerk throws when it cannot refresh the session over a dead network.
+      if (attempt >= networkRetryDelaysMs.length) throw error;
+      await waitUntilOnline();
+      await sleep(networkRetryDelaysMs[attempt]);
+    }
+  }
+}
+
+async function fetchWithRetry(path: string, token: string | null, init?: RequestInit): Promise<Response> {
+  const canRetrySent = isReadRequest(init);
+  for (let attempt = 0; ; attempt += 1) {
+    await waitUntilOnline();
+    const offlineBefore = typeof navigator !== "undefined" && navigator.onLine === false;
+    const lastAttempt = attempt >= networkRetryDelaysMs.length;
+    let response: Response;
+    try {
+      response = await serverFetchWithBearerToken(path, token, init);
+    } catch (error) {
+      if (lastAttempt || wasAborted(init) || !(canRetrySent || offlineBefore)) throw error;
+      await sleep(networkRetryDelaysMs[attempt]);
+      continue;
+    }
+    if (!canRetrySent || lastAttempt || !retryableStatuses.has(response.status)) return response;
+    await sleep(networkRetryDelaysMs[attempt]);
+  }
+}
+
 export async function serverFetch(
   path: string,
   init?: RequestInit,
   authTokenGetter?: AuthTokenGetter
 ): Promise<Response> {
   const getter = authTokenGetter ?? getAuthToken;
-  const token = await resolveAuthToken(getter);
+  const token = await resolveAuthTokenWithRetry(getter);
 
   if (shouldLogAuthToken) {
     console.log("[Clerk token]", token);
   }
 
-  const response = await serverFetchWithBearerToken(path, token, init);
+  const response = await fetchWithRetry(path, token, init);
   if (response.status !== 401 || !token) return response;
 
   // A cached token can go stale between Clerk's refreshes (a sleeping laptop,
   // a clock skew); mint a fresh one and send the request once more. Request
   // bodies here are strings or FormData, so they can be sent again.
-  const freshToken = await resolveAuthToken(getter, true);
+  const freshToken = await resolveAuthTokenWithRetry(getter, true);
   if (!freshToken || freshToken === token) return response;
-  return serverFetchWithBearerToken(path, freshToken, init);
+  return fetchWithRetry(path, freshToken, init);
 }
 
 export function serverFetchWithBearerToken(

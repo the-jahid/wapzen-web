@@ -74,7 +74,7 @@ async function send(
   try {
     return await serverFetch(path, init, getToken);
   } catch {
-    throw new OrderError("Could not reach the server. Is the backend running?", 0);
+    throw new OrderError("Could not connect. Check your internet and try again.", 0);
   }
 }
 

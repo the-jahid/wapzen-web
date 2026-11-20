@@ -128,7 +128,7 @@ async function request<T>(
         ? await serverFetchWithAPIKey(path, credential.apiKey, init)
         : await serverFetch(path, init, credential.getToken);
   } catch {
-    throw new ApiError("Could not reach the server. Is the backend running?", 0);
+    throw new ApiError("Could not connect. Check your internet and try again.", 0);
   }
 
   let envelope: Envelope<T> | null = null;

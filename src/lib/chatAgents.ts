@@ -155,7 +155,7 @@ async function request<T>(
   try {
     response = await serverFetch(path, init, getToken);
   } catch {
-    throw new ChatAgentError("Could not reach the server. Is the backend running?", 0);
+    throw new ChatAgentError("Could not connect. Check your internet and try again.", 0);
   }
 
   let envelope: Envelope<T> | null = null;

@@ -82,7 +82,7 @@ export async function getCampaignAnalytics(
   try {
     response = await serverFetch(path, undefined, getToken);
   } catch {
-    throw new OutboundCampaignError("Could not reach the server. Is the backend running?", 0);
+    throw new OutboundCampaignError("Could not connect. Check your internet and try again.", 0);
   }
 
   let envelope: Envelope<CampaignAnalytics> | null = null;

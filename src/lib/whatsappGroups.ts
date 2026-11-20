@@ -36,7 +36,7 @@ async function request<T>(path: string, init: RequestInit | undefined, getToken:
   try {
     response = await serverFetch(path, init, getToken);
   } catch {
-    throw new WhatsAppGroupError("Could not reach the server. Is the backend running?", 0);
+    throw new WhatsAppGroupError("Could not connect. Check your internet and try again.", 0);
   }
   let envelope: Envelope<T> | null = null;
   try {

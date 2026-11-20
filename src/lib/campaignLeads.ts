@@ -58,7 +58,7 @@ async function request<T>(path: string, init: RequestInit | undefined, getToken:
   try {
     response = await serverFetch(path, init, getToken);
   } catch {
-    throw new OutboundCampaignError("Could not reach the server. Is the backend running?", 0);
+    throw new OutboundCampaignError("Could not connect. Check your internet and try again.", 0);
   }
   let envelope: Envelope<T> | null = null;
   try { envelope = (await response.json()) as Envelope<T>; } catch { /* handled below */ }
