@@ -4,9 +4,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import * as m from "motion/react-m";
-import { LazyLayoutMotion } from "@/components/motion/LazyLayoutMotion";
 import {
+  dashboardHref,
   useWorkspaceMode,
   type WorkspaceMode,
 } from "@/components/nav/workspaceMode";
@@ -64,6 +63,7 @@ type IconName =
   | "search"
   | "trash"
   | "check"
+  | "copy"
   | "x"
   | "menu"
   | "chevron"
@@ -120,7 +120,6 @@ type Tool = {
 };
 
 type Notice = { kind: "success" | "error"; text: string };
-type BrowseView = "list" | "grid";
 
 
 const toolTypes: {
@@ -238,31 +237,6 @@ function toolMeta(type: ToolType) {
   return toolTypes.find((item) => item.id === type) ?? toolTypes[0];
 }
 
-// cardSummary is the line a grid card shows under the description: where the
-// tool points, in the terms that matter for its type. A tool that is missing
-// that piece says so on the card rather than leaving the row blank.
-function cardSummary(tool: Tool): { method: string | null; line: string; tail: string | null } {
-  switch (tool.type) {
-    case "api_request":
-      return {
-        method: tool.method,
-        line: tool.url ? tool.url.replace(/^https?:\/\//, "") : "No endpoint set",
-        tail: `${tool.parameters.length} param${tool.parameters.length === 1 ? "" : "s"}`,
-      };
-    case "transfer_call":
-      return { method: null, line: tool.destination || "No destination set", tail: null };
-    case "send_text":
-      return { method: null, line: tool.textBody || "Message written by the agent", tail: null };
-    case "end_call":
-      return { method: null, line: tool.endMessage || "Hangs up when the call is done", tail: null };
-    case "order":
-      return {
-        method: null,
-        line: "Turned on per agent",
-        tail: `${tool.agentCount} agent${tool.agentCount === 1 ? "" : "s"}`,
-      };
-  }
-}
 
 function emptyTool(id: string, type: ToolType, name: string, description: string): Tool {
   const defaults = emptyApiRequestConfig();
@@ -594,6 +568,13 @@ function iconPaths(name: IconName): ReactNode {
       );
     case "chevron":
       return <path d="M9 6l6 6-6 6" />;
+    case "copy":
+      return (
+        <>
+          <rect height="13" rx="2" width="13" x="9" y="9" />
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+        </>
+      );
     case "check":
       return <path d="M5 12.5l4 4 10-10" />;
     case "x":
@@ -646,7 +627,7 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
   useEffect(() => {
     if (oldOrdersLink) router.replace("/dashboard/orders");
   }, [oldOrdersLink, router]);
-  const [tools, setTools, hasCachedTools] = useCachedState<Tool[]>("tools-page:tools", []);
+  const [tools, setTools, hasCachedTools] = useCachedState<Tool[]>(`tools-page:tools:${mode}`, []);
   const [isLoading, setIsLoading] = useState(true);
   // Tools cached from an earlier visit stay on screen while they refetch.
   const showSkeleton = isLoading && !hasCachedTools;
@@ -654,10 +635,8 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
   // The open tool comes from the URL: /dashboard/tools/<id> shows it on its
   // own page, the bare route shows the list.
   const selectedId = toolId ?? null;
-  const openTool = (id: string) => router.push(`/dashboard/tools/${encodeURIComponent(id)}`);
-  const backToList = () => router.push("/dashboard/tools");
-  const [query, setQuery] = useState("");
-  const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
+  const openTool = (id: string) => router.push(`${dashboardHref("/tools", mode)}/${encodeURIComponent(id)}`);
+  const backToList = () => router.push(dashboardHref("/tools", mode));
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
@@ -691,7 +670,7 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
 
     (async () => {
       try {
-        const stored = await apiListTools(getToken);
+        const stored = await apiListTools(getToken, {}, mode);
         if (cancelled) return;
         const mapped = stored.map(fromApi);
         setTools(mapped);
@@ -707,7 +686,7 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [getToken, setTools]);
+  }, [getToken, mode, setTools]);
 
   useEffect(() => {
     if (!isCreateOpen && !pendingDelete) return;
@@ -722,22 +701,13 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isCreateOpen, pendingDelete]);
 
+  // Retell-style master-detail: the bare route opens the first tool, a URL id
+  // opens that one (null when it no longer exists).
   const selected = useMemo(
-    () => tools.find((tool) => tool.id === selectedId) ?? null,
+    () => (selectedId ? tools.find((tool) => tool.id === selectedId) ?? null : tools[0] ?? null),
     [tools, selectedId]
   );
 
-  const visibleTools = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return tools;
-    return tools.filter(
-      (tool) =>
-        tool.name.toLowerCase().includes(term) ||
-        tool.description.toLowerCase().includes(term) ||
-        toolMeta(tool.type).label.toLowerCase().includes(term)
-    );
-  }, [tools, query]);
-  const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
 
   function openCreate() {
     setDraftName("");
@@ -792,13 +762,12 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
 
     setIsCreating(true);
     try {
-      const created = await apiCreateTool(payload, getToken);
+      const created = await apiCreateTool(payload, getToken, mode);
       const tool = fromApi(created);
       setDetailEpoch((current) => current + 1);
       setTools((current) => [tool, ...current]);
       openTool(tool.id);
       setIsCreateOpen(false);
-      setQuery("");
       setNotice({ kind: "success", text: `Tool "${tool.name}" created.` });
     } catch (error) {
       setNotice({ kind: "error", text: describeError(error, "Could not create the tool.") });
@@ -812,13 +781,13 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
   // saved rather than what was typed.
   const saveTool = useCallback(
     async (draft: Tool) => {
-      const saved = await apiUpdateTool(draft.id, toUpdatePayload(draft), getToken);
+      const saved = await apiUpdateTool(draft.id, toUpdatePayload(draft), getToken, mode);
       const tool = fromApi(saved);
       setTools((current) => current.map((item) => (item.id === tool.id ? tool : item)));
       setDetailEpoch((current) => current + 1);
       setNotice({ kind: "success", text: `Tool "${tool.name}" saved.` });
     },
-    [getToken, setTools]
+    [getToken, mode, setTools]
   );
 
   // deleteTool removes the tool and, with it, every agent's attachment to it —
@@ -827,7 +796,7 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
     if (isDeleting) return;
     setIsDeleting(true);
     try {
-      await apiDeleteTool(tool.id, getToken);
+      await apiDeleteTool(tool.id, getToken, mode);
       setTools((current) => current.filter((item) => item.id !== tool.id));
       if (selectedId === tool.id) backToList();
       setPendingDelete(null);
@@ -840,15 +809,55 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
   }
 
   return (
-    <LazyLayoutMotion>
-    <div className={`tools-shell${mode === "chat" ? " app-accent-green" : ""}`}>
+    <div className="tools-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: toolsCss }} />
       <DashboardSidebar activeLabel="Tools" stackBelow={900} />
 
       <main className="tools-main">
-        <div className="tools-content">
-          {toolId ? (
-            selected?.isSystem ? (
+        <div className={`tools-split${toolId ? " has-selection" : ""}`}>
+          <aside aria-label="Tools" className="tools-pane-list">
+            <div className="tools-pane-head">
+              <Icon name="wrench" size={17} sw={1.8} />
+              <h1 className="tools-pane-title">Tools</h1>
+              <button
+                aria-label="Create Tool"
+                className="tools-pane-add"
+                onClick={openCreate}
+                title="Create Tool"
+                type="button"
+              >
+                <Icon name="plus" size={16} sw={2.4} />
+              </button>
+            </div>
+            <nav className="tools-pane-items">
+              {showSkeleton ? (
+                <p className="tools-pane-note">Loading…</p>
+              ) : loadError && tools.length === 0 ? (
+                <p className="tools-pane-note">{loadError}</p>
+              ) : tools.length === 0 ? (
+                <p className="tools-pane-note">No tools yet.</p>
+              ) : (
+                tools.map((tool) => {
+                  const isActive = selected?.id === tool.id;
+                  return (
+                    <Link
+                      aria-current={isActive ? "page" : undefined}
+                      className={`tools-pane-item${isActive ? " is-active" : ""}`}
+                      href={`${dashboardHref("/tools", mode)}/${encodeURIComponent(tool.id)}`}
+                      key={tool.id}
+                    >
+                      <Icon name={toolMeta(tool.type).icon} size={16} sw={1.8} />
+                      <span className="tools-pane-item-name">{tool.name}</span>
+                      {tool.isSystem ? <span className="tools-pane-item-tag">Default</span> : null}
+                    </Link>
+                  );
+                })
+              )}
+            </nav>
+          </aside>
+
+          <section className="tools-pane-detail">
+            {selected?.isSystem ? (
               <SystemToolDetail
                 key={`${selected.id}:${detailEpoch}`}
                 onBack={backToList}
@@ -864,9 +873,9 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
                 tool={selected}
                 mode={mode}
               />
-            ) : (
+            ) : toolId ? (
               <div className="tools-detail">
-                <Link className="tools-page-back" href="/dashboard/tools">
+                <Link className="tools-back" href={dashboardHref("/tools", mode)}>
                   <Icon name="back" size={15} sw={2.2} />
                   Tools
                 </Link>
@@ -878,190 +887,28 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
                   </span>
                 </div>
               </div>
-            )
-          ) : (
-            <div className="tools-browse">
-              <h1 className="tools-page-title">Tools</h1>
-              <div className="tools-toolbar">
-                <div className="tools-search-wrap">
-                  <span className="tools-search-icon">
-                    <Icon name="search" size={15} />
-                  </span>
-                  <input
-                    aria-label="Search tools"
-                    className="tools-input tools-search-input"
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search Tools"
-                    value={query}
-                  />
-                </div>
-                <div aria-label="View" className="tools-view-toggle" role="group">
-                  <button
-                    aria-label="List view"
-                    aria-pressed={viewMode === "list"}
-                    className={`tools-view-btn${viewMode === "list" ? " is-active" : ""}`}
-                    onClick={() => setViewModeOverride("list")}
-                    title="List view"
-                    type="button"
-                  >
-                    <Icon name="list" size={16} sw={2.2} />
-                  </button>
-                  <button
-                    aria-label="Grid view"
-                    aria-pressed={viewMode === "grid"}
-                    className={`tools-view-btn${viewMode === "grid" ? " is-active" : ""}`}
-                    onClick={() => setViewModeOverride("grid")}
-                    title="Grid view"
-                    type="button"
-                  >
-                    <Icon name="grid" size={16} sw={2.2} />
-                  </button>
-                </div>
-                <span className="tools-count">
-                  {query.trim()
-                    ? `${visibleTools.length} of ${tools.length}`
-                    : `${tools.length} tool${tools.length === 1 ? "" : "s"}`}
+            ) : !showSkeleton && !loadError && tools.length === 0 ? (
+              <section className="tools-empty">
+                <span className="tools-empty-icon">
+                  <Icon name="wrench" size={32} sw={1.6} />
                 </span>
+                <h2 className="tools-empty-title">No tools yet</h2>
+                <p className="tools-empty-copy">
+                  Tools let your agents take actions during calls — transfer, hang up, hit APIs,
+                  and more.
+                </p>
                 <button
-                  aria-label="Create Tool"
-                  className="tools-btn tools-btn-primary tools-toolbar-new"
+                  className="tools-dark-btn"
                   onClick={openCreate}
+                  style={{ marginTop: 18 }}
                   type="button"
                 >
                   <Icon name="plus" size={16} sw={2.4} />
-                  <span className="tools-toolbar-new-label">Create Tool</span>
+                  Create Tool
                 </button>
-              </div>
-
-              {showSkeleton ? (
-                <div className="tools-list-empty">
-                  <strong>Loading tools…</strong>
-                </div>
-              ) : loadError ? (
-                <div className="tools-list-empty">
-                  <strong>Could not load tools</strong>
-                  <span>{loadError}</span>
-                </div>
-              ) : tools.length === 0 ? (
-                <section className="tools-empty">
-                  <span className="tools-empty-icon">
-                    <Icon name="wrench" size={32} sw={1.6} />
-                  </span>
-                  <h2 className="tools-empty-title">No tools yet</h2>
-                  <p className="tools-empty-copy">
-                    Tools let your agents take actions during calls — transfer, hang up, hit APIs,
-                    and more.
-                  </p>
-                  <button
-                    className="tools-btn tools-btn-primary"
-                    onClick={openCreate}
-                    style={{ marginTop: 18 }}
-                    type="button"
-                  >
-                    <Icon name="plus" size={16} sw={2.4} />
-                    Create Tool
-                  </button>
-                </section>
-              ) : visibleTools.length === 0 ? (
-                <div className="tools-list-empty">
-                  <strong>No tools found</strong>
-                  <span>Try another search.</span>
-                </div>
-              ) : viewMode === "list" ? (
-                <div className="tools-list">
-                  {visibleTools.map((tool) => {
-                    const meta = toolMeta(tool.type);
-                    const summary = cardSummary(tool);
-                    return (
-                      <m.button
-                        className="tools-row"
-                        key={tool.id}
-                        layoutId={`tool-${tool.id}`}
-                        onClick={() => openTool(tool.id)}
-                        type="button"
-                      >
-                        <span className={`tools-tile tools-accent-${meta.accent}`}>
-                          <Icon name={meta.icon} size={17} />
-                        </span>
-                        <span className="tools-row-identity">
-                          <span className="tools-row-name">{tool.name}</span>
-                          <span className="tools-row-desc">{tool.description || typeBlurb(tool.type, mode)}</span>
-                        </span>
-                        {tool.isSystem ? (
-                          <span className="tools-badge tools-badge-default tools-row-type">Default</span>
-                        ) : (
-                          <span className="tools-badge tools-badge-neutral tools-row-type">{meta.label}</span>
-                        )}
-                        <span className="tools-row-summary">
-                          {summary.method ? (
-                            <span className="tools-chip-method">{summary.method}</span>
-                          ) : null}
-                          <span className={`tools-row-line${summary.method ? " tools-mono" : ""}`}>
-                            {summary.line}
-                          </span>
-                        </span>
-                        <span className="tools-row-tail">{summary.tail ?? "Ready"}</span>
-                        <span className="tools-row-chevron">
-                          <Icon name="chevron" size={16} sw={2.3} />
-                        </span>
-                      </m.button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="tools-grid">
-                  {visibleTools.map((tool) => {
-                    const meta = toolMeta(tool.type);
-                    const summary = cardSummary(tool);
-
-                    return (
-                      <m.button
-                        className="tools-card-item"
-                        key={tool.id}
-                        layoutId={`tool-${tool.id}`}
-                        onClick={() => openTool(tool.id)}
-                        type="button"
-                      >
-                        <span className="tools-card-top">
-                          <span className={`tools-tile tools-tile-lg tools-accent-${meta.accent}`}>
-                            <Icon name={meta.icon} size={20} />
-                          </span>
-                          {tool.isSystem ? (
-                            <span className="tools-badge tools-badge-default">Default</span>
-                          ) : (
-                            <span className="tools-badge tools-badge-neutral">{meta.label}</span>
-                          )}
-                        </span>
-                        <span className="tools-card-name">{tool.name}</span>
-                        <span className="tools-card-desc">{tool.description || typeBlurb(tool.type, mode)}</span>
-                        <span className="tools-card-foot">
-                          {summary.method ? (
-                            <span className="tools-chip-method">{summary.method}</span>
-                          ) : null}
-                          <span
-                            className={`tools-chip-line${summary.method ? " tools-mono" : ""}`}
-                          >
-                            {summary.line}
-                          </span>
-                          {summary.tail ? (
-                            <span className="tools-chip-tail">{summary.tail}</span>
-                          ) : null}
-                        </span>
-                      </m.button>
-                    );
-                  })}
-
-                  <button className="tools-add-card" onClick={openCreate} type="button">
-                    <span className="tools-add-icon">
-                      <Icon name="plus" size={20} sw={2.4} />
-                    </span>
-                    <span className="tools-add-label">Create Tool</span>
-                    <span className="tools-add-copy">Another action your agents can take.</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+              </section>
+            ) : null}
+          </section>
         </div>
 
       </main>
@@ -1273,12 +1120,36 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
         </div>
       ) : null}
     </div>
-    </LazyLayoutMotion>
   );
 }
 
 // SystemToolDetail shows a built-in tool. Nothing about it is set here: it is
 // switched on per agent, in the agent's Tools section.
+// IdCopy is Retell's "ID: know...e52" with a copy button; the full id is copied.
+function IdCopy({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  const short = id.length > 12 ? `${id.slice(0, 4)}...${id.slice(-3)}` : id;
+  return (
+    <>
+      <span>ID: {short}</span>
+      <button
+        aria-label="Copy ID"
+        className="tools-rt-copy"
+        onClick={() => {
+          void navigator.clipboard?.writeText(id).then(() => {
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1500);
+          });
+        }}
+        title={copied ? "Copied" : "Copy ID"}
+        type="button"
+      >
+        <Icon name={copied ? "check" : "copy"} size={13} />
+      </button>
+    </>
+  );
+}
+
 function SystemToolDetail({ tool, onBack }: { tool: Tool; onBack: () => void }) {
   const meta = toolMeta(tool.type);
 
@@ -1289,24 +1160,18 @@ function SystemToolDetail({ tool, onBack }: { tool: Tool; onBack: () => void }) 
         All tools
       </button>
 
-      <section className="tools-card">
-        <div className="tools-detail-head">
-          <div className="tools-identity">
-            <span className={`tools-tile tools-tile-lg tools-accent-${meta.accent}`}>
-              <Icon name={meta.icon} size={20} />
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <h2 className="tools-detail-name">{tool.name}</h2>
-              <div className="tools-detail-sub">
-                <span className="tools-badge tools-badge-default">Default</span>
-                <span className="tools-badge tools-badge-neutral">
-                  {tool.agentCount} agent{tool.agentCount === 1 ? "" : "s"}
-                </span>
-              </div>
-            </div>
+      <header className="tools-rt-head">
+        <div style={{ minWidth: 0 }}>
+          <h2 className="tools-rt-title">{tool.name}</h2>
+          <div className="tools-rt-line">
+            <span>{meta.label}</span>
+            <span className="tools-rt-dot" />
+            <span>Default</span>
+            <span className="tools-rt-dot" />
+            <span>{tool.agentCount} agent{tool.agentCount === 1 ? "" : "s"}</span>
           </div>
         </div>
-      </section>
+      </header>
 
       <section className="tools-card">
         <div className="tools-card-head">
@@ -1686,50 +1551,46 @@ function ToolDetail({
         All tools
       </button>
 
-      <section className="tools-card">
-        <div className="tools-detail-head">
-          <div className="tools-identity">
-            <span className={`tools-tile tools-tile-lg tools-accent-${meta.accent}`}>
-              <Icon name={meta.icon} size={20} />
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <h2 className="tools-detail-name">{draft.name}</h2>
-              <div className="tools-detail-sub">
-                <span className="tools-badge tools-badge-neutral">{meta.label}</span>
-                {draft.type === "api_request" ? (
-                  <>
-                    <span className="tools-badge tools-badge-neutral">
-                      {draft.async ? "Async" : "Blocking"}
-                    </span>
-                    <span className="tools-badge tools-badge-neutral">
-                      {draft.parameters.length} parameter
-                      {draft.parameters.length === 1 ? "" : "s"}
-                    </span>
-                  </>
-                ) : null}
-                {isDirty ? (
-                  <span className="tools-badge tools-badge-neutral">Unsaved changes</span>
-                ) : null}
-              </div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              className="tools-btn tools-btn-primary"
-              disabled={!isDirty || isSaving}
-              onClick={save}
-              type="button"
-            >
-              <Icon name="check" size={16} sw={2.4} />
-              {isSaving ? "Saving…" : "Save"}
-            </button>
-            <button className="tools-btn tools-btn-secondary" onClick={onDelete} type="button">
-              <Icon name="trash" size={16} />
-              Delete
-            </button>
+      <header className="tools-rt-head">
+        <div style={{ minWidth: 0 }}>
+          <h2 className="tools-rt-title">{draft.name}</h2>
+          <div className="tools-rt-line">
+            <IdCopy id={tool.id} />
+            <span className="tools-rt-dot" />
+            <span>{meta.label}</span>
+            {draft.type === "api_request" ? (
+              <>
+                <span className="tools-rt-dot" />
+                <span>{draft.async ? "Async" : "Blocking"}</span>
+                <span className="tools-rt-dot" />
+                <span>
+                  {draft.parameters.length} parameter{draft.parameters.length === 1 ? "" : "s"}
+                </span>
+              </>
+            ) : null}
+            {isDirty ? (
+              <>
+                <span className="tools-rt-dot" />
+                <span className="tools-rt-unsaved">Unsaved changes</span>
+              </>
+            ) : null}
           </div>
         </div>
-      </section>
+        <div className="tools-rt-buttons">
+          <button
+            className="tools-dark-btn"
+            disabled={!isDirty || isSaving}
+            onClick={save}
+            type="button"
+          >
+            <Icon name="check" size={16} sw={2.4} />
+            {isSaving ? "Saving…" : "Save"}
+          </button>
+          <button aria-label={`Delete ${draft.name}`} className="tools-outline-icon" onClick={onDelete} title="Delete tool" type="button">
+            <Icon name="trash" size={16} />
+          </button>
+        </div>
+      </header>
 
       <section className="tools-card">
         <div className="tools-card-head">
@@ -1987,6 +1848,7 @@ function prettyBody(body: string): string {
 // what the agent would get. Unsaved edits are tested as they stand, which lets
 // a URL or parameter change be tried before it is saved.
 function ToolTestPanel({ draft, isDirty }: { draft: Tool; isDirty: boolean }) {
+  const { mode } = useWorkspaceMode();
   const { getToken } = useAuth();
   const [values, setValues] = useState<Record<string, string>>({});
   const [isRunning, setIsRunning] = useState(false);
@@ -2011,7 +1873,7 @@ function ToolTestPanel({ draft, isDirty }: { draft: Tool; isDirty: boolean }) {
     setResult(null);
     try {
       const apiRequest = isDirty ? toConfig(draft).api_request : undefined;
-      setResult(await apiTestTool(draft.id, args, apiRequest, getToken));
+      setResult(await apiTestTool(draft.id, args, apiRequest, getToken, mode));
     } catch (error) {
       setRunError(describeError(error, "The test could not be run."));
     } finally {

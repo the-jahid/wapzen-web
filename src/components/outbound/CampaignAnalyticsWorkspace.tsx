@@ -31,15 +31,14 @@ const maxBarWidth = 18;
 const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 const percentFormatter = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 });
 
-type LeadKey = "pending" | "calling" | "contacted" | "failed" | "opted_out";
+type LeadKey = "pending" | "calling" | "called" | "failed";
 type CallKey = "received" | "answered" | "ended" | "declined" | "failed";
 
 const leadRows: { key: LeadKey; label: string }[] = [
   { key: "pending", label: "Pending" },
   { key: "calling", label: "Calling" },
-  { key: "contacted", label: "Contacted" },
+  { key: "called", label: "Contacted" },
   { key: "failed", label: "Call unsuccessful" },
-  { key: "opted_out", label: "Opted out" },
 ];
 
 const callRows: { key: CallKey; label: string }[] = [
@@ -102,7 +101,7 @@ export default function CampaignAnalyticsWorkspace({ campaignId }: { campaignId:
       <div className="ca-kpi-row">
         <StatTile label="Calls connected" value={formatCount(calls.connected)} note={`${formatPercent(analytics.pickup_rate)} of ${formatCount(calls.total)} placed`} />
         <StatTile label="Conversations completed" value={formatCount(calls.successful)} note={`${formatPercent(analytics.success_rate)} of calls placed`} />
-        <StatTile label="Leads reached" value={formatCount(leads.contacted)} note={`${formatPercent(analytics.reach_rate)} of ${formatCount(leads.total)} leads`} />
+        <StatTile label="Leads reached" value={formatCount(leads.called)} note={`${formatPercent(analytics.reach_rate)} of ${formatCount(leads.total)} leads`} />
         <StatTile label="Talk time" value={formatDuration(talk.total_seconds)} note={`avg ${formatDuration(talk.average_seconds)} · longest ${formatDuration(talk.longest_seconds)}`} />
       </div>
 
@@ -126,14 +125,14 @@ export default function CampaignAnalyticsWorkspace({ campaignId }: { campaignId:
       <div className="ca-card ca-outcomes-calls">
         <div className="ca-card-head"><div><h3>Call outcomes</h3><p>Where this campaign&rsquo;s calls stand. All time.</p></div></div>
         {hasCalls
-          ? <BreakdownList rows={callRows.map((row) => ({ key: row.key, label: row.label, chip: `ca-call-${row.key}`, value: calls[row.key] }))} total={calls.total} />
+          ? <BreakdownList rows={callRows.map((row) => ({ key: row.key, label: row.label, chip: `ca-call-${row.key}`, value: calls[row.key] ?? 0 }))} total={calls.total} />
           : <p className="ca-empty">No calls yet. Add a lead in the Leads tab and this campaign calls it right away.</p>}
       </div>
 
       <div className="ca-card ca-outcomes-leads">
         <div className="ca-card-head"><div><h3>Lead outcomes</h3><p>Where this campaign&rsquo;s contacts stand. All time.</p></div></div>
         {leads.total > 0
-          ? <BreakdownList rows={leadRows.map((row) => ({ key: row.key, label: row.label, chip: `ca-lead-${row.key}`, value: leads[row.key] }))} total={leads.total} />
+          ? <BreakdownList rows={leadRows.map((row) => ({ key: row.key, label: row.label, chip: `ca-lead-${row.key}`, value: leads[row.key] ?? 0 }))} total={leads.total} />
           : <p className="ca-empty">No leads yet.</p>}
       </div>
 
@@ -350,7 +349,7 @@ function formatDateTime(value: string | null) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "—" : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
 }
-function formatCount(value: number) { return new Intl.NumberFormat("en-US").format(value); }
+function formatCount(value: number | undefined) { return new Intl.NumberFormat("en-US").format(value ?? 0); }
 function formatPercent(value: number) { return percentFormatter.format(value); }
 function formatDuration(seconds: number) {
   if (!seconds) return "0s";
@@ -378,11 +377,11 @@ const workspaceCSS = `
 /* Status chips, matching the colour each status already wears in the Leads and
    Calls tabs — a status that changed hue between tabs would read as a different
    thing. Every chip carries its label, so none of them is colour alone. */
-.ca-lead-pending{background:var(--app-amber-soft);color:var(--app-amber)}.ca-lead-calling,.ca-call-received{background:var(--app-blue-soft);color:var(--app-blue)}.ca-lead-contacted,.ca-call-answered{background:var(--app-green-soft);color:var(--app-green)}.ca-lead-failed,.ca-call-failed{background:var(--app-pink-soft);color:var(--app-pink)}.ca-lead-opted_out,.ca-call-ended{background:var(--app-slate-soft);color:var(--app-slate)}.ca-call-declined{background:var(--app-amber-soft);color:var(--app-amber)}
+.ca-lead-pending{background:var(--app-amber-soft);color:var(--app-amber)}.ca-lead-calling,.ca-call-received{background:var(--app-blue-soft);color:var(--app-blue)}.ca-lead-called,.ca-call-answered{background:var(--app-green-soft);color:var(--app-green)}.ca-lead-failed,.ca-call-failed{background:var(--app-pink-soft);color:var(--app-pink)}.ca-lead-opted_out,.ca-call-ended{background:var(--app-slate-soft);color:var(--app-slate)}.ca-call-declined{background:var(--app-amber-soft);color:var(--app-amber)}
 .ca-bar-track{background:var(--app-panel-hover);border-radius:4px;height:8px;overflow:hidden}.ca-bar{background:var(--app-primary-2);border-radius:0 4px 4px 0;display:block;height:100%;min-width:0}.ca-bar-value{color:var(--app-text-soft);display:flex;font-size:12px;font-variant-numeric:tabular-nums;font-weight:750;gap:6px;justify-content:flex-end}.ca-bar-value small{color:var(--faint);font-size:10.5px;font-weight:600}
 .ca-table-wrap{max-height:280px;overflow:auto}.ca-chart-card .ca-table-wrap{flex:1 1 0;max-height:none;min-height:0}.ca-table{border-collapse:collapse;width:100%}.ca-table th{border-bottom:1px solid var(--border);color:var(--app-muted);font-size:10.5px;font-weight:650;padding:8px 8px;text-align:left;white-space:nowrap}.ca-table td{border-bottom:1px solid var(--app-line);color:var(--app-text-soft);font-size:11.5px;padding:8px}.ca-numeric{font-variant-numeric:tabular-nums;text-align:right}
 .ca-empty{color:var(--muted);font-size:11.5px;line-height:1.6;margin:0;padding:22px 0;text-align:center}.ca-footnote{color:var(--faint);font-size:10.5px;margin:12px 0 0}
 @media(max-width:1050px){.ca-kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:820px){.ca-grid{grid-template-columns:1fr}.ca-chart-card,.ca-outcomes-calls,.ca-outcomes-leads{grid-column:1;grid-row:auto}.ca-chart-card{align-self:auto}.ca-chart{min-height:220px}.ca-breakdown li{grid-template-columns:118px minmax(0,1fr) 68px}}
-@media(max-width:560px){.ca-kpi-row{grid-template-columns:1fr}.ca-breakdown li{grid-template-columns:1fr auto;row-gap:4px}.ca-bar-track{grid-column:1/-1}}
+@media(max-width:560px){.ca-kpi-row{gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}.ca-stat{padding:13px}.ca-stat>strong{font-size:22px}.ca-stat>small{overflow-wrap:anywhere}.ca-breakdown li{grid-template-columns:1fr auto;row-gap:4px}.ca-bar-track{grid-column:1/-1}}
 `;

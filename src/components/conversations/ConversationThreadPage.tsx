@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { AiReplySwitch, avatarColor, conversationPartsCSS, formatDate } from "@/components/chat/ConversationParts";
 import ConversationsShell from "@/components/conversations/ConversationsShell";
+import ConversationsSplit from "@/components/conversations/ConversationsSplit";
 import {
   conversationPhone,
   conversationTitle,
@@ -51,9 +52,41 @@ export default function ConversationThreadPage({
   conversationId: string;
   fromAgentId?: string;
 }) {
+  // Opened from a chat agent's Conversation tab: the thread keeps its own page
+  // with a back arrow to that agent. Otherwise it opens in the Conversations
+  // page's right pane, beside the contact list.
+  if (fromAgentId) {
+    return (
+      <ConversationsShell activeLabel="Chat Agents" flush label="Conversation">
+        <ConversationThreadView
+          backHref={`/dashboard/chat/${encodeURIComponent(fromAgentId)}`}
+          conversationId={conversationId}
+          fromAgent
+        />
+      </ConversationsShell>
+    );
+  }
+  return (
+    <ConversationsSplit activeId={conversationId}>
+      <ConversationThreadView backHref="/dashboard/conversations" conversationId={conversationId} />
+    </ConversationsSplit>
+  );
+}
+
+// ConversationThreadView is one thread without the page around it: header,
+// transcript and composer. The split view and the agent-opened page share it.
+export function ConversationThreadView({
+  backHref,
+  conversationId,
+  fromAgent = false,
+}: {
+  backHref: string;
+  conversationId: string;
+  fromAgent?: boolean;
+}) {
   const { getToken } = useAuth();
   const router = useRouter();
-  const backHref = fromAgentId ? `/dashboard/chat/${encodeURIComponent(fromAgentId)}` : "/dashboard/conversations";
+  const fromAgentId = fromAgent ? "agent" : undefined;
 
   const [thread, setThread] = useCachedState<ApiChatConversation | null>(`chat-conversation:${conversationId}`, null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -228,8 +261,7 @@ export default function ConversationThreadPage({
   }, [busy, confirmingDelete]);
 
   return (
-    <ConversationsShell activeLabel={fromAgentId ? "Chat Agents" : "Conversations"} flush label="Conversation">
-      <div className="cv-thread">
+    <div className="cv-thread">
         <style dangerouslySetInnerHTML={{ __html: conversationPartsCSS + threadCSS }} />
 
         <div className="cv-thread-head">
@@ -416,8 +448,7 @@ export default function ConversationThreadPage({
             </div>
           </div>
         ) : null}
-      </div>
-    </ConversationsShell>
+    </div>
   );
 }
 

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { AlertTriangle, Phone, RefreshCw, Search, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Phone, RefreshCw, Search, Users } from "lucide-react";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { rt } from "@/components/nav/RetellPage";
 import { useCachedState } from "@/lib/pageCache";
 import { listPhoneNumbers, type ApiPhoneNumber } from "@/lib/phoneNumbers";
 import { listWhatsAppGroups, setGroupAi, type ApiGroupList, type ApiWhatsAppGroup } from "@/lib/whatsappGroups";
@@ -49,7 +50,12 @@ export default function GroupsPage() {
   }, [notice]);
 
   const linked = numbers.filter((number) => number.phone_number);
-  const selected = linked.find((number) => number.id === numberId && number.status === "connected");
+  // Retell-style master-detail: the first connected number is open until
+  // another is picked; numberId is only the explicit pick (on phones it swaps
+  // the list pane for the detail pane).
+  const selected =
+    linked.find((number) => number.id === numberId && number.status === "connected") ??
+    linked.find((number) => number.status === "connected");
 
   return (
     <div className="grp-shell app-accent-green">
@@ -57,67 +63,89 @@ export default function GroupsPage() {
       <DashboardSidebar activeLabel="Groups" stackBelow={900} />
 
       <main className="grp-main">
-        <div className="grp-content">
-          <div className="grp-page">
-            <header>
-              <h1 className="grp-title">Groups</h1>
-              <p className="grp-subtitle">
-                Choose a number to see its WhatsApp groups, then switch the AI on in the ones you want it to answer.
-              </p>
-            </header>
-
-            <section aria-label="Choose a number" className="grp-section">
-              <h2 className="grp-label">Number</h2>
+        <div className={`grp-split${numberId ? " has-selection" : ""}`}>
+          <aside aria-label="Numbers" className="grp-pane-list">
+            <div className="grp-pane-head">
+              <Users size={17} strokeWidth={1.8} />
+              <h1 className="grp-pane-title">Groups</h1>
+            </div>
+            <p className="grp-pane-hint">Pick a number, then switch the AI on in the groups you want it to answer.</p>
+            <nav className="grp-pane-items">
               {loading && !linked.length ? (
-                <div className="grp-empty-line">Loading your numbers…</div>
+                <p className="grp-pane-note">Loading your numbers…</p>
               ) : loadError && !linked.length ? (
-                <div className="grp-empty-line">
-                  <strong>Could not load your numbers</strong>
-                  <span>{loadError}</span>
-                </div>
+                <p className="grp-pane-note">{loadError}</p>
               ) : !linked.length ? (
-                <div className="grp-empty">
-                  <span className="grp-empty-icon">
-                    <Phone size={28} strokeWidth={1.6} />
-                  </span>
-                  <h3 className="grp-empty-title">No WhatsApp number yet</h3>
-                  <p className="grp-empty-copy">Connect a number first. Its groups will show up here.</p>
-                  <Link className="grp-btn grp-btn-primary" href="/dashboard/phone-numbers">
-                    Go to Phone Numbers
-                  </Link>
-                </div>
+                <p className="grp-pane-note">No WhatsApp number yet.</p>
               ) : (
-                <div className="grp-numbers">
-                  {linked.map((number) => {
-                    const online = number.status === "connected";
-                    return (
-                      <button
-                        aria-pressed={selected?.id === number.id}
-                        className={`grp-number${selected?.id === number.id ? " is-active" : ""}`}
-                        disabled={!online}
-                        key={number.id}
-                        onClick={() => setNumberId(number.id)}
-                        title={online ? undefined : "Reconnect this number on the Phone Numbers page to see its groups"}
-                        type="button"
-                      >
-                        <span className={`grp-dot${online ? " is-online" : ""}`} />
-                        <span className="grp-number-text">
-                          <strong className="notranslate">{number.label || number.phone_number}</strong>
-                          <span className={online && number.label ? "notranslate" : undefined}>{online ? (number.label ? number.phone_number : "Connected") : "Offline"}</span>
+                linked.map((number) => {
+                  const online = number.status === "connected";
+                  const isActive = selected?.id === number.id;
+                  return (
+                    <button
+                      aria-current={isActive ? "true" : undefined}
+                      className={`grp-pane-item${isActive ? " is-active" : ""}`}
+                      disabled={!online}
+                      key={number.id}
+                      onClick={() => setNumberId(number.id)}
+                      title={online ? undefined : "Reconnect this number on the Phone Numbers page to see its groups"}
+                      type="button"
+                    >
+                      <Phone size={16} strokeWidth={1.8} />
+                      <span className="grp-pane-item-body">
+                        <span className="grp-pane-item-name notranslate">{number.label || number.phone_number}</span>
+                        <span className="grp-pane-item-sub">
+                          {online ? (number.label ? number.phone_number : "Connected") : "Offline"}
                         </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                      </span>
+                      <span className={`grp-dot${online ? " is-online" : ""}`} />
+                    </button>
+                  );
+                })
               )}
-            </section>
+            </nav>
+          </aside>
 
+          <section className="grp-pane-detail">
+            <button className="grp-pane-back" onClick={() => setNumberId("")} type="button">
+              <ArrowLeft size={15} />
+              Groups
+            </button>
             {selected ? (
-              <GroupsPanel key={selected.id} number={selected} onNotice={setNotice} />
+              <>
+                <header className="grp-rt-head">
+                  <div style={{ minWidth: 0 }}>
+                    <h2 className="grp-rt-title notranslate">{selected.label || selected.phone_number}</h2>
+                    <div className="grp-rt-line">
+                      <span className="grp-rt-status">
+                        <Check size={13} strokeWidth={2.4} />
+                        Connected
+                      </span>
+                      <span className="grp-rt-dot" />
+                      <span className="notranslate">WhatsApp · {selected.phone_number}</span>
+                    </div>
+                  </div>
+                </header>
+                <GroupsPanel key={selected.id} number={selected} onNotice={setNotice} />
+              </>
+            ) : !loading && !loadError && !linked.length ? (
+              <div className="grp-empty">
+                <span className="grp-empty-icon">
+                  <Phone size={28} strokeWidth={1.6} />
+                </span>
+                <h3 className="grp-empty-title">No WhatsApp number yet</h3>
+                <p className="grp-empty-copy">Connect a number first. Its groups will show up here.</p>
+                <Link className="grp-btn grp-btn-primary" href="/dashboard/phone-numbers">
+                  Go to Phone Numbers
+                </Link>
+              </div>
             ) : linked.length ? (
-              <div className="grp-empty-line">Choose a number above to see its groups.</div>
+              <div className="grp-empty-line">
+                <strong>No connected number</strong>
+                <span>Reconnect a number on the Phone Numbers page to see its groups.</span>
+              </div>
             ) : null}
-          </div>
+          </section>
         </div>
       </main>
 
@@ -257,11 +285,23 @@ function GroupsPanel({ number, onNotice }: { number: ApiPhoneNumber; onNotice: (
           {shown.length === 0 ? (
             <div className="grp-empty-line">No group matches &quot;{query.trim()}&quot;.</div>
           ) : (
-            <ul className="grp-list">
-              {shown.map((group) => (
-                <GroupRow busy={saving.includes(group.jid)} group={group} key={group.jid} onToggle={() => void toggle(group)} />
-              ))}
-            </ul>
+            <div className={rt.wrap}>
+              <table className={rt.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Group Name</th>
+                    <th scope="col">Members</th>
+                    <th className={rt.hideSm} scope="col">Posting</th>
+                    <th className={rt.end} scope="col">AI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shown.map((group) => (
+                    <GroupRow busy={saving.includes(group.jid)} group={group} key={group.jid} onToggle={() => void toggle(group)} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           <p className="grp-fineprint">
             Replies in groups count towards the agent&apos;s hourly reply limit. Group members didn&apos;t sign up to talk to an
@@ -279,33 +319,35 @@ function GroupRow({ busy, group, onToggle }: { busy: boolean; group: ApiWhatsApp
   const locked = !group.can_send && !on;
 
   return (
-    <li className={`grp-row${on ? " is-on" : ""}`}>
-      <span className="grp-avatar">
-        <Users size={18} strokeWidth={1.8} />
-      </span>
-      <span className="grp-row-text">
-        <strong className="notranslate">{group.name}</strong>
-        <span>
-          {group.member_count} member{group.member_count === 1 ? "" : "s"}
-          {group.can_send ? "" : " · Only admins can post, and this number isn't one"}
+    <tr className={`grp-row${on ? " is-on" : ""}`}>
+      <td>
+        <span className={rt.name}>
+          <span className={rt.icon}>
+            <Users size={16} strokeWidth={1.8} />
+          </span>
+          <strong className={`${rt.nameText} notranslate`}>{group.name}</strong>
         </span>
-      </span>
-      <button
-        aria-checked={on}
-        aria-label={`AI in ${group.name}`}
-        className={`grp-switch notranslate${on ? " is-on" : ""}`}
-        disabled={busy || locked}
-        onClick={onToggle}
-        role="switch"
-        title={locked ? "The AI couldn't reply here" : undefined}
-        type="button"
-      >
-        <span className="grp-switch-track">
-          <span className="grp-switch-knob" />
-        </span>
-        <span className="grp-switch-label">{on ? "AI on" : "AI off"}</span>
-      </button>
-    </li>
+      </td>
+      <td className={rt.muted}>{group.member_count}</td>
+      <td className={`${rt.muted} ${rt.hideSm}`}>{group.can_send ? "Can post" : "Admins only"}</td>
+      <td className={rt.end}>
+        <button
+          aria-checked={on}
+          aria-label={`AI in ${group.name}`}
+          className={`grp-switch notranslate${on ? " is-on" : ""}`}
+          disabled={busy || locked}
+          onClick={onToggle}
+          role="switch"
+          title={locked ? "The AI couldn't reply here" : undefined}
+          type="button"
+        >
+          <span className="grp-switch-track">
+            <span className="grp-switch-knob" />
+          </span>
+          <span className="grp-switch-label">{on ? "AI on" : "AI off"}</span>
+        </button>
+      </td>
+    </tr>
   );
 }
 
@@ -318,9 +360,9 @@ const css = `
 .grp-shell ::-webkit-scrollbar-track { background: transparent; }
 .grp-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
 .grp-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 24px 32px 32px; }
-.grp-page { display: flex; flex-direction: column; gap: 20px; margin: 0 auto; max-width: 880px; width: 100%; }
+.grp-page { display: flex; flex-direction: column; gap: 20px; width: 100%; }
 .grp-title { font-size: 22px; font-weight: 850; letter-spacing: -.4px; margin: 0; }
-.grp-subtitle { color: var(--app-muted); font-size: 13px; margin: 4px 0 0; max-width: 560px; }
+.grp-subtitle { color: var(--app-muted); font-size: 13px; margin: -8px 0 0; max-width: 560px; }
 .grp-section { display: flex; flex-direction: column; gap: 12px; }
 .grp-label { color: var(--app-subtle); font-size: 11.5px; font-weight: 800; letter-spacing: .3px; margin: 0; text-transform: uppercase; }
 .grp-numbers { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
@@ -343,14 +385,7 @@ const css = `
 .grp-search:focus-within { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
 .grp-search input { background: transparent; border: 0; color: var(--app-text); flex: 1; min-width: 0; outline: none; }
 .grp-search input::placeholder { color: var(--app-faint); }
-.grp-list { display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; padding: 0; }
-.grp-row { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 13px; display: flex; gap: 12px; padding: 11px 14px; transition: border-color .18s ease; }
-.grp-row.is-on { border-color: var(--app-green-border); }
 .grp-avatar { align-items: center; background: var(--app-hover-2); border-radius: 11px; color: var(--app-subtle); display: flex; flex-shrink: 0; height: 38px; justify-content: center; width: 38px; }
-.grp-row.is-on .grp-avatar { background: var(--app-green-soft); color: var(--app-green); }
-.grp-row-text { display: grid; flex: 1; gap: 1px; min-width: 0; }
-.grp-row-text strong { font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.grp-row-text span { color: var(--app-subtle); font-size: 12px; }
 .grp-switch { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; flex-shrink: 0; font-size: 12px; font-weight: 800; gap: 8px; padding: 6px 2px; }
 .grp-switch:disabled { cursor: not-allowed; opacity: .5; }
 .grp-switch:focus-visible { border-radius: 8px; box-shadow: 0 0 0 3px var(--app-primary-ring); outline: none; }
@@ -377,8 +412,45 @@ const css = `
 .grp-toast { border-radius: 12px; bottom: 24px; box-shadow: 0 18px 50px var(--app-shadow-color); font-size: 13px; font-weight: 750; left: 50%; max-width: min(480px, calc(100vw - 48px)); padding: 12px 18px; position: fixed; transform: translateX(-50%); z-index: 130; }
 .grp-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .grp-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+/* Retell-style master-detail: numbers in a list pane, the open one's groups beside it. */
+.grp-split { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
+.grp-pane-list { border-right: 1px solid var(--app-border); display: flex; flex: 0 0 290px; flex-direction: column; min-height: 0; min-width: 0; padding: 16px; }
+.grp-pane-head { align-items: center; border-bottom: 1px solid var(--app-border); color: var(--app-text); display: flex; gap: 10px; min-height: 46px; padding: 0 2px 14px; }
+.grp-pane-title { flex: 1; font-size: 14.5px; font-weight: 600; margin: 0; }
+.grp-pane-hint { color: var(--app-subtle); font-size: 12px; line-height: 1.5; margin: 10px 2px 0; }
+.grp-pane-items { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow-y: auto; padding-top: 10px; }
+.grp-pane-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-muted); cursor: pointer; display: flex; gap: 10px; min-height: 48px; padding: 6px 10px; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
+.grp-pane-item > svg { color: var(--app-text); flex-shrink: 0; }
+.grp-pane-item:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
+.grp-pane-item.is-active { background: var(--app-hover-2); color: var(--app-text); }
+.grp-pane-item:disabled { cursor: not-allowed; opacity: .5; }
+.grp-pane-item-body { display: grid; flex: 1; gap: 1px; min-width: 0; }
+.grp-pane-item-name { color: var(--app-text); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grp-pane-item-sub { color: var(--app-subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grp-pane-note { color: var(--app-subtle); font-size: 13px; margin: 0; padding: 6px 4px; }
+.grp-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 20px; min-height: 0; min-width: 0; overflow-y: auto; padding: 24px 24px 32px; }
+.grp-pane-back { display: none; }
+.grp-rt-head { border-bottom: 1px solid var(--app-border); padding-bottom: 16px; }
+.grp-rt-title { font-size: 18px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.grp-rt-line { align-items: center; color: var(--app-subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
+.grp-rt-status { align-items: center; color: var(--app-green-text, var(--app-green)); display: inline-flex; font-weight: 600; gap: 4px; }
+.grp-rt-dot { background: var(--app-text); border-radius: 50%; height: 4px; margin: 0 4px; width: 4px; }
 @media (max-width: 1100px) {
   .grp-content { padding: 20px 20px 28px; }
+}
+@media (max-width: 900px) {
+  .grp-split { flex-direction: column; }
+  .grp-pane-list { border-right: 0; flex: 1 1 auto; }
+  .grp-split:not(.has-selection) .grp-pane-detail { display: none; }
+  .grp-split.has-selection .grp-pane-list { display: none; }
+  .grp-pane-detail { overflow: visible; padding: 16px; }
+  .grp-pane-back { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; padding: 0; }
+  /* Phones and tablets: a page title like "All Agents", "Orders" and
+     "Conversations", without the small icon and divider. */
+  .grp-pane-head { border-bottom: 0; min-height: 0; padding-bottom: 0; }
+  .grp-pane-head > svg { display: none; }
+  .grp-pane-title { font-size: 20px; font-weight: 600; letter-spacing: -.2px; }
+  .grp-pane-hint { font-size: 13px; margin-top: 4px; }
 }
 /* Tablets and phones: the sidebar becomes a drawer behind a top bar, and the
    page scrolls as a whole. */

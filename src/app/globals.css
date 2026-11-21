@@ -581,6 +581,9 @@ textarea {
   display: flex;
   height: 28px;
   justify-content: center;
+  /* Without a width each button shrank to its 15px icon, squeezing the
+     three icons together. */
+  min-width: 32px;
   padding: 0;
   transition:
     background 0.18s ease,

@@ -1,4 +1,4 @@
-import { serverFetch, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter, type Workspace } from "./api";
 
 export type PhoneNumberStatus =
   | "pending_qr"
@@ -95,8 +95,16 @@ async function request<T>(
   return envelope.data;
 }
 
-export function listPhoneNumbers(getToken: AuthTokenGetter): Promise<ApiPhoneNumber[]> {
-  return request<ApiPhoneNumber[]>("/v1/phone-number", undefined, getToken);
+// routed sends a voice-workspace request to the Go server, whose numbers
+// (voice_phone_numbers) live under /v1/voice/phone-number; chat requests go to
+// the chat server as written.
+function routed(path: string, workspace: Workspace): string {
+  if (workspace !== "voice") return path;
+  return voiceServerURL(path.replace(/^\/v1\/phone-number/, "/v1/voice/phone-number"));
+}
+
+export function listPhoneNumbers(getToken: AuthTokenGetter, workspace: Workspace = "chat"): Promise<ApiPhoneNumber[]> {
+  return request<ApiPhoneNumber[]>(routed("/v1/phone-number", workspace), undefined, getToken);
 }
 
 // The QR picture each login was last given, by the id it is asked about. A
@@ -121,8 +129,12 @@ async function startedLogin(pending: Promise<ApiPhoneNumber>): Promise<ApiPhoneN
   return login;
 }
 
-export async function getPhoneNumber(phoneNumberId: string, getToken: AuthTokenGetter): Promise<ApiPhoneNumber> {
-  const path = `/v1/phone-number/${encodeURIComponent(phoneNumberId)}`;
+export async function getPhoneNumber(
+  phoneNumberId: string,
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
+): Promise<ApiPhoneNumber> {
+  const path = routed(`/v1/phone-number/${encodeURIComponent(phoneNumberId)}`, workspace);
   const held = heldQrs.get(phoneNumberId);
   if (!held) {
     const login = await request<ApiPhoneNumber>(path, undefined, getToken);
@@ -157,9 +169,10 @@ export async function getPhoneNumber(phoneNumberId: string, getToken: AuthTokenG
 // re-pair calls further down aren't, so they don't retry.
 export function startPhoneNumberLogin(
   payload: { phone_number?: string; label?: string; agent_id?: string },
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiPhoneNumber> {
-  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>(routed("/v1/phone-number/login", workspace), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -173,9 +186,10 @@ export function startPhoneNumberLogin(
 // caller must swap the returned login in for that one. phone_number is E.164.
 export function startPhoneNumberCodeLogin(
   payload: { phone_number: string; label?: string; agent_id?: string },
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiPhoneNumber> {
-  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>(routed("/v1/phone-number/login", workspace), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, pairing_method: "phone_code" }),
@@ -187,9 +201,10 @@ export function startPhoneNumberCodeLogin(
 // this ends the code and returns a QR login, so the caller must swap it in.
 export function startPhoneNumberQrLogin(
   payload: { label?: string; agent_id?: string },
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiPhoneNumber> {
-  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>(routed("/v1/phone-number/login", workspace), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, pairing_method: "qr" }),
@@ -202,9 +217,10 @@ export function startPhoneNumberQrLogin(
 export function restartPhoneNumberLogin(
   phoneNumberId: string,
   getToken: AuthTokenGetter,
-  agentId?: string
+  agentId?: string,
+  workspace: Workspace = "chat"
 ): Promise<ApiPhoneNumber> {
-  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>(routed("/v1/phone-number/login", workspace), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone_number_id: phoneNumberId, ...(agentId ? { agent_id: agentId } : {}) }),
@@ -213,9 +229,10 @@ export function restartPhoneNumberLogin(
 
 export function rePairPhoneNumber(
   phoneNumberId: string,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiPhoneNumber> {
-  return startedLogin(request<ApiPhoneNumber>("/v1/phone-number/login", {
+  return startedLogin(request<ApiPhoneNumber>(routed("/v1/phone-number/login", workspace), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone_number_id: phoneNumberId, force_repair: true }),
@@ -224,9 +241,10 @@ export function rePairPhoneNumber(
 
 export function logoutPhoneNumber(
   phoneNumberId: string,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<{ id: string; disconnected: boolean; deleted: boolean }> {
-  return request<{ id: string; disconnected: boolean; deleted: boolean }>("/v1/phone-number/logout", {
+  return request<{ id: string; disconnected: boolean; deleted: boolean }>(routed("/v1/phone-number/logout", workspace), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone_number_id: phoneNumberId }),

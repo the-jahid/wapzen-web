@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
-import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
-import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import { useCachedState } from "@/lib/pageCache";
 import {
@@ -24,11 +22,10 @@ import CampaignLeadsWorkspace from "@/components/outbound/CampaignLeadsWorkspace
 import CampaignCallsWorkspace from "@/components/outbound/CampaignCallsWorkspace";
 import CampaignAnalyticsWorkspace from "@/components/outbound/CampaignAnalyticsWorkspace";
 
-type IconName = "grid" | "agents" | "phone" | "phoneOut" | "demo" | "chat" | "message" | "calendar" | "chart" | "settings" | "spark" | "key" | "book" | "wrench" | "target" | "plus" | "edit" | "trash" | "refresh" | "search" | "list" | "chevron" | "x";
+type IconName = "grid" | "agents" | "phone" | "phoneOut" | "demo" | "chat" | "message" | "calendar" | "chart" | "settings" | "spark" | "key" | "book" | "wrench" | "target" | "plus" | "edit" | "trash" | "refresh" | "search" | "list" | "chevron" | "x" | "copy" | "check" | "back";
 type Notice = { kind: "success" | "error"; text: string };
 type LoadState = "loading" | "ready" | "error";
 type CampaignTab = "overview" | "calls" | "leads" | "analytics";
-type ViewMode = "list" | "grid";
 
 // AgentOption is one pickable agent. A campaign is pointed at an agent, never at
 // a phone number: the agent carries the number it speaks on, so the number is
@@ -81,13 +78,15 @@ function iconPaths(name: IconName): ReactNode {
     case "list": return <><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6h.01M4 12h.01M4 18h.01" /></>;
     case "chevron": return <path d="M9 6l6 6-6 6" />;
     case "x": return <path d="M18 6L6 18M6 6l12 12" />;
+    case "copy": return <><rect height="13" rx="2" width="13" x="9" y="9" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></>;
+    case "check": return <path d="M5 12.5l4 4 10-10" />;
+    case "back": return <path d="M20 12H4M10 6l-6 6 6 6" />;
   }
 }
 
 function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   return <svg aria-hidden="true" fill="none" height={size} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24" width={size}>{iconPaths(name)}</svg>;
 }
-function StatusChip({ status }: { status: OutboundCampaignStatus }) { return <span className={`ob-status ob-status-${status}`}><span className="ob-status-dot" />{statusLabels[status]}</span>; }
 function formatNumber(value: number) { return numberFormatter.format(value); }
 function formatMoney(value: number | null) { return value == null ? "No budget" : moneyFormatter.format(value); }
 function formatPercent(value: number) { return `${(value * 100).toFixed(1)}%`; }
@@ -124,21 +123,16 @@ export default function OutboundPage() {
   // campaign's counters move with its calls, so the detail is re-read rather
   // than left showing the totals from before the call.
   const [progressKey, setProgressKey] = useState(0);
-  const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const isAuthenticated = Boolean(isUserLoaded && isAuthLoaded && isUserSignedIn && isAuthSignedIn && user);
   const authError = !isUserLoaded || !isAuthLoaded ? null : !isAuthenticated ? "Sign in to view outbound campaigns." : null;
-  // Nothing is selected until a campaign is opened: the page browses the list
-  // first and shows one campaign in an expandable card only once it is picked.
-  const selectedListCampaign = useMemo(() => (selectedId ? campaigns.find((campaign) => campaign.campaign_id === selectedId) ?? null : null), [campaigns, selectedId]);
+  // Retell-style master-detail: the first campaign is open until another is
+  // picked. selectedId is only the explicit pick (on phones it switches the
+  // list pane for the detail pane).
+  const selectedListCampaign = useMemo(() => (selectedId ? campaigns.find((campaign) => campaign.campaign_id === selectedId) : null) ?? campaigns[0] ?? null, [campaigns, selectedId]);
   const selectedCampaignId = selectedListCampaign?.campaign_id ?? null;
   const selected = detail?.campaign_id === selectedCampaignId ? detail : selectedListCampaign;
-  const filteredCampaigns = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return campaigns;
-    return campaigns.filter((campaign) => [campaign.campaign_name, campaign.campaign_id, campaign.status, campaign.agent_name ?? "", campaign.phone_number ?? ""].some((value) => value.toLowerCase().includes(normalized)));
-  }, [campaigns, query]);
 
   useEffect(() => {
     if (!isUserLoaded || !isAuthLoaded || !isAuthenticated) return;
@@ -176,7 +170,7 @@ export default function OutboundPage() {
     let cancelled = false;
     (async () => {
       try {
-        const [agents, numbers] = await Promise.all([listDashboardAgents(getToken), listPhoneNumbers(getToken)]);
+        const [agents, numbers] = await Promise.all([listDashboardAgents(getToken), listPhoneNumbers(getToken, "voice")]);
         if (cancelled) return;
         const labelById = new Map(numbers.map((number) => [number.id, number.phone_number || number.label || null]));
         setAgentOptions(agents.map((agent) => {
@@ -187,6 +181,13 @@ export default function OutboundPage() {
     })();
     return () => { cancelled = true; };
   }, [getToken, isAuthenticated, reloadKey, setAgentOptions]);
+
+  function copyId(id: string) {
+    void navigator.clipboard?.writeText(id).then(() => {
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500);
+    });
+  }
 
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(null), 4000); return () => clearTimeout(timer); }, [notice]);
 
@@ -222,113 +223,78 @@ export default function OutboundPage() {
   }, [selectedCampaignId, setCampaigns]);
   const noteCampaignProgress = useCallback(() => setProgressKey((key) => key + 1), []);
 
-  return <div className="ob-shell">
+  return <div className="ob-shell app-accent-green">
     <style dangerouslySetInnerHTML={{ __html: css }} />
     <DashboardSidebar activeLabel="Outbound" badges={{ Outbound: campaigns.length }} stackBelow={980} />
     <main className="ob-main">
-      <header className="ob-topbar">
-        <div className="ob-topbar-heading">
-          <h1 className="ob-topbar-title">Outbound</h1>
-          <p className="ob-topbar-copy">Create and manage outbound campaigns — pick an agent, load leads, and watch the calls land.</p>
-        </div>
-      </header>
-      <div className="ob-content">
-        {selected ? (
-          <ExpandableCardDemoStandard
-            className="ob-expandable-card"
-            dismissDisabled={isEditOpen || Boolean(deletingId)}
-            layoutId={`campaign-${selected.campaign_id}`}
-            onClose={() => setSelectedId(null)}
-            open
-          >
-            <div className="ob-detail">
-              <div className="ob-expandable-topline">
-                <span className="ob-expandable-label">Campaign details</span>
-                <button aria-label="Close campaign details" className="ob-expandable-close" onClick={() => setSelectedId(null)} type="button"><Icon name="x" size={16} /></button>
-              </div>
-              <div className="ob-card ob-detail-head"><div className="ob-detail-title"><span className="ob-detail-icon"><Icon name="target" size={22} /></span><div style={{ minWidth: 0 }}><div className="ob-name-row"><h2>{selected.campaign_name}</h2><StatusChip status={selected.status} /></div><p className="ob-id">{selected.campaign_id}</p></div></div><div className="ob-actions"><button className="ob-secondary-btn" onClick={() => setEditOpen(true)} type="button"><Icon name="edit" size={15} />Edit</button><button className="ob-danger-btn" disabled={selected.status === "running" || deletingId === selected.campaign_id} onClick={() => deleteCampaign(selected)} title={selected.status === "running" ? "Pause the campaign before deleting it" : undefined} type="button"><Icon name="trash" size={15} />{deletingId === selected.campaign_id ? "Deleting…" : "Delete"}</button></div></div>
-              <div aria-label="Campaign sections" className="ob-card ob-tabs" role="tablist">{campaignTabs.map((tab) => <button aria-controls={`campaign-${tab.id}-panel`} aria-selected={activeTab === tab.id} className={activeTab === tab.id ? "is-active" : ""} id={`campaign-${tab.id}-tab`} key={tab.id} onClick={() => setActiveTab(tab.id)} role="tab" type="button">{tab.label}{tab.id === "leads" && selected.leads_count > 0 ? <span>{selected.leads_count}</span> : null}{tab.id === "calls" && selected.calls_placed > 0 ? <span>{selected.calls_placed}</span> : null}</button>)}</div>
+      <div className={`ob-split${selectedId ? " has-selection" : ""}`}>
+        <aside aria-label="Campaigns" className="ob-pane-list">
+          <div className="ob-pane-head">
+            <Icon name="target" size={17} />
+            <h1 className="ob-pane-title">Outbound</h1>
+            <button aria-label="Refresh campaigns" className="ob-pane-refresh" disabled={!isAuthenticated || loadState === "loading"} onClick={() => setReloadKey((key) => key + 1)} title="Refresh" type="button"><Icon name="refresh" size={15} /></button>
+            <button aria-label="New campaign" className="ob-pane-add" disabled={!isAuthenticated} onClick={() => setCreateOpen(true)} title="New campaign" type="button"><Icon name="plus" size={16} /></button>
+          </div>
+          <nav className="ob-pane-items">
+            {effectiveLoadState === "loading" ? (
+              <p className="ob-pane-note">Loading…</p>
+            ) : effectiveLoadState === "error" ? (
+              <div className="ob-pane-note"><VoiceUpdateNote /></div>
+            ) : campaigns.length === 0 ? (
+              <p className="ob-pane-note">No campaigns yet.</p>
+            ) : (
+              campaigns.map((campaign) => {
+                const isActive = selected?.campaign_id === campaign.campaign_id;
+                return (
+                  <button aria-current={isActive ? "page" : undefined} className={`ob-pane-item${isActive ? " is-active" : ""}`} key={campaign.campaign_id} onClick={() => { setSelectedId(campaign.campaign_id); setActiveTab("overview"); }} type="button">
+                    <Icon name="target" size={16} />
+                    <span className="ob-pane-item-name">{campaign.campaign_name}</span>
+                    <span className={`ob-pane-item-dot ob-status-${campaign.status}`} title={statusLabels[campaign.status]} />
+                  </button>
+                );
+              })
+            )}
+          </nav>
+        </aside>
+
+        <section className="ob-pane-detail">
+          <button className="ob-pane-back" onClick={() => setSelectedId(null)} type="button"><Icon name="back" size={15} />Outbound</button>
+          {selected ? (
+            <>
+              <header className="ob-detail-top">
+                <button aria-label="Back to campaigns" className="ob-detail-back" onClick={() => setSelectedId(null)} type="button"><Icon name="back" size={16} /></button>
+                <div className="ob-detail-identity">
+                  <h2 className="ob-detail-name">{selected.campaign_name}</h2>
+                  <div className="ob-detail-line">
+                    <span>ID: {shortId(selected.campaign_id)}</span>
+                    <button aria-label="Copy ID" className="ob-copy" onClick={() => copyId(selected.campaign_id)} title={copiedId === selected.campaign_id ? "Copied" : "Copy ID"} type="button"><Icon name={copiedId === selected.campaign_id ? "check" : "copy"} size={13} /></button>
+                    <span className="ob-detail-dot" />
+                    <span className={`ob-status-line ob-status-${selected.status}`}><span className="ob-status-dot" />{statusLabels[selected.status]}</span>
+                    <span className="ob-detail-dot ob-detail-agent-dot" />
+                    <span className="ob-detail-agent">{selected.agent_name ?`${selected.agent_name}${selected.phone_number ? ` · ${selected.phone_number}` : ""}` : "No agent"}</span>
+                  </div>
+                </div>
+                <div className="ob-detail-buttons">
+                  <button aria-label="Edit campaign" className="ob-dark-btn" onClick={() => setEditOpen(true)} title="Edit campaign" type="button"><Icon name="edit" size={15} /><span className="ob-edit-label">Edit</span></button>
+                  <button aria-label={`Delete ${selected.campaign_name}`} className="ob-outline-icon" disabled={selected.status === "running" || deletingId === selected.campaign_id} onClick={() => deleteCampaign(selected)} title={selected.status === "running" ? "Pause the campaign before deleting it" : "Delete campaign"} type="button"><Icon name="trash" size={16} /></button>
+                </div>
+              </header>
+              <div aria-label="Campaign sections" className="ob-card ob-tabs ob-pane-tabs" role="tablist">{campaignTabs.map((tab) => <button aria-controls={`campaign-${tab.id}-panel`} aria-selected={activeTab === tab.id} className={activeTab === tab.id ? "is-active" : ""} id={`campaign-${tab.id}-tab`} key={tab.id} onClick={() => setActiveTab(tab.id)} role="tab" type="button">{tab.label}{tab.id === "leads" && selected.leads_count > 0 ? <span>{selected.leads_count}</span> : null}{tab.id === "calls" && selected.calls_placed > 0 ? <span>{selected.calls_placed}</span> : null}</button>)}</div>
               {detailState === "error" ? <div className="ob-card ob-inline-error">{detailError}</div> : null}
               {activeTab === "overview" ? <div aria-labelledby="campaign-overview-tab" className="ob-tab-panel" id="campaign-overview-panel" role="tabpanel"><div className="ob-stat-grid"><StatCard label="Leads" value={formatNumber(selected.leads_count)} /><StatCard label="Calls placed" value={formatNumber(selected.calls_placed)} /><StatCard label="Pickup rate" note={`${formatNumber(selected.answered_calls)} answered`} value={formatPercent(selected.pickup_rate)} /><StatCard label="Success rate" note={`${formatNumber(selected.successful_calls)} successful`} value={formatPercent(selected.success_rate)} /></div><div className="ob-card ob-details-card"><h3>Campaign details</h3><div className="ob-detail-grid"><DetailItem label="Status" value={statusLabels[selected.status]} /><DetailItem label="Agent" value={selected.agent_name ?? "No agent"} /><DetailItem label="Calls from" value={selected.phone_number ?? (selected.agent_id ? "Agent has no number" : "—")} /><DetailItem label="Budget" value={formatMoney(selected.budget_usd)} /><DetailItem label="Answered calls" value={formatNumber(selected.answered_calls)} /><DetailItem label="Successful calls" value={formatNumber(selected.successful_calls)} /><DetailItem label="Calls today" value={formatNumber(selected.today_calls)} /><DetailItem label="Today calls date" value={selected.today_calls_date ?? "—"} /><DetailItem label="Total usage" value={formatDuration(selected.total_usage_seconds)} /><DetailItem label="Started" value={formatDate(selected.started_at)} /><DetailItem label="Completed" value={formatDate(selected.completed_at)} /><DetailItem label="Created" value={formatDate(selected.created_at)} /><DetailItem label="Updated" value={formatDate(selected.updated_at)} /></div></div></div> : null}
               {activeTab === "leads" ? <div aria-labelledby="campaign-leads-tab" id="campaign-leads-panel" role="tabpanel"><CampaignLeadsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onCallPlaced={noteCampaignProgress} onCountChange={updateSelectedLeadCount} /></div> : null}
               {activeTab === "calls" ? <div aria-labelledby="campaign-calls-tab" id="campaign-calls-panel" role="tabpanel"><CampaignCallsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onProgress={noteCampaignProgress} /></div> : null}
               {activeTab === "analytics" ? <div aria-labelledby="campaign-analytics-tab" id="campaign-analytics-panel" role="tabpanel"><CampaignAnalyticsWorkspace campaignId={selected.campaign_id} key={`${selected.campaign_id}-${progressKey}`} /></div> : null}
-            </div>
-          </ExpandableCardDemoStandard>
-        ) : (
-          <div className="ob-browse">
-            <div className="ob-toolbar">
-              <div className="ob-toolbar-search">
-                <span className="ob-search-icon"><Icon name="search" size={16} /></span>
-                <input aria-label="Search campaigns" className="ob-search" onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, agent, status..." type="search" value={query} />
-              </div>
-              <div aria-label="View" className="ob-view-toggle" role="group">
-                <button aria-label="List view" aria-pressed={viewMode === "list"} className={`ob-view-btn${viewMode === "list" ? " is-active" : ""}`} onClick={() => setViewMode("list")} title="List view" type="button"><Icon name="list" size={16} /></button>
-                <button aria-label="Grid view" aria-pressed={viewMode === "grid"} className={`ob-view-btn${viewMode === "grid" ? " is-active" : ""}`} onClick={() => setViewMode("grid")} title="Grid view" type="button"><Icon name="grid" size={16} /></button>
-              </div>
-              <span className="ob-count">{query.trim() ? `${filteredCampaigns.length} of ${campaigns.length}` : `${campaigns.length} ${campaigns.length === 1 ? "campaign" : "campaigns"}`}</span>
-              <button aria-label="Refresh campaigns" className="ob-icon-btn" disabled={!isAuthenticated || loadState === "loading"} onClick={() => setReloadKey((key) => key + 1)} title="Refresh" type="button"><Icon name="refresh" size={16} /></button>
+            </>
+          ) : effectiveLoadState === "ready" && campaigns.length === 0 ? (
+            <div className="ob-list-message">
+              <Icon name="target" size={30} />
+              <h2>No campaigns yet</h2>
+              <p>Create a campaign to pick an agent, add leads, and start dialling.</p>
               <button className="ob-primary-btn" disabled={!isAuthenticated} onClick={() => setCreateOpen(true)} type="button"><Icon name="plus" size={15} />New campaign</button>
             </div>
-
-            {effectiveLoadState === "loading" ? (
-              <div className="ob-list-message"><p>Loading campaigns…</p></div>
-            ) : effectiveLoadState === "error" ? (
-              <div className="ob-list-message">
-                <VoiceUpdateNote />
-              </div>
-            ) : campaigns.length === 0 ? (
-              <div className="ob-list-message">
-                <Icon name="target" size={30} />
-                <h2>No campaigns yet</h2>
-                <p>Create a campaign to pick an agent, add leads, and start dialling.</p>
-                <button className="ob-primary-btn" onClick={() => setCreateOpen(true)} type="button"><Icon name="plus" size={15} />New campaign</button>
-              </div>
-            ) : filteredCampaigns.length === 0 ? (
-              <div className="ob-list-message"><p>No campaigns match your search.</p></div>
-            ) : viewMode === "grid" ? (
-              <div className="ob-grid">
-                {filteredCampaigns.map((campaign) => (
-                  <motion.button className="ob-card-item" key={campaign.campaign_id} layoutId={`campaign-${campaign.campaign_id}`} onClick={() => setSelectedId(campaign.campaign_id)} type="button">
-                    <span className="ob-card-top">
-                      <span className="ob-target"><Icon name="target" size={18} /></span>
-                      <StatusChip status={campaign.status} />
-                    </span>
-                    <span className="ob-card-identity">
-                      <span className="ob-row-name">{campaign.campaign_name}</span>
-                      <span className="ob-row-id">{campaign.campaign_id}</span>
-                    </span>
-                    <span className="ob-card-meta">
-                      <span className="ob-card-tile"><span className="ob-row-label">Leads</span><span>{formatNumber(campaign.leads_count)}</span></span>
-                      <span className="ob-card-tile"><span className="ob-row-label">Calls</span><span>{formatNumber(campaign.calls_placed)}</span></span>
-                    </span>
-                    <span className="ob-card-foot">
-                      <span>{campaign.agent_name ? `${campaign.agent_name}${campaign.phone_number ? ` · ${campaign.phone_number}` : ""}` : "No agent"}</span>
-                      <span>{formatMoney(campaign.budget_usd)}</span>
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            ) : (
-              <div className="ob-list">
-                {filteredCampaigns.map((campaign) => (
-                  <motion.button className="ob-row" key={campaign.campaign_id} layoutId={`campaign-${campaign.campaign_id}`} onClick={() => setSelectedId(campaign.campaign_id)} type="button">
-                    <span className="ob-target"><Icon name="target" size={17} /></span>
-                    <span className="ob-row-identity">
-                      <span className="ob-row-name">{campaign.campaign_name}</span>
-                      <span className="ob-row-id">{campaign.campaign_id}</span>
-                    </span>
-                    <span className="ob-row-field ob-row-leads"><span className="ob-row-label">Leads</span><span>{formatNumber(campaign.leads_count)}</span></span>
-                    <span className="ob-row-field ob-row-calls"><span className="ob-row-label">Calls</span><span>{formatNumber(campaign.calls_placed)}</span></span>
-                    <span className="ob-row-field"><span className="ob-row-label">Agent</span><span>{campaign.agent_name ? `${campaign.agent_name}${campaign.phone_number ? ` · ${campaign.phone_number}` : ""}` : "No agent"}</span></span>
-                    <StatusChip status={campaign.status} />
-                    <span className="ob-row-chevron"><Icon name="chevron" size={17} /></span>
-                  </motion.button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          ) : null}
+        </section>
       </div>
     </main>
     {notice ? <div className={`ob-toast ${notice.kind}`} role="status">{notice.text}</div> : null}
@@ -337,8 +303,10 @@ export default function OutboundPage() {
   </div>;
 }
 
+// Retell shows ids shortened in the middle; the copy button copies the full id.
+function shortId(id: string) { return id.length > 12 ? `${id.slice(0, 4)}...${id.slice(-3)}` : id; }
 function StatCard({ label, note, value }: { label: string; note?: string; value: string }) { return <div className="ob-card ob-stat"><span>{label}</span><strong>{value}</strong>{note ? <small>{note}</small> : null}</div>; }
-function DetailItem({ label, value }: { label: string; value: string }) { return <div className="ob-detail-item"><span>{label}</span><strong>{value}</strong></div>; }
+function DetailItem({ label, value }: { label: string; value: string }) { return <div className="ob-detail-item"><span>{label}</span><strong title={value}>{value}</strong></div>; }
 
 function CreateCampaignModal({ agents, onClose, onSubmit }: { agents: AgentOption[]; onClose: () => void; onSubmit: (payload: CreateOutboundCampaignPayload) => Promise<void> }) {
   const [name, setName] = useState(""); const [budget, setBudget] = useState(""); const [agentId, setAgentId] = useState(""); const [error, setError] = useState(""); const [submitting, setSubmitting] = useState(false);
@@ -439,7 +407,10 @@ const css = `
 .ob-topbar-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
 .ob-topbar-copy { color: var(--subtle); font-size: 12.5px; margin: 3px 0 0; }
 .ob-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
-.ob-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.ob-browse { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+/* Search in the Retell-style header, right of the title. */
+.ob-browse .ob-toolbar-search { flex: 0 1 300px; max-width: none; min-width: 0; width: 300px; }
+@media (max-width: 640px) { .ob-browse .ob-toolbar-search { flex: 1 1 100%; width: auto; } }
 .ob-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .ob-toolbar-search { flex: 1 1 240px; max-width: 420px; position: relative; }
 .ob-search-icon { color: var(--subtle); display: flex; left: 12px; pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); }
@@ -775,6 +746,79 @@ const css = `
 }
 .ob-toast.success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .ob-toast.error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+/* Retell-style master-detail: a list pane of campaigns beside the open one. */
+.ob-split { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
+.ob-pane-list { border-right: 1px solid var(--app-border); display: flex; flex: 0 0 290px; flex-direction: column; min-height: 0; min-width: 0; padding: 16px; }
+.ob-pane-head { align-items: center; border-bottom: 1px solid var(--app-border); color: var(--app-text); display: flex; gap: 8px; padding: 0 2px 14px; }
+.ob-pane-head > svg { margin-right: 2px; }
+.ob-pane-title { flex: 1; font-size: 14.5px; font-weight: 600; margin: 0; }
+.ob-pane-add, .ob-pane-refresh { align-items: center; border-radius: 8px; cursor: pointer; display: inline-flex; height: 32px; justify-content: center; transition: opacity .16s ease, background .16s ease; width: 32px; }
+.ob-pane-add { background: var(--app-text-strong, var(--app-text)); border: 0; color: var(--app-bg); }
+.ob-pane-add:hover:not(:disabled) { opacity: .85; }
+.ob-pane-refresh { background: transparent; border: 1px solid var(--app-border-strong); color: var(--app-muted); }
+.ob-pane-refresh:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
+.ob-pane-add:disabled, .ob-pane-refresh:disabled { cursor: not-allowed; opacity: .4; }
+.ob-pane-items { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow-y: auto; padding-top: 12px; }
+.ob-pane-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-muted); cursor: pointer; display: flex; font: inherit; font-size: 14px; gap: 10px; min-height: 36px; padding: 0 10px; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
+.ob-pane-item > svg { color: var(--app-text); flex-shrink: 0; }
+.ob-pane-item:hover { background: var(--app-hover); color: var(--app-text); }
+.ob-pane-item.is-active { background: var(--app-hover-2); color: var(--app-text); }
+.ob-pane-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-pane-item-dot { border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
+.ob-pane-item-dot.ob-status-draft { background: var(--app-slate); }
+.ob-pane-item-dot.ob-status-running { background: var(--app-green); }
+.ob-pane-item-dot.ob-status-paused { background: var(--app-amber); }
+.ob-pane-item-dot.ob-status-completed { background: var(--app-primary-text); }
+.ob-pane-item-dot.ob-status-failed { background: var(--app-rose); }
+.ob-pane-note { color: var(--app-subtle); font-size: 13px; margin: 0; padding: 6px 4px; }
+.ob-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 20px; min-height: 0; min-width: 0; overflow-y: auto; padding: 24px 24px 32px; }
+.ob-pane-back { display: none; }
+.ob-detail-top { align-items: flex-start; border-bottom: 1px solid var(--app-border); display: flex; gap: 16px; justify-content: space-between; padding-bottom: 16px; }
+.ob-detail-name { font-size: 18px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.ob-detail-line { align-items: center; color: var(--app-subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
+.ob-copy { align-items: center; background: none; border: 0; border-radius: 5px; color: var(--app-subtle); cursor: pointer; display: inline-flex; height: 20px; justify-content: center; padding: 0; width: 20px; }
+.ob-copy:hover { background: var(--app-hover); color: var(--app-text); }
+.ob-detail-dot { background: var(--app-text); border-radius: 50%; height: 4px; margin: 0 4px; width: 4px; }
+.ob-status-line { align-items: center; background: none !important; display: inline-flex; font-weight: 600; gap: 5px; }
+/* The separator dot already sits before the status, so its own dot made "• •". */
+.ob-detail-line .ob-status-line .ob-status-dot { display: none; }
+.ob-detail-back { display: none; }
+.ob-detail-identity { flex: 1 1 auto; min-width: 0; }
+.ob-detail-buttons { display: flex; flex-shrink: 0; gap: 8px; }
+.ob-dark-btn { align-items: center; background: var(--app-text-strong, var(--app-text)); border: 0; border-radius: 8px; color: var(--app-bg); cursor: pointer; display: inline-flex; font: inherit; font-size: 14px; font-weight: 600; gap: 6px; height: 36px; padding: 0 14px; white-space: nowrap; }
+.ob-dark-btn:hover { opacity: .85; }
+.ob-outline-icon { align-items: center; background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); cursor: pointer; display: inline-flex; height: 36px; justify-content: center; width: 36px; }
+.ob-outline-icon:hover:not(:disabled) { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
+.ob-outline-icon:disabled { cursor: not-allowed; opacity: .4; }
+@media (max-width: 980px) {
+  .ob-split { flex-direction: column; }
+  .ob-pane-list { border-right: 0; flex: 1 1 auto; }
+  .ob-split:not(.has-selection) .ob-pane-detail { display: none; }
+  .ob-split.has-selection .ob-pane-list { display: none; }
+  .ob-pane-detail { overflow: visible; padding: 16px; }
+  .ob-pane-back { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; font: inherit; font-size: 13px; font-weight: 600; gap: 6px; padding: 0; }
+  /* With a campaign open, the back link becomes an arrow button in its
+     header, like the knowledge base and phone number pages. */
+  .ob-pane-detail:has(> .ob-detail-top) > .ob-pane-back { display: none; }
+  .ob-detail-top { align-items: center; display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
+  .ob-detail-back { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; color: var(--app-text); cursor: pointer; display: inline-flex; height: 38px; justify-content: center; padding: 0; width: 38px; }
+  .ob-detail-back:hover { background: var(--app-hover); }
+  .ob-detail-back:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
+}
+/* Phones: back, name and the Edit / Delete buttons share one row (Edit as a
+   square icon button so the name keeps its width); ID and status on one line
+   under the name - the agent is in Campaign details below. */
+@media (max-width: 640px) {
+  .ob-detail-top { gap: 10px; }
+  .ob-detail-name { font-size: 17px; line-height: 1.25; overflow-wrap: break-word; }
+  .ob-detail-line { flex-wrap: nowrap; gap: 4px; margin-top: 3px; overflow: hidden; white-space: nowrap; }
+  .ob-detail-line .ob-detail-dot { margin: 0 2px; }
+  .ob-detail-agent, .ob-detail-agent-dot { display: none; }
+  .ob-detail-buttons { gap: 6px; }
+  .ob-detail-buttons .ob-dark-btn { border-radius: 10px; height: 38px; justify-content: center; padding: 0; width: 38px; }
+  .ob-detail-buttons .ob-edit-label { display: none; }
+  .ob-detail-buttons .ob-outline-icon { border-radius: 10px; height: 38px; width: 38px; }
+}
 @media (max-width: 1180px) {
   .ob-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ob-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -792,7 +836,20 @@ const css = `
 }
 @media (max-width: 640px) {
   .ob-topbar, .ob-content { padding: 16px 14px; }
-  .ob-stat-grid, .ob-detail-grid { grid-template-columns: 1fr; }
+  /* Campaign details as one compact list, like the call page: a slim row per
+     detail, label left, value right (long values end in "...", full value in
+     the tooltip). */
+  .ob-details-card { padding: 14px; }
+  .ob-details-card h3 { margin-bottom: 12px; }
+  .ob-detail-grid { border: 1px solid var(--app-border); border-radius: 12px; gap: 0; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
+  .ob-detail-item { align-items: center; border: 0; border-bottom: 1px solid var(--app-border); border-radius: 0; display: flex; gap: 12px; justify-content: space-between; padding: 9px 12px; }
+  .ob-detail-item:last-child { border-bottom: 0; }
+  .ob-detail-item span { flex: 0 0 auto; font-size: 10px; letter-spacing: .6px; }
+  .ob-detail-item strong { font-size: 12.5px; font-weight: 700; min-width: 0; overflow: hidden; overflow-wrap: normal; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+  /* Stats two per row: four short numbers don't need a screen each. */
+  .ob-stat-grid { gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ob-stat { min-height: 0; padding: 13px; }
+  .ob-stat > strong { font-size: 22px; }
   .ob-toolbar-search { max-width: none; min-width: 100%; }
   .ob-count { margin-left: 0; }
   .ob-row { gap: 10px; grid-template-columns: 38px minmax(0, 1fr) auto; padding: 11px; }

@@ -4,15 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { SignOutButton, useAuth, useUser } from "@clerk/nextjs";
-import { BrandMark } from "@/components/brand/BrandMark";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
-import {
-  reportChatAgentCount,
-  skipFirstAgentSetup,
-  useChatAgentCount,
-  useFirstAgentSetupSkipped,
-} from "@/lib/chatAgentCount";
 import {
   FREE_TRIAL_WHATSAPP_URL,
   MORE_AGENTS_WHATSAPP_URL,
@@ -32,7 +25,7 @@ import {
   type ApiPhoneNumber,
   type PhoneNumberStatus,
 } from "@/lib/phoneNumbers";
-import { WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
+import { useIsPhone, WhatsAppLinkHelp } from "@/components/phone-numbers/WhatsAppLinkHelp";
 import { listTools as apiListTools, type ApiTool } from "@/lib/tools";
 import { useCachedState } from "@/lib/pageCache";
 import { startPolling, startRefreshing } from "@/lib/polling";
@@ -385,7 +378,8 @@ const css = `
   min-height: 0;
 }
 .chat-workspace > * { min-height: 0; max-height: 100%; }
-.chat-agent-browser { margin: 0 auto; max-width: 1320px; width: 100%; }
+/* The agent list uses the page's full width, like Retell's. */
+.chat-agent-browser { display: flex; flex-direction: column; height: 100%; min-height: 0; width: 100%; }
 .chat-agent-page {
   background: var(--bg);
   border: 1px solid var(--border-strong);
@@ -633,7 +627,7 @@ const css = `
 .chat-runtime-alert-time { color: var(--subtle); font-weight: 600; }
 .chat-runtime-alert-copy { color: var(--text); font-size: 12.5px; line-height: 1.5; margin: 4px 0 0; overflow-wrap: anywhere; }
 /* An agent that has sent its replies for the hour, counting down to when it answers again. */
-.chat-limit-list { display: grid; gap: 10px; margin: 0 auto 16px; max-width: 1320px; width: 100%; }
+.chat-limit-list { display: grid; gap: 10px; margin: 0 0 16px; width: 100%; }
 .chat-limit-card { align-items: center; flex-wrap: wrap; justify-content: space-between; }
 .chat-limit-card-text { flex: 1 1 240px; min-width: 0; }
 .chat-limit-timer { color: var(--app-amber-text); flex: none; text-align: right; }
@@ -791,7 +785,58 @@ const css = `
 .chat-list-head > .chat-list-titlebar { flex: 1 1 auto; }
 .chat-list-titlebar { align-items: center; display: flex; gap: 16px; min-width: 0; }
 .chat-list-titleblock { flex: 0 0 auto; min-width: 0; }
-.chat-search-head { flex: 1 1 auto; margin: 0 auto; max-width: 440px; min-width: 0; }
+/* Retell-style agent list: title on the left, search and buttons on the right,
+   then a full-width table with a shaded header row and a pager under it. */
+.chat-list-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex: 0 0 auto; }
+.chat-list-title { font-size: 20px; font-weight: 600; letter-spacing: -.2px; line-height: 1.3; margin: 0; white-space: nowrap; }
+.chat-list-actions { align-items: center; display: flex; flex: 0 1 auto; gap: 8px; min-width: 0; }
+.chat-search-head { flex: 0 1 300px; margin: 0; min-width: 0; width: 300px; }
+.chat-search-head .chat-input { border-radius: 8px; height: 36px; }
+.chat-list-actions .chat-btn { border-radius: 8px; min-height: 36px; }
+.chat-table-wrap { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.chat-table { border-collapse: separate; border-spacing: 0; font-size: 14px; width: 100%; }
+.chat-table thead th {
+  background: var(--app-hover);
+  color: var(--muted);
+  font-weight: 500;
+  padding: 14px 16px;
+  position: sticky;
+  text-align: left;
+  top: 0;
+  white-space: nowrap;
+  z-index: 2;
+}
+.chat-table thead th:first-child { border-radius: 10px 0 0 10px; }
+.chat-table thead th:last-child { border-radius: 0 10px 10px 0; }
+.chat-table td { border-bottom: 1px solid var(--border); padding: 11px 16px; vertical-align: middle; }
+.chat-table-row { position: relative; }
+.chat-table-row:hover td { background: var(--panel-hover); }
+.chat-table-row:has(.chat-list-link:focus-visible) td { background: var(--panel-hover); }
+.chat-table-name { align-items: center; display: inline-flex; gap: 12px; max-width: 100%; min-width: 0; }
+.chat-table-icon { align-items: center; border: 1px solid var(--border); border-radius: 8px; color: var(--primary-light); display: inline-flex; flex: 0 0 auto; height: 32px; justify-content: center; width: 32px; }
+.chat-table .chat-list-link { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-table .chat-list-link::after { border-radius: 0; }
+.chat-table-muted { color: var(--muted); white-space: nowrap; }
+.chat-table-text { display: flex; flex-direction: column; min-width: 0; }
+.chat-table-sub { color: var(--muted); display: none; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-table-resources { align-items: center; display: inline-flex; gap: 10px; }
+.chat-table-resources .chat-orders-on { font-size: 11px; }
+.chat-col-actions { text-align: right; width: 56px; }
+.chat-table .chat-list-delete { opacity: .6; }
+.chat-table-row:hover .chat-list-delete, .chat-table .chat-list-delete:focus-visible { opacity: 1; }
+.chat-pager { align-items: center; display: flex; flex: 0 0 auto; gap: 10px; justify-content: center; padding: 14px 0 4px; }
+.chat-pager-btn { align-items: center; background: none; border: 0; border-radius: 6px; color: var(--muted); cursor: pointer; display: inline-flex; height: 28px; justify-content: center; width: 28px; }
+.chat-pager-btn:disabled { cursor: default; opacity: .35; }
+.chat-pager-btn:not(:disabled):hover { background: var(--app-hover); color: var(--text); }
+.chat-pager-btn svg { transform: rotate(-90deg); }
+.chat-pager-prev svg { transform: rotate(90deg); }
+.chat-pager-num { align-items: center; background: var(--app-hover-3); border-radius: 6px; display: inline-flex; font-size: 13px; font-weight: 600; height: 28px; justify-content: center; min-width: 28px; }
+@media (max-width: 1100px) {
+  .chat-col-edited { display: none; }
+}
+@media (max-width: 480px) {
+  .chat-table th:nth-child(3), .chat-table td:nth-child(3) { display: none; }
+}
 /* WhatsApp's own green, matching the sidebar's support card. */
 .chat-btn-whatsapp { background: #25d366; border-color: transparent; color: #fff; text-decoration: none; }
 .chat-btn-whatsapp:hover { background: #1fb956; }
@@ -874,37 +919,9 @@ const css = `
 .chat-qr-reveal-or { align-items: center; color: var(--faint); display: flex; font-size: 12px; font-weight: 700; gap: 12px; text-transform: uppercase; }
 .chat-qr-reveal-or::before, .chat-qr-reveal-or::after { background: var(--border); content: ""; flex: 1 1 auto; height: 1px; }
 .chat-qr-reveal .chat-btn { justify-content: center; width: 100%; }
-/* The setup page's top bar holds the logo and three buttons, so it shortens
-   their labels on tablets and phones, and on narrow phones the WhatsApp
-   button keeps only its icon and the logo only its mark. */
-@media (max-width: 680px) {
-  .chat-setup-top { padding: 10px 16px; }
-  .chat-setup-top .chat-btn .chat-btn-label { display: none; }
-  .chat-setup-top .chat-btn .chat-btn-label-short { display: inline; }
-  .chat-setup-actions { gap: 6px; }
-}
-@media (max-width: 460px) {
-  .chat-setup-top .chat-btn-whatsapp .chat-btn-label-short,
-  .chat-setup-brand > .notranslate { display: none; }
-}
-.chat-setup-shell { flex-direction: column; overflow-y: auto; }
-.chat-setup-top {
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex: 0 0 auto;
-  gap: 12px;
-  justify-content: space-between;
-  padding: 12px 24px;
-}
-.chat-setup-brand { align-items: center; display: inline-flex; font-size: 16px; font-weight: 850; gap: 9px; letter-spacing: -.2px; }
-.chat-setup-mark { display: inline-block; width: 30px; }
-.chat-setup-actions { align-items: center; display: flex; gap: 8px; }
-.chat-setup-main { align-items: flex-start; display: flex; flex: 1 0 auto; justify-content: center; padding: 28px 16px 40px; }
 .chat-setup-card-wrap { align-items: flex-start; display: flex; justify-content: center; width: 100%; }
 .chat-setup-card-wrap .chat-modal-card { border-radius: 18px; box-shadow: none; max-height: none; overflow: visible; }
 .chat-setup-card-wrap .chat-modal-body { overflow: visible; }
-.chat-setup-loading { align-self: center; color: var(--muted); }
 .chat-modal-card.is-pairing { max-width: 760px; }
 .chat-modal-card.is-pairing .chat-modal-body { grid-template-columns: minmax(0, 1fr); }
 .chat-modal-card .chat-number-grid { grid-template-columns: minmax(0, 1fr); }
@@ -958,6 +975,22 @@ const css = `
 /* 260px floor keeps the QR's modules big enough for a phone camera at 1x DPR. */
 .chat-number-grid { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
 .chat-number-grid.is-single { grid-template-columns: minmax(0, 1fr); }
+/* An agent with no number: the whole page is the connect screen. The QR side
+   gets the room; numbers already connected sit in a narrower column. */
+.chat-connect-page { display: flex; flex: 1 1 auto; justify-content: center; min-height: 0; overflow-y: auto; padding: 28px 24px 32px; }
+.chat-connect-inner { align-content: start; display: grid; gap: 20px; max-width: 1040px; width: 100%; }
+.chat-connect-head { display: grid; gap: 6px; text-align: center; }
+.chat-connect-title { color: var(--text); font-size: 22px; font-weight: 700; letter-spacing: -.3px; margin: 0; }
+.chat-connect-copy { color: var(--muted); font-size: 13.5px; line-height: 1.5; margin: 0 auto; max-width: 520px; }
+.chat-connect-page .chat-number-grid { gap: 16px; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); }
+.chat-connect-page .chat-number-grid.is-single { grid-template-columns: minmax(0, 1fr); }
+.chat-connect-page .chat-number-pane { gap: 14px; padding: 20px; }
+@media (max-width: 900px) {
+  .chat-connect-page { overflow: visible; padding: 16px 12px 24px; }
+  .chat-connect-page .chat-number-grid { grid-template-columns: minmax(0, 1fr); }
+  .chat-connect-page .chat-number-pane { padding: 16px; }
+  .chat-connect-title { font-size: 19px; }
+}
 .chat-number-pane {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -1015,6 +1048,30 @@ const css = `
   text-align: center;
 }
 .chat-number-status { color: var(--subtle); font-size: 11.5px; line-height: 1.5; }
+/* QR-first linking: the code and its reload timer on the left, the steps on
+   the right; stacked when the pane is too narrow for both side by side. */
+.chat-qr-connect { align-items: center; display: grid; gap: 18px 28px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.chat-qr-connect-code { display: grid; gap: 10px; justify-items: center; }
+.chat-qr-connect-code .chat-qr-frame { max-width: 240px; width: 100%; }
+.chat-qr-connect-timer { color: var(--app-primary-text); font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 600; text-align: center; }
+.chat-qr-connect-alt {
+  background: none;
+  border: 0;
+  color: var(--app-primary-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.chat-qr-connect-alt:hover { color: var(--text); }
+.chat-qr-connect-help { display: grid; gap: 14px; min-width: 0; }
+.chat-qr-connect-title { color: var(--text); font-size: 16px; font-weight: 700; text-align: center; }
+.chat-qr-connect-steps { color: var(--muted); display: grid; font-size: 13.5px; gap: 10px; line-height: 1.45; margin: 0; padding-left: 22px; }
+.chat-qr-connect-steps b { color: var(--text); font-weight: 700; }
+.chat-qr-connect-note { color: var(--subtle); font-size: 11.5px; line-height: 1.5; margin: 0; }
 .chat-number-error { color: var(--rose); font-size: 11.5px; line-height: 1.5; }
 .chat-number-list { display: grid; gap: 8px; list-style: none; margin: 0; max-height: 268px; overflow-y: auto; padding: 0; }
 .chat-number-row {
@@ -1050,6 +1107,20 @@ const css = `
 .chat-number-detail { color: var(--subtle); font-size: 11.5px; }
 .chat-number-hint { color: var(--green); font-size: 11px; font-weight: 700; white-space: nowrap; }
 .chat-number-hint.is-blocked { color: var(--faint); }
+.chat-number-end { align-items: center; display: inline-flex; gap: 10px; }
+.chat-number-use {
+  align-items: center;
+  background: var(--app-primary);
+  border-radius: 8px;
+  color: var(--app-on-accent, #fff);
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 700;
+  height: 30px;
+  padding: 0 14px;
+  transition: filter .15s ease;
+}
+.chat-number-row:hover:not(:disabled) .chat-number-use { filter: brightness(1.1); }
 /* Desktop editor: the agent page takes the whole width, with the prompt filling
    the left column and a flat list of settings on the right. Each column scrolls
    on its own. Colours are the same tokens the stacked layout uses. */
@@ -1128,7 +1199,7 @@ const css = `
   .chat-shell { display: block; height: auto; max-height: none; min-height: 100dvh; overflow: visible; width: 100%; max-width: 100%; }
   .chat-main { height: auto; overflow: visible; }
   .chat-content { padding: 16px; }
-  .chat-workspace { grid-template-columns: 1fr; }
+  .chat-workspace { grid-template-columns: minmax(0, 1fr); }
   .chat-panel { max-height: none; }
   .chat-agent-browser { overflow: visible; }
   .chat-agent-browser > .chat-panel-body { overflow: visible; }
@@ -1139,6 +1210,22 @@ const css = `
   .chat-agent-expanded-grid > .chat-editor { overflow: visible; padding-right: 0; }
   /* Toasts rise above the sidebar's bottom tab bar. */
   .chat-toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
+  /* The agent list fills the screen between the top bar (58px) and the bottom
+     tab bar (62px), so the pager sits at the foot of the screen, not right
+     under the last row. */
+  .chat-main:has(> .chat-content > .chat-workspace) { min-height: calc(100dvh - 120px - env(safe-area-inset-bottom)); }
+  .chat-content:has(> .chat-workspace) { flex: 1 1 auto; }
+  .chat-workspace .chat-agent-browser { flex: 1 1 auto; height: auto; }
+  .chat-workspace .chat-table-wrap { flex: 0 0 auto; overflow: visible; }
+  .chat-workspace .chat-pager { margin-top: auto; padding-top: 16px; }
+  /* Agent page: the Agent / Conversation / Configuration tabs stay pinned
+     under the top bar (58px) while the settings scroll beneath them. */
+  .chat-agent-page .chat-tabs {
+    box-shadow: 0 -12px 0 var(--bg), 0 10px 18px -14px rgba(0, 0, 0, .55);
+    position: sticky;
+    top: 66px;
+    z-index: 6;
+  }
 }
 /* Phones: one column everywhere, the agent editor goes full screen, and
    touch targets grow a little. */
@@ -1152,7 +1239,36 @@ const css = `
   .chat-list-head .chat-panel-title { white-space: nowrap; }
   .chat-list-head .chat-panel-copy { margin-top: 2px; }
   .chat-list-actions { width: 100%; }
-  .chat-search-head { margin: 0; max-width: none; }
+  .chat-search-head { flex: 1 1 100%; margin: 0; max-width: none; width: auto; }
+  .chat-list-actions { flex-wrap: wrap; }
+  .chat-col-resources { display: none; }
+  /* Phones: each agent is its own card - name with its number underneath,
+     then the status and delete - instead of a table row under a header. */
+  .chat-table thead { display: none; }
+  .chat-table, .chat-table tbody { display: block; }
+  .chat-table tbody tr {
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 12px;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .chat-table td { background: none !important; border: 0; display: block; flex: 0 0 auto; padding: 0; width: auto; }
+  .chat-table td:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+  .chat-table td:first-child .chat-table-name { display: flex; }
+  /* The card shows only name, status and delete; the number is under the name. */
+  .chat-table td:nth-child(3), .chat-table td.chat-col-resources, .chat-table td.chat-col-edited { display: none; }
+  .chat-table-row:hover { background: var(--panel-hover); border-color: var(--app-border-strong); }
+  .chat-table-row:has(.chat-list-link:focus-visible) { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 3px var(--app-primary-ring); }
+  .chat-table .chat-list-link::after { border-radius: 14px; }
+  .chat-table-icon { border-radius: 10px; height: 38px; width: 38px; }
+  .chat-table .chat-list-link { font-size: 15px; font-weight: 600; }
+  .chat-table-sub { display: block; }
+  .chat-table .chat-list-delete { opacity: 1; }
   .chat-list-actions .chat-btn { flex: 1 1 0; justify-content: center; min-width: 0; white-space: nowrap; }
   .chat-fields-2 { grid-template-columns: 1fr; }
   .chat-composer { grid-template-columns: 1fr; }
@@ -1163,12 +1279,38 @@ const css = `
   .chat-modal-footer { flex-direction: column-reverse; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
   .chat-modal-footer .chat-btn { width: 100%; }
   .chat-input, .chat-select { font-size: 16px; } /* stops iOS zooming on focus */
-  .chat-agent-page { border-radius: 16px; }
+  /* Agent page on phones: no frame around the page (it only cost width), and
+     the header is two rows - back, avatar, name and status on top, then
+     Pause and Delete side by side across the full width. */
+  .chat-content:has(> .chat-agent-page) { padding: 0; }
+  .chat-agent-page { background: transparent; border: 0; border-radius: 0; }
   .chat-agent-expanded-grid { gap: 12px; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
-  .chat-agent-expanded-topline { align-items: flex-start; padding: 12px; }
-  .chat-detail-head { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .chat-editor-actions { justify-content: stretch; }
-  .chat-editor-actions .chat-btn { flex: 1 1 0; }
+  .chat-agent-expanded-topline {
+    align-items: center;
+    display: grid;
+    gap: 12px 10px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 14px 12px 12px;
+  }
+  .chat-agent-expanded-topline > .chat-detail-head { display: contents; }
+  .chat-agent-expanded-topline .chat-identity { gap: 10px; grid-template-columns: 40px minmax(0, 1fr); }
+  .chat-agent-expanded-topline .chat-avatar-lg { border-radius: 11px; font-size: 15px; height: 40px; width: 40px; }
+  .chat-agent-expanded-topline .chat-heading-row { flex-wrap: nowrap; gap: 8px; }
+  .chat-agent-expanded-topline .chat-heading { flex: 0 1 auto; min-width: 0; }
+  .chat-agent-expanded-topline .chat-heading-row > :not(.chat-heading) { flex: none; }
+  .chat-agent-expanded-topline .chat-tag { display: none; }
+  /* The full name wraps onto a second line instead of being cut off. */
+  .chat-agent-expanded-topline .chat-heading { font-size: 17px; line-height: 1.2; white-space: normal; }
+  .chat-agent-expanded-topline .chat-heading-edit:not(.chat-heading-input) {
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .chat-editor-actions { gap: 8px; grid-column: 1 / -1; justify-content: stretch; }
+  .chat-editor-actions .chat-btn { flex: 1 1 0; justify-content: center; min-height: 40px; }
+  .chat-agent-page .chat-tabs { top: 58px; }
   .chat-heading { font-size: 18px; }
   .chat-heading-input { width: 100%; }
   .chat-card { padding: 14px; }
@@ -1199,6 +1341,17 @@ function avatarColor(id: string): string {
   let total = 0;
   for (const char of id) total += char.charCodeAt(0);
   return avatarColors[total % avatarColors.length];
+}
+
+const LIST_PAGE_SIZE = 20;
+
+// "11/21/2026 · 14:52" in the viewer's own time zone, as Retell's Edited column.
+function formatEdited(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  const day = date.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const time = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return `${day} · ${time}`;
 }
 
 function phoneNumberLabel(pn: ApiPhoneNumber): string {
@@ -1301,7 +1454,7 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
 export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   const router = useRouter();
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
-  const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn, userId } = useAuth();
+  const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
   const [chatAgents, setChatAgents, hasCachedAgents] = useCachedState<ApiChatAgent[]>("chat-agents", []);
   // Which part of the editor is on screen. Cached per agent because a thread
@@ -1350,9 +1503,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   // True once the server has returned the agent list in this visit. A cached or
   // failed list proves nothing about whether the account has an agent.
   const [isListFromServer, setIsListFromServer] = useState(false);
-  const knownAgentCount = useChatAgentCount(userId);
-  // "Go to dashboard" was pressed on the setup page in this tab.
-  const setupSkipped = useFirstAgentSetupSkipped(userId);
   // Saves waiting out their debounce, with the save itself so leaving the page
   // can send it at once instead of dropping it.
   const saveTimers = useRef<
@@ -1396,10 +1546,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
         if (cancelled) return;
         setChatAgents(agents);
         setIsListFromServer(true);
-        // No agent: the page is the setup flow, which starts on linking a number.
-        if (!agentId && agents.length === 0) {
-          setCreateForm((current) => current ?? newCreateForm(1));
-        }
       })
       .catch((error) => {
         if (cancelled) return;
@@ -1422,21 +1568,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       cancelled = true;
     };
   }, [agentId, getToken, isAuthenticated, setChatAgents, setKnowledgeBases, setPhoneNumbers, setTools]);
-
-  // Every dashboard page holds an account with no chat agent on the setup page
-  // (FirstAgentGate), so the count is reported each time the list changes:
-  // creating the first agent opens the dashboard, deleting the last closes it.
-  useEffect(() => {
-    if (isListFromServer && userId) reportChatAgentCount(userId, chatAgents.length);
-  }, [chatAgents.length, isListFromServer, userId]);
-
-  // With no agent the list page is only the setup flow: link a number, then
-  // name the agent. Before this visit's list arrives, a count another page
-  // already learned decides, so the full dashboard doesn't flash first.
-  const isSetupOnly =
-    !agentId &&
-    !setupSkipped &&
-    (isListFromServer ? chatAgents.length === 0 : knownAgentCount === 0);
 
   // Going back to the list, or on to another agent, unmounts this page. An
   // edit still inside its debounce is sent then rather than lost; its answer
@@ -1462,6 +1593,12 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     if (!normalized) return chatAgents;
     return chatAgents.filter((agent) => agent.agent.name.toLowerCase().includes(normalized));
   }, [chatAgents, query]);
+
+  // The list is a table of LIST_PAGE_SIZE rows a page, like Retell's.
+  const [listPage, setListPage] = useState(0);
+  const listPageCount = Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+  const currentListPage = Math.min(listPage, listPageCount - 1);
+  const pagedAgents = filtered.slice(currentListPage * LIST_PAGE_SIZE, (currentListPage + 1) * LIST_PAGE_SIZE);
 
   const selected = useMemo(
     () => (selectedId ? chatAgents.find((agent) => agent.id === selectedId) ?? null : null),
@@ -1645,6 +1782,45 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
   useEffect(() => {
     finishCreateRef.current = finishCreateWithNumber;
   }, [finishCreateWithNumber]);
+
+  // Linking a number creates its agent on the server, live, before the number
+  // reads connected. The login poller above only sees that while this page
+  // still holds the login it started; on a phone the owner leaves for WhatsApp
+  // to type the code, and a tab the browser reloaded meanwhile (or a link
+  // finished in another tab) was left on the setup page with the agent already
+  // made. So while the account shows no agent, look for one every few seconds,
+  // and at once on coming back to the tab, and open it when it appears.
+  const watchForFirstAgent = !agentId && isListFromServer && chatAgents.length === 0 && !isCreating;
+  useEffect(() => {
+    if (!watchForFirstAgent) return;
+    let cancelled = false;
+    let opening = false;
+    const stopRefreshing = startRefreshing(async () => {
+      if (opening) return;
+      try {
+        const live = await listChatAgentLiveStates(getToken);
+        if (cancelled || live.length === 0) return;
+        opening = true;
+        const agents = await listDashboardChatAgents(getToken);
+        if (cancelled || agents.length === 0) {
+          opening = false;
+          return;
+        }
+        const agent = agents.find((item) => item.agent.phone_number_id) ?? agents[0];
+        console.log("[wa-login] agent appeared on the setup page; opening it", { agentId: agent.id });
+        setChatAgents(agents);
+        setCreateForm(null);
+        router.push(`/dashboard/chat/${agent.id}`);
+      } catch {
+        opening = false;
+        // Tried again on the next turn.
+      }
+    }, 3000);
+    return () => {
+      cancelled = true;
+      stopRefreshing();
+    };
+  }, [getToken, router, setChatAgents, watchForFirstAgent]);
 
   const numberLoginId = numberLogin?.id;
   const numberLoginStatus = numberLogin?.status;
@@ -1965,10 +2141,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       saveTimers.current.delete(deleteTarget.id);
       await deleteDashboardChatAgent(deleteTarget.id, getToken);
       setChatAgents((current) => current.filter((agent) => agent.id !== deleteTarget.id));
-      if (!chatAgents.some((agent) => agent.id !== deleteTarget.id)) {
-        // That was the last agent, so the account is back on the setup flow.
-        setCreateForm(newCreateForm(1));
-      }
       if (agentId) {
         // Back to the list, where the agent is gone; replace, so Back does not
         // return to the deleted agent's page.
@@ -1985,7 +2157,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
       setIsDeleting(false);
       setDeleteTargetId("");
     }
-  }, [agentId, chatAgents, deleteTarget, getToken, router, setChatAgents]);
+  }, [agentId, deleteTarget, getToken, router, setChatAgents]);
 
   // Escape dismisses the delete confirmation. It listens in the capture phase
   // and stops the key there, so nothing behind it also acts on the key.
@@ -2000,90 +2172,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [isConfirmingDelete, isDeleting]);
-
-  if (isSetupOnly) {
-    // The whole dashboard for an account with no chat agent: no sidebar and no
-    // other pages, only linking a number and naming the agent. Creating it
-    // opens the agent's page and, with it, the rest of the dashboard.
-    return (
-      <div className="chat-shell chat-setup-shell app-accent-green">
-        <style dangerouslySetInnerHTML={{ __html: css }} />
-        <header className="chat-setup-top">
-          <span className="chat-setup-brand">
-            <span className="chat-setup-mark"><BrandMark priority /></span>
-            <span className="notranslate">Wapzen</span>
-          </span>
-          <div className="chat-setup-actions">
-            <a
-              aria-label="Trouble connecting? Chat with us on WhatsApp"
-              className="chat-btn chat-btn-whatsapp chat-btn-sm"
-              href={SUPPORT_WHATSAPP_URL}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <WhatsAppGlyph size={15} />
-              <span className="chat-btn-label">Trouble connecting?</span>
-              <span className="chat-btn-label-short">Need help?</span>
-            </a>
-            <button
-              className="chat-btn chat-btn-secondary chat-btn-sm"
-              onClick={() => {
-                // Ends the pairing in progress, as Cancel did in the pop-up, and
-                // opens the full dashboard with the empty agent list.
-                closeCreateModal();
-                if (userId) skipFirstAgentSetup(userId);
-              }}
-              type="button"
-            >
-              <Icon name="grid" size={14} sw={2.2} />
-              <span className="chat-btn-label">Go to dashboard</span>
-              <span className="chat-btn-label-short">Dashboard</span>
-            </button>
-            <SignOutButton redirectUrl="/">
-              <button className="chat-btn chat-btn-secondary chat-btn-sm" type="button">
-                Sign out
-              </button>
-            </SignOutButton>
-          </div>
-        </header>
-        <main className="chat-setup-main">
-          {createForm ? (
-            <CreateChatAgentModal
-              asPage
-              assignableNumbers={assignableNumbers}
-              error={createError}
-              form={createForm}
-              isRefreshingNumbers={isRefreshingNumbers}
-              isStartingLogin={isStartingLogin}
-              isSubmitting={isCreating}
-              login={numberLogin && numberLogin.status !== "connected" ? numberLogin : null}
-              loginError={numberLoginError}
-              onCancel={closeCreateModal}
-              onChangeNumber={changeCreateNumber}
-              onCreate={createAgent}
-              onRefreshNumbers={refreshPhoneNumbers}
-              onRequestCode={startNumberCodeLogin}
-              onRequestQr={startNumberQrLogin}
-              onSelectNumber={chooseCreateNumber}
-              onStartLogin={startNumberLogin}
-              phoneNumbers={phoneNumbers}
-              setForm={setCreateForm}
-            />
-          ) : (
-            <div aria-busy="true" className="chat-setup-loading">Loading...</div>
-          )}
-        </main>
-        {notice ? (
-          <div
-            className={`chat-toast ${notice.kind === "error" ? "chat-toast-error" : "chat-toast-success"}`}
-            role="status"
-          >
-            {notice.text}
-          </div>
-        ) : null}
-      </div>
-    );
-  }
 
   return (
     <div className="chat-shell app-accent-green">
@@ -2112,8 +2200,46 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                     agent={selected}
                     onDelete={() => setDeleteTargetId(selected.id)}
                     onPatch={patchSelected}
-                    tabs={isDesktop ? <EditorTabs isDesktop onSelect={setEditorTab} tab={editorTab} /> : null}
+                    tabs={
+                      isDesktop && selected.agent.phone_number_id ? (
+                        <EditorTabs isDesktop onSelect={setEditorTab} tab={editorTab} />
+                      ) : null
+                    }
                   />
+                  {!selected.agent.phone_number_id ? (
+                    // No number yet: the page is only the way to connect one.
+                    // The prompt and settings open once a number is linked
+                    // (a scan assigns it to this agent the moment it lands).
+                    <div className="chat-connect-page">
+                      <div className="chat-connect-inner">
+                        <div className="chat-connect-head">
+                          <h2 className="chat-connect-title">Connect your WhatsApp number</h2>
+                          <p className="chat-connect-copy">
+                            Link the number this agent will reply on. Its prompt and settings open as soon as it
+                            connects.
+                          </p>
+                        </div>
+                        <PhoneNumberSetupCard
+                          bare
+                          error={numberLoginError}
+                          isRefreshingNumbers={isRefreshingNumbers}
+                          isStarting={isStartingLogin}
+                          login={numberLogin && numberLogin.status !== "connected" ? numberLogin : null}
+                          numbers={assignableNumbers}
+                          onRefreshNumbers={refreshPhoneNumbers}
+                          onRequestCode={startNumberCodeLogin}
+                          onRequestQr={startNumberQrLogin}
+                          onSelectNumber={(phoneNumberId) =>
+                            patchSelected((current) => ({
+                              ...current,
+                              agent: { ...current.agent, phone_number_id: phoneNumberId, status: "active" },
+                            }))
+                          }
+                          onStartLogin={startNumberLogin}
+                        />
+                      </div>
+                    </div>
+                  ) : (
                   <div className="chat-agent-expanded-grid">
                     <Editor
                       agent={selected}
@@ -2136,6 +2262,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                       tools={tools}
                     />
                   </div>
+                  )}
                 </>
               ) : (
                 // A link or a reload lands here before the list has loaded, so
@@ -2156,46 +2283,34 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
             </section>
           ) : (
           <section className="chat-workspace" aria-label="Chat agents workspace">
-            <div className="chat-panel chat-agent-browser">
-              <div className="chat-panel-head chat-list-head">
-                <div className="chat-list-titlebar">
-                  <div className="chat-list-titleblock">
-                    <h2 className="chat-panel-title">
-                      <span className="chat-panel-ic">
-                        <Icon name="chat" size={16} />
-                      </span>
-                      Chat agents
-                    </h2>
-                    <div className="chat-panel-copy">
-                      {showSkeleton ? "Loading chat agents..." : `${chatAgents.length} chat agent${chatAgents.length === 1 ? "" : "s"}`}
-                    </div>
-                  </div>
-                  {/* The search sits in the header beside the title, filling
-                      the space between it and the buttons. */}
+            <div className="chat-agent-browser">
+              <div className="chat-list-head">
+                <h1 className="chat-list-title">All Agents</h1>
+                <div className="chat-list-actions">
                   <div className="chat-search chat-search-head">
                     <span className="chat-search-icon">
-                      <Icon name="search" size={15} sw={2.2} />
+                      <Icon name="search" size={14} sw={2.2} />
                     </span>
                     <input
                       aria-label="Search agents"
                       className="chat-input"
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Search agents..."
+                      onChange={(event) => {
+                        setQuery(event.target.value);
+                        setListPage(0);
+                      }}
+                      placeholder="Search agents"
                       value={query}
                     />
                   </div>
-                </div>
-                <div className="chat-list-actions">
                   <a
                     aria-label="Trouble connecting? Chat with us on WhatsApp"
-                    className="chat-btn chat-btn-whatsapp chat-btn-sm"
+                    className="chat-btn chat-btn-secondary chat-btn-sm"
                     href={SUPPORT_WHATSAPP_URL}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    <WhatsAppGlyph size={15} />
-                    <span className="chat-btn-label">Trouble connecting?</span>
-                    <span className="chat-btn-label-short">Need help?</span>
+                    <WhatsAppGlyph size={14} />
+                    <span className="chat-btn-label">Need help?</span>
                   </a>
                   <button
                     aria-label="New chat agent"
@@ -2204,29 +2319,83 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                     type="button"
                   >
                     <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
-                    <span className="chat-btn-label">New chat agent</span>
+                    <span className="chat-btn-label">Create</span>
                   </button>
                 </div>
               </div>
-              <div className={`chat-panel-body${!showSkeleton && chatAgents.length === 0 ? " chat-panel-body-empty" : ""}`}>
-                {showSkeleton ? (
-                  <div aria-busy="true" aria-label="Loading chat agents" className="chat-list">
-                    {[0, 1, 2].map((row) => (
-                      <div aria-hidden="true" className="chat-list-row chat-list-skeleton" key={row}>
-                        <span className="chat-skel chat-skel-avatar" />
-                        <span className="chat-list-identity">
-                          <span className="chat-skel" style={{ width: "58%" }} />
-                          <span className="chat-skel chat-skel-sm" style={{ width: "38%" }} />
-                        </span>
-                        <span className="chat-list-resources">
-                          <span className="chat-skel chat-skel-sm" style={{ width: 96 }} />
-                        </span>
-                        <span className="chat-skel chat-skel-pill" />
-                        <span className="chat-list-chevron" />
-                      </div>
-                    ))}
-                  </div>
-                ) : chatAgents.length === 0 ? (
+
+              <div className="chat-table-wrap">
+                <table className="chat-table" aria-busy={showSkeleton || undefined}>
+                  <thead>
+                    <tr>
+                      <th scope="col">Agent Name</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Phone</th>
+                      <th className="chat-col-resources" scope="col">Knowledge &amp; Tools</th>
+                      <th className="chat-col-edited" scope="col">Edited</th>
+                      <th aria-label="Actions" className="chat-col-actions" scope="col" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {showSkeleton
+                      ? [0, 1, 2].map((row) => (
+                          <tr aria-hidden="true" className="chat-table-skeleton" key={row}>
+                            <td><span className="chat-skel" style={{ width: 180 }} /></td>
+                            <td><span className="chat-skel" style={{ width: 56 }} /></td>
+                            <td><span className="chat-skel" style={{ width: 120 }} /></td>
+                            <td className="chat-col-resources"><span className="chat-skel" style={{ width: 96 }} /></td>
+                            <td className="chat-col-edited"><span className="chat-skel" style={{ width: 110 }} /></td>
+                            <td className="chat-col-actions" />
+                          </tr>
+                        ))
+                      : pagedAgents.map((agent) => {
+                          const phone = phoneNumbers.find((item) => item.id === agent.agent.phone_number_id);
+                          const knowledgeCount = agent.knowledge_base?.knowledge_base_ids?.length ?? 0;
+                          const toolCount = agent.tools?.tool_ids?.length ?? 0;
+                          return (
+                            <tr className="chat-table-row" key={agent.id}>
+                              <td>
+                                <span className="chat-table-name">
+                                  <span className="chat-table-icon">
+                                    <Icon name="chat" size={15} />
+                                  </span>
+                                  <span className="chat-table-text">
+                                    <Link className="chat-list-link" href={`/dashboard/chat/${agent.id}`}>
+                                      {agent.agent.name}
+                                    </Link>
+                                    <span className="chat-table-sub">
+                                      {phone ? phoneNumberLabel(phone) : "No number linked"}
+                                    </span>
+                                  </span>
+                                </span>
+                              </td>
+                              <td><StatusPill agent={agent} /></td>
+                              <td className="chat-table-muted">{phone ? phoneNumberLabel(phone) : "-"}</td>
+                              <td className="chat-col-resources chat-table-muted">
+                                <span className="chat-table-resources">
+                                  <span>{knowledgeCount} KB</span>
+                                  <span>{toolCount} tools</span>
+                                  {agent.order?.orders_on ? <span className="chat-orders-on">Orders on</span> : null}
+                                </span>
+                              </td>
+                              <td className="chat-col-edited chat-table-muted">{formatEdited(agent.updated_at)}</td>
+                              <td className="chat-col-actions">
+                                <button
+                                  aria-label={`Delete ${agent.agent.name}`}
+                                  className="chat-icon-btn chat-list-delete"
+                                  onClick={() => setDeleteTargetId(agent.id)}
+                                  title="Delete agent"
+                                  type="button"
+                                >
+                                  <Icon name="trash" size={15} sw={2.2} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                  </tbody>
+                </table>
+                {!showSkeleton && chatAgents.length === 0 ? (
                   <div className="chat-empty-list chat-empty-start">
                     <span>No chat agents yet.</span>
                     <button className="chat-btn chat-btn-primary" onClick={openCreateModal} type="button">
@@ -2234,61 +2403,34 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
                       New chat agent
                     </button>
                   </div>
-                ) : filtered.length === 0 ? (
+                ) : !showSkeleton && filtered.length === 0 ? (
                   <div className="chat-empty-list">No agent matches that search.</div>
-                ) : (
-                  <div className="chat-list">
-                    {filtered.map((agent) => {
-                      const phone = phoneNumbers.find((item) => item.id === agent.agent.phone_number_id);
-                      const knowledgeCount = agent.knowledge_base?.knowledge_base_ids?.length ?? 0;
-                      const toolCount = agent.tools?.tool_ids?.length ?? 0;
-                      return (
-                        <div className="chat-list-row" key={agent.id}>
-                          <span
-                            className="chat-avatar"
-                            style={{ background: avatarColor(agent.id) }}
-                          >
-                            {agent.agent.name.slice(0, 1).toUpperCase()}
-                          </span>
-                          <span className="chat-list-identity">
-                            <Link
-                              className="chat-list-name chat-list-link"
-                              href={`/dashboard/chat/${agent.id}`}
-                            >
-                              {agent.agent.name}
-                            </Link>
-                            <span className="chat-list-phone">
-                              {phone ? phoneNumberLabel(phone) : "No phone number"}
-                            </span>
-                          </span>
-                          <span className="chat-list-resources">
-                            <span><Icon name="book" size={12} />{knowledgeCount} KB</span>
-                            <span><Icon name="wrench" size={12} />{toolCount} tools</span>
-                            {agent.order?.orders_on ? (
-                              <span className="chat-orders-on">Orders on</span>
-                            ) : null}
-                          </span>
-                          <StatusPill agent={agent} />
-                          <span className="chat-list-row-end">
-                            <button
-                              aria-label={`Delete ${agent.agent.name}`}
-                              className="chat-icon-btn chat-list-delete"
-                              onClick={() => setDeleteTargetId(agent.id)}
-                              title="Delete agent"
-                              type="button"
-                            >
-                              <Icon name="trash" size={15} sw={2.2} />
-                            </button>
-                            <span className="chat-list-chevron">
-                              <Icon name="chevron" size={16} sw={2.3} />
-                            </span>
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                ) : null}
               </div>
+
+              {!showSkeleton && filtered.length > 0 ? (
+                <nav aria-label="Agent pages" className="chat-pager">
+                  <button
+                    aria-label="Previous page"
+                    className="chat-pager-btn chat-pager-prev"
+                    disabled={currentListPage === 0}
+                    onClick={() => setListPage(currentListPage - 1)}
+                    type="button"
+                  >
+                    <Icon name="chevron" size={15} sw={2.2} />
+                  </button>
+                  <span aria-current="page" className="chat-pager-num">{currentListPage + 1}</span>
+                  <button
+                    aria-label="Next page"
+                    className="chat-pager-btn"
+                    disabled={currentListPage >= listPageCount - 1}
+                    onClick={() => setListPage(currentListPage + 1)}
+                    type="button"
+                  >
+                    <Icon name="chevron" size={15} sw={2.2} />
+                  </button>
+                </nav>
+              ) : null}
             </div>
           </section>
           )}
@@ -3111,6 +3253,109 @@ function PromptCounter({ value }: { value: string }) {
 // or claim one of the numbers already connected to the account. forNewAgent is
 // the create modal's first step: the same panes, with no card around them, for an
 // agent that doesn't exist yet.
+function formatQrCountdown(ms: number) {
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+// The QR-first way to link a number: the code on the left with when it next
+// reloads, the steps beside it (under it where the pane is narrow), and a link
+// to the pairing-code form instead.
+function QrConnectView({
+  isStarting,
+  login,
+  onConnectSentence,
+  onRestart,
+  onUseCode,
+}: {
+  isStarting: boolean;
+  login: ApiPhoneNumber | null;
+  onConnectSentence: string;
+  onRestart: () => void;
+  onUseCode: () => void;
+}) {
+  const isPending = login?.status === "pending_qr";
+  const qrCode = isPending ? login?.qr_code ?? null : null;
+  const qrExpiresIn = qrCode ? login?.qr_expires_in_ms ?? null : null;
+  const [qrLeft, setQrLeft] = useState<number | null>(null);
+
+  // Every poll brings a fresh reading of the code's remaining life, so the
+  // countdown is re-anchored to it rather than drifting.
+  useEffect(() => {
+    if (qrExpiresIn === null) return;
+    const deadline = Date.now() + qrExpiresIn;
+    const tick = () => setQrLeft(Math.max(0, deadline - Date.now()));
+    const interval = window.setInterval(tick, 250);
+    tick();
+    return () => window.clearInterval(interval);
+  }, [qrCode, qrExpiresIn]);
+
+  const stopped = Boolean(login) && !isPending && !isStarting;
+  const timer = isStarting
+    ? "Getting a QR code…"
+    : qrCode && qrExpiresIn !== null && qrLeft !== null
+      ? qrLeft > 0
+        ? `QR code will reload in ${formatQrCountdown(qrLeft)}`
+        : "Loading a new QR code…"
+      : isPending
+        ? "Generating QR code…"
+        : login
+          ? `This QR code ${phoneStatusLabels[login.status].toLowerCase()}.`
+          : "Getting a QR code…";
+
+  return (
+    <div className="chat-qr-connect">
+      <div className="chat-qr-connect-code">
+        <div className="chat-qr-connect-timer" role="timer">{timer}</div>
+        <div className="chat-qr-frame">
+          {qrCode ? (
+            <Image
+              alt="WhatsApp login QR code"
+              className="chat-qr-image"
+              height={240}
+              src={qrCode}
+              unoptimized
+              width={240}
+            />
+          ) : (
+            <div className="chat-qr-placeholder">
+              <Icon name="qr" size={22} />
+              <span>{stopped ? "Get a new QR code to scan" : "The QR code appears here in a moment"}</span>
+            </div>
+          )}
+        </div>
+        {stopped ? (
+          <button className="chat-btn chat-btn-primary chat-btn-sm" onClick={onRestart} type="button">
+            <Icon name="refresh" size={15} stroke="var(--app-on-accent)" sw={2.2} />
+            New QR code
+          </button>
+        ) : null}
+        <button className="chat-qr-connect-alt" onClick={onUseCode} type="button">
+          Link with phone number
+        </button>
+      </div>
+      <div className="chat-qr-connect-help">
+        <div className="chat-qr-connect-title">Please scan the QR code</div>
+        <ol className="chat-qr-connect-steps">
+          <li>
+            Open <b>WhatsApp</b> on your phone
+          </li>
+          <li>
+            Tap <b>Menu</b> or <b>Settings</b> and select <b>Linked devices</b>
+          </li>
+          <li>
+            Tap <b>Link a device</b>
+          </li>
+          <li>
+            Point your phone at this screen to read the <b>QR code</b>
+          </li>
+        </ol>
+        <p className="chat-qr-connect-note">{onConnectSentence} — keep this page open.</p>
+      </div>
+    </div>
+  );
+}
+
 function PhoneNumberSetupCard({
   bare = false,
   error,
@@ -3145,11 +3390,32 @@ function PhoneNumberSetupCard({
   const canRestart = Boolean(login);
   // A code login still rotates QR codes underneath; the code is what to show.
   const showsCode = isPending && Boolean(login?.pairing_code);
-  // The pairing code links far more often than a scan, so the card leads with
-  // it alone and the QR code waits behind "Scan QR code". A QR login already
-  // running (asked for earlier) is shown straight away.
+  // A screen that can be scanned (desktop, tablet) leads with the QR code,
+  // already on screen, and "Link with phone number" swaps in the pairing-code
+  // form. A phone can't scan its own screen, so it keeps the code form first
+  // with the QR behind "Scan QR code".
+  const isPhone = useIsPhone();
+  const [codeChosen, setCodeChosen] = useState(false);
+  const showQrView = !isPhone && !codeChosen && !showsCode;
   const [wantsQr, setWantsQr] = useState(false);
-  const offersQr = wantsQr || (isPending && !login?.pairing_code);
+  // Only the phone layout shows the QR inside the code form.
+  const offersQr = isPhone && (wantsQr || (isPending && !login?.pairing_code));
+
+  // The QR view starts its login itself, once per time it is shown. Asking for
+  // a code creates no phone number until it is scanned, and the server hands
+  // back a login already running rather than opening another. From then on
+  // the page reissues the code as it runs out. A failed start is not retried
+  // here; the "New QR code" button is.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!showQrView) {
+      autoStarted.current = false;
+      return;
+    }
+    if (autoStarted.current || login || isStarting || error) return;
+    autoStarted.current = true;
+    onStartLogin();
+  }, [error, isStarting, login, onStartLogin, showQrView]);
   const onConnect = forNewAgent
     ? "your agent is ready the moment it connects"
     : "the number is assigned to this agent the moment it connects";
@@ -3171,6 +3437,16 @@ function PhoneNumberSetupCard({
             <span className="chat-number-pane-note">WhatsApp › Linked devices</span>
           </div>
 
+          {showQrView ? (
+            <QrConnectView
+              isStarting={isStarting}
+              login={login}
+              onConnectSentence={onConnectSentence}
+              onRestart={onStartLogin}
+              onUseCode={() => setCodeChosen(true)}
+            />
+          ) : (
+          <>
           <WhatsAppLinkHelp
             disabled={isStarting}
             login={login}
@@ -3178,6 +3454,7 @@ function PhoneNumberSetupCard({
             onRequestQr={async () => {
               await onRequestQr();
               setWantsQr(true);
+              setCodeChosen(false);
             }}
             qr={
               offersQr ? (
@@ -3218,6 +3495,8 @@ function PhoneNumberSetupCard({
                 disabled={isStarting}
                 onClick={() => {
                   setWantsQr(true);
+                  // On a desktop this is the way back to the QR view.
+                  setCodeChosen(false);
                   if (!isPending) onStartLogin();
                 }}
                 type="button"
@@ -3258,6 +3537,8 @@ function PhoneNumberSetupCard({
               />
               {canRestart ? "New QR code" : "Start WhatsApp login"}
             </button>
+          )}
+          </>
           )}
 
           {error ? <div className="chat-number-error">{error}</div> : null}
@@ -3302,8 +3583,16 @@ function PhoneNumberSetupCard({
                       <span className="chat-number-name">{number.name}</span>
                       <span className="chat-number-detail">{number.detail}</span>
                     </span>
-                    <span className={`chat-number-hint${number.disabled ? " is-blocked" : ""}`}>
-                      {number.hint}
+                    <span className="chat-number-end">
+                      <span className={`chat-number-hint${number.disabled ? " is-blocked" : ""}`}>
+                        {number.hint}
+                      </span>
+                      {/* The whole row is the button; this shows where to press. */}
+                      {number.disabled ? null : (
+                        <span aria-hidden="true" className="chat-number-use">
+                          Use
+                        </span>
+                      )}
                     </span>
                   </button>
                 </li>
@@ -4654,7 +4943,9 @@ function ConfigSection({
 
 function StatusPill({ agent }: { agent: ApiChatAgent }) {
   const limit = useHourlyLimit(agent);
-  const live = agent.agent.status === "active" && !limit;
+  // Live means it can reply: switched on, holding a number, and not resting
+  // on the hourly limit.
+  const live = agent.agent.status === "active" && Boolean(agent.agent.phone_number_id) && !limit;
   return (
     <span className={`chat-pill ${live ? "is-active" : "is-inactive"}`}>
       <span className="chat-dot" />

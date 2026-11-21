@@ -1,4 +1,4 @@
-import { serverFetch, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter, type Workspace } from "./api";
 
 // Wire types mirroring the Go server's KnowledgeBase model (see
 // server/internal/models/knowledge_base.go). Create, List, Get, Update, Delete
@@ -120,14 +120,23 @@ export class KnowledgeBaseError extends Error {
   }
 }
 
+// routed sends a voice-workspace request to the Go server, whose knowledge
+// bases (voice_knowledge_bases) live under /v1/dashboard/voice/knowledge-base;
+// chat requests go to the chat server as written.
+function routed(path: string, workspace: Workspace): string {
+  if (workspace !== "voice") return path;
+  return voiceServerURL(path.replace(/^\/v1\/dashboard\/knowledge-base/, "/v1/dashboard/voice/knowledge-base"));
+}
+
 async function request<T>(
   path: string,
   init: RequestInit | undefined,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<T> {
   let response: Response;
   try {
-    response = await serverFetch(path, init, getToken);
+    response = await serverFetch(routed(path, workspace), init, getToken);
   } catch {
     throw new KnowledgeBaseError("Could not connect. Check your internet and try again.", 0);
   }
@@ -163,7 +172,8 @@ export type ListKnowledgeBasesOptions = {
 // rows are surfaced, since the dashboard asks for a single large page.
 export function listKnowledgeBases(
   getToken: AuthTokenGetter,
-  options: ListKnowledgeBasesOptions = {}
+  options: ListKnowledgeBasesOptions = {},
+  workspace: Workspace = "chat"
 ): Promise<ApiKnowledgeBase[]> {
   const query = new URLSearchParams({
     page: String(options.page ?? 1),
@@ -172,24 +182,28 @@ export function listKnowledgeBases(
   return request<ApiKnowledgeBase[]>(
     `/v1/dashboard/knowledge-base?${query.toString()}`,
     undefined,
-    getToken
+    getToken,
+    workspace
   );
 }
 
 export function getKnowledgeBase(
   knowledgeBaseId: string,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiKnowledgeBase> {
   return request<ApiKnowledgeBase>(
     `/v1/dashboard/knowledge-base/${encodeURIComponent(knowledgeBaseId)}`,
     undefined,
-    getToken
+    getToken,
+    workspace
   );
 }
 
 export function createKnowledgeBase(
   payload: CreateKnowledgeBasePayload,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiKnowledgeBase> {
   return request<ApiKnowledgeBase>(
     "/v1/dashboard/knowledge-base",
@@ -198,7 +212,8 @@ export function createKnowledgeBase(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     },
-    getToken
+    getToken,
+    workspace
   );
 }
 
@@ -207,12 +222,14 @@ export function createKnowledgeBase(
 // state the endpoint can return. A 404 means it was already gone.
 export async function deleteKnowledgeBase(
   knowledgeBaseId: string,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<string> {
   const data = await request<{ id: string; deleted: boolean }>(
     `/v1/dashboard/knowledge-base/${encodeURIComponent(knowledgeBaseId)}`,
     { method: "DELETE" },
-    getToken
+    getToken,
+    workspace
   );
   return data.id;
 }
@@ -220,7 +237,8 @@ export async function deleteKnowledgeBase(
 export function updateKnowledgeBase(
   knowledgeBaseId: string,
   payload: UpdateKnowledgeBasePayload,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiKnowledgeBase> {
   return request<ApiKnowledgeBase>(
     `/v1/dashboard/knowledge-base/${encodeURIComponent(knowledgeBaseId)}`,
@@ -229,7 +247,8 @@ export function updateKnowledgeBase(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     },
-    getToken
+    getToken,
+    workspace
   );
 }
 
@@ -345,12 +364,14 @@ export function describeInvalidSourceTitle(title: string): string {
 export async function deleteKnowledgeBaseSource(
   knowledgeBaseId: string,
   sourceId: string,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<string> {
   const data = await request<{ id: string; knowledge_base_id: string; deleted: boolean }>(
     `/v1/dashboard/knowledge-base/${encodeURIComponent(knowledgeBaseId)}/sources/${encodeURIComponent(sourceId)}`,
     { method: "DELETE" },
-    getToken
+    getToken,
+    workspace
   );
   return data.id;
 }
@@ -363,7 +384,8 @@ export async function deleteKnowledgeBaseSource(
 export function addKnowledgeBaseSources(
   knowledgeBaseId: string,
   texts: NewKnowledgeBaseText[],
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiKnowledgeBase> {
   return request<ApiKnowledgeBase>(
     `/v1/dashboard/knowledge-base/${encodeURIComponent(knowledgeBaseId)}/sources`,
@@ -377,7 +399,8 @@ export function addKnowledgeBaseSources(
         })),
       }),
     },
-    getToken
+    getToken,
+    workspace
   );
 }
 
@@ -402,7 +425,8 @@ export type NewKnowledgeBaseFile = {
 export function addKnowledgeBaseFileSources(
   knowledgeBaseId: string,
   files: NewKnowledgeBaseFile[],
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiKnowledgeBase> {
   const form = new FormData();
   // The nth title belongs to the nth file, so both are appended in order.
@@ -416,6 +440,7 @@ export function addKnowledgeBaseFileSources(
   return request<ApiKnowledgeBase>(
     `/v1/dashboard/knowledge-base/${encodeURIComponent(knowledgeBaseId)}/sources`,
     { method: "POST", body: form },
-    getToken
+    getToken,
+    workspace
   );
 }

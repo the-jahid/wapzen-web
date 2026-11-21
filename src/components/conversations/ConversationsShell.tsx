@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { PageHead } from "@/components/nav/RetellPage";
 
 // The frame around the conversation list and the conversation page: the sidebar
 // and one panel filling the rest of the screen. `flush` hands the panel's edges
@@ -11,23 +12,34 @@ export default function ConversationsShell({
   children,
   flush = false,
   label,
+  split = false,
+  title,
 }: {
   activeLabel?: string;
   children: ReactNode;
   flush?: boolean;
   label: string;
+  /** Children fill the panel edge to edge (the list + thread split view). */
+  split?: boolean;
+  /** Page title shown above the panel, Retell-style. */
+  title?: string;
 }) {
   return (
     <div className="conv-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel={activeLabel} stackBelow={900} />
 
-      <main className="conv-main">
+      <main className={`conv-main${split ? " is-split" : ""}`}>
+        {split ? (
+          children
+        ) : (
         <div className={`conv-content${flush ? " is-flush" : ""}`}>
+          {title ? <PageHead title={title} /> : null}
           <section className={`conv-panel${flush ? " is-flush" : ""}`} aria-label={label}>
             {children}
           </section>
         </div>
+        )}
       </main>
     </div>
   );
@@ -67,7 +79,7 @@ const css = `
 .conv-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
 /* The panes inside the panel do the scrolling, so the page itself never does:
    the transcript stays put while its messages move. */
-.conv-content { display: flex; flex: 1 1 auto; min-height: 0; padding: 18px 30px 24px; }
+.conv-content { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; padding: 18px 30px 24px; }
 .conv-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -85,7 +97,6 @@ const css = `
 /* Wide screens: keep the rows from stretching into one long line. */
 @media (min-width: 1680px) {
   .conv-content { padding: 24px 40px 28px; }
-  .conv-panel { margin: 0 auto; max-width: 1480px; }
 }
 @media (max-width: 1100px) {
   .conv-content { padding: 16px 20px 20px; }

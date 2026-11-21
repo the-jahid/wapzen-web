@@ -3,8 +3,7 @@ import { noteAccountBlocked } from "./accountBlocked";
 const baseServerURL = process.env.NEXT_PUBLIC_BASE_SERVER_URL;
 
 // Account-level API calls use Clerk's getToken so every request can resolve a
-// fresh session token at the moment it is sent. Live agent API calls use the
-// generated API-key helper below instead.
+// fresh session token at the moment it is sent.
 export type AuthTokenGetter = (options?: { skipCache?: boolean }) => Promise<string | null>;
 
 let getAuthToken: AuthTokenGetter | null = null;
@@ -15,7 +14,27 @@ export function setAuthTokenGetter(getter: AuthTokenGetter | null) {
   getAuthToken = getter;
 }
 
+// The dashboard has two workspaces on one account: chat (the chat server above)
+// and voice, which talks to the Go server only. Shared pages (Phone Numbers,
+// Knowledge Base, Tools) pass the workspace they are showing so their requests
+// reach the server that owns those rows.
+export type Workspace = "voice" | "chat";
+
+// NEXT_PUBLIC_VOICE_SERVER_URL names where the Go server runs; without it the
+// voice requests go to the one base URL, for a setup where both servers sit
+// behind the same address.
+const voiceBaseURL = (process.env.NEXT_PUBLIC_VOICE_SERVER_URL || baseServerURL || "").replace(/\/+$/, "");
+
+// voiceServerURL is the full address of a Go server path.
+export function voiceServerURL(path: string): string {
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  return voiceBaseURL ? `${voiceBaseURL}${suffix}` : suffix;
+}
+
 export function serverURL(path: string): string {
+  // A full address goes to another server as given: the voice API (the Go
+  // server) is not the chat server this base points at.
+  if (/^https?:\/\//i.test(path)) return path;
   if (!baseServerURL) {
     throw new Error("NEXT_PUBLIC_BASE_SERVER_URL is not configured");
   }
@@ -203,6 +222,3 @@ export function serverFetchWithBearerToken(
   });
 }
 
-export function serverFetchWithAPIKey(path: string, apiKey: string, init?: RequestInit): Promise<Response> {
-  return serverFetchWithBearerToken(path, apiKey.trim(), init);
-}

@@ -1,4 +1,4 @@
-import { serverFetch, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter } from "./api";
 
 export type OutboundCampaignStatus = "draft" | "running" | "paused" | "completed" | "failed";
 
@@ -71,7 +71,7 @@ export class OutboundCampaignError extends Error {
 async function request<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<T> {
   let response: Response;
   try {
-    response = await serverFetch(path, init, getToken);
+    response = await serverFetch(voiceServerURL(path), init, getToken);
   } catch {
     throw new OutboundCampaignError("Could not connect. Check your internet and try again.", 0);
   }

@@ -1,4 +1,4 @@
-import { serverFetch, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter } from "./api";
 import { OutboundCampaignError, type OutboundCampaignFieldError } from "./outboundCampaigns";
 
 // Wire types mirroring models.CampaignAnalytics (server/internal/models/
@@ -9,9 +9,9 @@ export type CampaignLeadTotals = {
   total: number;
   pending: number;
   calling: number;
-  contacted: number;
+  // Leads that have been called at least once (server: CampaignLeadTotals.Called).
+  called: number;
   failed: number;
-  opted_out: number;
 };
 
 // received/answered/ended/declined/failed are where the calls stand right now
@@ -80,7 +80,7 @@ export async function getCampaignAnalytics(
 
   let response: Response;
   try {
-    response = await serverFetch(path, undefined, getToken);
+    response = await serverFetch(voiceServerURL(path), undefined, getToken);
   } catch {
     throw new OutboundCampaignError("Could not connect. Check your internet and try again.", 0);
   }

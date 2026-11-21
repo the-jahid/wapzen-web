@@ -562,17 +562,6 @@ function agentName(agent: ApiAgentResource): string {
   return agent.agent?.name?.trim() || "Untitled agent";
 }
 
-// The server defaults an unset direction to "outbound"; mirror that here so an
-// agent saved before the field existed is still offered.
-function agentDirection(agent: ApiAgentResource): string {
-  return agent.agent?.call_direction?.trim() || "outbound";
-}
-
-function canDialOut(agent: ApiAgentResource): boolean {
-  const direction = agentDirection(agent);
-  return direction === "outbound" || direction === "both";
-}
-
 function isAgentLive(agent: ApiAgentResource): boolean {
   // Agents are stored as active/inactive; anything unset counts as active, the
   // same reading the agents workspace uses.
@@ -737,7 +726,7 @@ export default function DemoCallPage() {
       try {
         const [agentRows, numberRows] = await Promise.all([
           apiListAgents(getToken),
-          apiListPhoneNumbers(getToken),
+          apiListPhoneNumbers(getToken, "voice"),
         ]);
         if (cancelled) return;
         setAgents(agentRows);
@@ -755,7 +744,7 @@ export default function DemoCallPage() {
     };
   }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, reloadKey, setAgents, setPhoneNumbers]);
 
-  const dialableAgents = useMemo(() => agents.filter(canDialOut), [agents]);
+  const dialableAgents = agents;
 
   // The picker falls back to the first agent that is actually ready to dial, so
   // the common case is one field and one click. Resolving it here rather than
@@ -948,7 +937,7 @@ export default function DemoCallPage() {
                   >
                     {dialableAgents.length === 0 ? (
                       <option value="">
-                        {effectiveLoadState === "loading" ? "Loading agents..." : "No outbound-capable agents"}
+                        {effectiveLoadState === "loading" ? "Loading agents..." : "No agents yet"}
                       </option>
                     ) : (
                       dialableAgents.map((agent) => (
@@ -960,8 +949,7 @@ export default function DemoCallPage() {
                     )}
                   </select>
                   <div className="demo-field-hint">
-                    Only agents set to outbound or both calls can dial. The agent that speaks is the one
-                    assigned to its phone number.
+                    The agent that speaks is the one assigned to its phone number.
                   </div>
                 </div>
 
@@ -1026,12 +1014,12 @@ export default function DemoCallPage() {
                 <div className="demo-checklist">
                   <Check
                     ok={Boolean(selectedAgent)}
-                    text={selectedAgent ? `Agent "${agentName(selectedAgent)}" selected` : "Pick an agent that can dial out"}
+                    text={selectedAgent ? `Agent "${agentName(selectedAgent)}" selected` : "Pick an agent"}
                     note={
                       selectedAgent ? undefined : (
                         <>
-                          Set an agent&apos;s call direction to outbound or both in{" "}
-                          <Link href="/dashboard/agents">Agents</Link>.
+                          Create one in{" "}
+                          <Link href="/dashboard/voice/agents">Agents</Link>.
                         </>
                       )
                     }
@@ -1047,7 +1035,7 @@ export default function DemoCallPage() {
                     note={
                       hasNumber ? undefined : (
                         <>
-                          Assign one on the agent in <Link href="/dashboard/agents">Agents</Link>.
+                          Assign one on the agent in <Link href="/dashboard/voice/agents">Agents</Link>.
                         </>
                       )
                     }
@@ -1064,7 +1052,7 @@ export default function DemoCallPage() {
                     note={
                       isNumberConnected ? undefined : (
                         <>
-                          Reconnect it in <Link href="/dashboard/phone-numbers">Phone Numbers</Link>. A number
+                          Reconnect it in <Link href="/dashboard/voice/phone-numbers">Phone Numbers</Link>. A number
                           linked before its agent was assigned has to be reconnected.
                         </>
                       )
@@ -1082,7 +1070,7 @@ export default function DemoCallPage() {
                       </span>
                       This session
                     </h2>
-                    <Link className="demo-card-copy" href="/dashboard/calls">
+                    <Link className="demo-card-copy" href="/dashboard/voice/calls">
                       Full history
                     </Link>
                   </div>

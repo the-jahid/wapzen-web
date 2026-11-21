@@ -1,4 +1,4 @@
-import { serverFetch, serverFetchWithAPIKey, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter } from "./api";
 
 // Wire types mirroring the Go server's JSON contract (see
 // server/internal/swagger/modules/agents/types). Every field the server may
@@ -9,14 +9,7 @@ export type ApiAgentSection = {
   language?: string;
   timezone?: string | null;
   phone_number_id?: string | null;
-  call_direction?: string;
   status?: string;
-};
-
-export type ApiModelSection = {
-  provider?: string;
-  name?: string;
-  temperature?: number;
 };
 
 export type ApiPromptSection = {
@@ -27,29 +20,15 @@ export type ApiPromptSection = {
 };
 
 export type ApiVoiceSection = {
-  provider?: string;
-  elevenlabs?: {
-    voice_id?: string;
-    voice_name?: string;
-    voice_model?: string;
-  } | null;
+  // OpenAI Realtime is the only live-call engine; this picks its model and voice.
   openai?: {
     voice_id?: string;
     voice_name?: string;
-    voice_model?: string;
     realtime_model?: string;
-    instructions?: string | null;
     // Spoken rate (0.25–1.5) and playback gain (0–2); 1 is neutral for both.
     speed?: number;
     volume?: number;
   } | null;
-};
-
-export type ApiTranscriberSection = {
-  provider?: string;
-  language?: string;
-  openai?: { model?: string } | null;
-  elevenlabs?: { model?: string } | null;
 };
 
 // ApiKnowledgeBaseSection lists the knowledge bases the agent answers from. The
@@ -75,10 +54,8 @@ export type ApiToolsSection = {
 // "leave at default / unchanged".
 export type AgentPayload = {
   agent?: Partial<ApiAgentSection>;
-  model?: ApiModelSection;
   prompt?: ApiPromptSection;
   voice?: ApiVoiceSection;
-  transcriber?: ApiTranscriberSection;
   knowledge_base?: ApiKnowledgeBaseSection;
   tools?: ApiToolsSection;
 };
@@ -88,10 +65,8 @@ export type ApiAgentResource = {
   created_at: string;
   updated_at: string;
   agent?: ApiAgentSection | null;
-  model?: ApiModelSection | null;
   prompt?: ApiPromptSection | null;
   voice?: ApiVoiceSection | null;
-  transcriber?: ApiTranscriberSection | null;
   knowledge_base?: ApiKnowledgeBaseSection | null;
   tools?: ApiToolsSection | null;
 };
@@ -112,21 +87,15 @@ export class ApiError extends Error {
   }
 }
 
-type AgentCredential =
-  | { kind: "apiKey"; apiKey: string }
-  | { kind: "auth"; getToken: AuthTokenGetter };
-
+// Voice agents live on the Go server only, so every request goes there.
 async function request<T>(
   path: string,
   init: RequestInit | undefined,
-  credential: AgentCredential
+  getToken: AuthTokenGetter
 ): Promise<T> {
   let response: Response;
   try {
-    response =
-      credential.kind === "apiKey"
-        ? await serverFetchWithAPIKey(path, credential.apiKey, init)
-        : await serverFetch(path, init, credential.getToken);
+    response = await serverFetch(voiceServerURL(path), init, getToken);
   } catch {
     throw new ApiError("Could not connect. Check your internet and try again.", 0);
   }
@@ -146,58 +115,9 @@ async function request<T>(
   return envelope.data;
 }
 
-// listAgents returns the API key owner's agents, newest first. A single page of
-// 100 is plenty until real pagination lands in the UI.
-export function listAgents(apiKey: string): Promise<ApiAgentResource[]> {
-  return request<ApiAgentResource[]>("/v1/agents?limit=100", undefined, { kind: "apiKey", apiKey });
-}
-
-export function createAgent(payload: AgentPayload, apiKey: string): Promise<ApiAgentResource> {
-  return request<ApiAgentResource>("/v1/agents", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }, { kind: "apiKey", apiKey });
-}
-
-export function getAgent(agentId: string, apiKey: string): Promise<ApiAgentResource> {
-  return request<ApiAgentResource>(`/v1/agents/${encodeURIComponent(agentId)}`, undefined, {
-    kind: "apiKey",
-    apiKey,
-  });
-}
-
-// updateAgent applies a partial update; only the fields present in payload
-// change, and the attachment sets (knowledge_base_ids, tool_ids) are replaced
-// wholesale when present.
-export function updateAgent(
-  agentId: string,
-  payload: AgentPayload,
-  apiKey: string
-): Promise<ApiAgentResource> {
-  return request<ApiAgentResource>(`/v1/agents/${encodeURIComponent(agentId)}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }, { kind: "apiKey", apiKey });
-}
-
-export function deleteAgent(
-  agentId: string,
-  apiKey: string
-): Promise<{ id: string; deleted: boolean }> {
-  return request<{ id: string; deleted: boolean }>(`/v1/agents/${encodeURIComponent(agentId)}`, {
-    method: "DELETE",
-  }, { kind: "apiKey", apiKey });
-}
-
-// Dashboard agent calls use the signed-in user's Clerk session. The server
-// keeps these separate from /v1/agents so the public API remains API-key-only.
+// Dashboard agent calls use the signed-in user's Clerk session.
 export function listDashboardAgents(getToken: AuthTokenGetter): Promise<ApiAgentResource[]> {
-  return request<ApiAgentResource[]>("/v1/dashboard/agents?limit=100", undefined, {
-    kind: "auth",
-    getToken,
-  });
+  return request<ApiAgentResource[]>("/v1/dashboard/agents?limit=100", undefined, getToken);
 }
 
 export function createDashboardAgent(
@@ -208,9 +128,12 @@ export function createDashboardAgent(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  }, { kind: "auth", getToken });
+  }, getToken);
 }
 
+// updateDashboardAgent applies a partial update; only the fields present in
+// payload change, and the attachment sets (knowledge_base_ids, tool_ids) are
+// replaced wholesale when present.
 export function updateDashboardAgent(
   agentId: string,
   payload: AgentPayload,
@@ -220,7 +143,7 @@ export function updateDashboardAgent(
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  }, { kind: "auth", getToken });
+  }, getToken);
 }
 
 export function deleteDashboardAgent(
@@ -230,6 +153,6 @@ export function deleteDashboardAgent(
   return request<{ id: string; deleted: boolean }>(
     `/v1/dashboard/agents/${encodeURIComponent(agentId)}`,
     { method: "DELETE" },
-    { kind: "auth", getToken }
+    getToken
   );
 }

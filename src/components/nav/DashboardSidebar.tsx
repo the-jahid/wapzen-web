@@ -28,10 +28,12 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { clerkAppearance } from "@/components/theme/clerkAppearance";
 import {
+  navGroups,
   navItemsForMode,
   useWorkspaceMode,
-  WorkspaceModeToggle,
+  WorkspaceSwitchButton,
   type NavIconName,
+  type WorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import { useNewOrders } from "@/components/nav/useNewOrders";
@@ -71,7 +73,8 @@ type DashboardSidebarProps = {
 
 /**
  * The dashboard's navigation: on desktop an always-open sidebar beside the
- * page; on small screens a top bar whose menu button slides the same sidebar
+ * page, laid out like Retell's (workspace card, grouped menu, account at the
+ * foot); on small screens a top bar whose menu button slides the same sidebar
  * in from the left.
  */
 export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardSidebarProps) {
@@ -96,10 +99,13 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
       </aside>
 
       <header className={styles.topbar}>
-        <Link aria-label="Wapzen home" className={styles.topbarLogo} href="/">
-          <span className={styles.logoMark}><BrandMark /></span>
-          <span className={`${styles.topbarName} notranslate`}>Wapzen</span>
-        </Link>
+        <span className={styles.topbarStart}>
+          <Link aria-label="Wapzen home" className={styles.topbarLogo} href="/">
+            <span className={styles.logoMark}><BrandMark /></span>
+            <span className={`${styles.topbarName} notranslate`}>Wapzen</span>
+          </Link>
+          <WorkspaceSwitchButton className={`${styles.iconButton} ${styles.modeSwitchButton}`} />
+        </span>
         <span className={styles.topbarActions}>
           <a
             aria-label="Need help? Chat with support on WhatsApp"
@@ -167,9 +173,11 @@ export function DashboardSidebar({ activeLabel, badges, stackBelow }: DashboardS
 // Phone-width names for the bottom bar, where each tab is only ~50-60px wide.
 const shortTabLabels: Partial<Record<string, string>> = {
   "Chat Agents": "Agents",
+  "WhatsApp Voice Agents": "Agents",
   Conversations: "Chats",
-  "Phone Numbers": "Numbers",
-  "Knowledge Base": "Knowledge",
+  "Phone Numbers": "Phone",
+  "Call History": "Calls",
+  "Knowledge Base": "KB",
 };
 
 /**
@@ -225,43 +233,51 @@ function SidebarBody({
   const { user } = useUser();
   const { resolvedTheme } = useTheme();
   const { mode } = useWorkspaceMode();
+  const items = navItemsForMode(mode);
 
   return (
     <>
       <Link aria-label="Wapzen home" className={styles.logo} href="/" onClick={onNavigate}>
         <span className={styles.logoMark}><BrandMark /></span>
-        <span className={styles.logoText}>
-          <span className={`${styles.logoName} notranslate`}>Wapzen</span>
-          <span className={styles.logoTagline}>AI Voice Agents</span>
-        </span>
+        <span className={`${styles.logoName} notranslate`}>Wapzen</span>
       </Link>
 
-      <div className={styles.kicker}>Menu</div>
+      <WorkspaceCard onNavigate={onNavigate} />
+
       <nav aria-label="Dashboard navigation" className={styles.nav}>
-        {navItemsForMode(mode).map((item) => {
-          const Icon = navIcons[item.icon];
-          const count = badges?.[item.label];
-          const active = item.label === activeLabel;
-          const ordersWaiting = item.label === "Orders" && newOrders > 0;
+        {navGroups.map((group) => {
+          const groupItems = items.filter((item) => item.group === group);
+          if (groupItems.length === 0) return null;
           return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={styles.navItem}
-              data-active={active || undefined}
-              href={item.href ?? "#"}
-              key={item.label}
-              onClick={onNavigate}
-            >
-              <span className={styles.navIcon}>
-                <Icon size={18} strokeWidth={1.9} />
-              </span>
-              <span className={styles.navLabel}>{item.label}</span>
-              {ordersWaiting ? (
-                <span className={styles.badge}>{newOrders} new</span>
-              ) : count ? (
-                <span className={styles.badge}>{count}</span>
-              ) : null}
-            </Link>
+            <div className={styles.navGroup} key={group}>
+              <div className={styles.kicker}>{group}</div>
+              {groupItems.map((item) => {
+                const Icon = navIcons[item.icon];
+                const count = badges?.[item.label];
+                const active = item.label === activeLabel;
+                const ordersWaiting = item.label === "Orders" && newOrders > 0;
+                return (
+                  <Link
+                    aria-current={active ? "page" : undefined}
+                    className={styles.navItem}
+                    data-active={active || undefined}
+                    href={item.href ?? "#"}
+                    key={item.label}
+                    onClick={onNavigate}
+                  >
+                    <span className={styles.navIcon}>
+                      <Icon size={16} strokeWidth={1.8} />
+                    </span>
+                    <span className={styles.navLabel}>{item.label}</span>
+                    {ordersWaiting ? (
+                      <span className={styles.badge}>{newOrders} new</span>
+                    ) : count ? (
+                      <span className={styles.badge}>{count}</span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
@@ -273,24 +289,55 @@ function SidebarBody({
           rel="noopener noreferrer"
           target="_blank"
         >
-          <span className={styles.supportIcon}><WhatsAppGlyph size={18} /></span>
-          <span className={styles.supportText}>
-            <span className={styles.supportTitle}>Trouble connecting?</span>
-            <span className={styles.supportHint}>Chat with us on WhatsApp</span>
-          </span>
+          <span className={styles.supportIcon}><WhatsAppGlyph size={13} /></span>
+          <span className={styles.supportTitle}>Trouble connecting?</span>
         </a>
-        <WorkspaceModeToggle />
-        <ThemeToggle />
-        <LanguageSwitch />
         <div className={styles.userCard}>
           <UserButton appearance={clerkAppearance(resolvedTheme)} />
-          <span className={styles.userText}>
-            <span className={`${styles.userName} notranslate`}>{user?.fullName || user?.username || "Account"}</span>
-            <span className={`${styles.userEmail} notranslate`}>{user?.primaryEmailAddress?.emailAddress ?? ""}</span>
+          <span className={`${styles.userEmail} notranslate`}>
+            {user?.primaryEmailAddress?.emailAddress || user?.fullName || user?.username || "Account"}
           </span>
+        </div>
+        <div className={styles.footerRow}>
+          <LanguageSwitch />
+          <ThemeToggle className={styles.themeToggle} />
         </div>
       </div>
     </>
   );
 }
 
+const workspaceNames: Record<WorkspaceMode, string> = {
+  chat: "Chat",
+  voice: "Voice",
+};
+
+/**
+ * Two-way toggle between the chat and voice workspaces. Picking one swaps the
+ * menu (and the page, when the current page only exists in the other one).
+ */
+function WorkspaceCard({ onNavigate }: { onNavigate?: () => void }) {
+  const { mode, setMode } = useWorkspaceMode();
+
+  return (
+    <div aria-label="Workspace" className={styles.workspace} role="radiogroup">
+      {(["chat", "voice"] as const).map((option) => (
+        <button
+          aria-checked={option === mode}
+          className={`${styles.workspaceOption}${option === mode ? ` ${styles.workspaceOptionActive}` : ""}`}
+          key={option}
+          onClick={() => {
+            if (option === mode) return;
+            setMode(option);
+            onNavigate?.();
+          }}
+          role="radio"
+          type="button"
+        >
+          {option === "chat" ? <MessageSquare size={15} /> : <Phone size={15} />}
+          <span>{workspaceNames[option]}</span>
+        </button>
+      ))}
+    </div>
+  );
+}

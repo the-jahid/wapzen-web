@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
-import { motion } from "motion/react";
 import { useAuth, useUser } from "@clerk/nextjs";
-import ExpandableCardDemoStandard from "@/components/expandable-card-demo-standard";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import { useCachedState } from "@/lib/pageCache";
 import {
@@ -43,6 +41,7 @@ type IconName =
   | "hash"
   | "check"
   | "copy"
+  | "back"
   | "save"
   | "list"
   | "chevron"
@@ -50,7 +49,6 @@ type IconName =
 
 
 type DetailState = "idle" | "loading" | "ready" | "error";
-type ViewMode = "list" | "grid";
 type Notice = { kind: "success" | "error"; text: string };
 
 
@@ -221,6 +219,8 @@ function iconPaths(name: IconName): ReactNode {
       );
     case "check":
       return <path d="M5 12.5l4 4 10-10" />;
+    case "back":
+      return <path d="M20 12H4M10 6l-6 6 6 6" />;
     case "copy":
       return (
         <>
@@ -335,7 +335,10 @@ const css = `
 .calls-topbar-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
 .calls-topbar-copy { color: var(--subtle); font-size: 12.5px; margin-top: 3px; }
 .calls-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
-.calls-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.calls-browse { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+/* Search in the Retell-style header, right of the title. */
+.calls-browse .calls-toolbar-search { flex: 0 1 300px; max-width: none; min-width: 0; width: 300px; }
+@media (max-width: 640px) { .calls-browse .calls-toolbar-search { flex: 1 1 100%; width: auto; } }
 .calls-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .calls-toolbar-search { flex: 1 1 240px; max-width: 420px; }
 .calls-toolbar .calls-count { margin-left: auto; }
@@ -598,18 +601,22 @@ const css = `
 .calls-section-title { align-items: center; display: flex; font-size: 13.5px; font-weight: 850; gap: 8px; letter-spacing: -.1px; margin: 0; }
 .calls-section-title .calls-section-ic { color: var(--primary-light); display: inline-flex; }
 .calls-section-copy { color: var(--subtle); font-size: 12px; }
-.calls-meta-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Facts as a list: one slim row per fact with a divider, the label in a fixed
+   column and the value beside it. */
+.calls-meta-grid { border: 1px solid var(--app-border); border-radius: 12px; display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
 .calls-meta-tile {
+  align-items: center;
   background: var(--panel);
-  border: 1px solid var(--app-border);
-  border-radius: 12px;
+  border-bottom: 1px solid var(--app-border);
   display: grid;
-  gap: 4px;
+  gap: 16px;
+  grid-template-columns: 150px minmax(0, 1fr);
   min-width: 0;
-  padding: 12px;
+  padding: 9px 14px;
 }
-.calls-meta-label { color: var(--faint); font-size: 10.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
-.calls-meta-value { color: var(--text); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-meta-tile:last-child { border-bottom: 0; }
+.calls-meta-label { color: var(--faint); font-size: 10.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; }
+.calls-meta-value { color: var(--text); font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .calls-meta-value.is-muted { color: var(--subtle); }
 .calls-status-chip {
   align-items: center;
@@ -669,7 +676,23 @@ const css = `
   padding: 0 34px 0 12px;
 }
 .calls-select option { background: var(--surface); color: var(--text); }
-.calls-transcript { display: flex; flex-direction: column; gap: 10px; }
+/* At most half the screen tall, scrolling inside itself, so a long call
+   doesn't push the call details a dozen screens down. */
+.calls-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 50vh;
+  max-height: 50dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-color: var(--app-border-strong) transparent;
+  scrollbar-width: thin;
+}
+.calls-transcript::-webkit-scrollbar { width: 6px; }
+.calls-transcript::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 6px; }
+.calls-transcript::-webkit-scrollbar-track { background: transparent; }
 .calls-turn { display: flex; gap: 10px; max-width: 92%; }
 .calls-turn.is-user { align-self: flex-end; flex-direction: row-reverse; }
 .calls-turn-avatar {
@@ -711,8 +734,87 @@ const css = `
 }
 .calls-toast-success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
 .calls-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
+/* Retell-style master-detail: a list pane of calls beside the open one. */
+.calls-split { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
+.calls-pane-list { border-right: 1px solid var(--app-border); display: flex; flex: 0 0 300px; flex-direction: column; min-height: 0; min-width: 0; padding: 16px; }
+.calls-pane-head { align-items: center; border-bottom: 1px solid var(--app-border); color: var(--app-text); display: flex; gap: 10px; padding: 0 2px 14px; }
+.calls-pane-title { flex: 0 0 auto; font-size: 14.5px; font-weight: 600; margin: 0; }
+.calls-pane-refresh { align-items: center; background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-muted); cursor: pointer; display: inline-flex; height: 32px; justify-content: center; width: 32px; }
+.calls-pane-refresh:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
+.calls-pane-refresh:disabled { cursor: not-allowed; opacity: .4; }
+.calls-pane-items { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow-y: auto; padding-top: 12px; }
+.calls-pane-search { align-items: center; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-subtle); display: flex; flex: 1 1 auto; gap: 7px; height: 34px; min-width: 0; padding: 0 10px; }
+.calls-pane-search:focus-within { border-color: var(--app-primary); }
+.calls-pane-search input { appearance: none; background: transparent; border: 0; color: var(--app-text); font: inherit; font-size: 13px; min-width: 0; outline: none; width: 100%; }
+.calls-pane-search input::placeholder { color: var(--app-subtle); }
+.calls-pane-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-muted); cursor: pointer; display: flex; font: inherit; gap: 10px; min-height: 48px; padding: 6px 10px; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
+.calls-pane-item > svg { color: var(--app-text); flex-shrink: 0; }
+.calls-pane-item:hover { background: var(--app-hover); color: var(--app-text); }
+.calls-pane-item.is-active { background: var(--app-hover-2); color: var(--app-text); }
+.calls-pane-item-body { display: grid; flex: 1; gap: 1px; min-width: 0; }
+.calls-pane-item-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-pane-item-sub { color: var(--app-subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-pane-item-dot { border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
+.calls-pane-item-dot.calls-status-ended { background: var(--green); }
+.calls-pane-item-dot.calls-status-answered { background: var(--sky); }
+.calls-pane-item-dot.calls-status-received { background: var(--amber); }
+.calls-pane-item-dot.calls-status-declined { background: var(--orange); }
+.calls-pane-item-dot.calls-status-failed { background: var(--rose); }
+.calls-pane-item-dot.calls-status-neutral { background: var(--faint); }
+.calls-pane-note { color: var(--app-subtle); font-size: 13px; margin: 0; padding: 6px 4px; }
+.calls-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 20px; min-height: 0; min-width: 0; overflow-y: auto; padding: 24px 24px 32px; }
+.calls-pane-back { display: none; }
+.calls-rt-head { align-items: flex-start; border-bottom: 1px solid var(--app-border); display: flex; gap: 16px; justify-content: space-between; padding-bottom: 16px; }
+.calls-rt-title { font-size: 18px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.calls-rt-line { align-items: center; color: var(--app-subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
+.calls-rt-copy { align-items: center; background: none; border: 0; border-radius: 5px; color: var(--app-subtle); cursor: pointer; display: inline-flex; height: 20px; justify-content: center; padding: 0; width: 20px; }
+.calls-rt-copy:hover { background: var(--app-hover); color: var(--app-text); }
+.calls-rt-dot { background: var(--app-text); border-radius: 50%; height: 4px; margin: 0 4px; width: 4px; }
+.calls-rt-status { align-items: center; background: none !important; display: inline-flex; font-weight: 600; gap: 5px; }
+.calls-rt-status-dot { background: currentColor; border-radius: 50%; height: 6px; width: 6px; }
+/* The separator dot already sits before the status, so its own dot made "• •". */
+.calls-rt-line .calls-rt-status-dot { display: none; }
+.calls-rt-back { display: none; }
+.calls-rt-identity { flex: 1 1 auto; min-width: 0; }
+.calls-rt-buttons { display: flex; flex-shrink: 0; gap: 8px; }
+.calls-rt-outline { align-items: center; background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); cursor: pointer; display: inline-flex; height: 36px; justify-content: center; width: 36px; }
+.calls-rt-outline:hover:not(:disabled) { background: var(--app-hover); }
+.calls-rt-outline.is-danger:hover:not(:disabled) { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
+.calls-rt-outline:disabled { cursor: not-allowed; opacity: .4; }
+@media (max-width: 980px) {
+  .calls-split { flex-direction: column; }
+  .calls-pane-list { border-right: 0; flex: 1 1 auto; }
+  .calls-split:not(.has-selection) .calls-pane-detail { display: none; }
+  .calls-split.has-selection .calls-pane-list { display: none; }
+  .calls-pane-detail { overflow: visible; padding: 16px; }
+  .calls-pane-back { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; font: inherit; font-size: 13px; font-weight: 600; gap: 6px; padding: 0; }
+  /* Phones and tablets: a page title like "All Agents" and "Conversations",
+     with a full-size search box under it. */
+  .calls-pane-head { border-bottom: 0; padding-bottom: 4px; }
+  .calls-pane-head > svg { display: none; }
+  .calls-pane-title { font-size: 20px; font-weight: 600; letter-spacing: -.2px; }
+  .calls-pane-refresh { border-radius: 10px; height: 38px; width: 38px; }
+  .calls-pane-search { background: var(--app-surface); border-radius: 10px; height: 40px; padding: 0 12px; }
+  .calls-pane-search input { font-size: 16px; } /* stops iOS zooming on focus */
+  /* With a call open, the back link becomes an arrow button in its header,
+     like the other detail pages. */
+  .calls-pane-detail:has(> .calls-rt-head) > .calls-pane-back { display: none; }
+  .calls-rt-head { align-items: center; display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
+  .calls-rt-back { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; color: var(--app-text); cursor: pointer; display: inline-flex; height: 38px; justify-content: center; padding: 0; width: 38px; }
+  .calls-rt-back:hover { background: var(--app-hover); }
+  .calls-rt-back:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
+}
+/* Phones: back, number and the refresh / delete buttons share one row; the
+   details line under the number stays on one line. */
+@media (max-width: 640px) {
+  .calls-rt-head { gap: 10px; }
+  .calls-rt-title { font-size: 17px; line-height: 1.25; overflow-wrap: break-word; }
+  .calls-rt-line { flex-wrap: nowrap; gap: 4px; margin-top: 3px; overflow: hidden; white-space: nowrap; }
+  .calls-rt-line .calls-rt-dot { margin: 0 2px; }
+  .calls-rt-buttons { gap: 6px; }
+  .calls-rt-outline { border-radius: 10px; height: 38px; width: 38px; }
+}
 @media (max-width: 1180px) {
-  .calls-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .calls-row { grid-template-columns: 38px minmax(150px, 1.2fr) minmax(150px, .9fr) minmax(90px, .5fr) auto 18px; }
   .calls-row-direction { display: none; }
 }
@@ -729,7 +831,15 @@ const css = `
 }
 @media (max-width: 640px) {
   .calls-topbar, .calls-content { padding: 16px 14px; }
-  .calls-meta-grid { grid-template-columns: 1fr; }
+  /* Call details as one compact list: a slim row per detail, label on the
+     left and value on the right (long ids end in "..."; the full value is
+     in the tooltip). */
+  .calls-meta-grid { border: 1px solid var(--app-border); border-radius: 12px; gap: 0; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
+  .calls-meta-tile { align-items: center; background: var(--panel); border: 0; border-bottom: 1px solid var(--app-border); border-radius: 0; display: flex; gap: 12px; justify-content: space-between; padding: 9px 12px; }
+  .calls-meta-tile:last-child { border-bottom: 0; }
+  .calls-meta-label { flex: 0 0 auto; font-size: 10px; letter-spacing: .6px; }
+  .calls-meta-value { font-size: 12.5px; min-width: 0; overflow: hidden; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+  .calls-section-head { flex-wrap: wrap; gap: 2px 8px; }
   .calls-toolbar-search { max-width: none; min-width: 100%; }
   .calls-toolbar .calls-count { margin-left: 0; }
   .calls-row { gap: 10px; grid-template-columns: 38px minmax(0, 1fr) auto; padding: 11px; }
@@ -797,26 +907,17 @@ function peerLabel(call: ApiCall) {
   return server === "s.whatsapp.net" ? `+${user}` : user;
 }
 
-function StatusChip({ status }: { status: string }) {
-  return (
-    <span className={`calls-status-chip ${statusClass(status)}`}>
-      <span className="calls-dot" />
-      {statusText(status)}
-    </span>
-  );
-}
-
 export default function CallsPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
   const [calls, setCalls, hasCachedCalls] = useCachedState<ApiCall[]>("calls-page:calls", []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Filters the loaded calls by number, status or direction as you type.
+  const [query, setQuery] = useState("");
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const [detail, setDetail] = useState<ApiCall | null>(null);
   const [detailState, setDetailState] = useState<DetailState>("idle");
@@ -839,20 +940,26 @@ export default function CallsPage() {
   const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadState = pendingLoadState === "loading" && hasCachedCalls ? "ready" : pendingLoadState;
 
-  const filteredCalls = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return calls;
-    return calls.filter((call) =>
-      [call.peer, call.call_id, call.status, call.call_type, call.end_reason ?? ""]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [calls, query]);
-
-  const selectedCall = selectedId
-    ? calls.find((call) => call.id === selectedId) ?? null
-    : null;
+  // Retell-style master-detail: the newest call is open until another is
+  // picked; selectedId is only the explicit pick (on phones it swaps the list
+  // pane for the detail pane).
+  const selectedCall =
+    (selectedId ? calls.find((call) => call.id === selectedId) : null) ?? calls[0] ?? null;
   const selectedCallId = selectedCall?.id ?? null;
+  const needle = query.trim().toLowerCase();
+  const digits = needle.replace(/\D/g, "");
+  const visibleCalls = needle
+    ? calls.filter((call) => {
+        const label = peerLabel(call).toLowerCase();
+        if (label.includes(needle)) return true;
+        // "01701 750469" or "+880 1701" still finds +8801701750469.
+        if (digits && label.replace(/\D/g, "").includes(digits)) return true;
+        return (
+          statusText(call.status).toLowerCase().includes(needle) ||
+          callTypeLabel(call.call_type).toLowerCase().includes(needle)
+        );
+      })
+    : calls;
   // Prefer the freshly fetched detail (has transcript) when it matches the
   // selected row; otherwise fall back to the list row while it loads.
   const shownCall = detail && detail.id === selectedCallId ? detail : selectedCall;
@@ -996,60 +1103,99 @@ export default function CallsPage() {
   }
 
   return (
-    <div className="calls-shell">
+    <div className="calls-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <DashboardSidebar activeLabel="Calls" badges={{ Calls: calls.length }} stackBelow={980} />
+      <DashboardSidebar activeLabel="Call History" badges={{ "Call History": calls.length }} stackBelow={980} />
 
       <main className="calls-main">
-        <header className="calls-topbar">
-          <div className="calls-topbar-heading">
-            <h1 className="calls-topbar-title">Calls</h1>
-            <div className="calls-topbar-copy">Review call activity, lifecycle details, and saved transcripts.</div>
-          </div>
-        </header>
-        <div className="calls-content">
-          <CallList
-            calls={calls}
-            deletingId={deletingId}
-            effectiveLoadState={effectiveLoadState}
-            filteredCalls={filteredCalls}
-            isAuthenticated={isAuthenticated}
-            onQueryChange={setQuery}
-            onRefresh={refresh}
-            onSelect={setSelectedId}
-            onViewModeChange={setViewMode}
-            query={query}
-            selectedId={selectedCallId}
-            viewMode={viewMode}
-          />
-
-          <ExpandableCardDemoStandard
-            className="calls-expandable-card"
-            layoutId={`call-${selectedCallId ?? "closed"}`}
-            onClose={() => setSelectedId(null)}
-            open={Boolean(shownCall)}
-          >
-            {shownCall ? (
-              <section className="calls-detail">
-                <CallDetail
-                  call={shownCall}
-                  deletingId={deletingId}
-                  detailError={detailError}
-                  detailState={detailState}
-                  editEndReason={editEndReason}
-                  editStatus={editStatus}
-                  isSaving={isSaving}
-                  onCopy={copyToClipboard}
-                  onDelete={removeCall}
-                  onEndReasonChange={setEditEndReason}
-                  onClose={() => setSelectedId(null)}
-                  onRefresh={refresh}
-                  onSave={saveUpdate}
-                  onStatusChange={setEditStatus}
+        <div className={`calls-split${selectedId ? " has-selection" : ""}`}>
+          <aside aria-label="Calls" className="calls-pane-list">
+            <div className="calls-pane-head">
+              <Icon name="phone" size={17} sw={1.8} />
+              <h1 className="calls-pane-title">Call History</h1>
+              {/* Search sits on the title row, in the space beside the title. */}
+              <label className="calls-pane-search">
+                <Icon name="search" size={14} sw={2.2} />
+                <input
+                  aria-label="Search calls by number, status or direction"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search calls..."
+                  title="Search by number, status or direction"
+                  type="search"
+                  value={query}
                 />
-              </section>
+              </label>
+              <button
+                aria-label="Refresh calls"
+                className="calls-pane-refresh"
+                disabled={!isAuthenticated || effectiveLoadState === "loading"}
+                onClick={refresh}
+                title="Refresh"
+                type="button"
+              >
+                <Icon name="refresh" size={15} sw={2} />
+              </button>
+            </div>
+            <nav className="calls-pane-items">
+              {effectiveLoadState === "loading" && calls.length === 0 ? (
+                <p className="calls-pane-note">Loading calls...</p>
+              ) : effectiveLoadState === "error" ? (
+                <div className="calls-pane-note"><VoiceUpdateNote /></div>
+              ) : calls.length === 0 ? (
+                <p className="calls-pane-note">No calls yet. Inbound and outbound calls appear here once they run.</p>
+              ) : visibleCalls.length === 0 ? (
+                <p className="calls-pane-note">No call matches that search.</p>
+              ) : (
+                visibleCalls.map((call) => {
+                  const isActive = call.id === selectedCallId;
+                  return (
+                    <button
+                      aria-current={isActive ? "true" : undefined}
+                      className={`calls-pane-item${isActive ? " is-active" : ""}`}
+                      key={call.id}
+                      onClick={() => setSelectedId(call.id)}
+                      style={deletingId === call.id ? { opacity: 0.5 } : undefined}
+                      type="button"
+                    >
+                      <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={16} sw={1.8} />
+                      <span className="calls-pane-item-body">
+                        <span className="calls-pane-item-name notranslate">{peerLabel(call)}</span>
+                        <span className="calls-pane-item-sub">
+                          {formatDate(call.created_at)} · {formatDuration(call.duration_seconds)}
+                        </span>
+                      </span>
+                      <span className={`calls-pane-item-dot ${statusClass(call.status)}`} title={statusText(call.status)} />
+                    </button>
+                  );
+                })
+              )}
+            </nav>
+          </aside>
+
+          <section className="calls-pane-detail">
+            <button className="calls-pane-back" onClick={() => setSelectedId(null)} type="button">
+              <Icon name="back" size={15} sw={2.2} />
+              Calls
+            </button>
+            {shownCall ? (
+              <CallDetail
+                call={shownCall}
+                deletingId={deletingId}
+                detailError={detailError}
+                detailState={detailState}
+                editEndReason={editEndReason}
+                editStatus={editStatus}
+                isSaving={isSaving}
+                onBack={() => setSelectedId(null)}
+                onCopy={copyToClipboard}
+                onDelete={removeCall}
+                onEndReasonChange={setEditEndReason}
+                onRefresh={refresh}
+                onSave={saveUpdate}
+                onStatusChange={setEditStatus}
+              />
             ) : null}
-          </ExpandableCardDemoStandard>
+          </section>
         </div>
       </main>
 
@@ -1062,176 +1208,6 @@ export default function CallsPage() {
   );
 }
 
-function CallList({
-  calls,
-  deletingId,
-  effectiveLoadState,
-  filteredCalls,
-  isAuthenticated,
-  onQueryChange,
-  onRefresh,
-  onSelect,
-  onViewModeChange,
-  query,
-  selectedId,
-  viewMode,
-}: {
-  calls: ApiCall[];
-  deletingId: string | null;
-  effectiveLoadState: "loading" | "ready" | "error";
-  filteredCalls: ApiCall[];
-  isAuthenticated: boolean;
-  onQueryChange: (value: string) => void;
-  onRefresh: () => void;
-  onSelect: (id: string) => void;
-  onViewModeChange: (mode: ViewMode) => void;
-  query: string;
-  selectedId: string | null;
-  viewMode: ViewMode;
-}) {
-  return (
-    <section className="calls-browse" aria-label="Calls">
-      <div className="calls-toolbar">
-        <div className="calls-search-wrap calls-toolbar-search">
-          <span className="calls-search-icon">
-            <Icon name="search" size={16} sw={2.2} />
-          </span>
-          <input
-            aria-label="Search calls"
-            className="calls-search"
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search by number, status, id..."
-            type="search"
-            value={query}
-          />
-        </div>
-        <div aria-label="View" className="calls-view-toggle" role="group">
-          <button
-            aria-label="List view"
-            aria-pressed={viewMode === "list"}
-            className={`calls-view-btn${viewMode === "list" ? " is-active" : ""}`}
-            onClick={() => onViewModeChange("list")}
-            title="List view"
-            type="button"
-          >
-            <Icon name="list" size={16} sw={2.2} />
-          </button>
-          <button
-            aria-label="Grid view"
-            aria-pressed={viewMode === "grid"}
-            className={`calls-view-btn${viewMode === "grid" ? " is-active" : ""}`}
-            onClick={() => onViewModeChange("grid")}
-            title="Grid view"
-            type="button"
-          >
-            <Icon name="grid" size={16} sw={2.2} />
-          </button>
-        </div>
-        <span className="calls-count">
-          {query.trim() ? `${filteredCalls.length} of ${calls.length}` : `${calls.length} ${calls.length === 1 ? "call" : "calls"}`}
-        </span>
-        <button
-          className="calls-icon-btn"
-          disabled={!isAuthenticated || effectiveLoadState === "loading"}
-          onClick={onRefresh}
-          title="Refresh"
-          type="button"
-        >
-          <Icon name="refresh" size={16} sw={2.2} />
-        </button>
-      </div>
-      {effectiveLoadState === "loading" && calls.length === 0 ? (
-        <div className="calls-list-message">Loading calls...</div>
-      ) : effectiveLoadState === "error" ? (
-        <div className="calls-list-message">
-          <VoiceUpdateNote />
-        </div>
-      ) : filteredCalls.length === 0 ? (
-        <div className="calls-list-message">
-          <p>{query.trim() ? "No calls match your search." : "No calls yet. Inbound and outbound calls appear here once they run."}</p>
-        </div>
-      ) : viewMode === "grid" ? (
-        <div className="calls-grid">
-          {filteredCalls.map((call) => (
-            <motion.button
-              aria-pressed={call.id === selectedId}
-              className={`calls-card-item${call.id === selectedId ? " is-active" : ""}`}
-              key={call.id}
-              layoutId={`call-${call.id}`}
-              onClick={() => onSelect(call.id)}
-              style={deletingId === call.id ? { opacity: 0.5 } : undefined}
-              type="button"
-            >
-              <span className="calls-card-top">
-                <span className="calls-row-dir" title={callTypeLabel(call.call_type)}>
-                  <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={16} sw={2.2} />
-                </span>
-                <span className="calls-card-identity">
-                  <span className="calls-row-peer notranslate">{peerLabel(call)}</span>
-                  <span className="calls-row-id">{call.call_id}</span>
-                </span>
-              </span>
-              <span className="calls-card-meta">
-                <span className="calls-card-tile">
-                  <span className="calls-row-label">Created</span>
-                  <span>{formatDate(call.created_at)}</span>
-                </span>
-                <span className="calls-card-tile">
-                  <span className="calls-row-label">Duration</span>
-                  <span>{formatDuration(call.duration_seconds)}</span>
-                </span>
-              </span>
-              <span className="calls-card-foot">
-                <StatusChip status={call.status} />
-                <span className="calls-dir-badge">
-                  <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={12} sw={2.4} />
-                  {callTypeLabel(call.call_type)}
-                </span>
-              </span>
-            </motion.button>
-          ))}
-        </div>
-      ) : (
-        <div className="calls-list">
-          {filteredCalls.map((call) => (
-            <motion.button
-              aria-pressed={call.id === selectedId}
-              className={`calls-row${call.id === selectedId ? " is-active" : ""}`}
-              key={call.id}
-              layoutId={`call-${call.id}`}
-              onClick={() => onSelect(call.id)}
-              style={deletingId === call.id ? { opacity: 0.5 } : undefined}
-              type="button"
-            >
-              <span className="calls-row-dir" title={callTypeLabel(call.call_type)}>
-                <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={15} sw={2.2} />
-              </span>
-              <span className="calls-row-identity">
-                <span className="calls-row-peer notranslate">{peerLabel(call)}</span>
-                <span className="calls-row-id">{call.call_id}</span>
-              </span>
-              <span className="calls-row-field calls-row-direction">
-                <span className="calls-row-label">Direction</span>
-                <span>{callTypeLabel(call.call_type)}</span>
-              </span>
-              <span className="calls-row-field calls-row-created">
-                <span className="calls-row-label">Created</span>
-                <span>{formatDate(call.created_at)}</span>
-              </span>
-              <span className="calls-row-field calls-row-duration">
-                <span className="calls-row-label">Duration</span>
-                <span>{formatDuration(call.duration_seconds)}</span>
-              </span>
-              <StatusChip status={call.status} />
-              <Icon className="calls-row-chevron" name="chevron" size={17} sw={2.2} />
-            </motion.button>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
 function CallDetail({
   call,
   deletingId,
@@ -1240,8 +1216,8 @@ function CallDetail({
   editEndReason,
   editStatus,
   isSaving,
+  onBack,
   onCopy,
-  onClose,
   onDelete,
   onEndReasonChange,
   onRefresh,
@@ -1255,8 +1231,8 @@ function CallDetail({
   editEndReason: string;
   editStatus: CallStatus;
   isSaving: boolean;
+  onBack: () => void;
   onCopy: (value: string, label: string) => void;
-  onClose: () => void;
   onDelete: (call: ApiCall) => void;
   onEndReasonChange: (value: string) => void;
   onRefresh: () => void;
@@ -1268,44 +1244,66 @@ function CallDetail({
 
   return (
     <>
-      <div className="calls-detail-topbar">
-        <div className="calls-summary">
-          <span className="calls-summary-icon">
-            <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={22} />
-          </span>
-          <div style={{ minWidth: 0 }}>
-            <div className="calls-summary-title notranslate">{peerLabel(call)}</div>
-            <div className="calls-summary-id">
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{call.call_id}</span>
-              <button
-                aria-label="Copy call id"
-                onClick={() => onCopy(call.call_id, "Call ID")}
-                style={{ background: "transparent", border: 0, color: "inherit", cursor: "pointer", display: "inline-flex", padding: 0 }}
-                type="button"
-              >
-                <Icon name="copy" size={13} />
-              </button>
-            </div>
+      <header className="calls-rt-head">
+        <button aria-label="Back to calls" className="calls-rt-back" onClick={onBack} type="button">
+          <Icon name="back" size={16} sw={2.4} />
+        </button>
+        <div className="calls-rt-identity">
+          <h2 className="calls-rt-title notranslate">{peerLabel(call)}</h2>
+          <div className="calls-rt-line">
+            <span title={call.call_id}>
+              ID: {call.call_id.length > 12 ? `${call.call_id.slice(0, 4)}...${call.call_id.slice(-3)}` : call.call_id}
+            </span>
+            <button aria-label="Copy call id" className="calls-rt-copy" onClick={() => onCopy(call.call_id, "Call ID")} title="Copy ID" type="button">
+              <Icon name="copy" size={13} />
+            </button>
+            <span className="calls-rt-dot" />
+            <span className={`calls-rt-status ${statusClass(call.status)}`}>
+              <span className="calls-rt-status-dot" />
+              {statusText(call.status)}
+            </span>
+            <span className="calls-rt-dot" />
+            <span>{callTypeLabel(call.call_type)}</span>
+            <span className="calls-rt-dot" />
+            <span>{formatDuration(call.duration_seconds)}</span>
           </div>
         </div>
-        <div className="calls-top-actions">
-          <span className={`calls-dir-badge`}>
-            <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={12} sw={2.4} />
-            {callTypeLabel(call.call_type)}
-          </span>
-          <StatusChip status={call.status} />
-          <button className="calls-top-btn" disabled={detailState === "loading"} onClick={onRefresh} type="button">
-            <Icon name="refresh" size={15} sw={2.2} />
-            Refresh
+        <div className="calls-rt-buttons">
+          <button aria-label="Refresh" className="calls-rt-outline" disabled={detailState === "loading"} onClick={onRefresh} title="Refresh" type="button">
+            <Icon name="refresh" size={15} sw={2} />
           </button>
-          <button className="calls-danger-btn" disabled={isDeleting} onClick={() => onDelete(call)} type="button">
-            <Icon name="trash" size={15} sw={2.1} />
-            {isDeleting ? "Deleting..." : "Delete"}
-          </button>
-          <button aria-label="Close call details" className="calls-icon-btn" onClick={onClose} type="button">
-            <Icon name="x" size={16} sw={2.2} />
+          <button aria-label="Delete call" className="calls-rt-outline is-danger" disabled={isDeleting} onClick={() => onDelete(call)} title={isDeleting ? "Deleting..." : "Delete call"} type="button">
+            <Icon name="trash" size={16} sw={2} />
           </button>
         </div>
+      </header>
+
+      {/* The conversation comes first: it is what people open a call to read. */}
+      <div className="calls-section">
+        <div className="calls-section-head">
+          <h2 className="calls-section-title">
+            <span className="calls-section-ic">
+              <Icon name="message" size={16} />
+            </span>
+            Transcript
+          </h2>
+          <span className="calls-section-copy">
+            {messages.length > 0 ? `${messages.length} turn${messages.length === 1 ? "" : "s"}` : "Conversation replay"}
+          </span>
+        </div>
+        {detailState === "loading" && messages.length === 0 ? (
+          <div className="calls-list-message">Loading transcript...</div>
+        ) : detailState === "error" ? (
+          <div className="calls-list-message">{detailError || "Failed to load transcript."}</div>
+        ) : messages.length === 0 ? (
+          <div className="calls-list-message">No transcript was saved for this call.</div>
+        ) : (
+          <div className="calls-transcript">
+            {messages.map((message, index) => (
+              <TranscriptTurn key={index} message={message} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="calls-section">
@@ -1377,33 +1375,6 @@ function CallDetail({
             {isSaving ? "Saving..." : "Save"}
           </button>
         </div>
-      </div>
-
-      <div className="calls-section">
-        <div className="calls-section-head">
-          <h2 className="calls-section-title">
-            <span className="calls-section-ic">
-              <Icon name="message" size={16} />
-            </span>
-            Transcript
-          </h2>
-          <span className="calls-section-copy">
-            {messages.length > 0 ? `${messages.length} turn${messages.length === 1 ? "" : "s"}` : "Conversation replay"}
-          </span>
-        </div>
-        {detailState === "loading" && messages.length === 0 ? (
-          <div className="calls-list-message">Loading transcript...</div>
-        ) : detailState === "error" ? (
-          <div className="calls-list-message">{detailError || "Failed to load transcript."}</div>
-        ) : messages.length === 0 ? (
-          <div className="calls-list-message">No transcript was saved for this call.</div>
-        ) : (
-          <div className="calls-transcript">
-            {messages.map((message, index) => (
-              <TranscriptTurn key={index} message={message} />
-            ))}
-          </div>
-        )}
       </div>
     </>
   );

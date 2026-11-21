@@ -4,17 +4,16 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import {
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Copy,
   Download,
-  LayoutGrid,
-  List,
   MessageSquare,
   Search,
   ShoppingBag,
+  SlidersHorizontal,
   Trash2,
-  X,
 } from "lucide-react";
 import { listDashboardChatAgents } from "@/lib/chatAgents";
 import {
@@ -65,11 +64,6 @@ function orderSummary(order: ApiOrder) {
   );
 }
 
-function StatusBadge({ status }: { status: OrderStatus }) {
-  const meta = statusMeta(status);
-  return <span className={`orders-status tools-accent-${meta.accent}`}>{meta.label}</span>;
-}
-
 export default function OrdersTab({
   onNewCount,
   onNotice,
@@ -79,7 +73,6 @@ export default function OrdersTab({
   onNotice: Notify;
 }) {
   const { getToken } = useAuth();
-  const [view, setView] = useState<"list" | "grid">("list");
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<OrderStatus | "">("");
@@ -99,13 +92,20 @@ export default function OrdersTab({
     [agentId, dateFrom, dateTo, search, status]
   );
   const hasFilters = Boolean(search || status || agentId || dateFrom || dateTo);
+  // On phones and tablets the status, agent and date filters fold behind a
+  // Filters button; the count says how many are on while they are hidden.
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = [status, agentId, dateFrom, dateTo].filter(Boolean).length;
   // Cached per filter set, so going back to one shows its rows at once.
   const [orderPage, setOrderPage, hasCachedPage] = useCachedState<OrderPage>(
     `orders:${JSON.stringify(filters)}:${pageNumber}`,
     { items: [], total: 0 }
   );
   const { items: orders, total } = orderPage;
-  const selected = orders.find((order) => order.id === selectedId) ?? null;
+  // Retell-style master-detail: the newest order is open until another is
+  // picked; selectedId is only the explicit pick (on phones it swaps the list
+  // pane for the detail pane).
+  const selected = orders.find((order) => order.id === selectedId) ?? orders[0] ?? null;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
 
   useEffect(() => {
@@ -212,273 +212,244 @@ export default function OrdersTab({
   }
 
   return (
-    <>
+    <div className={`tools-split${selectedId ? " has-selection" : ""}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <div className="tools-toolbar">
-        <div className="tools-search-wrap">
-          <span className="tools-search-icon">
-            <Search size={15} />
-          </span>
-          <input
-            aria-label="Search orders"
-            className="tools-input tools-search-input"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search name, phone, email or order #"
-            value={query}
-          />
-        </div>
-        <div aria-label="View" className="tools-view-toggle" role="group">
+      <aside aria-label="Orders" className="tools-pane-list orders-pane-list">
+        <div className="tools-pane-head">
+          <ShoppingBag size={17} strokeWidth={1.8} />
+          <h1 className="tools-pane-title">Orders</h1>
           <button
-            aria-label="List view"
-            aria-pressed={view === "list"}
-            className={`tools-view-btn${view === "list" ? " is-active" : ""}`}
-            onClick={() => setView("list")}
-            title="List view"
+            aria-label="Export CSV"
+            className="orders-pane-icon orders-export-btn"
+            disabled={isExporting || total === 0}
+            onClick={downloadCsv}
+            title={isExporting ? "Exporting…" : "Export CSV"}
             type="button"
           >
-            <List size={16} />
-          </button>
-          <button
-            aria-label="Grid view"
-            aria-pressed={view === "grid"}
-            className={`tools-view-btn${view === "grid" ? " is-active" : ""}`}
-            onClick={() => setView("grid")}
-            title="Grid view"
-            type="button"
-          >
-            <LayoutGrid size={16} />
+            <Download size={15} />
+            <span className="orders-export-label">{isExporting ? "Exporting…" : "Export"}</span>
           </button>
         </div>
-        <span className="tools-count">
-          {total} order{total === 1 ? "" : "s"}
-        </span>
-        <button
-          className="tools-btn tools-btn-secondary"
-          disabled={isExporting || total === 0}
-          onClick={downloadCsv}
-          type="button"
-        >
-          <Download size={15} />
-          {isExporting ? "Exporting…" : "Export CSV"}
-        </button>
-      </div>
 
-      <div className="orders-filters">
-        <label className="tools-field">
-          <span className="tools-field-label">Status</span>
-          <select
-            className="tools-select"
-            onChange={(event) => {
-              setStatus(event.target.value as OrderStatus | "");
-              setPageNumber(1);
-            }}
-            value={status}
-          >
-            <option value="">All statuses</option>
-            {orderStatuses.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="tools-field">
-          <span className="tools-field-label">Agent</span>
-          <select
-            className="tools-select"
-            onChange={(event) => {
-              setAgentId(event.target.value);
-              setPageNumber(1);
-            }}
-            value={agentId}
-          >
-            <option value="">All agents</option>
-            {agents.map((agent) => (
-              <option key={agent.id} value={agent.id}>
-                {agent.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="tools-field">
-          <span className="tools-field-label">From</span>
-          <input
-            className="tools-input"
-            max={dateTo || undefined}
-            onChange={(event) => {
-              setDateFrom(event.target.value);
-              setPageNumber(1);
-            }}
-            type="date"
-            value={dateFrom}
-          />
-        </label>
-        <label className="tools-field">
-          <span className="tools-field-label">To</span>
-          <input
-            className="tools-input"
-            min={dateFrom || undefined}
-            onChange={(event) => {
-              setDateTo(event.target.value);
-              setPageNumber(1);
-            }}
-            type="date"
-            value={dateTo}
-          />
-        </label>
-      </div>
-
-      {error && orders.length === 0 ? (
-        <div className="tools-list-empty">
-          <strong>Could not load orders</strong>
-          <span>{error}</span>
-        </div>
-      ) : loading && !hasCachedPage ? (
-        <div className="tools-list-empty">
-          <strong>Loading orders…</strong>
-        </div>
-      ) : orders.length === 0 ? (
-        hasFilters ? (
-          <div className="tools-list-empty">
-            <strong>No orders found</strong>
-            <span>Try another search or filter.</span>
+        <div className="orders-pane-filters">
+          <div className="orders-search-row">
+            <label className="orders-pane-search">
+              <Search size={14} />
+              <input
+                aria-label="Search orders"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Name, phone, email or order #"
+                value={query}
+              />
+            </label>
+            <button
+              aria-controls="orders-more-filters"
+              aria-expanded={filtersOpen}
+              className={`orders-filters-btn${activeFilterCount > 0 ? " is-on" : ""}`}
+              onClick={() => setFiltersOpen((open) => !open)}
+              type="button"
+            >
+              <SlidersHorizontal size={15} />
+              <span>Filters</span>
+              {activeFilterCount > 0 ? <span className="orders-filters-count">{activeFilterCount}</span> : null}
+            </button>
           </div>
-        ) : (
+          <div className="orders-more-filters" data-open={filtersOpen || undefined} id="orders-more-filters">
+          <div className="orders-pane-row">
+            <select
+              aria-label="Filter by status"
+              className="orders-pane-select"
+              onChange={(event) => {
+                setStatus(event.target.value as OrderStatus | "");
+                setPageNumber(1);
+              }}
+              value={status}
+            >
+              <option value="">All statuses</option>
+              {orderStatuses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Filter by agent"
+              className="orders-pane-select"
+              onChange={(event) => {
+                setAgentId(event.target.value);
+                setPageNumber(1);
+              }}
+              value={agentId}
+            >
+              <option value="">All agents</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="orders-pane-row">
+            <label className="orders-date-field">
+              <span className="orders-date-label">From</span>
+              <input
+                aria-label="From date"
+                className="orders-pane-select"
+                max={dateTo || undefined}
+                onChange={(event) => {
+                  setDateFrom(event.target.value);
+                  setPageNumber(1);
+                }}
+                type="date"
+                value={dateFrom}
+              />
+            </label>
+            <label className="orders-date-field">
+              <span className="orders-date-label">To</span>
+              <input
+                aria-label="To date"
+                className="orders-pane-select"
+                min={dateFrom || undefined}
+                onChange={(event) => {
+                  setDateTo(event.target.value);
+                  setPageNumber(1);
+                }}
+                type="date"
+                value={dateTo}
+              />
+            </label>
+          </div>
+          </div>
+        </div>
+
+        <nav className="tools-pane-items">
+          {error && orders.length === 0 ? (
+            <p className="tools-pane-note">{error}</p>
+          ) : loading && !hasCachedPage ? (
+            <p className="tools-pane-note">Loading orders…</p>
+          ) : orders.length === 0 ? (
+            <>
+              <p className="tools-pane-note orders-empty-note">
+                {hasFilters ? "No orders match these filters." : "No orders yet."}
+              </p>
+              {/* Phones and tablets have no detail pane beside the list, so the
+                  list itself explains where orders come from. */}
+              <div className="orders-list-empty">
+                <span className="orders-list-empty-icon">
+                  <ShoppingBag size={24} strokeWidth={1.7} />
+                </span>
+                <p className="orders-list-empty-title">
+                  {hasFilters ? "No orders match these filters" : "No orders yet"}
+                </p>
+                <p className="orders-list-empty-copy">
+                  {hasFilters
+                    ? "Try another status, agent or date range."
+                    : "Orders show up here when an agent with Take Order on confirms one in a chat."}
+                </p>
+                {hasFilters ? null : (
+                  <Link className="tools-dark-btn orders-empty-link" href="/dashboard/chat">
+                    Open chat agents
+                  </Link>
+                )}
+              </div>
+            </>
+          ) : (
+            orders.map((order) => {
+              const isActive = selected?.id === order.id;
+              return (
+                <button
+                  aria-current={isActive ? "true" : undefined}
+                  className={`orders-pane-item${isActive ? " is-active" : ""}`}
+                  key={order.id}
+                  onClick={() => setSelectedId(order.id)}
+                  type="button"
+                >
+                  <span className="orders-pane-item-body">
+                    <span className="orders-pane-item-top">
+                      <span className="orders-pane-item-name notranslate">
+                        #{order.order_number} · {order.customer_name || "No name"}
+                      </span>
+                      <span className="orders-pane-item-time">{dateFormatter.format(new Date(order.created_at))}</span>
+                    </span>
+                    <span className="orders-pane-item-sub notranslate">{orderSummary(order) || order.phone || "—"}</span>
+                  </span>
+                  <span
+                    className={`orders-pane-dot tools-accent-${statusMeta(order.status).accent}`}
+                    title={statusMeta(order.status).label}
+                  />
+                </button>
+              );
+            })
+          )}
+        </nav>
+
+        {pageCount > 1 ? (
+          <div className="orders-pager">
+            <button
+              aria-label="Previous page"
+              className="orders-pane-icon"
+              disabled={pageNumber <= 1}
+              onClick={() => setPageNumber((current) => current - 1)}
+              type="button"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <span className="tools-pane-note">
+              Page {pageNumber} of {pageCount}
+            </span>
+            <button
+              aria-label="Next page"
+              className="orders-pane-icon"
+              disabled={pageNumber >= pageCount}
+              onClick={() => setPageNumber((current) => current + 1)}
+              type="button"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        ) : null}
+      </aside>
+
+      <section className="tools-pane-detail">
+        <button className="orders-pane-back" onClick={() => setSelectedId("")} type="button">
+          <ArrowLeft size={15} />
+          Orders
+        </button>
+        {selected ? (
+          <OrderDetail
+            key={selected.id}
+            onDeleted={dropOrder}
+            onNotice={onNotice}
+            onSaved={replaceOrder}
+            order={selected}
+          />
+        ) : !loading && !error && orders.length === 0 && !hasFilters ? (
           <section className="tools-empty">
             <span className="tools-empty-icon">
               <ShoppingBag size={32} strokeWidth={1.6} />
             </span>
             <h2 className="tools-empty-title">No orders yet</h2>
-            <p className="tools-empty-copy">
-              Enable &apos;Take Order&apos; on an agent to start receiving orders.
-            </p>
-            <Link className="tools-btn tools-btn-primary orders-empty-link" href="/dashboard/chat">
+            <p className="tools-empty-copy">Enable &apos;Take Order&apos; on an agent to start receiving orders.</p>
+            <Link className="tools-dark-btn orders-empty-link" href="/dashboard/chat">
               Open chat agents
             </Link>
           </section>
-        )
-      ) : view === "list" ? (
-        <div className="orders-table-wrap">
-          <table className="orders-table">
-            <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Description</th>
-                <th>Agent</th>
-                <th>Status</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order.id} onClick={() => setSelectedId(order.id)}>
-                  <td>
-                    <button
-                      className="orders-number"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setSelectedId(order.id);
-                      }}
-                      type="button"
-                    >
-                      #{order.order_number}
-                    </button>
-                  </td>
-                  <td className="orders-strong notranslate">{order.customer_name || "—"}</td>
-                  <td className="tools-mono notranslate">{order.phone || "—"}</td>
-                  <td className="notranslate">{order.email ?? "—"}</td>
-                  <td className="orders-truncate notranslate" title={orderSummary(order)}>
-                    {orderSummary(order) || "—"}
-                  </td>
-                  <td>{order.agent_name ?? "Deleted agent"}</td>
-                  <td>
-                    <StatusBadge status={order.status} />
-                  </td>
-                  <td className="orders-date">{dateFormatter.format(new Date(order.created_at))}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="tools-grid">
-          {orders.map((order) => (
-            <button
-              className="tools-card-item orders-card"
-              key={order.id}
-              onClick={() => setSelectedId(order.id)}
-              type="button"
-            >
-              <span className="tools-card-top">
-                <span className="tools-card-name">#{order.order_number}</span>
-                <StatusBadge status={order.status} />
-              </span>
-              <span className="orders-strong notranslate">{order.customer_name || "—"}</span>
-              <span className="tools-card-desc notranslate">{orderSummary(order)}</span>
-              <span className="tools-card-foot">
-                <span className="tools-chip-line tools-mono notranslate">{order.phone}</span>
-                <span className="tools-chip-tail">{dateFormatter.format(new Date(order.created_at))}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {pageCount > 1 ? (
-        <div className="orders-pager">
-          <button
-            className="tools-btn tools-btn-secondary tools-btn-sm"
-            disabled={pageNumber <= 1}
-            onClick={() => setPageNumber((current) => current - 1)}
-            type="button"
-          >
-            <ChevronLeft size={14} />
-            Previous
-          </button>
-          <span className="tools-count">
-            Page {pageNumber} of {pageCount}
-          </span>
-          <button
-            className="tools-btn tools-btn-secondary tools-btn-sm"
-            disabled={pageNumber >= pageCount}
-            onClick={() => setPageNumber((current) => current + 1)}
-            type="button"
-          >
-            Next
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      ) : null}
-
-      {selected ? (
-        <OrderDrawer
-          key={selected.id}
-          onClose={() => setSelectedId("")}
-          onDeleted={dropOrder}
-          onNotice={onNotice}
-          onSaved={replaceOrder}
-          order={selected}
-        />
-      ) : null}
-    </>
+        ) : null}
+      </section>
+    </div>
   );
 }
 
-// OrderDrawer shows one order in full. The status saves as soon as it is picked;
-// the note holds a draft until Save, so a re-read of the list can't overwrite
-// what is being typed. The parent keys this on the order id.
-function OrderDrawer({
+// OrderDetail shows one order in full in the right pane. The status saves as
+// soon as it is picked; the note holds a draft until Save, so a re-read of the
+// list can't overwrite what is being typed. The parent keys this on the order id.
+function OrderDetail({
   order,
-  onClose,
   onDeleted,
   onNotice,
   onSaved,
 }: {
   order: ApiOrder;
-  onClose: () => void;
   onDeleted: (id: string) => void;
   onNotice: Notify;
   onSaved: (order: ApiOrder) => void;
@@ -488,14 +459,7 @@ function OrderDrawer({
   const [isSaving, setIsSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const noteChanged = note.trim() !== (order.internal_note ?? "");
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  const meta = statusMeta(order.status);
 
   async function save(update: { status?: OrderStatus; internal_note?: string | null }) {
     setIsSaving(true);
@@ -531,121 +495,143 @@ function OrderDrawer({
   }
 
   return (
-    <div
-      className="orders-drawer-overlay"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <aside aria-label={`Order #${order.order_number}`} aria-modal="true" className="orders-drawer" role="dialog">
-        <header className="orders-drawer-head">
-          <div>
-            <h2 className="tools-detail-name">Order #{order.order_number}</h2>
-            <div className="tools-detail-sub">
-              <StatusBadge status={order.status} />
-              <span className="tools-field-hint">{dateFormatter.format(new Date(order.created_at))}</span>
-            </div>
+    <div className="tools-detail orders-detail">
+      <header className="tools-rt-head">
+        <div style={{ minWidth: 0 }}>
+          <h2 className="tools-rt-title">Order #{order.order_number}</h2>
+          <div className="tools-rt-line">
+            <span className={`orders-status-line tools-accent-${meta.accent}`}>
+              <span className="orders-pane-dot" />
+              {meta.label}
+            </span>
+            <span className="tools-rt-dot" />
+            <span>{dateFormatter.format(new Date(order.created_at))}</span>
+            <span className="tools-rt-dot" />
+            <span>{order.channel === "voice" ? "Voice" : "Chat"}</span>
+            <span className="tools-rt-dot" />
+            <span>{order.agent_name ?? "Deleted agent"}</span>
           </div>
-          <button aria-label="Close" className="tools-icon-button" onClick={onClose} type="button">
-            <X size={16} />
-          </button>
-        </header>
+        </div>
+        <div className="tools-rt-buttons">
+          {confirmingDelete ? (
+            <>
+              <span className="orders-confirm">Delete this order for good?</span>
+              <button className="orders-outline-btn" onClick={() => setConfirmingDelete(false)} type="button">
+                Keep
+              </button>
+              <button className="orders-outline-btn is-danger" disabled={isSaving} onClick={remove} type="button">
+                Delete
+              </button>
+            </>
+          ) : (
+            <>
+              {order.conversation_id ? (
+                <Link
+                  className="tools-dark-btn"
+                  href={`/dashboard/conversations/${encodeURIComponent(order.conversation_id)}`}
+                >
+                  <MessageSquare size={15} />
+                  Conversation
+                </Link>
+              ) : null}
+              <button
+                aria-label="Delete order"
+                className="tools-outline-icon"
+                onClick={() => setConfirmingDelete(true)}
+                title="Delete order"
+                type="button"
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
+        </div>
+      </header>
 
-        <div className="orders-drawer-body">
-          <label className="tools-field">
-            <span className="tools-field-label">Status</span>
-            <select
-              className="tools-select"
-              disabled={isSaving}
-              onChange={(event) => save({ status: event.target.value as OrderStatus })}
-              value={order.status}
-            >
-              {orderStatuses.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <dl className="orders-facts">
-            <Fact label="Customer">{order.customer_name || "Not given"}</Fact>
-            <Fact label="Phone">
-              {order.phone ? (
-                <span className="orders-copyable">
-                  <span className="tools-mono">{order.phone}</span>
-                  <CopyButton label="Phone" onCopy={() => copy("Phone", order.phone)} />
-                </span>
-              ) : (
-                "Not given"
-              )}
-            </Fact>
-            <Fact label="Email">
-              {order.email ? (
-                <span className="orders-copyable">
-                  <span>{order.email}</span>
-                  <CopyButton label="Email" onCopy={() => copy("Email", order.email ?? "")} />
-                </span>
-              ) : (
-                "Not given"
-              )}
-            </Fact>
-            <Fact label="Delivery address">{order.delivery_address ?? "Not given"}</Fact>
-            {(order.custom_fields ?? []).map((field) => (
-              <Fact key={field.key} label={field.label}>
-                {field.value}
-              </Fact>
+      <div className="orders-detail-body">
+        <label className="tools-field orders-status-field">
+          <span className="tools-field-label">Status</span>
+          <select
+            className="tools-select"
+            disabled={isSaving}
+            onChange={(event) => save({ status: event.target.value as OrderStatus })}
+            value={order.status}
+          >
+            {orderStatuses.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
             ))}
-            <Fact label="Agent">{order.agent_name ?? "Deleted agent"}</Fact>
-            <Fact label="Channel">{order.channel === "voice" ? "Voice" : "Chat"}</Fact>
-          </dl>
+          </select>
+        </label>
 
-          {order.description ? (
-            <div className="tools-field">
-              <span className="tools-field-label">Description</span>
-              <p className="orders-text notranslate">{order.description}</p>
-            </div>
-          ) : null}
+        <dl className="orders-facts">
+          <Fact label="Customer">{order.customer_name || "Not given"}</Fact>
+          <Fact label="Phone">
+            {order.phone ? (
+              <span className="orders-copyable">
+                <span className="tools-mono">{order.phone}</span>
+                <CopyButton label="Phone" onCopy={() => copy("Phone", order.phone)} />
+              </span>
+            ) : (
+              "Not given"
+            )}
+          </Fact>
+          <Fact label="Email">
+            {order.email ? (
+              <span className="orders-copyable">
+                <span>{order.email}</span>
+                <CopyButton label="Email" onCopy={() => copy("Email", order.email ?? "")} />
+              </span>
+            ) : (
+              "Not given"
+            )}
+          </Fact>
+          <Fact label="Delivery address">{order.delivery_address ?? "Not given"}</Fact>
+          {(order.custom_fields ?? []).map((field) => (
+            <Fact key={field.key} label={field.label}>
+              {field.value}
+            </Fact>
+          ))}
+        </dl>
 
-          {order.items.length > 0 ? (
-            <div className="tools-field">
-              <span className="tools-field-label">Items</span>
-              <ul className="orders-items notranslate">
-                {order.items.map((item, index) => (
-                  <li key={`${item.name}-${index}`}>
-                    <span className="orders-strong">
-                      {item.quantity !== undefined ? `${item.quantity} × ` : ""}
-                      {item.name}
-                    </span>
-                    {item.note ? <span className="tools-field-hint">{item.note}</span> : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+        {order.description ? (
+          <div className="tools-field">
+            <span className="tools-field-label">Description</span>
+            <p className="orders-text notranslate">{order.description}</p>
+          </div>
+        ) : null}
 
-          {order.conversation_id ? (
-            <Link
-              className="tools-btn tools-btn-secondary"
-              href={`/dashboard/conversations/${encodeURIComponent(order.conversation_id)}`}
-            >
-              <MessageSquare size={15} />
-              View conversation
-            </Link>
-          ) : null}
+        {order.items.length > 0 ? (
+          <div className="tools-field">
+            <span className="tools-field-label">Items</span>
+            <ul className="orders-items notranslate">
+              {order.items.map((item, index) => (
+                <li key={`${item.name}-${index}`}>
+                  <span className="orders-strong">
+                    {item.quantity !== undefined ? `${item.quantity} × ` : ""}
+                    {item.name}
+                  </span>
+                  {item.note ? <span className="tools-field-hint">{item.note}</span> : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
-          <label className="tools-field">
-            <span className="tools-field-label">Internal note</span>
-            <textarea
-              className="tools-textarea"
-              maxLength={2000}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Only you can see this. The customer never does."
-              value={note}
-            />
-          </label>
+        <label className="tools-field">
+          <span className="tools-field-label">Internal note</span>
+          <textarea
+            className="tools-textarea"
+            maxLength={2000}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="Only you can see this. The customer never does."
+            value={note}
+          />
+        </label>
+        <div>
           <button
-            className="tools-btn tools-btn-primary"
+            className="tools-dark-btn"
             disabled={!noteChanged || isSaving}
             onClick={() => save({ internal_note: note.trim() || null })}
             type="button"
@@ -653,39 +639,7 @@ function OrderDrawer({
             Save note
           </button>
         </div>
-
-        <footer className="orders-drawer-foot">
-          {confirmingDelete ? (
-            <>
-              <span className="tools-field-hint">Delete this order for good?</span>
-              <button
-                className="tools-btn tools-btn-secondary tools-btn-sm"
-                onClick={() => setConfirmingDelete(false)}
-                type="button"
-              >
-                Keep
-              </button>
-              <button
-                className="tools-btn tools-btn-destructive tools-btn-sm"
-                disabled={isSaving}
-                onClick={remove}
-                type="button"
-              >
-                Delete
-              </button>
-            </>
-          ) : (
-            <button
-              className="tools-btn tools-btn-secondary tools-btn-sm"
-              onClick={() => setConfirmingDelete(true)}
-              type="button"
-            >
-              <Trash2 size={14} />
-              Delete order
-            </button>
-          )}
-        </footer>
-      </aside>
+      </div>
     </div>
   );
 }
@@ -709,29 +663,44 @@ function CopyButton({ label, onCopy }: { label: string; onCopy: () => void }) {
 }
 
 const css = `
-.orders-filters { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.orders-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow-x: auto; }
-.orders-table { border-collapse: collapse; font-size: 12.5px; min-width: 920px; width: 100%; }
-.orders-table th { border-bottom: 1px solid var(--border); color: var(--faint); font-size: 10.5px; font-weight: 850; letter-spacing: .8px; padding: 11px 14px; text-align: left; text-transform: uppercase; white-space: nowrap; }
-.orders-table td { border-bottom: 1px solid var(--border); color: var(--muted); padding: 11px 14px; vertical-align: middle; white-space: nowrap; }
-.orders-table tbody tr { cursor: pointer; transition: background .18s ease; }
-.orders-table tbody tr:hover { background: var(--panel-hover); }
-.orders-table tbody tr:last-child td { border-bottom: 0; }
-.orders-number { background: none; border: 0; color: var(--app-primary-text); cursor: pointer; font-weight: 850; padding: 0; }
-.orders-number:focus-visible { border-radius: 4px; box-shadow: 0 0 0 3px var(--app-primary-ring); outline: none; }
+/* Orders use the Tools master-detail classes (tools-split / tools-pane-*);
+   these are the orders-only pieces. */
+.orders-pane-list { flex-basis: 320px; }
+.orders-pane-icon { align-items: center; background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-muted); cursor: pointer; display: inline-flex; height: 32px; justify-content: center; width: 32px; }
+.orders-pane-icon:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
+.orders-pane-icon:disabled { cursor: not-allowed; opacity: .4; }
+.orders-pane-filters { display: grid; gap: 8px; padding-top: 12px; }
+.orders-pane-search { align-items: center; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-subtle); display: flex; gap: 7px; height: 34px; padding: 0 10px; }
+.orders-pane-search:focus-within { border-color: var(--app-primary); }
+.orders-pane-search input { background: transparent; border: 0; color: var(--app-text); font-size: 13px; min-width: 0; outline: none; width: 100%; }
+.orders-pane-search input::placeholder { color: var(--app-subtle); }
+.orders-pane-row { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.orders-pane-select { background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); font-size: 12.5px; height: 32px; min-width: 0; outline: none; padding: 0 6px; width: 100%; }
+.orders-pane-select option { background: var(--app-surface); }
+.orders-pane-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-muted); cursor: pointer; display: flex; gap: 10px; min-height: 50px; padding: 6px 10px; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
+.orders-pane-item:hover { background: var(--app-hover); color: var(--app-text); }
+.orders-pane-item.is-active { background: var(--app-hover-2); color: var(--app-text); }
+.orders-pane-item-body { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.orders-pane-item-top { align-items: baseline; display: flex; gap: 8px; min-width: 0; }
+.orders-pane-item-name { color: var(--app-text); flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orders-pane-item-time { color: var(--app-faint); flex: 0 0 auto; font-size: 11px; white-space: nowrap; }
+.orders-pane-item-sub { color: var(--app-subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The accent classes paint a soft background; a dot wants the solid colour. */
+.orders-pane-dot { background: currentColor !important; border: 0; border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
+.orders-pager { align-items: center; border-top: 1px solid var(--app-border); display: flex; gap: 8px; justify-content: space-between; margin-top: auto; padding-top: 10px; }
+.orders-pane-back { display: none; }
+.orders-status-line { align-items: center; background: none !important; border: 0; display: inline-flex; font-weight: 600; gap: 5px; }
+.orders-detail-body { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+.orders-status-field { max-width: 260px; }
+.orders-confirm { align-self: center; color: var(--app-rose-text); font-size: 12.5px; font-weight: 600; }
+.orders-outline-btn { align-items: center; background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 600; height: 36px; padding: 0 12px; }
+.orders-outline-btn:hover:not(:disabled) { background: var(--app-hover); }
+.orders-outline-btn.is-danger { border-color: var(--app-rose-border); color: var(--app-rose-text); }
+.orders-outline-btn.is-danger:hover:not(:disabled) { background: var(--app-rose-soft); }
+.orders-outline-btn:disabled { cursor: not-allowed; opacity: .5; }
+.orders-detail .tools-dark-btn { text-decoration: none; }
 .orders-strong { color: var(--text); font-weight: 750; }
-.orders-truncate { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
-.orders-date { color: var(--subtle); }
-.orders-status { border: 1px solid; border-radius: 999px; display: inline-flex; font-size: 11px; font-weight: 800; line-height: 1; padding: 5px 8px; white-space: nowrap; }
-.orders-card { min-height: 170px; }
 .orders-empty-link { margin-top: 18px; text-decoration: none; }
-.orders-pager { align-items: center; display: flex; gap: 10px; justify-content: center; }
-.orders-drawer-overlay { animation: tools-fade-in .16s ease; background: var(--app-overlay); inset: 0; position: fixed; z-index: 120; }
-.orders-drawer { animation: orders-drawer-in .2s ease; background: var(--surface-2); border-left: 1px solid var(--border-strong); bottom: 0; box-shadow: -20px 0 60px var(--app-shadow-color); display: flex; flex-direction: column; max-width: 460px; position: absolute; right: 0; top: 0; width: 100%; }
-.orders-drawer-head { align-items: flex-start; border-bottom: 1px solid var(--border); display: flex; gap: 12px; justify-content: space-between; padding: 16px 18px; }
-.orders-drawer-body { display: flex; flex: 1 1 auto; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; padding: 18px; }
-.orders-drawer-foot { align-items: center; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); }
-.orders-drawer-foot .tools-field-hint { margin-right: auto; }
 .orders-facts { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
 .orders-fact { display: grid; gap: 4px; min-width: 0; }
 .orders-fact dd { font-size: 13px; margin: 0; overflow-wrap: anywhere; }
@@ -742,12 +711,56 @@ const css = `
 .orders-text { font-size: 13px; line-height: 1.55; margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .orders-items { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .orders-items li { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; display: grid; font-size: 13px; gap: 2px; padding: 8px 11px; }
-@keyframes orders-drawer-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.orders-export-btn { font-size: 12.5px; font-weight: 600; gap: 6px; padding: 0 10px; width: auto; }
+.orders-search-row { display: flex; gap: 8px; min-width: 0; }
+.orders-search-row .orders-pane-search { flex: 1 1 auto; min-width: 0; }
+.orders-filters-btn { display: none; }
+.orders-more-filters { display: grid; gap: 8px; }
+.orders-date-field { display: grid; gap: 4px; min-width: 0; }
+.orders-date-label { color: var(--app-subtle); font-size: 11px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+.orders-list-empty { display: none; }
 @media (max-width: 900px) {
-  .orders-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .orders-pane-back { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; margin-bottom: 12px; padding: 0; }
+  .orders-pane-search input, .orders-pane-select { font-size: 16px; }
+  /* A page title like "All Agents", with a labelled Export button. */
+  .orders-pane-list .tools-pane-head { border-bottom: 0; padding-bottom: 4px; }
+  .orders-pane-list .tools-pane-head > svg { display: none; }
+  .orders-pane-list .tools-pane-title { font-size: 20px; font-weight: 600; letter-spacing: -.2px; }
+  .orders-export-btn { border-radius: 10px; font-size: 13.5px; height: 38px; padding: 0 12px; }
+  /* Every control the same 40px height and look. */
+  .orders-pane-search, .orders-pane-select { background: var(--app-surface); border-radius: 10px; height: 40px; }
+  .orders-pane-search { padding: 0 12px; }
+  .orders-pane-select { padding: 0 10px; }
+  .orders-filters-btn {
+    align-items: center;
+    background: var(--app-surface);
+    border: 1px solid var(--app-border-strong);
+    border-radius: 10px;
+    color: var(--app-text);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 6px;
+    height: 40px;
+    padding: 0 12px;
+  }
+  .orders-filters-btn:hover { background: var(--app-hover); }
+  .orders-filters-btn[aria-expanded="true"], .orders-filters-btn.is-on { border-color: var(--app-primary); color: var(--app-primary-text, var(--app-text)); }
+  .orders-filters-count { background: var(--app-primary); border-radius: 999px; color: var(--app-on-accent, #fff); font-size: 11px; font-weight: 700; line-height: 1; min-width: 18px; padding: 3px 6px; text-align: center; }
+  .orders-more-filters:not([data-open]) { display: none; }
+  .orders-more-filters { gap: 10px; padding-top: 2px; }
+  /* Empty list: a centred message instead of a line in the corner. */
+  .orders-empty-note { display: none; }
+  .orders-list-empty { align-items: center; display: flex; flex-direction: column; padding: 56px 20px 32px; text-align: center; }
+  .orders-list-empty-icon { align-items: center; background: var(--app-hover-2); border: 1px solid var(--app-border); border-radius: 14px; color: var(--app-primary-light, var(--app-text)); display: inline-flex; height: 52px; justify-content: center; margin-bottom: 14px; width: 52px; }
+  .orders-list-empty-title { color: var(--app-text); font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+  .orders-list-empty-copy { color: var(--app-subtle); font-size: 13.5px; line-height: 1.5; margin: 0; max-width: 300px; }
+  .orders-list-empty .orders-empty-link { background: var(--app-primary); color: var(--app-on-accent, #fff); height: 40px; }
 }
 @media (max-width: 640px) {
-  .orders-drawer { border-left: 0; max-width: none; }
   .orders-facts { grid-template-columns: minmax(0, 1fr); }
 }
 `;

@@ -1,4 +1,4 @@
-import { serverFetch, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter, type Workspace } from "./api";
 
 // Wire types mirroring the Go server's Tool model (see server/internal/models/
 // tool.go). A tool is one action an agent can take while a call is running; it
@@ -178,14 +178,23 @@ export class ToolError extends Error {
   }
 }
 
+// routed sends a voice-workspace request to the Go server, whose tools
+// (voice_tools) live under /v1/dashboard/voice/tools; chat requests go to the
+// chat server as written.
+function routed(path: string, workspace: Workspace): string {
+  if (workspace !== "voice") return path;
+  return voiceServerURL(path.replace(/^\/v1\/dashboard\/tools/, "/v1/dashboard/voice/tools"));
+}
+
 async function request<T>(
   path: string,
   init: RequestInit | undefined,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<T> {
   let response: Response;
   try {
-    response = await serverFetch(path, init, getToken);
+    response = await serverFetch(routed(path, workspace), init, getToken);
   } catch {
     throw new ToolError("Could not connect. Check your internet and try again.", 0);
   }
@@ -205,9 +214,9 @@ async function request<T>(
   return envelope.data;
 }
 
-// Dashboard tool routes use the signed-in user's Clerk session, the same split
-// the agents and knowledge base routes use to keep /v1/tools API-key-only for
-// external callers.
+// Dashboard tool routes use the signed-in user's Clerk session. Every function
+// takes the workspace last: chat tools and voice tools are different rows on
+// different servers.
 
 export type ListToolsOptions = {
   page?: number;
@@ -220,27 +229,34 @@ export type ListToolsOptions = {
 // since the dashboard asks for a single large page.
 export function listTools(
   getToken: AuthTokenGetter,
-  options: ListToolsOptions = {}
+  options: ListToolsOptions = {},
+  workspace: Workspace = "chat"
 ): Promise<ApiTool[]> {
   const query = new URLSearchParams({
     page: String(options.page ?? 1),
     limit: String(options.limit ?? 200),
   });
   if (options.type) query.set("type", options.type);
-  return request<ApiTool[]>(`/v1/dashboard/tools?${query.toString()}`, undefined, getToken);
+  return request<ApiTool[]>(`/v1/dashboard/tools?${query.toString()}`, undefined, getToken, workspace);
 }
 
-export function getTool(toolId: string, getToken: AuthTokenGetter): Promise<ApiTool> {
+export function getTool(
+  toolId: string,
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
+): Promise<ApiTool> {
   return request<ApiTool>(
     `/v1/dashboard/tools/${encodeURIComponent(toolId)}`,
     undefined,
-    getToken
+    getToken,
+    workspace
   );
 }
 
 export function createTool(
   payload: CreateToolPayload,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiTool> {
   return request<ApiTool>(
     "/v1/dashboard/tools",
@@ -249,14 +265,16 @@ export function createTool(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     },
-    getToken
+    getToken,
+    workspace
   );
 }
 
 export function updateTool(
   toolId: string,
   payload: UpdateToolPayload,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ApiTool> {
   return request<ApiTool>(
     `/v1/dashboard/tools/${encodeURIComponent(toolId)}`,
@@ -265,18 +283,21 @@ export function updateTool(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     },
-    getToken
+    getToken,
+    workspace
   );
 }
 
 export function deleteTool(
   toolId: string,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<{ id: string; deleted: boolean }> {
   return request<{ id: string; deleted: boolean }>(
     `/v1/dashboard/tools/${encodeURIComponent(toolId)}`,
     { method: "DELETE" },
-    getToken
+    getToken,
+    workspace
   );
 }
 
@@ -308,7 +329,8 @@ export function testTool(
   toolId: string,
   args: Record<string, unknown>,
   apiRequest: ToolApiRequestConfig | undefined,
-  getToken: AuthTokenGetter
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
 ): Promise<ToolTestResult> {
   return request<ToolTestResult>(
     `/v1/dashboard/tools/${encodeURIComponent(toolId)}/test`,
@@ -317,7 +339,8 @@ export function testTool(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ arguments: args, api_request: apiRequest }),
     },
-    getToken
+    getToken,
+    workspace
   );
 }
 

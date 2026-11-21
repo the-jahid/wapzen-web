@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { preconnect } from "react-dom";
 
 import { AccountBlockedScreen } from "@/components/nav/AccountBlockedScreen";
-import { FirstAgentGate } from "@/components/nav/FirstAgentGate";
 import { MaintenanceScreen } from "@/components/nav/MaintenanceScreen";
 import { SignedOutGate } from "@/components/nav/SignedOutGate";
 import { VoiceComingSoonGate } from "@/components/nav/VoiceComingSoonGate";
@@ -35,9 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       <SignedOutGate>
-        <FirstAgentGate>
-          <VoiceComingSoonGate>{children}</VoiceComingSoonGate>
-        </FirstAgentGate>
+        <VoiceComingSoonGate>{children}</VoiceComingSoonGate>
       </SignedOutGate>
       <MaintenanceScreen />
       <AccountBlockedScreen />

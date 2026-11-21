@@ -1,4 +1,4 @@
-import { serverFetch, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter } from "./api";
 import type { ApiCall } from "./calls";
 import { OutboundCampaignError, type OutboundCampaignFieldError } from "./outboundCampaigns";
 
@@ -56,7 +56,7 @@ const dashboardPath = "/v1/dashboard/outbound-campaigns";
 async function request<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<Envelope<T>> {
   let response: Response;
   try {
-    response = await serverFetch(path, init, getToken);
+    response = await serverFetch(voiceServerURL(path), init, getToken);
   } catch {
     throw new OutboundCampaignError("Could not connect. Check your internet and try again.", 0);
   }

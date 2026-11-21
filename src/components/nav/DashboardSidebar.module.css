@@ -3,7 +3,7 @@
  * (stacked) is itself the child of the page's flex shell.
  */
 .root {
-  --rail-open: 264px;
+  --rail-open: 240px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   display: contents;
 }
@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 22px 16px;
+  padding: 14px 10px 12px;
   background: var(--app-sidebar);
   color: var(--app-text);
 }
@@ -37,78 +37,106 @@
 }
 
 /* ---------- Brand ---------- */
-.logo { display: flex; align-items: center; gap: 11px; padding: 4px 3px 26px; color: inherit; text-decoration: none; }
-.logo:focus-visible, .navItem:focus-visible, .topbarLogo:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; border-radius: 10px; }
-.logoMark { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 34px; height: 34px; }
-.logoText { display: flex; flex-direction: column; white-space: nowrap; }
-.logoName { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
-.logoTagline { margin-top: -1px; color: var(--app-subtle); font-size: 11px; font-weight: 500; }
+.logo { display: flex; align-items: center; gap: 8px; padding: 2px 6px 14px; color: inherit; text-decoration: none; }
+.logo:focus-visible, .navItem:focus-visible, .topbarLogo:focus-visible, .workspaceOption:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; border-radius: 8px; }
+.logoMark { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 26px; height: 26px; }
+.logoName { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; white-space: nowrap; }
+
+/* ---------- Workspace card ---------- */
+.workspace {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  margin-bottom: 14px;
+  padding: 3px;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
+}
+.workspaceOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--app-subtle);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.workspaceOption svg { flex-shrink: 0; }
+.workspaceOption span { overflow: hidden; text-overflow: ellipsis; }
+.workspaceOption:hover { background: var(--app-hover); color: var(--app-text); }
+.workspaceOptionActive,
+.workspaceOptionActive:hover { background: var(--app-primary); color: var(--app-on-accent, #fff); }
 
 /* ---------- Navigation ---------- */
-.kicker { padding: 4px 11px 8px; color: var(--app-faint); font-size: 10.5px; font-weight: 700; letter-spacing: 0.9px; text-transform: uppercase; white-space: nowrap; }
-.nav { display: flex; flex-direction: column; gap: 3px; }
+.nav { display: flex; flex-direction: column; gap: 14px; }
+.navGroup { display: flex; flex-direction: column; gap: 2px; }
+.kicker { padding: 2px 8px 6px; color: var(--app-faint); font-size: 11.5px; font-weight: 500; letter-spacing: 0.4px; text-transform: uppercase; white-space: nowrap; }
 .navItem {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 9px;
   width: 100%;
-  padding: 9px 11px;
+  min-height: 34px;
+  padding: 7px 8px;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 7px;
   color: var(--app-nav);
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .navItem:hover { background: var(--app-hover); color: var(--app-text-soft); }
-.navItem[data-active] { background: var(--app-hover-3); box-shadow: inset 0 0 0 1px var(--app-border-strong); color: var(--app-text-strong); font-weight: 700; }
-.navIcon { position: relative; display: flex; flex-shrink: 0; justify-content: center; width: 18px; }
-.navLabel { min-width: 0; }
+.navItem[data-active] { background: var(--app-hover-3); color: var(--app-text-strong); font-weight: 600; }
+.navIcon { position: relative; display: flex; flex-shrink: 0; justify-content: center; width: 16px; }
+.navLabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .badge { margin-left: auto; padding: 1px 7px; border-radius: 20px; background: var(--app-primary); color: var(--app-on-accent); font-size: 10.5px; font-weight: 700; }
 
 .menuButton { position: relative; }
 .menuDot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--app-primary); box-shadow: 0 0 0 2px var(--app-bg); }
 
 /* ---------- Footer ---------- */
-.footer { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 18px; }
-.userCard {
+.footer { display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 18px; }
+
+/* Bordered rows like Retell's "Free trial" and account cards. The help row
+   keeps WhatsApp's own green mark so it reads as "WhatsApp" in any accent. */
+.supportCard, .userCard {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 5px 10px 5px 5px;
+  min-height: 40px;
+  padding: 6px 10px;
   overflow: hidden;
   border: 1px solid var(--app-border);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--app-surface);
-}
-.userText { display: flex; flex-direction: column; min-width: 0; }
-.userName, .userEmail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.userName { font-size: 12.5px; font-weight: 700; }
-.userEmail { margin-top: 1px; color: var(--app-subtle); font-size: 11.5px; }
-
-/* WhatsApp's own green, so the help link reads as "WhatsApp" in either accent. */
-.supportCard {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 11px;
-  border: 1px solid rgba(37, 211, 102, 0.35);
-  border-radius: 12px;
-  background: rgba(37, 211, 102, 0.08);
   color: var(--app-text);
   text-decoration: none;
-  transition: background 0.18s ease, border-color 0.18s ease;
 }
-.supportCard:hover { background: rgba(37, 211, 102, 0.14); border-color: rgba(37, 211, 102, 0.55); }
+.supportCard { transition: background 0.18s ease, border-color 0.18s ease; }
+.supportCard:hover { background: var(--app-hover); border-color: var(--app-border-strong); }
 .supportCard:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
-.supportIcon { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 9px; background: #25d366; color: #fff; }
-.supportText { display: flex; flex-direction: column; min-width: 0; }
-.supportTitle { font-size: 12.5px; font-weight: 700; }
-.supportHint { margin-top: 1px; color: var(--app-subtle); font-size: 11.5px; }
+.supportIcon { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: #25d366; color: #fff; }
+.supportTitle { font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+.userCard { padding-left: 8px; }
+.userEmail { min-width: 0; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.footerRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* The theme switch fills the row (lining up with the cards above it) and its
+   three buttons share the width evenly. */
+.themeToggle { flex: 1 1 auto; min-width: 0; }
 
 .iconButton {
   display: inline-flex;
@@ -146,7 +174,8 @@
 .topbarLogo { display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none; }
 .topbarName { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; }
 .topbarActions { display: flex; align-items: center; gap: 8px; }
-.supportIconButton { border-color: rgba(37, 211, 102, 0.45); background: #25d366; color: #fff; }
+.topbarStart { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.modeSwitchButton { width: auto; gap: 6px; padding: 0 12px; font-family: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; }.supportIconButton { border-color: rgba(37, 211, 102, 0.45); background: #25d366; color: #fff; }
 .supportIconButton:hover { background: #1fb956; color: #fff; }
 
 .backdrop {
@@ -251,4 +280,38 @@
 
 @media (prefers-reduced-motion: reduce) {
   .navItem, .drawer, .backdrop, .tab { transition: none; }
+}
+
+/* ---------- Desktop: the page in an inset panel (Retell) ---------- */
+/* Beside the rail, every dashboard page's <main> sits in a rounded panel set
+   into the sidebar's colour, and the rail loses its divider. The root is
+   `display: contents`, so its parent is the page shell and the <main> is its
+   sibling; these selectors outrank each page's own .xxx-main rules. */
+@media (min-width: 901px) {
+  *:has(> .root[data-stack="900"]) { background: var(--app-sidebar); }
+  .root[data-stack="900"] .rail .panel { border-right-color: transparent; }
+  .root[data-stack="900"] ~ main {
+    box-sizing: border-box;
+    height: calc(100vh - 16px);
+    height: calc(100dvh - 16px);
+    margin: 8px 8px 8px 0;
+    overflow: auto;
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    background: var(--app-bg);
+  }
+}
+@media (min-width: 981px) {
+  *:has(> .root[data-stack="980"]) { background: var(--app-sidebar); }
+  .root[data-stack="980"] .rail .panel { border-right-color: transparent; }
+  .root[data-stack="980"] ~ main {
+    box-sizing: border-box;
+    height: calc(100vh - 16px);
+    height: calc(100dvh - 16px);
+    margin: 8px 8px 8px 0;
+    overflow: auto;
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    background: var(--app-bg);
+  }
 }

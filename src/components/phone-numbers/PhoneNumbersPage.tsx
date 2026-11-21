@@ -6,10 +6,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
-import * as m from "motion/react-m";
-import { LazyLayoutMotion } from "@/components/motion/LazyLayoutMotion";
 import {
   type WorkspaceMode,
+  dashboardHref,
   useWorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
@@ -48,7 +47,6 @@ type IconName =
   | "grid"
   | "agents"
   | "phone"
-  | "phoneOut"
   | "demo"
   | "chat"
   | "calendar"
@@ -61,6 +59,7 @@ type IconName =
   | "wrench"
   | "plus"
   | "refresh"
+  | "link"
   | "logOut"
   | "search"
   | "tag"
@@ -77,25 +76,20 @@ type IconName =
   | "hash";
 
 
-type BrowseView = "list" | "grid";
-
-type CallDirection = "inbound" | "outbound" | "both";
 
 type AssignedAgent = {
   id: string;
   kind: "voice" | "chat";
   name: string;
-  direction: CallDirection;
   phoneNumberId: string | null;
   status: string;
 };
 
 type PhoneAssignments = {
-  inbound: AssignedAgent | null;
-  outbound: AssignedAgent | null;
+  voice: AssignedAgent | null;
 };
 
-type AssignableDirection = "inbound" | "outbound" | "chat";
+type AssignableDirection = "voice" | "chat";
 
 
 // A login that ended is "disconnected" whichever way it went; failed and expired
@@ -139,14 +133,6 @@ function iconPaths(name: IconName): ReactNode {
       );
     case "phone":
       return <path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.6A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.7 2.7a2 2 0 01-.5 2.1L8.1 9.9a16 16 0 006 6l1.4-1.2a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z" />;
-    case "phoneOut":
-      return (
-        <>
-          <path d="M16 8l5-5" />
-          <path d="M21 3h-4M21 3v4" />
-          <path d="M21 16.5v3a2 2 0 01-2.2 2 19.5 19.5 0 01-8.5-3 19.2 19.2 0 01-6-6 19.5 19.5 0 01-3-8.5A2 2 0 013.5 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L9.5 11.5a16 16 0 006 6l1.1-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.6 2z" />
-        </>
-      );
     case "demo":
       return (
         <>
@@ -218,6 +204,13 @@ function iconPaths(name: IconName): ReactNode {
           <path d="M4 4v6h6" />
           <path d="M20 20v-6h-6" />
           <path d="M20 9a8 8 0 00-13.5-3L4 10M4 15a8 8 0 0013.5 3L20 14" />
+        </>
+      );
+    case "link":
+      return (
+        <>
+          <path d="M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.7 1.7" />
+          <path d="M14 11a5 5 0 00-7.5-.5l-3 3a5 5 0 007 7l1.7-1.7" />
         </>
       );
     case "logOut":
@@ -372,7 +365,10 @@ const css = `
 .phone-link-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; }
 .phone-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .phone-content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 32px; }
-.phone-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.phone-browse { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+/* Search in the Retell-style header, right of the title. */
+.phone-browse .phone-search-wrap { flex: 0 1 300px; max-width: none; min-width: 0; width: 300px; }
+@media (max-width: 640px) { .phone-browse .phone-search-wrap { flex: 1 1 100%; width: auto; } }
 .phone-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .phone-toolbar .phone-search-wrap { flex: 1 1 240px; margin-bottom: 0; max-width: 420px; }
 .phone-count {
@@ -646,7 +642,7 @@ const css = `
 }
 .phone-add-label { font-size: 13.5px; font-weight: 800; }
 .phone-add-copy { color: var(--faint); font-size: 11.5px; max-width: 210px; }
-.phone-detail-layout { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.phone-detail-layout { display: flex; flex-direction: column; gap: 14px; width: 100%; }
 .phone-back {
   align-items: center;
   background: none;
@@ -1101,6 +1097,149 @@ const css = `
 }
 .phone-modal-close:hover { color: var(--app-text-strong); }
 /* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
+/* Retell-style master-detail: a list pane of numbers beside the open one. */
+.phone-main { min-height: 100vh; }
+.phone-split { display: flex; flex: 1; min-height: 100%; min-width: 0; }
+.phone-pane-list { border-right: 1px solid var(--border); display: flex; flex: 0 0 290px; flex-direction: column; min-width: 0; padding: 16px; }
+.phone-pane-head { align-items: center; border-bottom: 1px solid var(--border); color: var(--text); display: flex; gap: 10px; padding: 0 2px 14px; }
+.phone-pane-title { flex: 1; font-size: 14.5px; font-weight: 600; margin: 0; }
+.phone-pane-add {
+  align-items: center;
+  background: var(--app-text-strong, var(--text));
+  border: 0;
+  border-radius: 8px;
+  color: var(--bg);
+  cursor: pointer;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  transition: opacity .16s ease;
+  width: 32px;
+}
+.phone-pane-add:hover:not(:disabled) { opacity: .85; }
+.phone-pane-add:disabled { cursor: not-allowed; opacity: .4; }
+.phone-pane-items { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; padding-top: 12px; }
+.phone-pane-item {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--muted);
+  display: flex;
+  font-size: 14px;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  text-decoration: none;
+  transition: background .16s ease, color .16s ease;
+}
+.phone-pane-item > svg { color: var(--text); flex-shrink: 0; }
+.phone-pane-item:hover { background: var(--app-hover); color: var(--text); }
+.phone-pane-item.is-active { background: var(--app-hover-2); color: var(--text); }
+.phone-pane-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phone-pane-item-dot { border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
+.phone-pane-item-dot.phone-status-connected { background: var(--green); }
+.phone-pane-item-dot.phone-status-pending { background: var(--amber); }
+.phone-pane-item-dot.phone-status-failed { background: var(--rose); }
+.phone-pane-item-dot.phone-status-neutral { background: var(--faint); }
+.phone-pane-note { color: var(--subtle); display: grid; font-size: 13px; gap: 10px; justify-items: start; margin: 0; padding: 6px 4px; }
+.phone-pane-note p { margin: 0; }
+.phone-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 28px; min-width: 0; padding: 24px 24px 32px; }
+.phone-pane-back { display: none; }
+.phone-detail-top { align-items: flex-start; border-bottom: 1px solid var(--border); display: flex; gap: 16px; justify-content: space-between; padding-bottom: 16px; }
+.phone-detail-title { font-size: 18px; font-weight: 600; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.phone-detail-back { display: none; }
+/* Re-pair shows its link icon only on phones, where the button loses its text. */
+.phone-btn-phone-icon { display: none; }
+.phone-detail-identity { flex: 1 1 auto; min-width: 0; }
+.phone-detail-title-row { align-items: center; display: flex; gap: 10px; min-width: 0; }
+.phone-detail-status-inline { display: none; flex: none; font-size: 12px; font-weight: 600; }
+.phone-detail-line-status { align-items: center; display: inline-flex; gap: 6px; }
+.phone-detail-line { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
+.phone-copy { align-items: center; background: none; border: 0; border-radius: 5px; color: var(--subtle); cursor: pointer; display: inline-flex; height: 20px; justify-content: center; padding: 0; width: 20px; }
+.phone-copy:hover { background: var(--app-hover); color: var(--text); }
+.phone-detail-dot { background: var(--text); border-radius: 50%; height: 4px; margin: 0 4px; width: 4px; }
+.phone-status-line { align-items: center; background: none; display: inline-flex; gap: 5px; }
+.phone-status-line.phone-status-connected { background: none; color: var(--app-green-text); }
+.phone-status-line.phone-status-pending { background: none; color: var(--app-amber-text); }
+.phone-status-line.phone-status-failed { background: none; color: var(--app-rose-text); }
+.phone-status-line.phone-status-neutral { background: none; }
+.phone-detail-buttons { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+.phone-outline-btn {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 6px;
+  height: 36px;
+  justify-content: center;
+  min-width: 36px;
+  white-space: nowrap;
+}
+.phone-outline-btn.has-text { padding: 0 12px; }
+.phone-outline-btn:hover:not(:disabled) { background: var(--app-hover); }
+.phone-outline-btn.is-danger:hover:not(:disabled) { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
+.phone-outline-btn:disabled { cursor: not-allowed; opacity: .5; }
+@media (max-width: 900px) {
+  .phone-split { flex-direction: column; }
+  .phone-pane-list { border-right: 0; flex: 1 1 auto; }
+  .phone-split:not(.has-selection) .phone-pane-detail { display: none; }
+  .phone-split.has-selection .phone-pane-list { display: none; }
+  .phone-pane-detail { gap: 20px; padding: 16px; }
+  .phone-pane-back { align-items: center; color: var(--subtle); display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; text-decoration: none; }
+  /* With a number open, the back link becomes an arrow button in its header,
+     like the agent and knowledge base pages. */
+  .phone-pane-detail:has(> .phone-detail-top) > .phone-pane-back { display: none; }
+  .phone-detail-top { align-items: center; display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
+  .phone-detail-back {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    display: inline-flex;
+    height: 38px;
+    justify-content: center;
+    text-decoration: none;
+    width: 38px;
+  }
+  .phone-detail-back:hover { background: var(--app-hover); }
+  .phone-detail-back:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
+  /* Once linked, the status needs one line, not a square box the size of a QR. */
+  .phone-qr-placeholder.is-status {
+    aspect-ratio: auto;
+    border-style: solid;
+    font-size: 13px;
+    justify-content: flex-start;
+    padding: 10px 14px;
+    text-align: left;
+  }
+}
+/* Phones: back, number and the buttons share one row, like the knowledge
+   base page - refresh, re-pair and disconnect as icon buttons (names in
+   their tooltips). The status sits on the details line under the number.
+   The agent picker loses two of its three frames so it gets the card's
+   whole width. */
+@media (max-width: 640px) {
+  .phone-detail-top { gap: 10px; }
+  .phone-detail-title { font-size: 17px; line-height: 1.25; }
+  .phone-detail-line { gap: 4px; margin-top: 3px; }
+  .phone-detail-line .phone-detail-dot { margin: 0 2px; }
+  .phone-detail-buttons { flex-wrap: nowrap; gap: 6px; }
+  .phone-detail-buttons .phone-outline-btn,
+  .phone-detail-buttons .phone-outline-btn.has-text { border-radius: 10px; height: 38px; min-width: 38px; padding: 0; width: 38px; }
+  .phone-detail-buttons .phone-btn-label { display: none; }
+  .phone-detail-buttons .phone-btn-phone-icon { display: block; }
+  .phone-config-section { gap: 14px; padding: 14px; }
+  .phone-settings-grid > .phone-setting-row { background: none; border: 0; border-radius: 0; padding: 0; }
+  .phone-setting-row { align-items: center; gap: 12px 10px; }
+  .phone-setting-row > .phone-setting-body { display: contents; }
+  .phone-setting-row .phone-assignment-grid { grid-column: 1 / -1; }
+  .phone-setting-copy { margin-top: 0; }
+}
 /* Wide screens: a little more room around the capped content. */
 @media (min-width: 1680px) {
   .phone-content { padding: 28px 40px 36px; }
@@ -1214,14 +1353,13 @@ function statusClass(status: PhoneNumberStatus) {
   return "phone-status-neutral";
 }
 
-function upsertPhoneNumber(current: ApiPhoneNumber[], phoneNumber: ApiPhoneNumber) {
-  return [phoneNumber, ...current.filter((item) => item.id !== phoneNumber.id)];
+// Retell shows ids shortened in the middle; the copy button copies the full id.
+function shortId(id: string) {
+  return id.length > 12 ? `${id.slice(0, 4)}...${id.slice(-3)}` : id;
 }
 
-function voiceAgentCallDirection(agent: ApiAgentResource): CallDirection {
-  const direction = agent.agent?.call_direction;
-  if (direction === "inbound" || direction === "outbound" || direction === "both") return direction;
-  return "both";
+function upsertPhoneNumber(current: ApiPhoneNumber[], phoneNumber: ApiPhoneNumber) {
+  return [phoneNumber, ...current.filter((item) => item.id !== phoneNumber.id)];
 }
 
 function normalizeVoiceAgent(agent: ApiAgentResource): AssignedAgent {
@@ -1229,7 +1367,6 @@ function normalizeVoiceAgent(agent: ApiAgentResource): AssignedAgent {
     id: agent.id,
     kind: "voice",
     name: agent.agent?.name?.trim() || "Unnamed agent",
-    direction: voiceAgentCallDirection(agent),
     phoneNumberId: agent.agent?.phone_number_id ?? null,
     status: agent.agent?.status || "unknown",
   };
@@ -1240,28 +1377,15 @@ function normalizeChatAgent(agent: ApiChatAgent): AssignedAgent {
     id: agent.id,
     kind: "chat",
     name: agent.agent.name.trim() || "Unnamed agent",
-    direction: "both",
     phoneNumberId: agent.agent.phone_number_id ?? null,
     status: agent.agent.status || "unknown",
   };
 }
 
-function agentUsesDirection(agent: AssignedAgent, direction: "inbound" | "outbound") {
-  return agent.direction === "both" || agent.direction === direction;
-}
-
 function phoneAssignments(phoneNumberId: string | null, agents: AssignedAgent[]): PhoneAssignments {
-  if (!phoneNumberId) return { inbound: null, outbound: null };
-
-  const assignedAgents = agents.filter(
-    (agent) => agent.kind === "voice" && agent.phoneNumberId === phoneNumberId
-  );
-  const inbound = assignedAgents.find((agent) => agentUsesDirection(agent, "inbound"));
-  const outbound = assignedAgents.find((agent) => agentUsesDirection(agent, "outbound"));
-
+  if (!phoneNumberId) return { voice: null };
   return {
-    inbound: inbound ?? null,
-    outbound: outbound ?? null,
+    voice: agents.find((agent) => agent.kind === "voice" && agent.phoneNumberId === phoneNumberId) ?? null,
   };
 }
 
@@ -1283,7 +1407,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
   const { mode } = useWorkspaceMode();
-  const [phoneNumbers, setPhoneNumbers, hasCachedNumbers] = useCachedState<ApiPhoneNumber[]>("phone-numbers", []);
+  const [phoneNumbers, setPhoneNumbers, hasCachedNumbers] = useCachedState<ApiPhoneNumber[]>(`phone-numbers:${mode}`, []);
   const [voiceAgents, setVoiceAgents] = useCachedState<ApiAgentResource[]>("voice-agents", []);
   const [chatAgents, setChatAgents] = useCachedState<ApiChatAgent[]>("chat-agents", []);
   // The selected number comes from the URL: /dashboard/phone-numbers/<id>
@@ -1296,17 +1420,16 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
   }, [selectedId]);
   const openNumber = useCallback(
     (id: string, replace = false) => {
-      const href = `/dashboard/phone-numbers/${encodeURIComponent(id)}`;
+      const href = `${dashboardHref("/phone-numbers", mode)}/${encodeURIComponent(id)}`;
       if (replace) router.replace(href);
       else router.push(href);
     },
-    [router]
+    [mode, router]
   );
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<BrowseView>("list");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [label, setLabel] = useState("");
   const [activeLogin, setActiveLogin] = useState<ApiPhoneNumber | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -1335,19 +1458,17 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
     () => mode === "chat" ? chatAgents.map(normalizeChatAgent) : voiceAgents.map(normalizeVoiceAgent),
     [chatAgents, mode, voiceAgents]
   );
-  const filteredPhoneNumbers = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return phoneNumbers;
-    return phoneNumbers.filter((item) =>
-      [displayName(item), displayNumber(item), item.id, statusLabels[item.status]]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [phoneNumbers, query]);
-  // No selection means the grid, so there is no falling back to the first
-  // number here — an empty selection is what opens the browse view.
-  const selectedPhoneNumber =
-    (selectedId ? phoneNumbers.find((item) => item.id === selectedId) : null) ?? null;
+  // Retell-style master-detail: the bare route opens the first number, a URL
+  // id opens that one (null while it is missing).
+  const selectedPhoneNumber = selectedId
+    ? phoneNumbers.find((item) => item.id === selectedId) ?? null
+    : phoneNumbers[0] ?? null;
+  function copyId(id: string) {
+    void navigator.clipboard?.writeText(id).then(() => {
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500);
+    });
+  }
   const selectedAssignments = useMemo(
     () => phoneAssignments(selectedPhoneNumber?.id ?? null, agents),
     [agents, selectedPhoneNumber?.id]
@@ -1368,7 +1489,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
     const withOpenedNumber = async (rows: ApiPhoneNumber[]) => {
       const openedId = selectedIdRef.current;
       if (!openedId || rows.some((row) => row.id === openedId)) return rows;
-      const opened = await apiGetPhoneNumber(openedId, getToken).catch(() => null);
+      const opened = await apiGetPhoneNumber(openedId, getToken, mode).catch(() => null);
       return opened ? upsertPhoneNumber(rows, opened) : rows;
     };
     (async () => {
@@ -1377,7 +1498,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
       try {
         if (mode === "chat") {
           const [rows, agentRows] = await Promise.all([
-            apiListPhoneNumbers(getToken).then(withOpenedNumber),
+            apiListPhoneNumbers(getToken, mode).then(withOpenedNumber),
             apiListChatAgents(getToken),
           ]);
           if (cancelled) return;
@@ -1385,7 +1506,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
           setChatAgents(agentRows);
         } else {
           const [rows, agentRows] = await Promise.all([
-            apiListPhoneNumbers(getToken).then(withOpenedNumber),
+            apiListPhoneNumbers(getToken, mode).then(withOpenedNumber),
             apiListAgents(getToken),
           ]);
           if (cancelled) return;
@@ -1419,7 +1540,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
     let cancelled = false;
     const poll = async () => {
       try {
-        const updated = await apiGetPhoneNumber(activeLoginID, getToken);
+        const updated = await apiGetPhoneNumber(activeLoginID, getToken, mode);
         if (cancelled) return;
         setActiveLogin(updated);
         setPhoneNumbers((current) => upsertPhoneNumber(current, updated));
@@ -1447,7 +1568,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
       cancelled = true;
       stopPolling();
     };
-  }, [activeLoginID, activeLoginStatus, getToken, setPhoneNumbers]);
+  }, [activeLoginID, activeLoginStatus, getToken, mode, setPhoneNumbers]);
 
   useEffect(() => {
     if (!selectedPendingLoginID || selectedPendingLoginID === activeLoginID) return;
@@ -1455,7 +1576,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
     let cancelled = false;
     const poll = async () => {
       try {
-        const updated = await apiGetPhoneNumber(selectedPendingLoginID, getToken);
+        const updated = await apiGetPhoneNumber(selectedPendingLoginID, getToken, mode);
         if (cancelled) return;
         setPhoneNumbers((current) => upsertPhoneNumber(current, updated));
         if (terminalStatuses.has(updated.status)) {
@@ -1482,7 +1603,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
       cancelled = true;
       stopPolling();
     };
-  }, [activeLoginID, getToken, selectedPendingLoginID, setPhoneNumbers]);
+  }, [activeLoginID, getToken, mode, selectedPendingLoginID, setPhoneNumbers]);
 
   // With a phone number it links by pairing code (the create modal on a phone)
   // rather than by QR.
@@ -1493,8 +1614,8 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
     try {
       const payload = label.trim() ? { label: label.trim() } : {};
       const started = phone
-        ? await apiStartPhoneNumberCodeLogin({ ...payload, phone_number: phone }, getToken)
-        : await apiStartPhoneNumberLogin(payload, getToken);
+        ? await apiStartPhoneNumberCodeLogin({ ...payload, phone_number: phone }, getToken, mode)
+        : await apiStartPhoneNumberLogin(payload, getToken, mode);
       setActiveLogin(started);
       setPhoneNumbers((current) => upsertPhoneNumber(current, started));
       openNumber(started.id);
@@ -1531,8 +1652,8 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
   }
 
   const startCodeLogin = (phone: string) =>
-    replaceLogin((payload) => apiStartPhoneNumberCodeLogin({ ...payload, phone_number: phone }, getToken));
-  const startQrLogin = () => replaceLogin((payload) => apiStartPhoneNumberQrLogin(payload, getToken));
+    replaceLogin((payload) => apiStartPhoneNumberCodeLogin({ ...payload, phone_number: phone }, getToken, mode));
+  const startQrLogin = () => replaceLogin((payload) => apiStartPhoneNumberQrLogin(payload, getToken, mode));
 
   async function disconnect(phone: ApiPhoneNumber) {
     if (disconnectingId) return;
@@ -1542,10 +1663,10 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
 
     setDisconnectingId(phone.id);
     try {
-      await apiLogoutPhoneNumber(phone.id, getToken);
+      await apiLogoutPhoneNumber(phone.id, getToken, mode);
       const remaining = phoneNumbers.filter((item) => item.id !== phone.id);
       setPhoneNumbers(remaining);
-      if (selectedId === phone.id) router.push("/dashboard/phone-numbers");
+      if (selectedId === phone.id) router.push(dashboardHref("/phone-numbers", mode));
       if (activeLogin?.id === phone.id) setActiveLogin(null);
       setNotice({ kind: "success", text: `${displayName(phone)} removed` });
     } catch (error) {
@@ -1590,51 +1711,21 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
         return;
       }
 
-      const current = phoneAssignments(phone.id, agents);
-      const nextInboundId =
-        direction === "inbound" ? nextAgentId || null : current.inbound?.id ?? null;
-      const nextOutboundId =
-        direction === "outbound" ? nextAgentId || null : current.outbound?.id ?? null;
-      const affectedIds = new Set(
-        voiceAgents
-          .filter(
-            (agent) =>
-              agent.agent?.phone_number_id === phone.id ||
-              agent.id === nextAgentId
-          )
-          .map((agent) => agent.id)
+      // A voice number has one agent, which answers its calls and places calls
+      // from it. Clear the current holder before assigning the replacement so
+      // the two writes never hold the number at once.
+      const currentHolders = voiceAgents.filter(
+        (agent) => agent.agent?.phone_number_id === phone.id && agent.id !== nextAgentId
       );
-      const updatedAgents = await Promise.all(
-        [...affectedIds].map((agentId) => {
-          const desiredDirections: Array<"inbound" | "outbound"> = [];
-          if (nextInboundId === agentId) desiredDirections.push("inbound");
-          if (nextOutboundId === agentId) desiredDirections.push("outbound");
-
-          const callDirection: CallDirection | null =
-            desiredDirections.length === 2
-              ? "both"
-              : desiredDirections.length === 1
-                ? desiredDirections[0]
-                : null;
-
-          return apiUpdateAgent(
-            agentId,
-            {
-              agent: callDirection
-                ? {
-                    phone_number_id: phone.id,
-                    call_direction: callDirection,
-                  }
-                : {
-                    phone_number_id: null,
-                  },
-            },
-            getToken
-          );
-        })
-      );
+      const updatedAgents: ApiAgentResource[] = [];
+      for (const holder of currentHolders) {
+        updatedAgents.push(await apiUpdateAgent(holder.id, { agent: { phone_number_id: null } }, getToken));
+      }
+      if (nextAgentId) {
+        updatedAgents.push(await apiUpdateAgent(nextAgentId, { agent: { phone_number_id: phone.id } }, getToken));
+      }
       setVoiceAgents((existing) => upsertVoiceAgents(existing, updatedAgents));
-      setNotice({ kind: "success", text: `${direction === "inbound" ? "Inbound" : "Outbound"} agent updated` });
+      setNotice({ kind: "success", text: "Voice agent updated" });
     } catch (error) {
       if (direction === "chat") setReloadKey((key) => key + 1);
       setNotice({
@@ -1681,7 +1772,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
       setIsRestarting(true);
       try {
         const previousId = selectedPhoneNumber.id;
-        const restarted = await apiRestartPhoneNumberLogin(previousId, getToken);
+        const restarted = await apiRestartPhoneNumberLogin(previousId, getToken, undefined, mode);
         setActiveLogin(restarted);
         // Restarting a login that was never scanned starts a new one — the old
         // one was never a phone number and is gone — so the entry it was shown
@@ -1718,7 +1809,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
 
     setIsRestarting(true);
     try {
-      const restarted = await apiRePairPhoneNumber(selectedPhoneNumber.id, getToken);
+      const restarted = await apiRePairPhoneNumber(selectedPhoneNumber.id, getToken, mode);
       setActiveLogin(restarted);
       setPhoneNumbers((current) => upsertPhoneNumber(current, restarted));
       if (restarted.id !== selectedPhoneNumber.id) openNumber(restarted.id, true);
@@ -1734,53 +1825,200 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
   }
 
   return (
-    <LazyLayoutMotion>
-    <div className={`phone-shell${mode === "chat" ? " app-accent-green" : ""}`}>
+    <div className="phone-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Phone Numbers" stackBelow={900} />
 
       <main className="phone-main">
-        <div className="phone-content">
-          {phoneNumberId ? (
-            <PhoneNumberPageView
-              agents={agents}
-              assigningKey={assigningKey}
-              assignments={selectedAssignments}
-              disconnectingId={disconnectingId}
-              effectiveLoadError={effectiveLoadError}
-              effectiveLoadState={effectiveLoadState}
-              isAuthenticated={isAuthenticated}
-              isFetching={pendingLoadState === "loading"}
-              isRestarting={isRestarting}
-              mode={mode}
-              onAssignAgent={assignAgent}
-              onDisconnect={disconnect}
-              onRePair={rePair}
-              onRequestCode={startCodeLogin}
-              onRequestQr={startQrLogin}
-              onRefresh={refresh}
-              phoneNumber={selectedPhoneNumber}
-            />
-          ) : (
-            <PhoneNumberGrid
-              agents={agents}
-              assigningKey={assigningKey}
-              effectiveLoadError={effectiveLoadError}
-              effectiveLoadState={effectiveLoadState}
-              filteredPhoneNumbers={filteredPhoneNumbers}
-              isAuthenticated={isAuthenticated}
-              mode={mode}
-              onAssignAgent={assignAgent}
-              onCreate={() => setIsCreateOpen(true)}
-              onQueryChange={setQuery}
-              onRetry={refresh}
-              onSelect={(id) => openNumber(id)}
-              onViewChange={setViewMode}
-              phoneNumbers={phoneNumbers}
-              query={query}
-              view={viewMode}
-            />
-          )}
+        <div className={`phone-split${phoneNumberId ? " has-selection" : ""}`}>
+          <aside aria-label="Phone numbers" className="phone-pane-list">
+            <div className="phone-pane-head">
+              <Icon name="phone" size={17} sw={1.8} />
+              <h1 className="phone-pane-title">Phone Numbers</h1>
+              <button
+                aria-label="New Number"
+                className="phone-pane-add"
+                disabled={!isAuthenticated}
+                onClick={() => setIsCreateOpen(true)}
+                title="New Number"
+                type="button"
+              >
+                <Icon name="plus" size={16} sw={2.4} />
+              </button>
+            </div>
+            <nav className="phone-pane-items">
+              {effectiveLoadState === "loading" && phoneNumbers.length === 0 ? (
+                <p className="phone-pane-note">Loading...</p>
+              ) : effectiveLoadState === "error" && phoneNumbers.length === 0 ? (
+                <div className="phone-pane-note">
+                  <p>{effectiveLoadError}</p>
+                  {isAuthenticated ? (
+                    <button className="phone-ghost-btn" onClick={refresh} type="button">
+                      <Icon name="refresh" size={15} />
+                      Try again
+                    </button>
+                  ) : null}
+                </div>
+              ) : phoneNumbers.length === 0 ? (
+                <p className="phone-pane-note">No phone numbers yet.</p>
+              ) : (
+                phoneNumbers.map((item) => {
+                  const isActive = selectedPhoneNumber?.id === item.id;
+                  return (
+                    <Link
+                      aria-current={isActive ? "page" : undefined}
+                      className={`phone-pane-item${isActive ? " is-active" : ""}`}
+                      href={`${dashboardHref("/phone-numbers", mode)}/${encodeURIComponent(item.id)}`}
+                      key={item.id}
+                    >
+                      <Icon name="phone" size={16} sw={1.8} />
+                      <span className="phone-pane-item-name notranslate">{displayName(item)}</span>
+                      <span
+                        className={`phone-pane-item-dot ${statusClass(item.status)}`}
+                        title={statusLabels[item.status]}
+                      />
+                    </Link>
+                  );
+                })
+              )}
+            </nav>
+          </aside>
+
+          <section className="phone-pane-detail">
+            <Link className="phone-pane-back" href={dashboardHref("/phone-numbers", mode)}>
+              <Icon name="back" size={15} sw={2.2} />
+              Phone Numbers
+            </Link>
+            {selectedPhoneNumber ? (
+              <>
+                <header className="phone-detail-top">
+                  <Link aria-label="Back to phone numbers" className="phone-detail-back" href={dashboardHref("/phone-numbers", mode)}>
+                    <Icon name="back" size={16} sw={2.4} />
+                  </Link>
+                  <div className="phone-detail-identity">
+                    <div className="phone-detail-title-row">
+                      <h2 className="phone-detail-title notranslate">{displayName(selectedPhoneNumber)}</h2>
+                      <span className={`phone-status-line phone-detail-status-inline ${statusClass(selectedPhoneNumber.status)}`}>
+                        {selectedPhoneNumber.status === "connected" ? (
+                          <Icon name="check" size={13} sw={2.4} />
+                        ) : (
+                          <span className="phone-dot" />
+                        )}
+                        {statusLabels[selectedPhoneNumber.status]}
+                      </span>
+                    </div>
+                    <div className="phone-detail-line">
+                      <span>ID: {shortId(selectedPhoneNumber.id)}</span>
+                      <button
+                        aria-label="Copy ID"
+                        className="phone-copy"
+                        onClick={() => copyId(selectedPhoneNumber.id)}
+                        title={copiedId === selectedPhoneNumber.id ? "Copied" : "Copy ID"}
+                        type="button"
+                      >
+                        <Icon name={copiedId === selectedPhoneNumber.id ? "check" : "copy"} size={13} />
+                      </button>
+                      <span className="phone-detail-line-status">
+                        <span className="phone-detail-dot" />
+                        <span className={`phone-status-line ${statusClass(selectedPhoneNumber.status)}`}>
+                          {selectedPhoneNumber.status === "connected" ? (
+                            <Icon name="check" size={13} sw={2.4} />
+                          ) : (
+                            <span className="phone-dot" />
+                          )}
+                          {statusLabels[selectedPhoneNumber.status]}
+                        </span>
+                      </span>
+                      <span className="phone-detail-dot phone-detail-wa-dot" />
+                      <span className="phone-detail-wa notranslate">WhatsApp · {displayNumber(selectedPhoneNumber)}</span>
+                      {selectedPhoneNumber.last_connected_at ? (
+                        <>
+                          <span className="phone-detail-dot" />
+                          <span>Last connected {formatShortDate(selectedPhoneNumber.last_connected_at)}</span>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="phone-detail-buttons">
+                    <button
+                      aria-label="Refresh"
+                      className="phone-outline-btn"
+                      disabled={!isAuthenticated || effectiveLoadState === "loading" || isRestarting}
+                      onClick={refresh}
+                      title="Refresh"
+                      type="button"
+                    >
+                      <Icon name="refresh" size={15} />
+                    </button>
+                    {selectedPhoneNumber.status === "connected" ? (
+                      <button
+                        aria-label={isRestarting ? "Re-pairing" : "Re-pair"}
+                        className="phone-outline-btn has-text"
+                        disabled={!isAuthenticated || effectiveLoadState === "loading" || isRestarting}
+                        onClick={rePair}
+                        title="Re-pair"
+                        type="button"
+                      >
+                        <Icon className="phone-btn-phone-icon" name="link" size={15} />
+                        <span className="phone-btn-label">{isRestarting ? "Re-pairing..." : "Re-pair"}</span>
+                      </button>
+                    ) : null}
+                    <button
+                      className="phone-outline-btn has-text is-danger"
+                      disabled={disconnectingId === selectedPhoneNumber.id}
+                      onClick={() => disconnect(selectedPhoneNumber)}
+                      title={rowActionLabel(selectedPhoneNumber, disconnectingId === selectedPhoneNumber.id)}
+                      type="button"
+                    >
+                      <Icon name="logOut" size={15} />
+                      <span className="phone-btn-label">
+                        {rowActionLabel(selectedPhoneNumber, disconnectingId === selectedPhoneNumber.id)}
+                      </span>
+                    </button>
+                  </div>
+                </header>
+
+                <PhoneNumberDetail
+                  agents={agents}
+                  assignments={selectedAssignments}
+                  assigningKey={assigningKey}
+                  effectiveLoadError={effectiveLoadError}
+                  effectiveLoadState={effectiveLoadState}
+                  isAuthenticated={isAuthenticated}
+                  isRestarting={isRestarting}
+                  mode={mode}
+                  onAssignAgent={assignAgent}
+                  onCreate={() => setIsCreateOpen(true)}
+                  onRequestCode={startCodeLogin}
+                  onRequestQr={startQrLogin}
+                  onRetry={refresh}
+                  phoneNumber={selectedPhoneNumber}
+                />
+              </>
+            ) : phoneNumberId ? (
+              <div className="phone-empty-workspace">
+                {pendingLoadState === "loading" ? (
+                  <p>Loading phone number...</p>
+                ) : effectiveLoadState === "error" ? (
+                  <p>{effectiveLoadError}</p>
+                ) : (
+                  <p>This phone number was not found. It may have been removed.</p>
+                )}
+              </div>
+            ) : effectiveLoadState === "ready" && phoneNumbers.length === 0 ? (
+              <div className="phone-empty-workspace">
+                <p>
+                  {mode === "chat"
+                    ? "No phone numbers yet. Pair a WhatsApp number by QR so a chat agent can reply to messages."
+                    : "No phone numbers yet. Pair a WhatsApp number by QR to give your voice agents a line to call and answer on."}
+                </p>
+                <button className="phone-create-btn" disabled={!isAuthenticated} onClick={() => setIsCreateOpen(true)} type="button">
+                  <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
+                  New Number
+                </button>
+              </div>
+            ) : null}
+          </section>
         </div>
       </main>
 
@@ -1801,451 +2039,6 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
         </div>
       ) : null}
     </div>
-    </LazyLayoutMotion>
-  );
-}
-
-// PhoneNumberPageView is one number on its own page: a back link to the
-// list, the number's details and its actions.
-function PhoneNumberPageView({
-  agents,
-  assigningKey,
-  assignments,
-  disconnectingId,
-  effectiveLoadError,
-  effectiveLoadState,
-  isAuthenticated,
-  isFetching,
-  isRestarting,
-  mode,
-  onAssignAgent,
-  onDisconnect,
-  onRePair,
-  onRequestCode,
-  onRequestQr,
-  onRefresh,
-  phoneNumber,
-}: {
-  agents: AssignedAgent[];
-  assigningKey: string | null;
-  assignments: PhoneAssignments;
-  disconnectingId: string | null;
-  effectiveLoadError: string;
-  effectiveLoadState: "loading" | "ready" | "error";
-  isAuthenticated: boolean;
-  // True while the list is still being fetched, even when cached rows are
-  // shown, so a number missing from the cache isn't called "not found" early.
-  isFetching: boolean;
-  isRestarting: boolean;
-  mode: WorkspaceMode;
-  onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
-  onDisconnect: (phoneNumber: ApiPhoneNumber) => void;
-  onRePair: () => void;
-  onRequestCode: (phone: string) => Promise<void>;
-  onRequestQr: () => Promise<void>;
-  onRefresh: () => void;
-  phoneNumber: ApiPhoneNumber | null;
-}) {
-  if (!phoneNumber) {
-    return (
-      <div className="phone-page">
-        <Link className="phone-page-backlink" href="/dashboard/phone-numbers">
-          <Icon name="back" size={15} sw={2.2} />
-          Phone numbers
-        </Link>
-        <div className="phone-empty-workspace">
-          {isFetching ? (
-            <p>Loading phone number...</p>
-          ) : effectiveLoadState === "error" ? (
-            <>
-              <p>{effectiveLoadError}</p>
-              {isAuthenticated ? (
-                <button className="phone-ghost-btn" onClick={onRefresh} type="button">
-                  <Icon name="refresh" size={15} />
-                  Try again
-                </button>
-              ) : null}
-            </>
-          ) : (
-            <p>This phone number was not found. It may have been removed.</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="phone-page">
-      <div className="phone-expandable-card phone-page-card">
-        <>
-          <header className="phone-expandable-head">
-            <Link
-              aria-label="Back to phone numbers"
-              className="phone-expandable-close phone-page-back"
-              href="/dashboard/phone-numbers"
-            >
-              <Icon name="back" size={16} sw={2.2} />
-            </Link>
-            <span className="phone-summary-icon">
-              <Icon name="phone" size={20} />
-            </span>
-            <div className="phone-expandable-identity">
-              <div className="phone-expandable-title notranslate">{displayName(phoneNumber)}</div>
-              <div className="phone-expandable-subtitle notranslate">WhatsApp · {displayNumber(phoneNumber)}</div>
-            </div>
-            <StatusChip compact status={phoneNumber.status} />
-          </header>
-
-          <div className="phone-expandable-body">
-            <PhoneNumberDetail
-              agents={agents}
-              assignments={assignments}
-              assigningKey={assigningKey}
-              effectiveLoadError={effectiveLoadError}
-              effectiveLoadState={effectiveLoadState}
-              isAuthenticated={isAuthenticated}
-              isRestarting={isRestarting}
-              mode={mode}
-              onAssignAgent={onAssignAgent}
-              onCreate={() => undefined}
-              onRequestCode={onRequestCode}
-              onRequestQr={onRequestQr}
-              onRetry={onRefresh}
-              phoneNumber={phoneNumber}
-            />
-          </div>
-
-          <footer className="phone-expandable-actions">
-            <button
-              className="phone-top-btn"
-              disabled={!isAuthenticated || effectiveLoadState === "loading" || isRestarting}
-              onClick={onRefresh}
-              type="button"
-            >
-              <Icon name="refresh" size={15} />
-              Refresh
-            </button>
-            {phoneNumber.status === "connected" ? (
-              <button
-                className="phone-top-btn"
-                disabled={!isAuthenticated || effectiveLoadState === "loading" || isRestarting}
-                onClick={onRePair}
-                type="button"
-              >
-                <Icon name="refresh" size={15} />
-                {isRestarting ? "Re-pairing..." : "Re-pair"}
-              </button>
-            ) : null}
-            <button
-              className="phone-danger-btn"
-              disabled={disconnectingId === phoneNumber.id}
-              onClick={() => onDisconnect(phoneNumber)}
-              type="button"
-            >
-              <Icon name="logOut" size={15} />
-              {rowActionLabel(phoneNumber, disconnectingId === phoneNumber.id)}
-            </button>
-          </footer>
-        </>
-      </div>
-    </div>
-  );
-}
-
-function PhoneNumberGrid({
-  agents,
-  assigningKey,
-  effectiveLoadError,
-  effectiveLoadState,
-  filteredPhoneNumbers,
-  isAuthenticated,
-  mode,
-  onAssignAgent,
-  onCreate,
-  onQueryChange,
-  onRetry,
-  onSelect,
-  onViewChange,
-  phoneNumbers,
-  query,
-  view,
-}: {
-  agents: AssignedAgent[];
-  assigningKey: string | null;
-  effectiveLoadError: string;
-  effectiveLoadState: "loading" | "ready" | "error";
-  filteredPhoneNumbers: ApiPhoneNumber[];
-  isAuthenticated: boolean;
-  mode: WorkspaceMode;
-  onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
-  onCreate: () => void;
-  onQueryChange: (value: string) => void;
-  onRetry: () => void;
-  onSelect: (id: string) => void;
-  onViewChange: (view: BrowseView) => void;
-  phoneNumbers: ApiPhoneNumber[];
-  query: string;
-  view: BrowseView;
-}) {
-  return (
-    <div className="phone-browse">
-      <div className="phone-toolbar">
-        <div className="phone-search-wrap">
-          <span className="phone-search-icon">
-            <Icon name="search" size={16} sw={2.2} />
-          </span>
-          <input
-            aria-label="Search phone numbers"
-            className="phone-search"
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search phone numbers..."
-            type="search"
-            value={query}
-          />
-        </div>
-        <div aria-label="View" className="phone-view-toggle" role="group">
-          <button
-            aria-label="List view"
-            aria-pressed={view === "list"}
-            className={`phone-view-btn${view === "list" ? " is-active" : ""}`}
-            onClick={() => onViewChange("list")}
-            title="List view"
-            type="button"
-          >
-            <Icon name="list" size={16} sw={2.2} />
-          </button>
-          <button
-            aria-label="Grid view"
-            aria-pressed={view === "grid"}
-            className={`phone-view-btn${view === "grid" ? " is-active" : ""}`}
-            onClick={() => onViewChange("grid")}
-            title="Grid view"
-            type="button"
-          >
-            <Icon name="grid" size={16} sw={2.2} />
-          </button>
-        </div>
-        <span className="phone-count">
-          {effectiveLoadState === "loading" && phoneNumbers.length === 0
-            ? "Loading..."
-            : query.trim()
-              ? `${filteredPhoneNumbers.length} of ${phoneNumbers.length}`
-              : `${phoneNumbers.length} ${phoneNumbers.length === 1 ? "number" : "numbers"}`}
-        </span>
-        <button
-          aria-label="New Number"
-          className="phone-create-btn"
-          disabled={!isAuthenticated}
-          onClick={onCreate}
-          type="button"
-        >
-          <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
-          <span className="phone-create-label">New Number</span>
-        </button>
-      </div>
-
-      {effectiveLoadState === "loading" && phoneNumbers.length === 0 ? (
-        <div className="phone-empty-workspace">
-          <p>Loading phone numbers...</p>
-        </div>
-      ) : effectiveLoadState === "error" ? (
-        <div className="phone-empty-workspace">
-          <p>{effectiveLoadError}</p>
-          {isAuthenticated ? (
-            <button className="phone-ghost-btn" onClick={onRetry} type="button">
-              <Icon name="refresh" size={15} />
-              Try again
-            </button>
-          ) : null}
-        </div>
-      ) : phoneNumbers.length === 0 ? (
-        <div className="phone-empty-workspace">
-          <p>
-            {mode === "chat"
-              ? "No phone numbers yet. Pair a WhatsApp number by QR so a chat agent can reply to messages."
-              : "No phone numbers yet. Pair a WhatsApp number by QR to give your voice agents a line to call and answer on."}
-          </p>
-          <button className="phone-create-btn" disabled={!isAuthenticated} onClick={onCreate} type="button">
-            <Icon name="plus" size={14} stroke="#fff" sw={2.4} />
-            New Number
-          </button>
-        </div>
-      ) : filteredPhoneNumbers.length === 0 ? (
-        <div className="phone-empty-workspace">
-          <p>No phone numbers match &ldquo;{query}&rdquo;.</p>
-        </div>
-      ) : view === "list" ? (
-        <div className="phone-list">
-          {filteredPhoneNumbers.map((item) => (
-            <PhoneNumberRow
-              agents={agents}
-              assigningKey={assigningKey}
-              isAuthenticated={isAuthenticated}
-              key={item.id}
-              mode={mode}
-              onAssignAgent={onAssignAgent}
-              onSelect={() => onSelect(item.id)}
-              phoneNumber={item}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="phone-grid">
-          {filteredPhoneNumbers.map((item) => (
-            <PhoneNumberCard
-              agents={agents}
-              assigningKey={assigningKey}
-              isAuthenticated={isAuthenticated}
-              key={item.id}
-              mode={mode}
-              onAssignAgent={onAssignAgent}
-              onSelect={() => onSelect(item.id)}
-              phoneNumber={item}
-            />
-          ))}
-
-          <button
-            className="phone-add-card"
-            disabled={!isAuthenticated}
-            onClick={onCreate}
-            type="button"
-          >
-            <span className="phone-add-icon">
-              <Icon name="plus" size={20} sw={2.4} />
-            </span>
-            <span className="phone-add-label">New phone number</span>
-            <span className="phone-add-copy">Pair another WhatsApp number by QR.</span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-type BrowseItemProps = {
-  agents: AssignedAgent[];
-  assigningKey: string | null;
-  isAuthenticated: boolean;
-  mode: WorkspaceMode;
-  onAssignAgent: (phone: ApiPhoneNumber, direction: AssignableDirection, agentId: string) => void;
-  onSelect: () => void;
-  phoneNumber: ApiPhoneNumber;
-};
-
-function PhoneNumberCard({ onSelect, ...rest }: BrowseItemProps) {
-  const { phoneNumber } = rest;
-
-  return (
-    <m.div className="phone-card-item" layoutId={`phone-number-${phoneNumber.id}`}>
-      <span className="phone-card-top">
-        <span className="phone-card-avatar">
-          <Icon name="phone" size={18} />
-        </span>
-        <StatusChip compact status={phoneNumber.status} />
-      </span>
-      <span className="phone-card-name notranslate">{displayName(phoneNumber)}</span>
-      <span className="phone-card-desc notranslate">WhatsApp - {displayNumber(phoneNumber)}</span>
-      <span className="phone-card-agents">
-        <AgentChipPickers {...rest} />
-      </span>
-      <span className="phone-card-foot">
-        <span className="phone-card-foot-meta">
-          <Icon name="message" size={11} />
-          WhatsApp
-        </span>
-        <span className="phone-card-foot-meta phone-card-foot-time" title="Last connected">
-          <Icon name="clock" size={11} />
-          {formatShortDate(phoneNumber.last_connected_at)}
-        </span>
-      </span>
-      <OpenOverlay label={displayName(phoneNumber)} onSelect={onSelect} />
-    </m.div>
-  );
-}
-
-function PhoneNumberRow({ onSelect, ...rest }: BrowseItemProps) {
-  const { phoneNumber } = rest;
-
-  return (
-    <m.div className="phone-row" layoutId={`phone-number-${phoneNumber.id}`}>
-      <span className="phone-card-avatar">
-        <Icon name="phone" size={18} />
-      </span>
-      <span className="phone-row-identity">
-        <span className="phone-row-name notranslate">{displayName(phoneNumber)}</span>
-        <span className="phone-row-sub notranslate">WhatsApp - {displayNumber(phoneNumber)}</span>
-      </span>
-      <span className="phone-row-agents">
-        <AgentChipPickers {...rest} />
-      </span>
-      <span className="phone-row-time" title="Last connected">
-        <Icon name="clock" size={12} />
-        {formatShortDate(phoneNumber.last_connected_at)}
-      </span>
-      <StatusChip compact status={phoneNumber.status} />
-      <OpenOverlay label={displayName(phoneNumber)} onSelect={onSelect} />
-    </m.div>
-  );
-}
-
-// OpenOverlay is the whole-card click target. It is a real button stretched
-// over the card rather than a card-shaped <button>, so the agent pickers can
-// sit inside without nesting one button in another; it is painted below them.
-function OpenOverlay({ label, onSelect }: { label: string; onSelect: () => void }) {
-  return (
-    <button aria-label={`Open ${label}`} className="phone-open-overlay notranslate" onClick={onSelect} type="button" />
-  );
-}
-
-// AgentChipPickers is the inbound/outbound pair both the card and the row
-// show. Each chip is the compact form of the detail view's agent select, so a
-// number can be assigned without opening it; an unassigned direction still
-// gets a chip so the gap stays visible at a glance.
-function AgentChipPickers({
-  agents,
-  assigningKey,
-  isAuthenticated,
-  mode,
-  onAssignAgent,
-  phoneNumber,
-}: Omit<BrowseItemProps, "onSelect">) {
-  const assignments = phoneAssignments(phoneNumber.id, agents);
-  const assignedChatAgent = chatAssignment(phoneNumber.id, agents);
-  // Assignment only sticks on a live pairing, which is the same rule the
-  // detail view's assignment rows apply.
-  const locked = !isAuthenticated || phoneNumber.status !== "connected";
-
-  return (
-    <>
-      {(mode === "chat" ? (["chat"] as const) : (["inbound", "outbound"] as const)).map((direction) => {
-        const agent = direction === "chat" ? assignedChatAgent : assignments[direction];
-        const key = assignmentKey(phoneNumber.id, direction);
-        const label = direction === "chat" ? "Chat" : direction === "inbound" ? "Inbound" : "Outbound";
-
-        return (
-          <AgentSelect
-            agents={agents}
-            disabled={locked || assigningKey !== null}
-            icon={direction === "chat" ? "chat" : direction === "inbound" ? "phone" : "phoneOut"}
-            key={direction}
-            label={`${label} agent for ${displayName(phoneNumber)}`}
-            onChange={(agentId) => onAssignAgent(phoneNumber, direction, agentId)}
-            placeholder="Not assigned"
-            prefix={label}
-            saving={assigningKey === key}
-            title={
-              locked
-                ? `Connect this number to assign a ${direction} agent`
-                : agent
-                  ? `${label} agent: ${agent.name}`
-                  : `No ${direction} agent assigned`
-            }
-            value={agent?.id ?? ""}
-            variant="chip"
-          />
-        );
-      })}
-    </>
   );
 }
 
@@ -2321,7 +2114,7 @@ function PhoneNumberDetail({
           <div className="phone-section-copy">
             {mode === "chat"
               ? "Assign the chat agent that handles messages for this number."
-              : "Assign the voice agents that handle this number's inbound and outbound calls."}
+              : "Assign the voice agent that answers and places calls on this number."}
           </div>
         </div>
 
@@ -2337,10 +2130,10 @@ function PhoneNumberDetail({
                   <div className="phone-setting-copy">
                     {mode === "chat"
                       ? "Chat agent currently assigned to this number."
-                      : "Voice agents currently assigned to this number by call direction."}
+                      : "Voice agent that answers and places calls on this number."}
                   </div>
                 </div>
-                <div className={mode === "chat" ? "phone-assignment-grid phone-assignment-grid-single" : "phone-assignment-grid"}>
+                <div className="phone-assignment-grid phone-assignment-grid-single">
                   {mode === "chat" ? (
                     <AssignmentRow
                       agent={chatAssignment(phoneNumber.id, agents)}
@@ -2351,24 +2144,14 @@ function PhoneNumberDetail({
                       onChange={(agentId) => onAssignAgent(phoneNumber, "chat", agentId)}
                     />
                   ) : (
-                    <>
-                      <AssignmentRow
-                        agent={assignments.inbound}
-                        agents={agents}
-                        direction="inbound"
-                        disabled={!isAuthenticated || phoneNumber.status !== "connected" || assigningKey !== null}
-                        isSaving={assigningKey === assignmentKey(phoneNumber.id, "inbound")}
-                        onChange={(agentId) => onAssignAgent(phoneNumber, "inbound", agentId)}
-                      />
-                      <AssignmentRow
-                        agent={assignments.outbound}
-                        agents={agents}
-                        direction="outbound"
-                        disabled={!isAuthenticated || phoneNumber.status !== "connected" || assigningKey !== null}
-                        isSaving={assigningKey === assignmentKey(phoneNumber.id, "outbound")}
-                        onChange={(agentId) => onAssignAgent(phoneNumber, "outbound", agentId)}
-                      />
-                    </>
+                    <AssignmentRow
+                      agent={assignments.voice}
+                      agents={agents}
+                      direction="voice"
+                      disabled={!isAuthenticated || phoneNumber.status !== "connected" || assigningKey !== null}
+                      isSaving={assigningKey === assignmentKey(phoneNumber.id, "voice")}
+                      onChange={(agentId) => onAssignAgent(phoneNumber, "voice", agentId)}
+                    />
                   )}
                 </div>
               </div>
@@ -2399,7 +2182,9 @@ function PhoneNumberDetail({
                 }
               />
             ) : (
-              <div className="phone-qr-placeholder">{statusLabels[phoneNumber.status]}</div>
+              <div className="phone-qr-placeholder is-status">
+                {statusLabels[phoneNumber.status]}
+              </div>
             )}
           </div>
         </div>
@@ -2408,21 +2193,8 @@ function PhoneNumberDetail({
   );
 }
 
-function StatusChip({ compact = false, status }: { compact?: boolean; status: PhoneNumberStatus }) {
-  return (
-    <span className={`phone-status-chip ${statusClass(status)}`} title={statusLabels[status]}>
-      <span className="phone-dot" />
-      {compact ? statusLabels[status].replace("Pending ", "") : statusLabels[status]}
-    </span>
-  );
-}
-
 function agentOptionMeta(agent: AssignedAgent) {
-  if (agent.kind === "chat") return `Chat agent - ${agent.status}`;
-  const direction = agent.direction;
-  const directionText =
-    direction === "both" ? "Both directions" : direction === "inbound" ? "Inbound only" : "Outbound only";
-  return `${directionText} - ${agent.status}`;
+  return `${agent.kind === "chat" ? "Chat" : "Voice"} agent - ${agent.status}`;
 }
 
 function AssignmentRow({
@@ -2440,7 +2212,7 @@ function AssignmentRow({
   isSaving: boolean;
   onChange: (agentId: string) => void;
 }) {
-  const directionLabel = direction === "chat" ? "Chat" : direction === "inbound" ? "Inbound" : "Outbound";
+  const directionLabel = direction === "chat" ? "Chat" : "Voice";
 
   return (
     <div className={`phone-assignment-row${agent ? "" : " is-empty"}`}>
@@ -2448,12 +2220,6 @@ function AssignmentRow({
         <span className="phone-assignment-direction">{directionLabel}</span>
         {agent ? (
           <div className="phone-assignment-meta">
-            {direction !== "chat" ? (
-              <>
-                <span>{agent.direction === "both" ? "Both directions" : `${directionLabel} only`}</span>
-                <span className="phone-assignment-dot" />
-              </>
-            ) : null}
             <span>{isSaving ? "Saving..." : agent.status}</span>
           </div>
         ) : (
@@ -2496,7 +2262,6 @@ function AgentSelect({
   value: string;
   variant?: "full" | "chip";
 }) {
-  const { mode } = useWorkspaceMode();
   const [open, setOpen] = useState(false);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -2622,7 +2387,7 @@ function AgentSelect({
         ? createPortal(
             <div
               // Portalled outside .phone-shell, so it carries the accent itself.
-              className={`phone-agent-popover${mode === "chat" ? " app-accent-green" : ""}`}
+              className="phone-agent-popover app-accent-green"
               data-expandable-card-ignore
               ref={popoverRef}
               role="listbox"

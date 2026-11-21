@@ -1,4 +1,4 @@
-import { serverFetch, type AuthTokenGetter } from "./api";
+import { serverFetch, voiceServerURL, type AuthTokenGetter } from "./api";
 
 // Wire types mirroring the Go server's Call model (see server/internal/models/
 // call.go). Every field the server may null out is optional/nullable here so
@@ -84,7 +84,7 @@ export class CallError extends Error {
 async function request<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<T> {
   let response: Response;
   try {
-    response = await serverFetch(path, init, getToken);
+    response = await serverFetch(voiceServerURL(path), init, getToken);
   } catch {
     throw new CallError("Could not connect. Check your internet and try again.", 0);
   }

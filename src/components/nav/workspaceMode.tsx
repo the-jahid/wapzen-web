@@ -25,9 +25,13 @@ export type NavIconName =
   | "orders"
   | "settings";
 
+// The sidebar heading an item sits under, as Retell groups its menu.
+export type NavGroup = "Build" | "Deploy" | "Data";
+
 export type WorkspaceNavItem = {
   label: string;
   icon: NavIconName;
+  group: NavGroup;
   href?: string;
   badge?: string;
 };
@@ -37,44 +41,51 @@ const STORAGE_KEY = "voca.workspace-mode";
 // Chat is the workspace a new browser opens in, until the user picks one.
 const defaultMode: WorkspaceMode = "chat";
 
-// Routes that only exist in one mode. Landing on one of these switches the
-// sidebar to that mode, so a link or a bookmark always shows a coherent menu.
-// Orders sit in both menus: voice and chat agents both take them.
-const chatOnlyPaths = ["/dashboard/chat", "/dashboard/conversations", "/dashboard/groups"];
-const voiceOnlyPaths = [
-  "/dashboard/agents",
-  "/dashboard/calls",
-  "/dashboard/outbound",
-  "/dashboard/demo-call",
-];
+// Every voice page lives under /dashboard/voice; everything else under
+// /dashboard is chat. The URL alone decides the mode, so a link or a bookmark
+// always shows a coherent menu, and the shared pages (Knowledge Base, Tools,
+// Phone Numbers) exist once per mode: /dashboard/tools holds the chat agents'
+// tools, /dashboard/voice/tools the voice agents'.
+export const voiceRoot = "/dashboard/voice";
 
+function isVoicePath(pathname: string | null | undefined): boolean {
+  return pathname === voiceRoot || !!pathname?.startsWith(`${voiceRoot}/`);
+}
+
+/** dashboardHref("/tools", "voice") → "/dashboard/voice/tools". */
+export function dashboardHref(path: string, mode: WorkspaceMode): string {
+  return `${mode === "voice" ? voiceRoot : "/dashboard"}${path}`;
+}
+
+// "WhatsApp" because these agents talk over WhatsApp calls; agents on ordinary
+// phone lines will sit beside them later under their own name.
 const voiceNavItems: WorkspaceNavItem[] = [
-  { label: "Agents", icon: "agents", href: "/dashboard/agents" },
-  { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
-  { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
-  { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
-  { label: "API Keys", icon: "key", href: "/dashboard/api-keys" },
-  { label: "Calls", icon: "phone", href: "/dashboard/calls" },
-  { label: "Outbound", icon: "target", href: "/dashboard/outbound" },
-  { label: "Orders", icon: "orders", href: "/dashboard/orders" },
+  { label: "WhatsApp Voice Agents", icon: "agents", group: "Build", href: "/dashboard/voice/agents" },
+  { label: "Knowledge Base", icon: "book", group: "Build", href: "/dashboard/voice/knowledge-base" },
+  { label: "Tools", icon: "wrench", group: "Build", href: "/dashboard/voice/tools" },
+  { label: "Phone Numbers", icon: "phone", group: "Deploy", href: "/dashboard/voice/phone-numbers" },
+  { label: "Outbound", icon: "target", group: "Deploy", href: "/dashboard/voice/outbound" },
+  { label: "Call History", icon: "phone", group: "Data", href: "/dashboard/voice/calls" },
 ];
 
 // Chat mode drops everything that only makes sense for a phone call — the voice
-// agent list, the call log and outbound campaigns.
+// agent list, the call log and outbound campaigns. Grouped like Retell's menu:
+// what you build, where it runs, what it produced.
 const chatNavItems: WorkspaceNavItem[] = [
-  { label: "Chat Agents", icon: "chat", href: "/dashboard/chat" },
-  // The account's whole chat inbox. It sits under the agents that produce it,
-  // and the same threads are also readable per agent in the editor's
-  // Conversation tab.
-  { label: "Conversations", icon: "message", href: "/dashboard/conversations" },
+  { label: "Chat Agents", icon: "chat", group: "Build", href: "/dashboard/chat" },
+  { label: "Knowledge Base", icon: "book", group: "Build", href: "/dashboard/knowledge-base" },
+  { label: "Tools", icon: "wrench", group: "Build", href: "/dashboard/tools" },
+  { label: "Phone Numbers", icon: "phone", group: "Deploy", href: "/dashboard/phone-numbers" },
+  // The account's whole chat inbox; the same threads are also readable per
+  // agent in the editor's Conversation tab.
+  { label: "Conversations", icon: "message", group: "Data", href: "/dashboard/conversations" },
   // The WhatsApp groups a number is in, each with its own AI switch.
-  { label: "Groups", icon: "groups", href: "/dashboard/groups" },
-  { label: "Phone Numbers", icon: "phone", href: "/dashboard/phone-numbers" },
-  { label: "Knowledge Base", icon: "book", href: "/dashboard/knowledge-base" },
-  { label: "Tools", icon: "wrench", href: "/dashboard/tools" },
+  { label: "Groups", icon: "groups", group: "Data", href: "/dashboard/groups" },
   // What the agents' Take Order tool has placed.
-  { label: "Orders", icon: "orders", href: "/dashboard/orders" },
+  { label: "Orders", icon: "orders", group: "Data", href: "/dashboard/orders" },
 ];
+
+export const navGroups: NavGroup[] = ["Build", "Deploy", "Data"];
 
 export function navItemsForMode(mode: WorkspaceMode): WorkspaceNavItem[] {
   return mode === "chat" ? chatNavItems : voiceNavItems;
@@ -146,18 +157,21 @@ export function useWorkspaceMode(): {
   const pathname = usePathname();
   const router = useRouter();
 
-  const pinned: WorkspaceMode | null = chatOnlyPaths.some((path) => pathname?.startsWith(path))
-    ? "chat"
-    : voiceOnlyPaths.some((path) => pathname?.startsWith(path))
-      ? "voice"
+  const pinned: WorkspaceMode | null = isVoicePath(pathname)
+    ? "voice"
+    : pathname?.startsWith("/dashboard")
+      ? "chat"
       : null;
   const mode = pinned ?? stored;
 
   // Visiting a mode's own page adopts that mode, so the next shared page (say
-  // Tools) keeps showing the menu the user was last working in.
+  // Tools) keeps showing the menu the user was last working in. It runs when
+  // the page is opened, not on every change of the stored choice: another tab
+  // switching modes must not be switched straight back by a tab that happens to
+  // sit on a pinned page, or the two tabs fight and the toggle never sticks.
   useEffect(() => {
-    if (pinned && pinned !== stored) writeMode(pinned);
-  }, [pinned, stored]);
+    if (pinned && getSnapshot() !== pinned) writeMode(pinned);
+  }, [pinned]);
 
   const setMode = useCallback(
     (next: WorkspaceMode) => {
@@ -167,12 +181,65 @@ export function useWorkspaceMode(): {
       // sidebar pointing at nothing the current screen relates to, so land on
       // that mode's own workspace instead.
       const leavingPinnedPage = pinned !== null && pinned !== next;
-      if (leavingPinnedPage) router.push(next === "chat" ? "/dashboard/chat" : "/dashboard/agents");
+      if (leavingPinnedPage) router.push(next === "chat" ? "/dashboard/chat" : "/dashboard/voice/agents");
     },
     [mode, pinned, router]
   );
 
   return { mode, setMode };
+}
+
+/**
+ * One button that jumps to the other workspace: in Chat it shows the voice
+ * icon and opens the voice agents page, in Voice it shows the chat icon and
+ * opens the chat agents page.
+ */
+export function WorkspaceSwitchButton({ className = "" }: { className?: string }) {
+  const { mode } = useWorkspaceMode();
+  const router = useRouter();
+  const next: WorkspaceMode = mode === "chat" ? "voice" : "chat";
+  const label = next === "voice" ? "Switch to Voice agents" : "Switch to Chat agents";
+
+  return (
+    <button
+      aria-label={label}
+      className={className}
+      onClick={() => {
+        writeMode(next);
+        router.push(next === "chat" ? "/dashboard/chat" : "/dashboard/voice/agents");
+      }}
+      title={label}
+      type="button"
+    >
+      {next === "voice" ? <VoiceModeIcon /> : <ChatModeIcon />}
+      <span>{next === "voice" ? "Voice" : "Chat"}</span>
+      <SwitchArrowsIcon />
+    </button>
+  );
+}
+
+// Two opposing arrows after the label say "switch over", so the button reads
+// as a way into the other workspace rather than a label for this one.
+function SwitchArrowsIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={14}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2.2}
+      style={{ opacity: 0.75 }}
+      viewBox="0 0 24 24"
+      width={14}
+    >
+      <path d="M16 3l4 4-4 4" />
+      <path d="M20 7H8" />
+      <path d="M8 21l-4-4 4-4" />
+      <path d="M4 17h12" />
+    </svg>
+  );
 }
 
 function VoiceModeIcon() {

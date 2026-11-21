@@ -18,6 +18,10 @@ const removedPosts: Array<[string, string]> = [
 ];
 
 const nextConfig: NextConfig = {
+  // The dev-only "N" badge sat on top of the sidebar's footer controls and
+  // the phone tab bar in every corner. Off; compile and runtime errors still
+  // show their overlay. Production never renders it either way.
+  devIndicators: false,
   async redirects() {
     return removedPosts.map(([source, destination]) => ({ source, destination, permanent: true }));
   },

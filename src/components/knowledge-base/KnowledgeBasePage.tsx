@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import * as m from "motion/react-m";
-import { LazyLayoutMotion } from "@/components/motion/LazyLayoutMotion";
 import {
+  dashboardHref,
   useWorkspaceMode,
 } from "@/components/nav/workspaceMode";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
@@ -93,22 +92,15 @@ type IconName =
   | "clock"
   | "layers"
   | "chevron"
-  | "back";
+  | "back"
+  | "copy"
+  | "openBook";
 
 
 type Notice = { kind: "success" | "error"; text: string };
-type BrowseView = "list" | "grid";
-
-// Shown on the one control whose endpoint does not exist yet: re-indexing a
-// knowledge base from its sources.
-const notYetHint = "Available once the refresh endpoint lands.";
 
 
-// The list column is narrow, so rows get a date without the year or clock time.
-const shortDateFormatter = new Intl.DateTimeFormat(undefined, {
-  month: "short",
-  day: "numeric",
-});
+
 
 function iconPaths(name: IconName): ReactNode {
   switch (name) {
@@ -284,6 +276,20 @@ function iconPaths(name: IconName): ReactNode {
       );
     case "chevron":
       return <path d="M9 6l6 6-6 6" />;
+    case "copy":
+      return (
+        <>
+          <rect height="13" rx="2" width="13" x="9" y="9" />
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+        </>
+      );
+    case "openBook":
+      return (
+        <>
+          <path d="M2 4h6a4 4 0 014 4v13a3 3 0 00-3-3H2z" />
+          <path d="M22 4h-6a4 4 0 00-4 4v13a3 3 0 013-3h7z" />
+        </>
+      );
     case "back":
       return (
         <>
@@ -364,9 +370,12 @@ const css = `
 .kb-shell button, .kb-shell input, .kb-shell textarea, .kb-shell select { font: inherit; }
 .kb-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .kb-content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 32px; }
-.kb-browse { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.kb-browse { display: flex; flex-direction: column; gap: 16px; width: 100%; }
 .kb-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .kb-toolbar .kb-search { flex: 1 1 240px; max-width: 420px; }
+/* Search in the Retell-style header, right of the title. */
+.kb-browse .kb-search { flex: 0 1 300px; min-width: 0; width: 300px; }
+@media (max-width: 640px) { .kb-browse .kb-search { flex: 1 1 100%; width: auto; } }
 .kb-count {
   background: var(--app-hover-2);
   border: 1px solid var(--border-strong);
@@ -454,7 +463,7 @@ const css = `
 }
 .kb-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
 .kb-expandable-card .kb-detail-layout { max-width: none; }
-.kb-detail-layout { display: flex; flex-direction: column; gap: 14px; margin: 0 auto; max-width: 1320px; width: 100%; }
+.kb-detail-layout { display: flex; flex-direction: column; gap: 14px; width: 100%; }
 .kb-page { max-width: 1040px; }
 .kb-page-back { align-items: center; align-self: flex-start; color: var(--subtle); display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; text-decoration: none; }
 .kb-page-back:hover { color: var(--text); }
@@ -956,6 +965,208 @@ const css = `
 .kb-add-progress { color: var(--subtle); font-size: 12.5px; margin-right: auto; }
 /* The mobile top bar and drawer backdrop only exist below the tablet breakpoint. */
 /* Wide screens: a little more room around the capped content. */
+/* Retell-style master-detail: a list pane of bases beside the open one. */
+.kb-main { min-height: 100vh; }
+.kb-split { display: flex; flex: 1; min-height: 100%; min-width: 0; }
+.kb-pane-list {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex: 0 0 290px;
+  flex-direction: column;
+  min-width: 0;
+  padding: 16px;
+}
+.kb-pane-head {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  gap: 10px;
+  padding: 0 2px 14px 2px;
+}
+.kb-pane-title { flex: 1; font-size: 14.5px; font-weight: 600; margin: 0; }
+.kb-pane-add {
+  align-items: center;
+  background: var(--app-primary);
+  border: 0;
+  border-radius: 8px;
+  color: var(--app-on-accent, #fff);
+  cursor: pointer;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  transition: opacity .16s ease;
+  width: 32px;
+}
+.kb-pane-add:hover { opacity: .85; }
+.kb-pane-items { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; padding-top: 12px; }
+.kb-pane-item {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--muted);
+  display: flex;
+  font-size: 14px;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  text-decoration: none;
+  transition: background .16s ease, color .16s ease;
+}
+.kb-pane-item svg { color: var(--text); flex-shrink: 0; }
+.kb-pane-item:hover { background: var(--app-hover); color: var(--text); }
+.kb-pane-item.is-active { background: var(--app-hover-2); color: var(--text); }
+.kb-pane-item-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-pane-note { color: var(--subtle); display: grid; font-size: 13px; gap: 10px; justify-items: start; margin: 0; padding: 6px 4px; }
+.kb-pane-note p { margin: 0; }
+.kb-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 32px; min-width: 0; padding: 24px 24px 32px; }
+.kb-pane-back { display: none; }
+.kb-detail-top {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+.kb-detail-title { font-size: 18px; font-weight: 600; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.kb-detail-back { display: none; }
+.kb-detail-identity-block { flex: 1 1 auto; min-width: 0; }
+.kb-detail-title-row { align-items: center; display: flex; gap: 10px; min-width: 0; }
+.kb-detail-status-inline { display: none; flex: none; font-size: 12px; font-weight: 600; }
+.kb-detail-line-status { align-items: center; display: inline-flex; gap: 6px; }
+.kb-detail-line { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
+.kb-copy { align-items: center; background: none; border: 0; border-radius: 5px; color: var(--subtle); cursor: pointer; display: inline-flex; height: 20px; justify-content: center; padding: 0; width: 20px; }
+.kb-copy:hover { background: var(--app-hover); color: var(--text); }
+.kb-detail-dot { background: var(--text); border-radius: 50%; height: 4px; margin: 0 4px; width: 4px; }
+.kb-status-line { align-items: center; display: inline-flex; gap: 5px; }
+.kb-status-line.is-complete { color: var(--app-green-text); }
+.kb-status-line.is-in_progress { color: var(--app-amber-text); }
+.kb-status-line.is-refreshing_in_progress { color: var(--app-sky-text); }
+.kb-status-line.is-error { color: var(--app-rose-text); }
+.kb-detail-buttons { display: flex; flex-shrink: 0; gap: 8px; }
+.kb-dark-btn {
+  align-items: center;
+  background: var(--app-primary);
+  border: 0;
+  border-radius: 8px;
+  color: var(--app-on-accent, #fff);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  transition: opacity .16s ease;
+  white-space: nowrap;
+}
+.kb-dark-btn:hover { opacity: .85; }
+.kb-outline-icon {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+.kb-outline-icon:hover { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
+.kb-src-list { display: flex; flex-direction: column; gap: 10px; }
+.kb-src {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  min-height: 50px;
+  padding: 6px 12px;
+}
+.kb-src-badge { color: var(--subtle); display: inline-flex; flex-shrink: 0; height: 32px; justify-content: center; position: relative; width: 30px; }
+.kb-src-badge svg { height: 32px; width: 30px; }
+.kb-src-badge span {
+  background: #f97316;
+  border-radius: 3px;
+  bottom: 2px;
+  color: #fff;
+  font-size: 7.5px;
+  font-weight: 800;
+  left: 50%;
+  letter-spacing: .3px;
+  line-height: 1;
+  padding: 2px 3px;
+  position: absolute;
+  transform: translateX(-50%);
+}
+.kb-src-badge.is-file span { background: #3b82f6; }
+.kb-src-text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.kb-src-name { font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-src-sub { color: var(--subtle); display: none; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-src-meta { color: var(--subtle); flex-shrink: 0; font-size: 12px; }
+.kb-src-delete { align-items: center; background: none; border: 0; border-radius: 6px; color: var(--text); cursor: pointer; display: inline-flex; flex-shrink: 0; height: 32px; justify-content: center; width: 32px; }
+.kb-src-delete:hover { background: var(--app-rose-soft-2); color: var(--app-rose-text); }
+/* Stacked (tablet/phone): list alone on the bare route, detail alone with a
+   back link once a base is opened. */
+@media (max-width: 900px) {
+  .kb-split { flex-direction: column; }
+  .kb-pane-list { border-right: 0; flex: 1 1 auto; }
+  .kb-split:not(.has-selection) .kb-pane-detail { display: none; }
+  .kb-split.has-selection .kb-pane-list { display: none; }
+  .kb-pane-detail { gap: 20px; padding: 16px; }
+  .kb-pane-back { align-items: center; color: var(--subtle); display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; text-decoration: none; }
+  /* With a base open, the back link becomes an arrow button in its header,
+     like the agent page: back, name and status, then the actions. */
+  .kb-pane-detail:has(> .kb-detail-top) > .kb-pane-back { display: none; }
+  .kb-detail-top { align-items: center; display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
+  .kb-detail-back {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    display: inline-flex;
+    height: 38px;
+    justify-content: center;
+    text-decoration: none;
+    width: 38px;
+  }
+  .kb-detail-back:hover { background: var(--app-hover); }
+  .kb-detail-back:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
+}
+/* Phones: back, name and the Add / Delete buttons share one row (no empty
+   space beside the name); each source a roomier card with its type under
+   the name. */
+@media (max-width: 640px) {
+  .kb-detail-top { gap: 10px; }
+  .kb-detail-title {
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    font-size: 17px;
+    line-height: 1.25;
+    overflow: hidden;
+    overflow-wrap: break-word;
+  }
+  /* ID and status stay on one line rather than leaving the dot stranded. */
+  .kb-detail-line { flex-wrap: nowrap; gap: 4px; margin-top: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+  .kb-detail-line-status .kb-detail-dot { margin: 0 2px; }
+  .kb-detail-buttons { gap: 6px; }
+  /* Add is a square "+" here, the same size as Delete, so the name keeps
+     enough width to read. */
+  .kb-detail-buttons .kb-dark-btn { border-radius: 10px; height: 38px; justify-content: center; padding: 0; width: 38px; }
+  .kb-detail-buttons .kb-add-label { display: none; }
+  .kb-detail-buttons .kb-outline-icon { border-radius: 10px; height: 38px; width: 38px; }
+  .kb-src { border-radius: 14px; gap: 12px; min-height: 64px; padding: 12px; }
+  .kb-src-badge, .kb-src-badge svg { height: 40px; width: 36px; }
+  .kb-src-badge span { font-size: 8px; }
+  .kb-src-name { font-size: 15px; font-weight: 600; }
+  .kb-src-sub { display: block; }
+  .kb-src-meta { display: none; }
+  .kb-src-delete { height: 38px; width: 38px; }
+}
 @media (min-width: 1680px) {
   .kb-content { padding: 28px 40px 36px; }
 }
@@ -1008,32 +1219,15 @@ const css = `
 }
 `;
 
-// cardSummary is the one line a grid card shows under the name: how much has
-// actually been indexed, which is what distinguishes one base from another at a
-// glance.
-function cardSummary(base: KnowledgeBase) {
-  const sources = base.knowledge_base_sources;
-  if (sources.length === 0) return "No sources yet — nothing to retrieve from.";
-  const chunks = sources.reduce((total, source) => total + source.chunk_count, 0);
-  return `${sources.length} source${sources.length === 1 ? "" : "s"} · ${chunks} chunk${
-    chunks === 1 ? "" : "s"
-  } indexed`;
-}
-
-function formatShortTimestamp(value: number | null) {
-  if (!value) return "never refreshed";
-  return shortDateFormatter.format(new Date(value));
-}
-
-// Only text sources exist so far; document and url rows arrive with their
-// fetchers, and the icon is picked here so adding them stays a one-line change.
-function sourceIcon(type: KnowledgeBaseSource["type"]): IconName {
-  return type === "text" ? "text" : "file";
-}
-
 // The stored text itself never comes back over the wire — it is kept to be
 // re-chunked, not read — so a row reports how many vectors the source produced
 // instead. A count of zero means the row was stored but never indexed.
+// Retell shows ids shortened in the middle ("know...e52"); the copy button
+// next to it copies the full id.
+function shortId(id: string) {
+  return id.length > 12 ? `${id.slice(0, 4)}...${id.slice(-3)}` : id;
+}
+
 function sourceDetail(source: KnowledgeBaseSource) {
   if (source.chunk_count === 0) return "not indexed";
   return `${source.chunk_count} chunk${source.chunk_count === 1 ? "" : "s"}`;
@@ -1043,16 +1237,15 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
   const router = useRouter();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const { mode } = useWorkspaceMode();
-  const [bases, setBases, hasCachedBases] = useCachedState<KnowledgeBase[]>("knowledge-base-page:bases", []);
+  const [bases, setBases, hasCachedBases] = useCachedState<KnowledgeBase[]>(`knowledge-base-page:bases:${mode}`, []);
   // The open base comes from the URL: /dashboard/knowledge-base/<id> shows it
   // on its own page, the bare route shows the list.
   const selectedId = knowledgeBaseId ?? null;
-  const openBase = (id: string) => router.push(`/dashboard/knowledge-base/${encodeURIComponent(id)}`);
+  const openBase = (id: string) => router.push(`${dashboardHref("/knowledge-base", mode)}/${encodeURIComponent(id)}`);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [query, setQuery] = useState("");
-  const [viewModeOverride, setViewModeOverride] = useState<BrowseView | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   // Deleting is confirmed against a snapshot of the row rather than the id
@@ -1078,21 +1271,18 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
   const pendingLoadState = !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadState = pendingLoadState === "loading" && hasCachedBases ? "ready" : pendingLoadState;
   const effectiveLoadError = authError ?? loadError;
-  const viewMode = viewModeOverride ?? (mode === "chat" ? "list" : "grid");
-
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    if (!needle) return bases;
-    return bases.filter((base) =>
-      base.knowledge_base_name.toLowerCase().includes(needle)
-    );
-  }, [bases, query]);
-
-  // Nothing selected means the grid, so there is no falling back to the first
-  // base here — that would make the browse view unreachable.
+  // Retell-style master-detail: the bare route opens the first base, a URL id
+  // opens that one (null when it no longer exists).
   const selected = selectedId
     ? bases.find((base) => base.knowledge_base_id === selectedId) ?? null
-    : null;
+    : bases[0] ?? null;
+
+  function copyId(id: string) {
+    void navigator.clipboard?.writeText(id).then(() => {
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500);
+    });
+  }
 
   useEffect(() => {
     if (!isAuthLoaded) return;
@@ -1103,7 +1293,7 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
       setLoadState("loading");
       setLoadError("");
       try {
-        const rows = await apiListKnowledgeBases(getToken);
+        const rows = await apiListKnowledgeBases(getToken, {}, mode);
         if (cancelled) return;
         const list = rows.map(fromApi);
         setBases(list);
@@ -1120,7 +1310,7 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
     return () => {
       cancelled = true;
     };
-  }, [getToken, isAuthLoaded, isSignedIn, reloadKey, setBases]);
+  }, [getToken, isAuthLoaded, isSignedIn, mode, reloadKey, setBases]);
 
   useEffect(() => {
     if (!notice) return;
@@ -1163,13 +1353,13 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
     setIsDeleting(true);
     setDeleteError("");
     try {
-      await apiDeleteKnowledgeBase(base.knowledge_base_id, getToken);
+      await apiDeleteKnowledgeBase(base.knowledge_base_id, getToken, mode);
       setBases((current) =>
         current.filter((row) => row.knowledge_base_id !== base.knowledge_base_id)
       );
       // Deleting the open base goes back to the list, which is where the
       // deleted base's card no longer is.
-      if (selectedId === base.knowledge_base_id) router.push("/dashboard/knowledge-base");
+      if (selectedId === base.knowledge_base_id) router.push(dashboardHref("/knowledge-base", mode));
       setPendingDelete(null);
       flash("success", `Knowledge base "${base.knowledge_base_name}" deleted`);
     } catch (error) {
@@ -1203,7 +1393,7 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
     setIsDeletingSource(true);
     setSourceDeleteError("");
     try {
-      await apiDeleteKnowledgeBaseSource(base.knowledge_base_id, source.source_id, getToken);
+      await apiDeleteKnowledgeBaseSource(base.knowledge_base_id, source.source_id, getToken, mode);
       setBases((current) =>
         current.map((row) =>
           row.knowledge_base_id === base.knowledge_base_id
@@ -1236,227 +1426,31 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
   }
 
   return (
-    <LazyLayoutMotion>
-    <div className={`kb-shell${mode === "chat" ? " app-accent-green" : ""}`}>
+    <div className="kb-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <DashboardSidebar activeLabel="Knowledge Base" badges={{ "Knowledge Base": bases.length }} stackBelow={900} />
 
       <main className="kb-main">
-        <div className="kb-content">
-          {knowledgeBaseId && !selected ? (
-            <div className="kb-detail-layout kb-page">
-              <Link className="kb-page-back" href="/dashboard/knowledge-base">
-                <Icon name="back" size={15} sw={2.2} />
-                Knowledge bases
-              </Link>
-              <div className="kb-empty">
-                {pendingLoadState === "loading" ? (
-                  <p>Loading knowledge base…</p>
-                ) : effectiveLoadState === "error" ? (
-                  <>
-                    <p>{effectiveLoadError}</p>
-                    {authError ? null : (
-                      <button
-                        className="kb-btn"
-                        onClick={() => setReloadKey((current) => current + 1)}
-                        type="button"
-                      >
-                        <Icon name="refresh" size={15} />
-                        Try again
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <p>This knowledge base was not found. It may have been deleted.</p>
-                )}
-              </div>
+        <div className={`kb-split${knowledgeBaseId ? " has-selection" : ""}`}>
+          <aside className="kb-pane-list" aria-label="Knowledge bases">
+            <div className="kb-pane-head">
+              <Icon name="book" size={18} sw={1.8} />
+              <h1 className="kb-pane-title">Knowledge Base</h1>
+              <button
+                aria-label="New knowledge base"
+                className="kb-pane-add"
+                onClick={openCreate}
+                title="New knowledge base"
+                type="button"
+              >
+                <Icon name="plus" size={16} sw={2.4} />
+              </button>
             </div>
-          ) : selected ? (
-            <div className="kb-detail-layout kb-page">
-              <Link className="kb-page-back" href="/dashboard/knowledge-base">
-                <Icon name="back" size={15} sw={2.2} />
-                Knowledge bases
-              </Link>
-
-              <div className="kb-detail-grid">
-              <div className="kb-detail-column">
-                <section className="kb-card">
-                  <div className="kb-detail-head">
-                    <div className="kb-detail-identity">
-                      <span className="kb-avatar" style={{ height: 44, width: 44 }}>
-                        <Icon name="book" size={20} />
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <h2 className="kb-detail-name">
-                          {selected.knowledge_base_name}
-                          <StatusPill status={selected.status} />
-                        </h2>
-                        <div className="kb-detail-sub">
-                          <span className="kb-detail-meta">
-                            <span className="kb-detail-tag">id</span>
-                            {selected.knowledge_base_id}
-                          </span>
-                          <span
-                            className="kb-detail-meta"
-                            title="Vector-store namespace holding this knowledge base's chunks."
-                          >
-                            <span className="kb-detail-tag">namespace</span>
-                            {selected.namespace_id ?? (
-                              <span className="kb-detail-pending">not assigned</span>
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="kb-detail-actions">
-                      <button className="kb-btn" disabled title={notYetHint} type="button">
-                        <Icon name="refresh" size={15} />
-                        Refresh
-                      </button>
-                      <button
-                        className="kb-btn kb-btn-primary"
-                        onClick={() => setIsAddingSources(true)}
-                        type="button"
-                      >
-                        <Icon name="plus" size={15} stroke="#fff" sw={2.4} />
-                        Add sources
-                      </button>
-                      <button
-                        aria-label={`Delete ${selected.knowledge_base_name}`}
-                        className="kb-icon-button is-danger"
-                        onClick={() => requestDelete(selected)}
-                        title="Delete this knowledge base"
-                        type="button"
-                      >
-                        <Icon name="trash" size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="kb-card">
-                  <div className="kb-section-head">
-                    <div>
-                      <h3 className="kb-section-title">Sources</h3>
-                      <div className="kb-section-copy">
-                        Files, raw texts and scraped pages indexed into this knowledge base.
-                      </div>
-                    </div>
-                    <button
-                      className="kb-btn"
-                      onClick={() => setIsAddingSources(true)}
-                      type="button"
-                    >
-                      <Icon name="plus" size={15} />
-                      Add
-                    </button>
-                  </div>
-                  {selected.knowledge_base_sources.length === 0 ? (
-                    <div className="kb-empty" style={{ border: 0, minHeight: 180 }}>
-                      <p>
-                        This knowledge base has no sources yet. Add a raw text and it is chunked,
-                        embedded and indexed into the namespace right away.
-                      </p>
-                      <button
-                        className="kb-btn kb-btn-primary"
-                        onClick={() => setIsAddingSources(true)}
-                        type="button"
-                      >
-                        <Icon name="plus" size={15} stroke="#fff" sw={2.4} />
-                        Add sources
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="kb-source-list">
-                      {selected.knowledge_base_sources.map((source) => (
-                        <div className="kb-source" key={source.source_id}>
-                          <span className={`kb-source-icon is-${source.type}`}>
-                            <Icon name={sourceIcon(source.type)} size={16} />
-                          </span>
-                          <div className="kb-source-body">
-                            <div className="kb-source-name">{source.title}</div>
-                            <div className="kb-source-meta">
-                              <span className="kb-pill kb-pill-neutral">{source.type}</span>
-                              <span>{sourceDetail(source)}</span>
-                              <span className="kb-source-id">{source.source_id}</span>
-                            </div>
-                          </div>
-                          <span className="kb-source-spacer" />
-                          <button
-                            aria-label={`Delete source ${source.title}`}
-                            className="kb-icon-button is-danger"
-                            onClick={() => requestSourceDelete(selected, source)}
-                            title="Delete this source and its chunks"
-                            type="button"
-                          >
-                            <Icon name="trash" size={15} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              </div>
-              </div>
-            </div>
-          ) : (
-            <div className="kb-browse">
-              <div className="kb-toolbar">
-                <label className="kb-search">
-                  <Icon name="search" size={16} />
-                  <input
-                    className="kb-input"
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search knowledge bases..."
-                    value={query}
-                  />
-                </label>
-                <div aria-label="View" className="kb-view-toggle" role="group">
-                  <button
-                    aria-label="List view"
-                    aria-pressed={viewMode === "list"}
-                    className={`kb-view-btn${viewMode === "list" ? " is-active" : ""}`}
-                    onClick={() => setViewModeOverride("list")}
-                    title="List view"
-                    type="button"
-                  >
-                    <Icon name="list" size={16} sw={2.2} />
-                  </button>
-                  <button
-                    aria-label="Grid view"
-                    aria-pressed={viewMode === "grid"}
-                    className={`kb-view-btn${viewMode === "grid" ? " is-active" : ""}`}
-                    onClick={() => setViewModeOverride("grid")}
-                    title="Grid view"
-                    type="button"
-                  >
-                    <Icon name="grid" size={16} sw={2.2} />
-                  </button>
-                </div>
-                <span className="kb-count">
-                  {effectiveLoadState === "loading"
-                    ? "Loading…"
-                    : query.trim()
-                      ? `${filtered.length} of ${bases.length}`
-                      : `${bases.length} ${bases.length === 1 ? "base" : "bases"}`}
-                </span>
-                <button
-                  aria-label="New knowledge base"
-                  className="kb-btn kb-btn-primary kb-toolbar-new"
-                  onClick={openCreate}
-                  type="button"
-                >
-                  <Icon name="plus" size={15} stroke="#fff" sw={2.4} />
-                  New
-                </button>
-              </div>
-
+            <nav className="kb-pane-items">
               {effectiveLoadState === "loading" ? (
-                <div className="kb-empty">
-                  <p>Loading knowledge bases…</p>
-                </div>
+                <p className="kb-pane-note">Loading…</p>
               ) : effectiveLoadState === "error" ? (
-                <div className="kb-empty">
+                <div className="kb-pane-note">
                   <p>{effectiveLoadError}</p>
                   {authError ? null : (
                     <button
@@ -1470,118 +1464,132 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
                   )}
                 </div>
               ) : bases.length === 0 ? (
-                <div className="kb-empty">
-                  <p>
-                    No knowledge bases yet. Create one to give your agents something to retrieve
-                    from.
-                  </p>
-                  <button className="kb-btn kb-btn-primary" onClick={openCreate} type="button">
-                    <Icon name="plus" size={15} stroke="#fff" sw={2.4} />
-                    New knowledge base
-                  </button>
-                </div>
-              ) : filtered.length === 0 ? (
-                <div className="kb-empty">
-                  <p>No knowledge bases match “{query}”.</p>
-                </div>
-              ) : viewMode === "list" ? (
-                <div className="kb-list">
-                  {filtered.map((base) => {
-                    const sourceCount = base.knowledge_base_sources.length;
-                    const chunkCount = base.knowledge_base_sources.reduce(
-                      (total, source) => total + source.chunk_count,
-                      0
-                    );
-                    return (
-                      <m.button
-                        className="kb-row"
-                        key={base.knowledge_base_id}
-                        layoutId={`knowledge-base-${base.knowledge_base_id}`}
-                        onClick={() => openBase(base.knowledge_base_id)}
+                <p className="kb-pane-note">No knowledge bases yet.</p>
+              ) : (
+                bases.map((base) => (
+                  <Link
+                    aria-current={selected?.knowledge_base_id === base.knowledge_base_id ? "page" : undefined}
+                    className={`kb-pane-item${selected?.knowledge_base_id === base.knowledge_base_id ? " is-active" : ""}`}
+                    href={`${dashboardHref("/knowledge-base", mode)}/${encodeURIComponent(base.knowledge_base_id)}`}
+                    key={base.knowledge_base_id}
+                  >
+                    <Icon name="openBook" size={17} sw={1.8} />
+                    <span className="kb-pane-item-name">{base.knowledge_base_name}</span>
+                  </Link>
+                ))
+              )}
+            </nav>
+          </aside>
+
+          <section className="kb-pane-detail">
+            <Link className="kb-pane-back" href={dashboardHref("/knowledge-base", mode)}>
+              <Icon name="back" size={15} sw={2.2} />
+              Knowledge Base
+            </Link>
+            {selected ? (
+              <>
+                <header className="kb-detail-top">
+                  <Link aria-label="Back to knowledge bases" className="kb-detail-back" href={dashboardHref("/knowledge-base", mode)}>
+                    <Icon name="back" size={16} sw={2.4} />
+                  </Link>
+                  <div className="kb-detail-identity-block">
+                    <div className="kb-detail-title-row">
+                      <h2 className="kb-detail-title">{selected.knowledge_base_name}</h2>
+                      <span className="kb-detail-status-inline">
+                        <StatusLine status={selected.status} />
+                      </span>
+                    </div>
+                    <div className="kb-detail-line">
+                      <span>ID: {shortId(selected.knowledge_base_id)}</span>
+                      <button
+                        aria-label="Copy ID"
+                        className="kb-copy"
+                        onClick={() => copyId(selected.knowledge_base_id)}
+                        title={copiedId === selected.knowledge_base_id ? "Copied" : "Copy ID"}
                         type="button"
                       >
-                        <span className="kb-avatar">
-                          <Icon name="book" size={18} />
-                        </span>
-                        <span className="kb-row-identity">
-                          <span className="kb-row-name">{base.knowledge_base_name}</span>
-                          <span className="kb-row-sub">{cardSummary(base)}</span>
-                        </span>
-                        <span className="kb-row-stats">
-                          <span className="kb-row-stat">
-                            <Icon name="file" size={12} />
-                            {sourceCount} {sourceCount === 1 ? "source" : "sources"}
-                          </span>
-                          <span className="kb-row-stat">
-                            <Icon name="layers" size={12} />
-                            {chunkCount} {chunkCount === 1 ? "chunk" : "chunks"}
-                          </span>
-                          <span className="kb-row-stat">
-                            <Icon name="refresh" size={12} />
-                            {base.enable_auto_refresh ? "Auto" : "Manual"}
-                          </span>
-                        </span>
-                        <span className="kb-row-time" title="Last refreshed">
-                          <Icon name="clock" size={12} />
-                          {formatShortTimestamp(base.last_refreshed_timestamp)}
-                        </span>
-                        <StatusPill status={base.status} />
-                        <span className="kb-row-chevron">
-                          <Icon name="chevron" size={16} sw={2.3} />
-                        </span>
-                      </m.button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="kb-grid">
-                  {filtered.map((base) => (
-                    <m.button
-                      className="kb-card kb-card-item"
-                      key={base.knowledge_base_id}
-                      layoutId={`knowledge-base-${base.knowledge_base_id}`}
-                      onClick={() => openBase(base.knowledge_base_id)}
+                        <Icon name={copiedId === selected.knowledge_base_id ? "check" : "copy"} size={13} />
+                      </button>
+                      <span className="kb-detail-line-status">
+                        <span className="kb-detail-dot" />
+                        <StatusLine status={selected.status} />
+                      </span>
+                    </div>
+                  </div>
+                  <div className="kb-detail-buttons">
+                    <button
+                      aria-label="Add a text or file"
+                      className="kb-dark-btn"
+                      onClick={() => setIsAddingSources(true)}
+                      title="Add a text or file"
                       type="button"
                     >
-                      <span className="kb-card-top">
-                        <span className="kb-avatar">
-                          <Icon name="book" size={18} />
-                        </span>
-                        <StatusPill status={base.status} />
-                      </span>
-                      <span className="kb-card-name">{base.knowledge_base_name}</span>
-                      <span className="kb-card-desc">{cardSummary(base)}</span>
-                      <span className="kb-card-foot">
-                        <span
-                          className="kb-pill kb-pill-neutral"
-                          title={`Chunks of ${base.min_chunk_size}–${base.max_chunk_size} characters`}
-                        >
-                          <Icon name="layers" size={11} />
-                          {base.max_chunk_size}/{base.min_chunk_size}
-                        </span>
-                        <span className="kb-card-foot-meta">
-                          <Icon name="refresh" size={11} />
-                          {base.enable_auto_refresh ? "Auto" : "Manual"}
-                        </span>
-                        <span className="kb-card-foot-meta kb-card-foot-time">
-                          <Icon name="clock" size={11} />
-                          {formatShortTimestamp(base.last_refreshed_timestamp)}
-                        </span>
-                      </span>
-                    </m.button>
-                  ))}
+                      <Icon name="plus" size={15} sw={2.2} />
+                      <span className="kb-add-label">Add</span>
+                    </button>
+                    <button
+                      aria-label={`Delete ${selected.knowledge_base_name}`}
+                      className="kb-outline-icon"
+                      onClick={() => requestDelete(selected)}
+                      title="Delete this knowledge base"
+                      type="button"
+                    >
+                      <Icon name="trash" size={16} />
+                    </button>
+                  </div>
+                </header>
 
-                  <button className="kb-add-card" onClick={openCreate} type="button">
-                    <span className="kb-add-icon">
-                      <Icon name="plus" size={20} sw={2.4} />
-                    </span>
-                    <span className="kb-add-label">New knowledge base</span>
-                    <span className="kb-add-copy">Index files, text or pages for your agents.</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                {selected.knowledge_base_sources.length === 0 ? (
+                  <div className="kb-empty">
+                    <p>No sources yet. Add a text or a file and it is indexed right away.</p>
+                    <button className="kb-dark-btn" onClick={() => setIsAddingSources(true)} type="button">
+                      <Icon name="plus" size={15} sw={2.2} />
+                      Add source
+                    </button>
+                  </div>
+                ) : (
+                  <div className="kb-src-list">
+                    {selected.knowledge_base_sources.map((source) => (
+                      <div className="kb-src" key={source.source_id}>
+                        <span className={`kb-src-badge is-${source.type}`}>
+                          <Icon name="file" size={26} sw={1.4} />
+                          <span>{source.type === "text" ? "TEXT" : "FILE"}</span>
+                        </span>
+                        <span className="kb-src-text">
+                          <span className="kb-src-name" title={source.title}>{source.title}</span>
+                          <span className="kb-src-sub">
+                            {source.type === "text" ? "Text" : "File"} · {sourceDetail(source)}
+                          </span>
+                        </span>
+                        <span className="kb-src-meta">{sourceDetail(source)}</span>
+                        <button
+                          aria-label={`Delete source ${source.title}`}
+                          className="kb-src-delete"
+                          onClick={() => requestSourceDelete(selected, source)}
+                          title="Delete this source"
+                          type="button"
+                        >
+                          <Icon name="trash" size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : knowledgeBaseId && effectiveLoadState === "ready" && pendingLoadState !== "loading" ? (
+              <div className="kb-empty">
+                <p>This knowledge base was not found. It may have been deleted.</p>
+              </div>
+            ) : effectiveLoadState === "ready" && bases.length === 0 ? (
+              <div className="kb-empty">
+                <p>No knowledge bases yet. Create one to give your agents something to answer from.</p>
+                <button className="kb-dark-btn" onClick={openCreate} type="button">
+                  <Icon name="plus" size={15} sw={2.2} />
+                  New knowledge base
+                </button>
+              </div>
+            ) : null}
+          </section>
         </div>
             </main>
 
@@ -1720,7 +1728,6 @@ export default function KnowledgeBasePage({ knowledgeBaseId }: { knowledgeBaseId
         </div>
       ) : null}
     </div>
-    </LazyLayoutMotion>
   );
 }
 
@@ -1785,6 +1792,7 @@ function KnowledgeBaseDialog({
   onPartial?: (updated: KnowledgeBase) => void;
   onSaved: (saved: KnowledgeBase, addedCount: number) => void;
 }) {
+  const { mode } = useWorkspaceMode();
   const [name, setName] = useState("");
   const [documents, setDocuments] = useState<DocumentDraft[]>([]);
   const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
@@ -1956,7 +1964,7 @@ function KnowledgeBaseDialog({
         let saved = base;
         if (textEntries.length > 0) {
           saved = fromApi(
-            await apiAddKnowledgeBaseSources(base.knowledge_base_id, textEntries, getToken)
+            await apiAddKnowledgeBaseSources(base.knowledge_base_id, textEntries, getToken, mode)
           );
           if (fileEntries.length > 0) {
             onPartial?.(saved);
@@ -1965,7 +1973,7 @@ function KnowledgeBaseDialog({
         }
         if (fileEntries.length > 0) {
           saved = fromApi(
-            await apiAddKnowledgeBaseFileSources(base.knowledge_base_id, fileEntries, getToken)
+            await apiAddKnowledgeBaseFileSources(base.knowledge_base_id, fileEntries, getToken, mode)
           );
         }
         onSaved(saved, documents.length);
@@ -1980,7 +1988,8 @@ function KnowledgeBaseDialog({
           min_chunk_size: 400,
           ...(textEntries.length > 0 ? { knowledge_base_texts: textEntries } : {}),
         },
-        getToken
+        getToken,
+        mode
       );
       if (fileEntries.length === 0) {
         onSaved(fromApi(created), documents.length);
@@ -1990,12 +1999,13 @@ function KnowledgeBaseDialog({
         const filled = await apiAddKnowledgeBaseFileSources(
           created.knowledge_base_id,
           fileEntries,
-          getToken
+          getToken,
+          mode
         );
         onSaved(fromApi(filled), documents.length);
       } catch (err) {
         // The upload's error is the one to show, so a failed clean-up stays quiet.
-        await apiDeleteKnowledgeBase(created.knowledge_base_id, getToken).catch(() => undefined);
+        await apiDeleteKnowledgeBase(created.knowledge_base_id, getToken, mode).catch(() => undefined);
         throw err;
       }
     } catch (err) {
@@ -2300,10 +2310,12 @@ function KnowledgeBaseDialog({
   );
 }
 
-function StatusPill({ status }: { status: KnowledgeBaseStatus }) {
+// StatusLine is the plain Retell-style status in the detail header: a check
+// and the word when ready, the coloured label otherwise.
+function StatusLine({ status }: { status: KnowledgeBaseStatus }) {
   return (
-    <span className={`kb-pill kb-pill-${status}`}>
-      <span className="kb-dot" />
+    <span className={`kb-status-line is-${status}`}>
+      {status === "complete" ? <Icon name="check" size={13} sw={2.4} /> : <span className="kb-dot" />}
       {statusLabels[status]}
     </span>
   );
