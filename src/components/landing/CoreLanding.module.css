@@ -11,6 +11,7 @@
 .brand > span:first-child { width: 29px; }
 .brand .brandDot { color: var(--landing-green); margin-left: -7px; }
 .login { display: inline-flex; align-items: center; gap: 15px; padding: 10px 17px; border-radius: 10px; background: var(--site-invert-bg); color: var(--site-invert-text); font-size: 12px; font-weight: 550; cursor: pointer; }
+.loginGhost { display: inline-flex; align-items: center; padding: 10px 17px; border-radius: 10px; border: 1px solid var(--site-border); background: transparent; color: var(--site-text); font-size: 12px; font-weight: 550; cursor: pointer; }
 .skip { position: fixed; top: -100px; left: 20px; z-index: 100; padding: 12px 20px; background: var(--site-bg); }
 .skip:focus { top: 20px; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 25px; min-height: 48px; padding: 13px 22px; border-radius: 11px; font-size: 13px; font-weight: 550; cursor: pointer; transition: transform .25s, box-shadow .25s, filter .25s; }
@@ -361,6 +362,7 @@
   .brand { font-size: 22px; }
   .brand > span:first-child { width: 25px; }
   .login { font-size: 11px; padding-inline: 11px; gap: 7px; }
+  .loginGhost { font-size: 11px; padding-inline: 11px; }
   .hero { padding-inline: 18px; }
   .hero h1 { font-size: clamp(32px,8.6vw,41px); }
   .hero .label { font-size: 8px; }

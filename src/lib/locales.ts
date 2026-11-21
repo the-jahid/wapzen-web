@@ -154,7 +154,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Features", pricing: "Pricing", tools: "Free tools", faq: "FAQ", faqHref: "/#faq" },
       login: "Log in",
-      signup: "Sign up",
+      signup: "Register",
       dashboard: "Dashboard",
       home: "Home",
       breadcrumb: "Breadcrumb",

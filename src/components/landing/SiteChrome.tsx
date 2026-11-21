@@ -1,4 +1,4 @@
-import { SignUpButton, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
@@ -33,7 +33,7 @@ export function WhatsAppButton({ href, label }: { href: string; label: string })
 
 export function SiteHeader({ links, brandHref, locale = "en" }: { links: Array<{ href: string; label: string }>; brandHref?: string; locale?: Locale }) {
   const { ui } = locales[locale];
-  return <ResizableNavbar brand={<Brand href={brandHref} />} links={links} actions={<><ThemeToggleButton /><AuthSwitch signedOut={<SignUpButton mode="modal" forceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard"><button className={styles.login} type="button">{ui.signup}<ArrowUpRight size={14} /></button></SignUpButton>} signedIn={<><a href="/dashboard" className={styles.login}>{ui.dashboard}</a><UserButton /></>} /></>} />;
+  return <ResizableNavbar brand={<Brand href={brandHref} />} links={links} actions={<><ThemeToggleButton /><AuthSwitch signedOut={<><SignInButton mode="modal" forceRedirectUrl="/dashboard" signUpForceRedirectUrl="/dashboard"><button className={styles.loginGhost} type="button">{ui.login}</button></SignInButton><SignUpButton mode="modal" forceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard"><button className={styles.login} type="button">{ui.signup}<ArrowUpRight size={14} /></button></SignUpButton></>} signedIn={<><a href="/dashboard" className={styles.login}>{ui.dashboard}</a><UserButton /></>} /></>} />;
 }
 
 // The footer's SOLUTIONS column lists the pages in the current language (or
