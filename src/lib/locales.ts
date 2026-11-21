@@ -41,6 +41,7 @@ export type BlogUi = {
 type Ui = {
   nav: { features: string; pricing: string; tools: string; faq: string; faqHref: string };
   login: string;
+  signup: string;
   dashboard: string;
   home: string;
   breadcrumb: string;
@@ -80,6 +81,7 @@ type Ui = {
 const arabicUi = (blogHref: string): Ui => ({
   nav: { features: "المزايا", pricing: "الأسعار", tools: "أدوات مجانية", faq: "الأسئلة", faqHref: "#faq" },
   login: "تسجيل الدخول",
+  signup: "إنشاء حساب",
   dashboard: "لوحة التحكم",
   home: "الرئيسية",
   breadcrumb: "مسار التنقل",
@@ -152,6 +154,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Features", pricing: "Pricing", tools: "Free tools", faq: "FAQ", faqHref: "/#faq" },
       login: "Log in",
+      signup: "Sign up",
       dashboard: "Dashboard",
       home: "Home",
       breadcrumb: "Breadcrumb",
@@ -213,6 +216,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Recursos", pricing: "Preços", tools: "Ferramentas grátis", faq: "Perguntas", faqHref: "#faq" },
       login: "Entrar",
+      signup: "Criar conta",
       dashboard: "Painel",
       home: "Início",
       breadcrumb: "Navegação estrutural",
@@ -274,6 +278,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
       login: "Entrar",
+      signup: "Crear cuenta",
       dashboard: "Panel",
       home: "Inicio",
       breadcrumb: "Ruta de navegación",
@@ -336,6 +341,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
       login: "Iniciar sesión",
+      signup: "Crear cuenta",
       dashboard: "Panel",
       home: "Inicio",
       breadcrumb: "Ruta de navegación",
@@ -398,6 +404,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
       login: "Iniciar sesión",
+      signup: "Crear cuenta",
       dashboard: "Panel",
       home: "Inicio",
       breadcrumb: "Ruta de navegación",
@@ -460,6 +467,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
       login: "Iniciar sesión",
+      signup: "Crear cuenta",
       dashboard: "Panel",
       home: "Inicio",
       breadcrumb: "Ruta de navegación",
@@ -522,6 +530,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Funciones", pricing: "Precios", tools: "Herramientas gratis", faq: "Preguntas", faqHref: "#faq" },
       login: "Iniciar sesión",
+      signup: "Crear cuenta",
       dashboard: "Panel",
       home: "Inicio",
       breadcrumb: "Ruta de navegación",
@@ -583,6 +592,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Funzioni", pricing: "Prezzi", tools: "Strumenti gratis", faq: "Domande", faqHref: "#faq" },
       login: "Accedi",
+      signup: "Registrati",
       dashboard: "Dashboard",
       home: "Home",
       breadcrumb: "Percorso di navigazione",
@@ -645,6 +655,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Funktionen", pricing: "Preise", tools: "Gratis-Tools", faq: "FAQ", faqHref: "#faq" },
       login: "Anmelden",
+      signup: "Registrieren",
       dashboard: "Dashboard",
       home: "Startseite",
       breadcrumb: "Brotkrümelnavigation",
@@ -725,6 +736,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Fitur", pricing: "Harga", tools: "Tools gratis", faq: "FAQ", faqHref: "#faq" },
       login: "Masuk",
+      signup: "Daftar",
       dashboard: "Dasbor",
       home: "Beranda",
       breadcrumb: "Navigasi",
@@ -787,6 +799,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Ominaisuudet", pricing: "Hinnat", tools: "Ilmaiset työkalut", faq: "UKK", faqHref: "#faq" },
       login: "Kirjaudu",
+      signup: "Rekisteröidy",
       dashboard: "Hallintapaneeli",
       home: "Etusivu",
       breadcrumb: "Murupolku",
@@ -849,6 +862,7 @@ export const locales: Record<Locale, {
     ui: {
       nav: { features: "Ciri-ciri", pricing: "Harga", tools: "Alat percuma", faq: "Soalan lazim", faqHref: "#faq" },
       login: "Log masuk",
+      signup: "Daftar",
       dashboard: "Papan pemuka",
       home: "Laman utama",
       breadcrumb: "Navigasi",
