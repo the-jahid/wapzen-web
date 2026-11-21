@@ -18,6 +18,11 @@ export const FREE_TRIAL_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encod
   "Hi, my free trial on Wapzen has ended. I'd like to buy a paid plan.",
 )}`;
 
+/** Opens a WhatsApp chat with support to buy more voice call minutes. */
+export const VOICE_MINUTES_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
+  "Hi, I've used my voice minutes on Wapzen. I'd like to buy more minutes for my WhatsApp voice agent.",
+)}`;
+
 export function WhatsAppGlyph({ size }: { size: number }) {
   return (
     <svg aria-hidden="true" fill="currentColor" height={size} viewBox="0 0 24 24" width={size}>

@@ -159,3 +159,18 @@ export function placeVoiceCall(
 export function hangupVoiceCall(callId: string, getToken: AuthTokenGetter): Promise<ApiCall> {
   return request<ApiCall>(`/v1/dashboard/calls/${encodeURIComponent(callId)}/hangup`, { method: "POST" }, getToken);
 }
+
+// Voice minutes: every account gets 10 free minutes (600 seconds) of voice
+// agent calls. Once they are used up the agents neither answer nor place calls
+// until more minutes are bought (by message; we raise the limit by hand).
+
+export type ApiVoiceUsage = {
+  used_seconds: number;
+  limit_seconds: number;
+  remaining_seconds: number;
+  exhausted: boolean;
+};
+
+export function getVoiceUsage(getToken: AuthTokenGetter): Promise<ApiVoiceUsage> {
+  return request<ApiVoiceUsage>("/v1/voice/usage", undefined, getToken);
+}

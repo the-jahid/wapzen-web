@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
-import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
+import { SUPPORT_WHATSAPP_URL, VOICE_MINUTES_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import type { AgentPayload, ApiAgentResource, ApiAgentSection } from "@/lib/agents";
 import type { ApiCall } from "@/lib/calls";
 import {
@@ -26,6 +26,9 @@ import {
   deleteVoiceAgent,
   getVoiceCall,
   getVoicePhoneNumber,
+  getVoiceUsage,
+  VoiceApiError,
+  type ApiVoiceUsage,
   hangupVoiceCall,
   listVoiceAgents,
   listVoiceCalls,
@@ -457,7 +460,125 @@ const css = `${baseCss}
   .va-seg { grid-template-columns: 1fr; }
   .va-call-form { grid-template-columns: 1fr; }
 }
+/* Voice minutes: a slim meter while minutes are left, the amber alert with the
+   WhatsApp button once they are used up. */
+.va-usage { align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 16px; padding: 12px 16px; }
+.va-usage-label { color: var(--text); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.va-usage-bar { background: var(--app-hover-3); border-radius: 999px; flex: 1 1 160px; height: 6px; min-width: 120px; overflow: hidden; }
+.va-usage-fill { background: var(--primary); border-radius: 999px; height: 100%; transition: width .3s ease; }
+.va-usage.is-low .va-usage-fill { background: var(--app-amber); }
+.va-usage-numbers { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.va-usage-numbers strong { color: var(--text); font-weight: 700; }
+.va-usage.is-low .va-usage-numbers strong { color: var(--app-amber-text); }
+.va-usage-alert { flex: 0 0 auto; margin-bottom: 16px; }
+.va-test-minutes { color: var(--subtle); font-size: 11.5px; font-variant-numeric: tabular-nums; margin: 8px 0 0; }
 `;
+
+// formatMinutes shows seconds of talk time as m:ss (10:00, 4:05).
+function formatMinutes(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+const VOICE_USAGE_KEY = "voice-usage";
+const VOICE_USAGE_POLL_MS = 30_000;
+// Under two minutes left the meter turns amber.
+const VOICE_USAGE_LOW_SECONDS = 120;
+
+// useVoiceUsage is the account's voice minutes, shared by every component on
+// the page through the page cache. Only the page passes `poll`, so one timer
+// keeps it fresh (every 30 s while the tab is visible); anyone can refresh.
+function useVoiceUsage(getToken: AuthGetter, poll = false) {
+  const [usage, setUsage] = useCachedState<ApiVoiceUsage | null>(VOICE_USAGE_KEY, null);
+  const refresh = useCallback(async () => {
+    try {
+      setUsage(await getVoiceUsage(getToken));
+    } catch {
+      // Keep what we had; the next poll tries again.
+    }
+  }, [getToken, setUsage]);
+
+  useEffect(() => {
+    if (!poll) return;
+    void refresh();
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") void refresh();
+    }, VOICE_USAGE_POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [poll, refresh]);
+
+  return { usage, refresh };
+}
+
+// VoiceMinutesUsedUpCard is the only notice once the minutes are gone: the
+// agents stop answering and calling until more minutes are bought.
+function VoiceMinutesUsedUpCard({ usage }: { usage: ApiVoiceUsage }) {
+  const free = usage.limit_seconds <= 600;
+  return (
+    <div className="va-card va-runtime-alert va-limit-card va-usage-alert" role="alert">
+      <span className="va-runtime-alert-icon">!</span>
+      <div className="va-limit-card-text">
+        <p className="va-runtime-alert-title">
+          {free
+            ? `You have used your ${Math.round(usage.limit_seconds / 60)} free voice minutes`
+            : "You have used all your voice minutes"}
+        </p>
+        <p className="va-runtime-alert-copy">
+          Your WhatsApp voice agents will not answer or make calls until you <strong>buy more minutes</strong>. To buy
+          minutes, message us on WhatsApp at <strong className="notranslate">+880 1701-750469</strong> and we&apos;ll add
+          them to your account.
+        </p>
+      </div>
+      <a
+        className="va-btn va-upgrade-whatsapp"
+        href={VOICE_MINUTES_WHATSAPP_URL}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <WhatsAppGlyph size={16} />
+        Buy minutes on WhatsApp
+      </a>
+    </div>
+  );
+}
+
+// VoiceUsageCard shows how much of the account's call time is used. With
+// `compact` it renders nothing until the minutes run out (the agent editor).
+function VoiceUsageCard({ usage, compact = false }: { usage: ApiVoiceUsage | null; compact?: boolean }) {
+  if (!usage) return null;
+  if (usage.exhausted) return <VoiceMinutesUsedUpCard usage={usage} />;
+  if (compact) return null;
+  const limit = Math.max(usage.limit_seconds, 1);
+  const percent = Math.min(100, Math.round((usage.used_seconds / limit) * 100));
+  const low = usage.remaining_seconds <= VOICE_USAGE_LOW_SECONDS;
+  return (
+    <div className={`va-card va-usage${low ? " is-low" : ""}`}>
+      <span className="va-usage-label">Voice minutes</span>
+      <div
+        aria-label="Voice minutes used"
+        aria-valuemax={usage.limit_seconds}
+        aria-valuemin={0}
+        aria-valuenow={Math.min(usage.used_seconds, usage.limit_seconds)}
+        aria-valuetext={`${formatMinutes(usage.used_seconds)} of ${formatMinutes(usage.limit_seconds)} minutes used`}
+        className="va-usage-bar"
+        role="progressbar"
+      >
+        <div className="va-usage-fill" style={{ width: `${percent}%` }} />
+      </div>
+      <span className="va-usage-numbers">
+        {formatMinutes(usage.used_seconds)} of {formatMinutes(usage.limit_seconds)} used ·{" "}
+        <strong>{formatMinutes(usage.remaining_seconds)} left</strong>
+      </span>
+    </div>
+  );
+}
 
 const avatarColors = ["#52525b", "#3f3f46", "#63636b", "#4a4a52", "#5a5a63", "#44444c"];
 
@@ -575,6 +696,7 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
   const editRevisions = useRef<Map<string, number>>(new Map());
 
   const isAuthenticated = Boolean(isUserLoaded && isAuthLoaded && isUserSignedIn && isAuthSignedIn && user);
+  const { usage: voiceUsage } = useVoiceUsage(getToken, isAuthenticated);
 
   const reloadAgents = useCallback(async () => {
     const list = await listVoiceAgents(getToken);
@@ -826,6 +948,7 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
                       ) : null
                     }
                   />
+                  <VoiceUsageCard compact usage={voiceUsage} />
                   {!selected.agent?.phone_number_id ? (
                     // No number yet: the page is only the way to connect one.
                     // The prompt and settings open once a number is linked.
@@ -922,6 +1045,8 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
                     </button>
                   </div>
                 </div>
+
+                <VoiceUsageCard usage={voiceUsage} />
 
                 <div className="va-table-wrap">
                   <table aria-busy={showSkeleton || undefined} className="va-table">
@@ -2384,14 +2509,23 @@ function TestCallCard({ agent, getToken }: { agent: VoiceAgent; getToken: AuthGe
   const placingRef = useRef<{ controller: AbortController; cancelled: boolean } | null>(null);
   const check = checkTestNumber(to, lib);
   const inCall = isCallInProgress(call);
+  const { usage, refresh: refreshUsage } = useVoiceUsage(getToken);
+  const minutesUsedUp = Boolean(usage?.exhausted);
   const canCall =
     Boolean(phoneNumberId) &&
+    !minutesUsedUp &&
     !isCalling &&
     !isCancelling &&
     !inCall &&
     (check.state === "valid" || (check.state === "unsure" && Boolean(lib)));
 
   useEffect(() => () => placingRef.current?.controller.abort(), []);
+
+  // A finished call has just used minutes: show the new balance right away.
+  const callStatus = call?.status ?? "";
+  useEffect(() => {
+    if (callStatus === "ended") void refreshUsage();
+  }, [callStatus, refreshUsage]);
 
   const callId = call?.id ?? "";
   useEffect(() => {
@@ -2471,6 +2605,8 @@ function TestCallCard({ agent, getToken }: { agent: VoiceAgent; getToken: AuthGe
       }
     } catch (err) {
       if (!placing.cancelled) setError(err instanceof Error ? err.message : "Could not place the call");
+      // 402 = minutes used up: refresh so the "buy minutes" card appears.
+      if (err instanceof VoiceApiError && err.status === 402) void refreshUsage();
     } finally {
       if (placingRef.current === placing) placingRef.current = null;
       setIsCalling(false);
@@ -2545,6 +2681,13 @@ function TestCallCard({ agent, getToken }: { agent: VoiceAgent; getToken: AuthGe
       ) : (
         <p className="va-field-hint">Link a phone number to this agent to place a test call.</p>
       )}
+      {usage && phoneNumberId ? (
+        <p className="va-test-minutes">
+          {minutesUsedUp
+            ? "Voice minutes used up. Buy more minutes to call again."
+            : `${formatMinutes(usage.remaining_seconds)} voice minutes left`}
+        </p>
+      ) : null}
       {error ? <p className="va-test-result is-error">{error}</p> : null}
       {isCalling ? (
         <p className="va-test-result">Placing the call…</p>
