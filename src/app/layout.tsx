@@ -6,6 +6,7 @@ import { siteConfig } from "@/lib/site";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { themeInitScript } from "@/components/theme/theme-constants";
 import { AutoTranslate } from "@/components/translate/AutoTranslate";
+import { VisitBeacon } from "@/components/analytics/VisitBeacon";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -101,6 +102,7 @@ export default function RootLayout({
           <ThemeProvider>{children}</ThemeProvider>
           <AutoTranslate />
           <Analytics />
+          <VisitBeacon />
         </body>
       </html>
     </ClerkProvider>
