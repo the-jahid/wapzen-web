@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Camera, Check, Clock3, FileText, MessageCircle, Mic, PhoneCall, Users } from "lucide-react";
+import { ArrowRight, Camera, Check, Clock3, FileText, MessageCircle, Mic, PhoneCall, PhoneIncoming, PhoneOutgoing, Users, Wrench, X } from "lucide-react";
 import { blogPost, blogUi, formatPostDate, postsIn } from "@/lib/blogPosts";
 import { locales } from "@/lib/locales";
 import { marketingPages } from "@/lib/marketingPages";
@@ -180,6 +180,63 @@ export function PromptFile({ name, text }: { name: string; text: string }) {
     <figcaption className={pb.fileHead}><span><FileText size={15} aria-hidden="true" />{name}</span><CopyButton value={text} label={`Copy ${name}`}>Copy</CopyButton></figcaption>
     <pre>{text}</pre>
   </figure>;
+}
+
+// Blocks for the WhatsApp voice agent industry posts (2026-11-21): a day of calls, one
+// sample call turn by turn, and a do / don't list for the rules of a regulated industry.
+
+const callOutcomes = {
+  answered: "Answered by the AI",
+  checked: "Checked in your system",
+  booked: "Booked in your system",
+  texted: "Sent a WhatsApp message",
+  saved: "Saved for your team",
+  team: "Left for your team",
+  urgent: "Told to get urgent help",
+  called: "AI called the customer",
+};
+export type CallLogItem = { time: string; direction: "in" | "out"; who: string; said: string; outcome: keyof typeof callOutcomes; result: string };
+
+/** A day of WhatsApp calls, hour by hour: who called (or was called), what they said and what the voice agent did. */
+export function CallLog({ items, caption }: { items: CallLogItem[]; caption: string }) {
+  return <figure className={pb.timeline}>
+    <ol>{items.map((item) => {
+      const Icon = item.direction === "in" ? PhoneIncoming : PhoneOutgoing;
+      return <li key={`${item.time}-${item.who}`} data-outcome={`call-${item.outcome}`}>
+        <span className={pb.time}>{item.time}</span>
+        <div className={pb.event}>
+          <p className={pb.from}><Icon size={14} aria-hidden="true" />{item.direction === "in" ? "Incoming WhatsApp call" : "Outgoing WhatsApp call"} · {item.who}</p>
+          <p className={pb.message}>{item.said}</p>
+          <p className={pb.reply}><span className={pb.tag}>{callOutcomes[item.outcome]}</span>{item.result}</p>
+        </div>
+      </li>;
+    })}</ol>
+    <figcaption>{caption}</figcaption>
+  </figure>;
+}
+
+export type CallTurn = { who: "agent" | "caller"; text: string } | { tool: string; text: string };
+
+/** One sample call, turn by turn, with the actions the agent took (API lookups, WhatsApp messages) in between. */
+export function CallTranscript({ title, meta, turns, caption }: { title: string; meta: string; turns: CallTurn[]; caption: string }) {
+  return <figure className={pb.call}>
+    <div className={pb.callHead}>
+      <span className={pb.callIcon} aria-hidden="true"><PhoneCall size={18} /></span>
+      <div><p className={pb.callTitle}>{title}</p><p className={pb.callMeta}>{meta}</p></div>
+    </div>
+    <ol className={pb.turns}>{turns.map((turn, i) => "tool" in turn
+      ? <li key={`${i}-${turn.tool}`} className={pb.action}><Wrench size={14} aria-hidden="true" /><span><code>{turn.tool}</code>{turn.text}</span></li>
+      : <li key={`${i}-${turn.who}`} className={pb.turn} data-who={turn.who}><span className={pb.who}>{turn.who === "agent" ? "AI agent" : "Caller"}</span><p className={pb.said}>{turn.text}</p></li>)}</ol>
+    <figcaption>{caption}</figcaption>
+  </figure>;
+}
+
+/** What to do and what never to do, side by side. */
+export function DoDont({ dos, donts, titles = ["Do", "Don’t"] }: { dos: string[]; donts: string[]; titles?: [string, string] }) {
+  return <div className={pb.rules}>
+    <section className={pb.rulesCol} data-tone="do" aria-label={titles[0]}><h3 className={pb.rulesTitle}>{titles[0]}</h3><ul>{dos.map((item) => <li key={item}><Check size={15} aria-hidden="true" />{item}</li>)}</ul></section>
+    <section className={pb.rulesCol} data-tone="dont" aria-label={titles[1]}><h3 className={pb.rulesTitle}>{titles[1]}</h3><ul>{donts.map((item) => <li key={item}><X size={15} aria-hidden="true" />{item}</li>)}</ul></section>
+  </div>;
 }
 
 /** The voice agent: WhatsApp calls, with a button to the team's WhatsApp. */

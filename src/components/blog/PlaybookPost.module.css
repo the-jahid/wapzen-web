@@ -88,6 +88,40 @@
 .voiceText li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.55; color: #e6f0eb; }
 .voiceText li > svg { flex-shrink: 0; margin-top: 3px; color: #6ee7a8; }
 
+/* A day of WhatsApp calls (CallLog): the timeline above, coloured by what the voice agent did */
+.timeline li[data-outcome="call-checked"], .timeline li[data-outcome="call-booked"] { --dot: #2aa4c9; }
+.timeline li[data-outcome="call-texted"] { --dot: #b46be0; }
+.timeline li[data-outcome="call-saved"] { --dot: #d79a1e; }
+.timeline li[data-outcome="call-team"] { --dot: #7a86f0; }
+.timeline li[data-outcome="call-urgent"] { --dot: #e0605a; }
+.timeline li[data-outcome="call-called"] { --dot: #e08a3c; }
+
+/* One sample call, turn by turn (CallTranscript) */
+.call { overflow: hidden; border: 1px solid var(--site-border); border-radius: 20px; background: var(--site-panel); }
+.callHead { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--site-border); background: color-mix(in srgb, var(--landing-green) 8%, var(--site-panel)); }
+.callIcon { display: grid; flex-shrink: 0; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: color-mix(in srgb, var(--landing-green) 16%, transparent); color: var(--landing-green); }
+.callTitle { font-size: 15px; font-weight: 650; line-height: 1.35; color: var(--site-text); }
+.callMeta { margin-top: 2px; font-family: var(--font-geist-mono), monospace; font-size: 11.5px; line-height: 1.5; color: var(--site-text-muted); }
+.turns { display: grid; gap: 10px; padding: 18px; }
+.turn { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: start; }
+.who { padding-top: 10px; text-align: right; font-size: 10.5px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; color: var(--site-text-muted); }
+.turn[data-who="agent"] .who { color: var(--landing-green); }
+.said { padding: 9px 13px; border-radius: 4px 14px 14px 14px; background: var(--site-fill-2); font-size: 14.5px; line-height: 1.6; color: var(--site-text); }
+.turn[data-who="agent"] .said { background: color-mix(in srgb, var(--landing-green) 13%, var(--site-panel)); }
+.action { display: flex; align-items: flex-start; gap: 8px; margin-left: 88px; padding: 8px 12px; border: 1px dashed color-mix(in srgb, #2aa4c9 50%, var(--site-border)); border-radius: 12px; font-size: 13px; line-height: 1.55; color: var(--site-text-soft); }
+.action > svg { flex-shrink: 0; margin-top: 3px; color: #2aa4c9; }
+.action code { margin-right: 7px; font-family: var(--font-geist-mono), monospace; font-size: 11.5px; font-weight: 650; color: #2aa4c9; }
+.call figcaption { padding: 12px 18px; border-top: 1px solid var(--site-border); font-size: 13px; line-height: 1.6; color: var(--site-text-muted); }
+
+/* Do / don't, side by side */
+.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rulesCol { --tone: var(--landing-green); padding: 20px 18px; border: 1px solid var(--site-border); border-top: 3px solid var(--tone); border-radius: 18px; background: var(--site-panel); }
+.rulesCol[data-tone="dont"] { --tone: #e0605a; }
+.rulesCol .rulesTitle { font-size: 16px; line-height: 1.3; letter-spacing: -.02em; }
+.rulesCol ul { display: grid; gap: 9px; margin-top: 12px; }
+.rulesCol li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.55; color: var(--site-text-soft); }
+.rulesCol li > svg { flex-shrink: 0; margin-top: 3px; color: var(--tone); }
+
 /* FAQ, always open */
 .faq { display: grid; gap: 10px; }
 .faq > div { padding: 18px 20px; border: 1px solid var(--site-border); border-radius: 16px; background: var(--site-panel); }
@@ -98,6 +132,7 @@
   .answer { grid-template-columns: minmax(0, 1fr); }
   .specs { border-left: 0; border-top: 1px solid color-mix(in srgb, var(--landing-green) 22%, var(--site-border)); }
   .board, .templates { grid-template-columns: minmax(0, 1fr); }
+  .rules { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
   .answerText { padding: 22px 20px; }
@@ -109,4 +144,8 @@
   .time { padding-top: 0; text-align: left; }
   .voice { grid-template-columns: minmax(0, 1fr); padding: 22px 20px; }
   .event, .faq > div { padding: 14px 15px; }
+  .turns { padding: 14px; }
+  .turn { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .who { padding-top: 0; text-align: left; }
+  .action { margin-left: 0; }
 }

@@ -1,4 +1,4 @@
-import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, BriefcaseBusiness, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Dumbbell, GitCompareArrows, GraduationCap, Hand, Handshake, Layers, ListChecks, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AudioLines, BedDouble, BookOpen, Bot, BotMessageSquare, BriefcaseBusiness, Building2, CalendarCheck, Car, CircleDollarSign, ClipboardCheck, Coins, Columns3, Dumbbell, GitCompareArrows, GraduationCap, Hand, HandCoins, Handshake, HeartPulse, Landmark, Layers, ListChecks, Luggage, Megaphone, MessageCircle, MessageSquareReply, MessagesSquare, PackageCheck, PhoneCall, Plane, QrCode, Receipt, Scale, Scissors, ShieldCheck, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Store, SunMedium, Truck, UtensilsCrossed, Workflow, Wrench, type LucideIcon } from "lucide-react";
 import { locales, type Locale } from "./locales";
 
 export type BlogPostEntry = {
@@ -1332,6 +1332,88 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-18",
     checked: "2026-11-17",
     readingMinutes: 12,
+  },
+  // WhatsApp voice agent posts for seven industries (2026-11-21), one per industry the user
+  // listed: healthcare, financial services, insurance, logistics, retail, travel and
+  // hospitality, debt collection. Voice calls only. Keywords from
+  // docs/seo-blog-voice-seven-industries-research.mjs ("ai voice agent for <industry>" led
+  // in every one); PlaybookPost with the CallLog, CallTranscript and DoDont blocks.
+  {
+    href: "/blog/ai-voice-agent-for-healthcare",
+    title: "AI Voice Agent for Healthcare: Free WhatsApp Calls (2026)",
+    name: "AI voice agent for healthcare",
+    description: "A free AI voice agent for healthcare: answers patients’ WhatsApp calls 24/7, books appointments in your system and makes recall calls. Health-data rules inside.",
+    tag: "Explainer",
+    icon: HeartPulse,
+    published: "2026-11-21",
+    updated: "2026-11-21",
+    readingMinutes: 15,
+  },
+  {
+    href: "/blog/ai-voice-agent-for-financial-services",
+    title: "AI Voice Agent for Financial Services on WhatsApp (2026)",
+    name: "AI voice agent for financial services",
+    description: "An AI voice agent for banks, lenders and fintechs on WhatsApp calls: loan and branch questions, document checklists, callbacks and WhatsApp’s rules. Free.",
+    tag: "Explainer",
+    icon: Landmark,
+    published: "2026-11-21",
+    updated: "2026-11-21",
+    readingMinutes: 14,
+  },
+  {
+    href: "/blog/ai-voice-agent-for-insurance",
+    title: "AI Voice Agent for Insurance Agents on WhatsApp (2026)",
+    name: "AI voice agent for insurance",
+    description: "A free AI voice agent for insurance agents: calls new leads back in seconds on WhatsApp, answers policy questions, takes claim details. Why not to cold call.",
+    tag: "Explainer",
+    icon: ShieldCheck,
+    published: "2026-11-21",
+    updated: "2026-11-21",
+    readingMinutes: 14,
+  },
+  {
+    href: "/blog/ai-voice-agent-for-logistics",
+    title: "AI Voice Agent for Logistics & Delivery on WhatsApp (2026)",
+    name: "AI voice agent for logistics",
+    description: "An AI voice agent for couriers and logistics teams on WhatsApp calls: parcel tracking, NDR and delivery confirmation calls, pickups. Free, on your own number.",
+    tag: "Explainer",
+    icon: Truck,
+    published: "2026-11-21",
+    updated: "2026-11-21",
+    readingMinutes: 13,
+  },
+  {
+    href: "/blog/ai-voice-agent-for-retail",
+    title: "AI Voice Agent for Retail & E-commerce on WhatsApp (2026)",
+    name: "AI voice agent for retail",
+    description: "Free retail AI voice agent for shops, online stores and distributors: answers stock, order and return calls on WhatsApp and calls buyers to confirm COD orders.",
+    tag: "Explainer",
+    icon: Store,
+    published: "2026-11-21",
+    updated: "2026-11-21",
+    readingMinutes: 12,
+  },
+  {
+    href: "/blog/ai-voice-agent-for-hotels-and-travel",
+    title: "AI Voice Agent for Hotels & Travel on WhatsApp (2026)",
+    name: "AI voice agent for hotels and travel",
+    description: "Free AI voice agent for hotels, travel agencies and tour operators: answers guests’ WhatsApp calls 24/7 in their language, takes booking requests, calls leads.",
+    tag: "Explainer",
+    icon: Luggage,
+    published: "2026-11-21",
+    updated: "2026-11-21",
+    readingMinutes: 14,
+  },
+  {
+    href: "/blog/ai-voice-agent-for-debt-collection",
+    title: "AI Voice Agent for Debt Collection: Is WhatsApp Allowed?",
+    name: "AI voice agent for debt collection",
+    description: "WhatsApp prohibits debt collection, licence or not. What AI voice agents for debt collection do on phone lines, and the payment reminder calls WhatsApp allows.",
+    tag: "Explainer",
+    icon: HandCoins,
+    published: "2026-11-21",
+    updated: "2026-11-21",
+    readingMinutes: 13,
   },
 ];
 
