@@ -123,6 +123,52 @@ const realtimeModels: Option[] = [
   { id: "gpt-realtime", label: "GPT Realtime" },
 ];
 
+// Google Gemini Live models. The server runs any "gemini-*" model on Gemini
+// Live and everything else on OpenAI Realtime, so the model is the engine.
+const geminiModels: Option[] = [
+  { id: "gemini-3.8-live", label: "Gemini 3.8 Live" },
+  { id: "gemini-3.1-flash-live-preview", label: "Gemini 3.1 Flash Live" },
+  { id: "gemini-2.5-flash-native-audio-latest", label: "Gemini 2.5 Flash Native Audio" },
+];
+
+const allRealtimeModels: Option[] = [...realtimeModels, ...geminiModels];
+
+type VoiceEngine = "openai" | "gemini";
+
+const voiceEngines: Option[] = [
+  { id: "gemini", label: "Google Gemini Live" },
+  { id: "openai", label: "OpenAI Realtime" },
+];
+
+function engineOf(model: string | undefined | null): VoiceEngine {
+  return model?.trim().toLowerCase().startsWith("gemini") ? "gemini" : "openai";
+}
+
+// The voices Gemini Live speaks.
+const geminiVoices: Option[] = [
+  { id: "puck", label: "Puck · male, upbeat" },
+  { id: "charon", label: "Charon · male, informative" },
+  { id: "kore", label: "Kore · female, firm" },
+  { id: "fenrir", label: "Fenrir · male, excitable" },
+  { id: "aoede", label: "Aoede · female, breezy" },
+  { id: "leda", label: "Leda · female, youthful" },
+  { id: "orus", label: "Orus · male, firm" },
+  { id: "zephyr", label: "Zephyr · female, bright" },
+];
+
+// What switching engine starts an agent on.
+const engineDefaults: Record<VoiceEngine, { model: string; voiceId: string; voiceName: string }> = {
+  openai: { model: "gpt-realtime-2.1-mini", voiceId: "echo", voiceName: "Echo" },
+  gemini: { model: "gemini-3.8-live", voiceId: "zephyr", voiceName: "Zephyr" },
+};
+
+// Every new voice agent starts on Google Gemini Live, Gemini 3.8 Live, Zephyr;
+// also what the editor shows when an agent has nothing saved. Keep in step with
+// the agents table defaults (whiskey migration 20261122000001) and the Go
+// voicecall defaults.
+const DEFAULT_ENGINE: VoiceEngine = "gemini";
+const DEFAULT_REALTIME_MODEL = engineDefaults[DEFAULT_ENGINE].model;
+
 // The voices the Realtime models speak.
 const realtimeVoices: Option[] = [
   { id: "alloy", label: "Alloy · neutral" },
@@ -137,9 +183,9 @@ const realtimeVoices: Option[] = [
   { id: "cedar", label: "Cedar · male, natural" },
 ];
 
-// New voice agents start on Echo (male); also shown when none is saved.
-const DEFAULT_VOICE_ID = "echo";
-const DEFAULT_VOICE_NAME = "Echo";
+// New voice agents start on Zephyr (Gemini); also shown when none is saved.
+const DEFAULT_VOICE_ID = engineDefaults[DEFAULT_ENGINE].voiceId;
+const DEFAULT_VOICE_NAME = engineDefaults[DEFAULT_ENGINE].voiceName;
 
 // OpenAI's supported speech languages (Whisper / Realtime list) plus the
 // regional variants and Bengali we already offered. "multi" = no language
@@ -622,7 +668,7 @@ function voiceSummary(agent: VoiceAgent): string {
 }
 
 function brainSummary(agent: VoiceAgent): string {
-  return optionLabel(realtimeModels, agent.voice?.openai?.realtime_model || "gpt-realtime-2.1-mini");
+  return optionLabel(allRealtimeModels, agent.voice?.openai?.realtime_model || DEFAULT_REALTIME_MODEL);
 }
 
 function nonEmpty(value: string | undefined | null): string | undefined {
@@ -918,7 +964,9 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
           system_prompt: "You are a friendly phone assistant. Keep every reply short and natural to say out loud.",
           begin_message_mode: DEFAULT_BEGIN_MODE,
         },
-        voice: { openai: { voice_id: DEFAULT_VOICE_ID, voice_name: DEFAULT_VOICE_NAME } },
+        voice: {
+          openai: { voice_id: DEFAULT_VOICE_ID, voice_name: DEFAULT_VOICE_NAME, realtime_model: DEFAULT_REALTIME_MODEL },
+        },
       },
       getToken
     );
@@ -2367,10 +2415,19 @@ function SelectField({
   );
 }
 
-// Every call runs on one OpenAI Realtime session, so the voice is all there is
-// to pick: the Realtime model and the voice it speaks in.
+// Every call runs on one speech-to-speech session — OpenAI Realtime or Google
+// Gemini Live — so the voice is all there is to pick: the engine, its model and
+// the voice it speaks in. The engine follows the model (gemini-* = Gemini), so
+// switching engine moves the agent onto that engine's default model and voice;
+// each engine only speaks its own voices.
 function VoiceSettings({ agent, onPatch }: { agent: VoiceAgent; onPatch: Patch }) {
   const openai = agent.voice?.openai ?? {};
+  const model = openai.realtime_model || DEFAULT_REALTIME_MODEL;
+  const engine = engineOf(model);
+  const models = engine === "gemini" ? geminiModels : realtimeModels;
+  const voices = engine === "gemini" ? geminiVoices : realtimeVoices;
+  const savedVoice = openai.voice_id || DEFAULT_VOICE_ID;
+  const voice = voices.some((option) => option.id === savedVoice) ? savedVoice : engineDefaults[engine].voiceId;
   const patchOpenAI = (fields: Partial<NonNullable<NonNullable<VoiceAgent["voice"]>["openai"]>>) =>
     onPatch((current) => ({
       ...current,
@@ -2379,23 +2436,38 @@ function VoiceSettings({ agent, onPatch }: { agent: VoiceAgent; onPatch: Patch }
 
   return (
     <div className="va-fields">
-      <span className="va-field-hint">OpenAI Realtime: one speech-to-speech model hears, thinks and speaks.</span>
+      <span className="va-field-hint">
+        {engine === "gemini"
+          ? "Google Gemini Live: one speech-to-speech model hears, thinks and speaks."
+          : "OpenAI Realtime: one speech-to-speech model hears, thinks and speaks."}
+      </span>
+      <SelectField
+        label="Engine"
+        onChange={(value) => {
+          const next = value === "gemini" ? "gemini" : "openai";
+          if (next === engine) return;
+          const defaults = engineDefaults[next];
+          patchOpenAI({ realtime_model: defaults.model, voice_id: defaults.voiceId, voice_name: defaults.voiceName });
+        }}
+        options={voiceEngines}
+        value={engine}
+      />
       <SelectField
         label="Realtime model"
         onChange={(value) => patchOpenAI({ realtime_model: value })}
-        options={realtimeModels}
-        value={openai.realtime_model || "gpt-realtime-2.1-mini"}
+        options={models}
+        value={model}
       />
       <SelectField
         label="Voice"
         onChange={(value) =>
           patchOpenAI({
             voice_id: value,
-            voice_name: realtimeVoices.find((option) => option.id === value)?.label.split(" · ")[0] ?? value,
+            voice_name: voices.find((option) => option.id === value)?.label.split(" · ")[0] ?? value,
           })
         }
-        options={realtimeVoices}
-        value={openai.voice_id || DEFAULT_VOICE_ID}
+        options={voices}
+        value={voice}
       />
     </div>
   );

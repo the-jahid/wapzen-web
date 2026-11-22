@@ -20,7 +20,8 @@ export type ApiPromptSection = {
 };
 
 export type ApiVoiceSection = {
-  // OpenAI Realtime is the only live-call engine; this picks its model and voice.
+  // The live-call model and voice. A "gemini-*" realtime_model runs the call on
+  // Google Gemini Live (with a Gemini voice), anything else on OpenAI Realtime.
   openai?: {
     voice_id?: string;
     voice_name?: string;
