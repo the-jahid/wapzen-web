@@ -264,6 +264,22 @@ export function WhatsAppLinkHelp({
             )
           </div>
         </div>
+        <div className="wa-pair-links">
+          <button className="wa-pair-link" disabled={!canSwitch} onClick={() => void requestQr()} type="button">
+            {isRequestingQr ? "Getting a QR code…" : "Log in with QR code"}
+            <svg aria-hidden="true" fill="none" height="14" viewBox="0 0 24 24" width="14">
+              <path d="m9 6 6 6-6 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
+            </svg>
+          </button>
+          <button
+            className={`wa-pair-link${expired ? " is-strong" : ""}`}
+            disabled={!canRenew}
+            onClick={renew}
+            type="button"
+          >
+            {isRequesting ? "Sending a new code…" : "Send a new code"}
+          </button>
+        </div>
         <div
           className={`wa-pair-code${expired ? " is-expired" : ""}`}
           aria-label={`Pairing code ${pairingCode.split("").join(" ")}`}
@@ -312,22 +328,6 @@ export function WhatsAppLinkHelp({
             Tap <b>Link with phone number instead</b> and enter this code on your phone
           </li>
         </ol>
-        <div className="wa-pair-links">
-          <button className="wa-pair-link" disabled={!canSwitch} onClick={() => void requestQr()} type="button">
-            {isRequestingQr ? "Getting a QR code…" : "Log in with QR code"}
-            <svg aria-hidden="true" fill="none" height="14" viewBox="0 0 24 24" width="14">
-              <path d="m9 6 6 6-6 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
-            </svg>
-          </button>
-          <button
-            className={`wa-pair-link${expired ? " is-strong" : ""}`}
-            disabled={!canRenew}
-            onClick={renew}
-            type="button"
-          >
-            {isRequesting ? "Sending a new code…" : "Send a new code"}
-          </button>
-        </div>
         <style dangerouslySetInnerHTML={{ __html: css }} />
       </div>
     );
@@ -583,7 +583,7 @@ const css = `
   width: 22px;
 }
 .wa-pair-icon.is-whatsapp { background: #25d366; border-color: #25d366; color: #fff; }
-.wa-pair-links { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 6px 0 0 40px; }
+.wa-pair-links { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 0; }
 .wa-pair-link {
   align-items: center;
   background: none;
