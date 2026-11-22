@@ -3393,13 +3393,14 @@ function PhoneNumberSetupCard({
   // A screen that can be scanned (desktop, tablet) leads with the QR code,
   // already on screen, and "Link with phone number" swaps in the pairing-code
   // form. A phone can't scan its own screen, so it keeps the code form first
-  // with the QR behind "Scan QR code".
+  // with the QR already showing under it (for scanning from a second phone).
   const isPhone = useIsPhone();
   const [codeChosen, setCodeChosen] = useState(false);
   const showQrView = !isPhone && !codeChosen && !showsCode;
-  const [wantsQr, setWantsQr] = useState(false);
-  // Only the phone layout shows the QR inside the code form.
-  const offersQr = isPhone && (wantsQr || (isPending && !login?.pairing_code));
+  // Only the phone layout shows the QR inside the code form — always, until a
+  // pairing code takes its place.
+  const offersQr = isPhone && !showsCode;
+  const autoStartsLogin = showQrView || offersQr;
 
   // The QR view starts its login itself, once per time it is shown. Asking for
   // a code creates no phone number until it is scanned, and the server hands
@@ -3408,14 +3409,14 @@ function PhoneNumberSetupCard({
   // here; the "New QR code" button is.
   const autoStarted = useRef(false);
   useEffect(() => {
-    if (!showQrView) {
+    if (!autoStartsLogin) {
       autoStarted.current = false;
       return;
     }
     if (autoStarted.current || login || isStarting || error) return;
     autoStarted.current = true;
     onStartLogin();
-  }, [error, isStarting, login, onStartLogin, showQrView]);
+  }, [autoStartsLogin, error, isStarting, login, onStartLogin]);
   const onConnect = forNewAgent
     ? "your agent is ready the moment it connects"
     : "the number is assigned to this agent the moment it connects";
@@ -3453,7 +3454,6 @@ function PhoneNumberSetupCard({
             onRequestCode={onRequestCode}
             onRequestQr={async () => {
               await onRequestQr();
-              setWantsQr(true);
               setCodeChosen(false);
             }}
             qr={
@@ -3494,7 +3494,6 @@ function PhoneNumberSetupCard({
                 className="chat-btn chat-btn-secondary"
                 disabled={isStarting}
                 onClick={() => {
-                  setWantsQr(true);
                   // On a desktop this is the way back to the QR view.
                   setCodeChosen(false);
                   if (!isPending) onStartLogin();

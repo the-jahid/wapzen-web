@@ -670,12 +670,19 @@ const css = `
 .orders-pane-icon:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
 .orders-pane-icon:disabled { cursor: not-allowed; opacity: .4; }
 .orders-pane-filters { display: grid; gap: 8px; padding-top: 12px; }
-.orders-pane-search { align-items: center; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-subtle); display: flex; gap: 7px; height: 34px; padding: 0 10px; }
+.orders-pane-search { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-subtle); display: flex; gap: 7px; height: 34px; padding: 0 10px; transition: border-color .16s ease; }
 .orders-pane-search:focus-within { border-color: var(--app-primary); }
 .orders-pane-search input { background: transparent; border: 0; color: var(--app-text); font-size: 13px; min-width: 0; outline: none; width: 100%; }
 .orders-pane-search input::placeholder { color: var(--app-subtle); }
 .orders-pane-row { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.orders-pane-select { background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); font-size: 12.5px; height: 32px; min-width: 0; outline: none; padding: 0 6px; width: 100%; }
+.orders-pane-select { background-color: var(--app-surface); border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); font: inherit; font-size: 13px; height: 34px; min-width: 0; outline: none; padding: 0 10px; transition: border-color .16s ease; width: 100%; }
+.orders-pane-select:hover { border-color: var(--app-muted); }
+.orders-pane-select:focus { border-color: var(--app-primary); }
+/* Selects get one quiet chevron instead of each browser's own arrow. */
+select.orders-pane-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-position: right 10px center; background-repeat: no-repeat; cursor: pointer; overflow: hidden; padding-right: 28px; text-overflow: ellipsis; white-space: nowrap; }
+input[type="date"].orders-pane-select { cursor: text; padding-right: 6px; }
+input[type="date"].orders-pane-select::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .55; }
+input[type="date"].orders-pane-select::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .orders-pane-select option { background: var(--app-surface); }
 .orders-pane-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-muted); cursor: pointer; display: flex; gap: 10px; min-height: 50px; padding: 6px 10px; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
 .orders-pane-item:hover { background: var(--app-hover); color: var(--app-text); }
@@ -714,10 +721,16 @@ const css = `
 .orders-export-btn { font-size: 12.5px; font-weight: 600; gap: 6px; padding: 0 10px; width: auto; }
 .orders-search-row { display: flex; gap: 8px; min-width: 0; }
 .orders-search-row .orders-pane-search { flex: 1 1 auto; min-width: 0; }
-.orders-filters-btn { display: none; }
-.orders-more-filters { display: grid; gap: 8px; }
-.orders-date-field { display: grid; gap: 4px; min-width: 0; }
-.orders-date-label { color: var(--app-subtle); font-size: 11px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+/* The narrow list pane keeps only search in view; status, agent and dates
+   open under the Filters button, same as on phones. */
+.orders-filters-btn { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-muted); cursor: pointer; display: inline-flex; flex: 0 0 auto; font: inherit; font-size: 13px; font-weight: 600; gap: 6px; height: 34px; padding: 0 10px; transition: background .16s ease, border-color .16s ease, color .16s ease; }
+.orders-filters-btn:hover { background: var(--app-hover); color: var(--app-text); }
+.orders-filters-btn[aria-expanded="true"], .orders-filters-btn.is-on { border-color: var(--app-primary); color: var(--app-text); }
+.orders-filters-count { background: var(--app-primary); border-radius: 999px; color: var(--app-on-accent, #fff); font-size: 10.5px; font-weight: 700; line-height: 1; min-width: 17px; padding: 3px 5px; text-align: center; }
+.orders-more-filters { display: grid; gap: 10px; }
+.orders-more-filters:not([data-open]) { display: none; }
+.orders-date-field { display: grid; gap: 5px; min-width: 0; }
+.orders-date-label { color: var(--app-subtle); font-size: 12px; font-weight: 500; }
 .orders-list-empty { display: none; }
 @media (max-width: 900px) {
   .orders-pane-back { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; margin-bottom: 12px; padding: 0; }
@@ -731,27 +744,9 @@ const css = `
   .orders-pane-search, .orders-pane-select { background: var(--app-surface); border-radius: 10px; height: 40px; }
   .orders-pane-search { padding: 0 12px; }
   .orders-pane-select { padding: 0 10px; }
-  .orders-filters-btn {
-    align-items: center;
-    background: var(--app-surface);
-    border: 1px solid var(--app-border-strong);
-    border-radius: 10px;
-    color: var(--app-text);
-    cursor: pointer;
-    display: inline-flex;
-    flex: 0 0 auto;
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    gap: 6px;
-    height: 40px;
-    padding: 0 12px;
-  }
-  .orders-filters-btn:hover { background: var(--app-hover); }
-  .orders-filters-btn[aria-expanded="true"], .orders-filters-btn.is-on { border-color: var(--app-primary); color: var(--app-primary-text, var(--app-text)); }
-  .orders-filters-count { background: var(--app-primary); border-radius: 999px; color: var(--app-on-accent, #fff); font-size: 11px; font-weight: 700; line-height: 1; min-width: 18px; padding: 3px 6px; text-align: center; }
-  .orders-more-filters:not([data-open]) { display: none; }
-  .orders-more-filters { gap: 10px; padding-top: 2px; }
+  .orders-filters-btn { border-radius: 10px; color: var(--app-text); font-size: 14px; height: 40px; padding: 0 12px; }
+  .orders-filters-count { font-size: 11px; min-width: 18px; padding: 3px 6px; }
+  .orders-more-filters { padding-top: 2px; }
   /* Empty list: a centred message instead of a line in the corner. */
   .orders-empty-note { display: none; }
   .orders-list-empty { align-items: center; display: flex; flex-direction: column; padding: 56px 20px 32px; text-align: center; }

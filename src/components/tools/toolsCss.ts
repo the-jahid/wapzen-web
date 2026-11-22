@@ -581,7 +581,11 @@ export const toolsCss = `
 .tools-outline-icon:hover { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
 @media (max-width: 900px) {
   .tools-split { flex-direction: column; }
-  .tools-pane-list { border-right: 0; flex: 1 1 auto; }
+  .tools-pane-list { border-right: 0; flex: 1 1 auto; min-height: auto; }
+  /* The page scrolls as a whole here, so the list grows with its content
+     instead of shrinking into its own scroll box (which clipped the empty
+     state mid-line with a second scrollbar). */
+  .tools-pane-items { flex: 0 0 auto; min-height: auto; overflow: visible; }
   .tools-split:not(.has-selection) .tools-pane-detail { display: none; }
   .tools-split.has-selection .tools-pane-list { display: none; }
   .tools-pane-detail { overflow: visible; padding: 16px; }
