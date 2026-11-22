@@ -1415,6 +1415,32 @@ export const blogPosts: BlogPostEntry[] = [
     updated: "2026-11-21",
     readingMinutes: 13,
   },
+  // Brazil voice agent industry posts (2026-11-22), picked by
+  // docs/seo-blog-br-voice-industries-research.mjs. Playbook format, in Portuguese.
+  {
+    href: "/pt-br/blog/agente-de-voz-ia-para-clinicas",
+    title: "Agente de voz IA para clínicas: secretária virtual no WhatsApp (2026)",
+    name: "Agente de voz IA para clínicas",
+    description: "Secretária virtual com IA para clínicas: atende as ligações de WhatsApp dos pacientes 24h, marca consultas e liga para confirmar. Grátis para começar.",
+    tag: "Explainer",
+    icon: Stethoscope,
+    published: "2026-11-22",
+    updated: "2026-11-22",
+    readingMinutes: 13,
+    locale: "pt-BR",
+  },
+  {
+    href: "/pt-br/blog/ia-para-corretora-de-seguros",
+    title: "IA para corretora de seguros: agente de voz no WhatsApp (2026)",
+    name: "IA para corretora de seguros",
+    description: "Agente de voz com IA para corretoras de seguros: atende clientes no WhatsApp 24h, orienta no sinistro, coleta dados de cotação e liga nas renovações. Grátis.",
+    tag: "Explainer",
+    icon: ShieldCheck,
+    published: "2026-11-22",
+    updated: "2026-11-22",
+    readingMinutes: 14,
+    locale: "pt-BR",
+  },
 ];
 
 export const postsIn = (locale: Locale) => blogPosts.filter((post) => (post.locale ?? "en") === locale);

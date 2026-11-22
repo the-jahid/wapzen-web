@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, Camera, Check, Clock3, FileText, MessageCircle, Mic, PhoneCall, PhoneIncoming, PhoneOutgoing, Users, Wrench, X } from "lucide-react";
 import { blogPost, blogUi, formatPostDate, postsIn } from "@/lib/blogPosts";
-import { locales } from "@/lib/locales";
+import { locales, type Locale } from "@/lib/locales";
 import { marketingPages } from "@/lib/marketingPages";
 import { GetStarted, WhatsAppButton } from "@/components/landing/SiteChrome";
 import { Section } from "@/components/marketing/MarketingPage";
@@ -18,8 +18,8 @@ import pb from "./PlaybookPost.module.css";
 // chapters, an always-open FAQ (the FAQPage structured data), sources, "keep reading" and
 // a CTA. The blocks below it (a day on the timeline, the jobs board, setup steps, message
 // templates, the instructions file and the voice card) are made for these chapters.
-// English only for now: the few fixed strings ("In this playbook", "Chapter") are props
-// with English defaults.
+// The few fixed strings ("In this playbook", "Chapter") are props with English defaults;
+// the call blocks and PromptFile take a `locale` (Portuguese since 2026-11-22).
 
 type Chapter = { id: string; title: string; body: ReactNode };
 type Faq = { q: string; a: string };
@@ -40,10 +40,12 @@ type PlaybookPostProps = {
   cta: { heading: ReactNode; body: string };
   /** Opens this WhatsApp chat from the closing CTA instead of sign-up. */
   action?: { href: string; label: string };
+  /** Where the closing sign-up CTA lands after sign-up (default /dashboard), e.g. the voice agents page. */
+  signUpTo?: string;
   labels?: { chapters: string; chapter: string };
 };
 
-export function PlaybookPost({ href, heading, lead, answer, chapters, faq, sources = [], related, product, cta, action, labels = { chapters: "In this playbook", chapter: "Chapter" } }: PlaybookPostProps) {
+export function PlaybookPost({ href, heading, lead, answer, chapters, faq, sources = [], related, product, cta, action, signUpTo, labels = { chapters: "In this playbook", chapter: "Chapter" } }: PlaybookPostProps) {
   const post = blogPost(href);
   const locale = post.locale ?? "en";
   const { ui } = locales[locale];
@@ -109,7 +111,7 @@ export function PlaybookPost({ href, heading, lead, answer, chapters, faq, sourc
     <section className={tools.cta} aria-labelledby="cta-title">
       <div className={tools.ctaInner}>
         <div><h2 id="cta-title">{cta.heading}</h2><p>{cta.body}</p></div>
-        <div>{action ? <WhatsAppButton href={action.href} label={action.label} /> : <GetStarted label={ui.startFree} />}</div>
+        <div>{action ? <WhatsAppButton href={action.href} label={action.label} /> : <GetStarted label={ui.startFree} to={signUpTo} />}</div>
       </div>
     </section>
   </>;
@@ -174,10 +176,11 @@ export function Templates({ items }: { items: Array<{ title: string; when: strin
   </article>)}</div>;
 }
 
-/** The agent's instructions as a file to copy. */
-export function PromptFile({ name, text }: { name: string; text: string }) {
+/** The agent's instructions as a file to copy. `locale` translates the copy button (English by default). */
+export function PromptFile({ name, text, locale = "en" }: { name: string; text: string; locale?: Locale }) {
+  const { copy, copied } = locales[locale].ui;
   return <figure className={pb.file}>
-    <figcaption className={pb.fileHead}><span><FileText size={15} aria-hidden="true" />{name}</span><CopyButton value={text} label={`Copy ${name}`}>Copy</CopyButton></figcaption>
+    <figcaption className={pb.fileHead}><span><FileText size={15} aria-hidden="true" />{name}</span><CopyButton value={text} label={`${copy} ${name}`} copiedText={locale === "en" ? undefined : copied}>{copy}</CopyButton></figcaption>
     <pre>{text}</pre>
   </figure>;
 }
@@ -197,17 +200,42 @@ const callOutcomes = {
 };
 export type CallLogItem = { time: string; direction: "in" | "out"; who: string; said: string; outcome: keyof typeof callOutcomes; result: string };
 
+// The call blocks' fixed words by language (first used in Portuguese for the Brazil voice
+// posts, 2026-11-22). A language without its own set gets English.
+type CallWords = { incoming: string; outgoing: string; agent: string; caller: string; outcomes: Record<keyof typeof callOutcomes, string> };
+const callWords: Partial<Record<Locale, CallWords>> = {
+  en: { incoming: "Incoming WhatsApp call", outgoing: "Outgoing WhatsApp call", agent: "AI agent", caller: "Caller", outcomes: callOutcomes },
+  "pt-BR": {
+    incoming: "Ligação de WhatsApp recebida",
+    outgoing: "Ligação de WhatsApp feita",
+    agent: "Assistente virtual",
+    caller: "Cliente",
+    outcomes: {
+      answered: "Respondido pela IA",
+      checked: "Consultado no seu sistema",
+      booked: "Marcado no seu sistema",
+      texted: "Mensagem enviada no WhatsApp",
+      saved: "Anotado para a equipe",
+      team: "Fica com a sua equipe",
+      urgent: "Orientado a buscar socorro",
+      called: "A IA ligou para o cliente",
+    },
+  },
+};
+const wordsFor = (locale: Locale) => callWords[locale] ?? callWords.en!;
+
 /** A day of WhatsApp calls, hour by hour: who called (or was called), what they said and what the voice agent did. */
-export function CallLog({ items, caption }: { items: CallLogItem[]; caption: string }) {
+export function CallLog({ items, caption, locale = "en" }: { items: CallLogItem[]; caption: string; locale?: Locale }) {
+  const words = wordsFor(locale);
   return <figure className={pb.timeline}>
     <ol>{items.map((item) => {
       const Icon = item.direction === "in" ? PhoneIncoming : PhoneOutgoing;
       return <li key={`${item.time}-${item.who}`} data-outcome={`call-${item.outcome}`}>
         <span className={pb.time}>{item.time}</span>
         <div className={pb.event}>
-          <p className={pb.from}><Icon size={14} aria-hidden="true" />{item.direction === "in" ? "Incoming WhatsApp call" : "Outgoing WhatsApp call"} · {item.who}</p>
+          <p className={pb.from}><Icon size={14} aria-hidden="true" />{item.direction === "in" ? words.incoming : words.outgoing} · {item.who}</p>
           <p className={pb.message}>{item.said}</p>
-          <p className={pb.reply}><span className={pb.tag}>{callOutcomes[item.outcome]}</span>{item.result}</p>
+          <p className={pb.reply}><span className={pb.tag}>{words.outcomes[item.outcome]}</span>{item.result}</p>
         </div>
       </li>;
     })}</ol>
@@ -217,8 +245,11 @@ export function CallLog({ items, caption }: { items: CallLogItem[]; caption: str
 
 export type CallTurn = { who: "agent" | "caller"; text: string } | { tool: string; text: string };
 
-/** One sample call, turn by turn, with the actions the agent took (API lookups, WhatsApp messages) in between. */
-export function CallTranscript({ title, meta, turns, caption }: { title: string; meta: string; turns: CallTurn[]; caption: string }) {
+/** One sample call, turn by turn, with the actions the agent took (API lookups, WhatsApp messages) in between. `names` relabels the two speakers (e.g. "Paciente"). */
+export function CallTranscript({ title, meta, turns, caption, locale = "en", names }: { title: string; meta: string; turns: CallTurn[]; caption: string; locale?: Locale; names?: { agent?: string; caller?: string } }) {
+  const words = wordsFor(locale);
+  const agentName = names?.agent ?? words.agent;
+  const callerName = names?.caller ?? words.caller;
   return <figure className={pb.call}>
     <div className={pb.callHead}>
       <span className={pb.callIcon} aria-hidden="true"><PhoneCall size={18} /></span>
@@ -226,7 +257,7 @@ export function CallTranscript({ title, meta, turns, caption }: { title: string;
     </div>
     <ol className={pb.turns}>{turns.map((turn, i) => "tool" in turn
       ? <li key={`${i}-${turn.tool}`} className={pb.action}><Wrench size={14} aria-hidden="true" /><span><code>{turn.tool}</code>{turn.text}</span></li>
-      : <li key={`${i}-${turn.who}`} className={pb.turn} data-who={turn.who}><span className={pb.who}>{turn.who === "agent" ? "AI agent" : "Caller"}</span><p className={pb.said}>{turn.text}</p></li>)}</ol>
+      : <li key={`${i}-${turn.who}`} className={pb.turn} data-who={turn.who}><span className={pb.who}>{turn.who === "agent" ? agentName : callerName}</span><p className={pb.said}>{turn.text}</p></li>)}</ol>
     <figcaption>{caption}</figcaption>
   </figure>;
 }

@@ -251,10 +251,10 @@ export function Screenshot({ src, width, height, alt, caption }: { src: string; 
 }
 
 /** A sign-up prompt inside a section, placed where the post has just made the case. */
-export function InlineCta({ title, body, label = "Start free", href }: { title: string; body: string; label?: string; /** Opens this WhatsApp chat instead of sign-up. */ href?: string }) {
+export function InlineCta({ title, body, label = "Start free", href, to }: { title: string; body: string; label?: string; /** Opens this WhatsApp chat instead of sign-up. */ href?: string; /** Where sign-up lands (default /dashboard). */ to?: string }) {
   return <aside className={styles.inlineCta} aria-label={title}>
     <div><p className={styles.inlineCtaTitle}>{title}</p><p>{body}</p></div>
-    <div>{href ? <WhatsAppButton href={href} label={label} /> : <GetStarted label={label} />}</div>
+    <div>{href ? <WhatsAppButton href={href} label={label} /> : <GetStarted label={label} to={to} />}</div>
   </aside>;
 }
 

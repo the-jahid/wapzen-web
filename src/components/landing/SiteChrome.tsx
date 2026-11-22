@@ -18,11 +18,12 @@ export function Brand({ href = "#top" }: { href?: string }) {
   return <a href={href} className={`${styles.brand} notranslate`} aria-label="Wapzen home"><span><BrandMark priority /></span>wapzen<span className={styles.brandDot}>.</span></a>;
 }
 
-export function GetStarted({ label = "Create your agent", dark = false }: { label?: string; dark?: boolean }) {
+/** `to` is where sign-up (or "Open dashboard") lands, e.g. /dashboard/voice/agents from a voice post. */
+export function GetStarted({ label = "Create your agent", dark = false, to = "/dashboard" }: { label?: string; dark?: boolean; to?: string }) {
   const className = `${styles.button} ${dark ? styles.darkButton : styles.greenButton}`;
   return <AuthSwitch
-    signedOut={<SignUpButton mode="modal" forceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard"><button type="button" className={className}>{label}<ArrowUpRight size={17} /></button></SignUpButton>}
-    signedIn={<a href="/dashboard" className={className}>Open dashboard<ArrowUpRight size={17} /></a>}
+    signedOut={<SignUpButton mode="modal" forceRedirectUrl={to} signInForceRedirectUrl={to}><button type="button" className={className}>{label}<ArrowUpRight size={17} /></button></SignUpButton>}
+    signedIn={<a href={to} className={className}>Open dashboard<ArrowUpRight size={17} /></a>}
   />;
 }
 
