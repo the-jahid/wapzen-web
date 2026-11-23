@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -1003,6 +1004,38 @@ const css = `
 .chat-number-pane-title { font-size: 12.5px; font-weight: 800; letter-spacing: -.1px; }
 .chat-number-pane-note { color: var(--faint); font-size: 11px; white-space: nowrap; }
 .chat-number-pane-actions { align-items: center; display: flex; gap: 8px; }
+/* "Watch video" how-to: desktop only (phones are the device doing the scan). */
+.chat-number-video-btn {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--subtle);
+  cursor: pointer;
+  display: none;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  white-space: nowrap;
+}
+.chat-modal-head-actions { align-items: center; display: flex; flex: none; gap: 8px; }
+.chat-number-video-btn:hover { border-color: var(--app-primary-ring); color: var(--text); }
+.chat-number-video-btn svg { color: #ff3d3d; flex: none; }
+@media (min-width: 901px) { .chat-number-video-btn.is-desktop { display: inline-flex; } }
+@media (max-width: 900px) {
+  .chat-number-video-btn.is-mobile { display: inline-flex; }
+  /* The Watch video pill squeezes the header; the QR steps below say the same thing. */
+  .chat-modal-subtitle.is-linking { display: none; }
+}
+.chat-video-overlay { align-items: center; animation: chat-confirm-fade .16s ease; backdrop-filter: blur(3px); background: rgba(0, 0, 0, .72); display: flex; inset: 0; justify-content: center; padding: 32px; position: fixed; z-index: 200; }
+.chat-video-box { display: grid; gap: 10px; width: min(960px, 100%); }
+.chat-video-close { background: transparent; border: 1px solid rgba(255,255,255,.3); border-radius: 8px; color: #fff; cursor: pointer; font-size: 12px; font-weight: 700; justify-self: end; padding: 5px 11px; }
+.chat-video-box.is-vertical { width: min(420px, 100%, calc((100dvh - 110px) * 9 / 16)); }
+.chat-video-box.is-vertical .chat-video-frame { aspect-ratio: 9 / 16; }
+@media (max-width: 900px) { .chat-video-overlay { padding: 16px; } }
+.chat-video-frame { aspect-ratio: 16 / 9; background: #000; border: 0; border-radius: 12px; width: 100%; }
 .chat-number-refresh {
   align-items: center;
   background: transparent;
@@ -2647,22 +2680,30 @@ function CreateChatAgentModal({
         <h2 className="chat-modal-title" id="chat-create-title">
           {isLinking ? "Connect your WhatsApp" : "Name your chat agent"}
         </h2>
-        <div className="chat-modal-subtitle">
+        <div className={`chat-modal-subtitle${isLinking ? " is-linking" : ""}`}>
           {isLinking
             ? "Use a pairing code or scan the QR code to link the number your agent will answer on. Your agent is ready the moment it connects."
             : "Your number is ready. The prompt, knowledge bases and tools are set in the editor once the agent exists."}
         </div>
       </div>
-      {asPage ? null : (
-        <button
-          aria-label="Close create chat agent"
-          className="chat-icon-btn"
-          onClick={onCancel}
-          type="button"
-        >
-          <Icon name="x" size={15} sw={2.2} />
-        </button>
-      )}
+      <span className="chat-modal-head-actions">
+        {isLinking ? (
+          <>
+            <SetupVideoButton />
+            <SetupVideoButton vertical />
+          </>
+        ) : null}
+        {asPage ? null : (
+          <button
+            aria-label="Close create chat agent"
+            className="chat-icon-btn"
+            onClick={onCancel}
+            type="button"
+          >
+            <Icon name="x" size={15} sw={2.2} />
+          </button>
+        )}
+      </span>
     </div>
   );
 
@@ -3261,6 +3302,72 @@ function formatQrCountdown(ms: number) {
 // The QR-first way to link a number: the code on the left with when it next
 // reloads, the steps beside it (under it where the pane is narrow), and a link
 // to the pairing-code form instead.
+// Desktop gets the landscape walkthrough; phones and tablets get the Short.
+const SETUP_VIDEO_ID = "sVzHeUp6Pho";
+const SETUP_SHORT_ID = "Lj6yex0_PXw";
+
+/** Small "Watch video" pill in the link-a-number header (desktop only via CSS)
+    that opens the setup walkthrough in a lightbox. Portalled to <body> so the
+    connect dialog's own stacking/transform can't clip it. */
+function SetupVideoButton({ vertical = false }: { vertical?: boolean }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        className={`chat-number-video-btn ${vertical ? "is-mobile" : "is-desktop"}`}
+        onClick={() => setOpen(true)}
+        title="Watch how to link your number"
+        type="button"
+      >
+        <svg aria-hidden="true" height="13" viewBox="0 0 24 24" width="13">
+          <path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8Z" fill="currentColor" />
+          <path d="m9.75 15.02 5.75-3.02-5.75-3.02v6.04Z" fill="#fff" />
+        </svg>
+        Watch video
+      </button>
+      {open
+        ? createPortal(
+            <div
+              aria-label="How to link your WhatsApp number"
+              aria-modal="true"
+              className="chat-video-overlay"
+              onClick={() => setOpen(false)}
+              role="dialog"
+            >
+              <div className={`chat-video-box${vertical ? " is-vertical" : ""}`} onClick={(e) => e.stopPropagation()}>
+                <button className="chat-video-close" onClick={() => setOpen(false)} type="button">
+                  Close ✕
+                </button>
+                <iframe
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="chat-video-frame"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  src={`https://www.youtube.com/embed/${vertical ? SETUP_SHORT_ID : SETUP_VIDEO_ID}?autoplay=1&rel=0&playsinline=1`}
+                  title="How to link your WhatsApp number"
+                />
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
+
 function QrConnectView({
   isStarting,
   login,
