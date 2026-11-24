@@ -4,6 +4,7 @@ import { preconnect } from "react-dom";
 import { AccountBlockedScreen } from "@/components/nav/AccountBlockedScreen";
 import { MaintenanceScreen } from "@/components/nav/MaintenanceScreen";
 import { SignedOutGate } from "@/components/nav/SignedOutGate";
+import { TechnicalIssueNotice } from "@/components/nav/TechnicalIssueNotice";
 import { VoiceComingSoonGate } from "@/components/nav/VoiceComingSoonGate";
 
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SignedOutGate>
         <VoiceComingSoonGate>{children}</VoiceComingSoonGate>
       </SignedOutGate>
+      <TechnicalIssueNotice />
       <MaintenanceScreen />
       <AccountBlockedScreen />
     </>

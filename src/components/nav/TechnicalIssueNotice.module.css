@@ -1,0 +1,56 @@
+/* Above the page and the mobile menu (60), below drawers (70) and dialogs (120). */
+.notice {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 65;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 10px 10px 16px;
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  background: #fef3c7;
+  box-shadow: 0 12px 32px var(--app-shadow-color);
+  color: #78350f;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  transform: translateX(-50%);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: #b45309;
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.close {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: rgba(120, 53, 15, 0.12);
+}
+
+.close:focus-visible {
+  outline: 2px solid #b45309;
+  outline-offset: 1px;
+}
