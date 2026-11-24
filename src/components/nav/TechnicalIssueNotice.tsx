@@ -20,7 +20,8 @@ export function TechnicalIssueNotice() {
     <div className={styles.notice} role="status">
       <TriangleAlert aria-hidden="true" className={styles.icon} size={18} />
       <p className={styles.text}>
-        We are having some technical issues. They will be fixed soon.
+        Because of major upgrades, some active agent connections may not work. To fix this issue,
+        disconnect your number and connect it again.
       </p>
       <button
         aria-label="Close notice"

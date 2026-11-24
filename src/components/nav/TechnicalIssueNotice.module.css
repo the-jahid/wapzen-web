@@ -9,7 +9,7 @@
   align-items: center;
   gap: 10px;
   width: max-content;
-  max-width: calc(100vw - 32px);
+  max-width: min(560px, calc(100vw - 32px));
   padding: 10px 10px 10px 16px;
   border: 1px solid #f59e0b;
   border-radius: 12px;
