@@ -1,5 +1,6 @@
 "use client";
 
+import { MessagesSkeleton } from "@/components/ui/Skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -291,7 +292,7 @@ export function ConversationThreadView({
             {thread ? <AiReplySwitch busy={aiSaving} onToggle={() => void toggleAiReply()} on={aiOn} /> : null}
             <button disabled={busy || !thread} onClick={() => void toggleStatus()} type="button">
               {thread?.status === "closed" ? <ReopenIcon /> : <CloseThreadIcon />}
-              {thread?.status === "closed" ? "Reopen" : "Close"}
+              <span className="cv-action-label">{thread?.status === "closed" ? "Reopen" : "Close"}</span>
             </button>
             <button
               className="danger"
@@ -300,7 +301,7 @@ export function ConversationThreadView({
               type="button"
             >
               <TrashIcon size={14} />
-              Delete
+              <span className="cv-action-label">Delete</span>
             </button>
           </div>
         </div>
@@ -319,10 +320,7 @@ export function ConversationThreadView({
 
         <div className="cv-messages" ref={messagesRef}>
           {messages === undefined && !error ? (
-            <div className="cv-empty">
-              <span className="cv-spinner" />
-              Loading messages…
-            </div>
+            <MessagesSkeleton />
           ) : null}
           {messages?.length === 0 ? (
             <div className="cv-empty">
@@ -384,7 +382,7 @@ export function ConversationThreadView({
             placeholder={
               canSend
                 ? "Write a reply — Enter to send, Shift+Enter for a new line"
-                : "This conversation's number is no longer connected to the account"
+                : "This number is no longer connected"
             }
             ref={composerRef}
             rows={1}
@@ -598,7 +596,7 @@ const threadCSS = `
 .cv-composer textarea{background:var(--app-elevated);border:1px solid var(--app-line);border-radius:11px;color:var(--app-text);flex:1 1 auto;font:inherit;font-size:12.5px;line-height:1.55;max-height:${composerMaxHeight}px;min-height:38px;min-width:0;outline:none;overflow-y:auto;padding:9px 11px;resize:none}
 .cv-composer textarea:focus{border-color:var(--app-primary);box-shadow:0 0 0 3px var(--app-primary-soft)}
 .cv-composer textarea::placeholder{color:var(--app-subtle)}
-.cv-composer textarea:disabled{cursor:not-allowed;opacity:.55}
+.cv-composer textarea:disabled{cursor:not-allowed;opacity:.55;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cv-send{align-items:center;background:linear-gradient(140deg,var(--app-primary-2),var(--app-primary));border:0;border-radius:11px;color:var(--app-on-accent);cursor:pointer;display:inline-flex;flex:0 0 auto;font-size:12px;font-weight:800;gap:7px;height:38px;justify-content:center;padding:0 14px}
 .cv-send:hover{filter:brightness(1.08)}
 .cv-send:disabled{cursor:not-allowed;filter:grayscale(.35);opacity:.45}
@@ -646,7 +644,10 @@ const threadCSS = `
   .cv-avatar-lg{display:none}
   .cv-thread-head{gap:8px;padding:10px}
   .cv-messages{padding:11px}
-  .cv-thread-actions button{font-size:10.5px;padding:5px 6px}
+  /* Icons only: the words would squeeze the contact name off the header. */
+  .cv-thread-actions button{font-size:10.5px;padding:6px}
+  .cv-action-label{clip:rect(0 0 0 0);height:1px;overflow:hidden;position:absolute;white-space:nowrap;width:1px}
+  .cv-thread-actions .cv-ai-switch{margin-right:2px}
 }
 
 /* Touch screens cannot hover, so the message times are always shown there. */

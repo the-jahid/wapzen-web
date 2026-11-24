@@ -1,862 +1,895 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { createPortal } from "react-dom";
+import { useSearchParams } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { Dialog } from "@base-ui/react/dialog";
+import { Select } from "@base-ui/react/select";
+import { Tabs } from "@base-ui/react/tabs";
+import { ArrowLeft, BarChart3, Bot, Check, ChevronDown, LayoutGrid, SlidersHorizontal, Users, X } from "lucide-react";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
-import { useCachedState } from "@/lib/pageCache";
+import { useDebouncedValue } from "@/components/conversations/ConversationPager";
+import BroadcastContacts from "@/components/outbound/BroadcastContacts";
 import {
-  createOutboundCampaign as apiCreateCampaign,
-  deleteOutboundCampaign as apiDeleteCampaign,
-  getOutboundCampaign as apiGetCampaign,
-  listOutboundCampaigns as apiListCampaigns,
-  updateOutboundCampaign as apiUpdateCampaign,
-  type CreateOutboundCampaignPayload,
-  type OutboundCampaign,
-  type OutboundCampaignStatus,
-  type UpdateOutboundCampaignPayload,
-} from "@/lib/outboundCampaigns";
-import { listDashboardAgents } from "@/lib/agents";
-import { listPhoneNumbers } from "@/lib/phoneNumbers";
-import CampaignLeadsWorkspace from "@/components/outbound/CampaignLeadsWorkspace";
-import CampaignCallsWorkspace from "@/components/outbound/CampaignCallsWorkspace";
-import CampaignAnalyticsWorkspace from "@/components/outbound/CampaignAnalyticsWorkspace";
+  createBroadcast,
+  deleteBroadcast,
+  getBroadcast,
+  listBroadcastContacts,
+  listBroadcasts,
+  listVoiceAgents,
+  updateBroadcast,
+  type ApiBroadcast,
+  type BroadcastContactPage,
+  type BroadcastContactSort,
+  type BroadcastContactStats,
+} from "@/lib/voiceAgents";
 
-type IconName = "grid" | "agents" | "phone" | "phoneOut" | "demo" | "chat" | "message" | "calendar" | "chart" | "settings" | "spark" | "key" | "book" | "wrench" | "target" | "plus" | "edit" | "trash" | "refresh" | "search" | "list" | "chevron" | "x" | "copy" | "check" | "back";
-type Notice = { kind: "success" | "error"; text: string };
+// Broadcast: a user creates as many broadcasts as they like, each with one of
+// their voice agents selected. Served by the Go server's
+// /v1/dashboard/voice/broadcasts routes.
+
+type AgentOption = { id: string; name: string; phoneNumberId: string | null };
 type LoadState = "loading" | "ready" | "error";
-type CampaignTab = "overview" | "calls" | "leads" | "analytics";
 
-// AgentOption is one pickable agent. A campaign is pointed at an agent, never at
-// a phone number: the agent carries the number it speaks on, so the number is
-// shown beside the name to say which line the campaign will dial from. An agent
-// with no number assigned cannot dial, so phoneNumberId is what makes an option
-// selectable, and phoneLabel is only how it reads.
-type AgentOption = { id: string; name: string; phoneNumberId: string | null; phoneLabel: string | null };
+const NAME_MAX = 80;
+const NO_AGENTS: AgentOption[] = [];
+const BROADCAST_SPLIT_MIN_WIDTH = 721;
 
-const campaignTabs: { id: CampaignTab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "calls", label: "Calls" },
-  { id: "leads", label: "Leads" },
-  { id: "analytics", label: "Analytics" },
-];
-
-const statusLabels: Record<OutboundCampaignStatus, string> = {
-  draft: "Draft",
-  running: "Running",
-  paused: "Paused",
-  completed: "Completed",
-  failed: "Failed",
-};
-
-const numberFormatter = new Intl.NumberFormat("en-US");
-const moneyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const dateFormatter = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-
-function iconPaths(name: IconName): ReactNode {
-  switch (name) {
-    case "grid": return <><rect height="9" rx="1.5" width="7" x="3" y="3" /><rect height="5" rx="1.5" width="7" x="14" y="3" /><rect height="9" rx="1.5" width="7" x="14" y="12" /><rect height="5" rx="1.5" width="7" x="3" y="16" /></>;
-    case "agents": return <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0112 0v1M19 8v4M21 10h-4" /></>;
-    case "phone": return <path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.6A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.7 2.7a2 2 0 01-.5 2.1L8.1 9.9a16 16 0 006 6l1.4-1.2a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z" />;
-    case "phoneOut": return <><path d="M16 8l5-5M21 3h-4M21 3v4" /><path d="M21 16.5v3a2 2 0 01-2.2 2 19.5 19.5 0 01-8.5-3 19.2 19.2 0 01-6-6 19.5 19.5 0 01-3-8.5A2 2 0 013.5 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L9.5 11.5a16 16 0 006 6l1.1-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.6 2z" /></>;
-    case "demo": return <><circle cx="12" cy="12" r="9" /><path d="M10.2 8.6l5.6 3.4-5.6 3.4z" /></>;
-    case "chat": return <><path d="M20.5 12.5a7.5 7.5 0 01-7.5 7.5H8l-4.5 2.5V12.5A7.5 7.5 0 0111 5h2a7.5 7.5 0 017.5 7.5z" /><path d="M8.5 12h7M8.5 15.5h4" /></>;
-    case "message": return <path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z" />;
-    case "calendar": return <><rect height="18" rx="2" width="18" x="3" y="4" /><path d="M16 2v4M8 2v4M3 10h18" /></>;
-    case "chart": return <path d="M4 19V5M8 19v-6M12 19V9M16 19v-8M20 19V7" />;
-    case "settings": return <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z" /></>;
-    case "spark": return <path d="M12 4l1.7 4.6L18 10l-4.3 1.4L12 16l-1.7-4.6L6 10l4.3-1.4L12 4z" />;
-    case "key": return <><circle cx="7.5" cy="14.5" r="3.5" /><path d="M10 12l8-8M14 8l2 2M16 6l2 2" /></>;
-    case "book": return <><path d="M4 4.5A2.5 2.5 0 016.5 2H20v15H6.5A2.5 2.5 0 004 19.5z" /><path d="M4 19.5A2.5 2.5 0 016.5 17H20v5H6.5A2.5 2.5 0 014 19.5z" /></>;
-    case "wrench": return <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.8-3.8a6 6 0 01-7.9 7.9l-6.9 6.9a2.1 2.1 0 01-3-3l6.9-6.9a6 6 0 017.9-7.9l-3.8 3.8z" />;
-    case "target": return <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1" /></>;
-    case "plus": return <path d="M12 5v14M5 12h14" />;
-    case "edit": return <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" /></>;
-    case "trash": return <path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 11v6M14 11v6" />;
-    case "refresh": return <><path d="M4 4v6h6M20 20v-6h-6" /><path d="M20 9a8 8 0 00-13.5-3L4 10M4 15a8 8 0 0013.5 3L20 14" /></>;
-    case "search": return <><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></>;
-    case "list": return <><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6h.01M4 12h.01M4 18h.01" /></>;
-    case "chevron": return <path d="M9 6l6 6-6 6" />;
-    case "x": return <path d="M18 6L6 18M6 6l12 12" />;
-    case "copy": return <><rect height="13" rx="2" width="13" x="9" y="9" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></>;
-    case "check": return <path d="M5 12.5l4 4 10-10" />;
-    case "back": return <path d="M20 12H4M10 6l-6 6 6 6" />;
-  }
+function subscribeSplitQuery(onChange: () => void): () => void {
+  const query = window.matchMedia(`(min-width: ${BROADCAST_SPLIT_MIN_WIDTH}px)`);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
 }
 
-function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
-  return <svg aria-hidden="true" fill="none" height={size} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24" width={size}>{iconPaths(name)}</svg>;
+function usePhoneLayout(): boolean {
+  return useSyncExternalStore(subscribeSplitQuery, () => !window.matchMedia(`(min-width: ${BROADCAST_SPLIT_MIN_WIDTH}px)`).matches, () => false);
 }
-function formatNumber(value: number) { return numberFormatter.format(value); }
-function formatMoney(value: number | null) { return value == null ? "No budget" : moneyFormatter.format(value); }
-function formatPercent(value: number) { return `${(value * 100).toFixed(1)}%`; }
-function formatDate(value: string | null) { if (!value) return "—"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : dateFormatter.format(date); }
-function formatDuration(seconds: number) { const hours = Math.floor(seconds / 3600); const minutes = Math.floor((seconds % 3600) / 60); const remainder = seconds % 60; if (hours) return `${hours}h ${minutes}m`; if (minutes) return `${minutes}m ${remainder}s`; return `${remainder}s`; }
-function allowedStatuses(status: OutboundCampaignStatus): OutboundCampaignStatus[] {
-  switch (status) {
-    case "draft": return ["draft", "running", "failed"];
-    case "running": return ["running", "paused", "completed", "failed"];
-    case "paused": return ["paused", "running", "completed", "failed"];
-    case "completed": return ["completed"];
-    case "failed": return ["failed"];
-  }
+
+// The open broadcast, its tab and its contacts page live in the URL
+// (?id=…&tab=…&page=…), so a refresh keeps them and the browser's Back button returns to the list.
+function writeBroadcastUrl(id: string | null, options: { tab?: string; page?: number; replace?: boolean } = {}) {
+  const params = new URLSearchParams();
+  if (id) params.set("id", id);
+  if (id && options.tab && options.tab !== "leads") params.set("tab", options.tab);
+  if (id && options.page && options.page > 1) params.set("page", String(options.page));
+  const url = `${window.location.pathname}${params.size ? `?${params}` : ""}`;
+  if (url === window.location.pathname + window.location.search) return;
+  if (options.replace) window.history.replaceState(null, "", url);
+  else window.history.pushState(null, "", url);
+}
+
+function errorText(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 export default function OutboundPage() {
-  const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
-  const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
-  const [campaigns, setCampaigns, hasCachedCampaigns] = useCachedState<OutboundCampaign[]>("outbound-page:campaigns", []);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<OutboundCampaign | null>(null);
+  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const [broadcasts, setBroadcasts] = useState<ApiBroadcast[]>([]);
+  const [loadedAgents, setLoadedAgents] = useState<AgentOption[]>([]);
+  const [agentState, setAgentState] = useState<LoadState>("loading");
   const [loadState, setLoadState] = useState<LoadState>("loading");
-  const [, setLoadError] = useState("");
-  const [detailState, setDetailState] = useState<LoadState>("loading");
-  const [detailError, setDetailError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [notice, setNotice] = useState<Notice | null>(null);
-  const [isCreateOpen, setCreateOpen] = useState(false);
-  const [isEditOpen, setEditOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<CampaignTab>("overview");
-  const [agentOptions, setAgentOptions] = useCachedState<AgentOption[]>("outbound-page:agent-options", []);
-  // Bumped whenever a call this campaign placed starts or changes state. The
-  // campaign's counters move with its calls, so the detail is re-read rather
-  // than left showing the totals from before the call.
-  const [progressKey, setProgressKey] = useState(0);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const isAuthenticated = Boolean(isUserLoaded && isAuthLoaded && isUserSignedIn && isAuthSignedIn && user);
-  const authError = !isUserLoaded || !isAuthLoaded ? null : !isAuthenticated ? "Sign in to view outbound campaigns." : null;
-  // Retell-style master-detail: the first campaign is open until another is
-  // picked. selectedId is only the explicit pick (on phones it switches the
-  // list pane for the detail pane).
-  const selectedListCampaign = useMemo(() => (selectedId ? campaigns.find((campaign) => campaign.campaign_id === selectedId) : null) ?? campaigns[0] ?? null, [campaigns, selectedId]);
-  const selectedCampaignId = selectedListCampaign?.campaign_id ?? null;
-  const selected = detail?.campaign_id === selectedCampaignId ? detail : selectedListCampaign;
+  const selectedId = useSearchParams().get("id");
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
-    if (!isUserLoaded || !isAuthLoaded || !isAuthenticated) return;
+    if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
-    (async () => {
-      setLoadState("loading"); setLoadError("");
-      try {
-        const rows = await apiListCampaigns(getToken);
+    listBroadcasts(getToken)
+      .then((list) => {
         if (cancelled) return;
-        setCampaigns(rows);
-        setSelectedId((current) => current && rows.some((campaign) => campaign.campaign_id === current) ? current : null);
+        setBroadcasts(list);
         setLoadState("ready");
-      } catch (error) { if (!cancelled) { setLoadState("error"); setLoadError(error instanceof Error ? error.message : "Failed to load outbound campaigns"); } }
-    })();
-    return () => { cancelled = true; };
-  }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, reloadKey, setCampaigns]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !selectedCampaignId) return;
-    let cancelled = false;
-    (async () => {
-      setDetailState("loading"); setDetailError("");
-      try { const campaign = await apiGetCampaign(selectedCampaignId, getToken); if (!cancelled) { setDetail(campaign); setCampaigns((current) => current.map((item) => item.campaign_id === campaign.campaign_id ? campaign : item)); setDetailState("ready"); } }
-      catch (error) { if (!cancelled) { setDetailState("error"); setDetailError(error instanceof Error ? error.message : "Failed to load the campaign"); } }
-    })();
-    return () => { cancelled = true; };
-  }, [getToken, isAuthenticated, progressKey, selectedCampaignId, setCampaigns]);
-
-  // The agent picker needs both collections: the agents to choose from, and the
-  // phone numbers only to render the line each agent answers on. A failure here
-  // is left silent — the campaign list is still usable, the picker just comes up
-  // empty and says so.
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const [agents, numbers] = await Promise.all([listDashboardAgents(getToken), listPhoneNumbers(getToken, "voice")]);
+        // In the split layout, open the newest broadcast automatically.
+        if (list.length && window.matchMedia(`(min-width: ${BROADCAST_SPLIT_MIN_WIDTH}px)`).matches) {
+          const current = new URLSearchParams(window.location.search).get("id");
+          if (!list.some((item) => item.id === current)) writeBroadcastUrl(list[0].id, { replace: true });
+        }
+      })
+      .catch((error) => {
         if (cancelled) return;
-        const labelById = new Map(numbers.map((number) => [number.id, number.phone_number || number.label || null]));
-        setAgentOptions(agents.map((agent) => {
-          const phoneNumberId = agent.agent?.phone_number_id ?? null;
-          return { id: agent.id, name: agent.agent?.name || "Untitled agent", phoneNumberId, phoneLabel: phoneNumberId ? labelById.get(phoneNumberId) ?? null : null };
-        }));
-      } catch { if (!cancelled) setAgentOptions([]); }
-    })();
-    return () => { cancelled = true; };
-  }, [getToken, isAuthenticated, reloadKey, setAgentOptions]);
+        setLoadError(errorText(error, "Could not load broadcasts."));
+        setLoadState("error");
+      });
+    listVoiceAgents(getToken)
+      .then((list) => {
+        if (cancelled) return;
+        setLoadedAgents(list.map((agent) => ({ id: agent.id, name: agent.agent?.name || "Untitled agent", phoneNumberId: agent.agent?.phone_number_id || null })));
+        setAgentState("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setAgentState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [getToken, isLoaded, isSignedIn, reloadKey]);
 
-  function copyId(id: string) {
-    void navigator.clipboard?.writeText(id).then(() => {
-      setCopiedId(id);
-      window.setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500);
-    });
-  }
+  // Signed out: nothing to load, so the list just shows empty.
+  const listState: LoadState = isLoaded && !isSignedIn ? "ready" : loadState;
+  const agents = isSignedIn && agentState === "ready" ? loadedAgents : NO_AGENTS;
+  const agentPlaceholder = isLoaded && !isSignedIn ? "Sign in to select an agent"
+    : agentState === "loading" ? "Loading agents…"
+    : agentState === "error" ? "Could not load agents"
+    : agents.length ? "Select an agent" : "No voice agents";
+  const refresh = () => {
+    setLoadState("loading");
+    setAgentState("loading");
+    setReloadKey((key) => key + 1);
+  };
 
-  useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(null), 4000); return () => clearTimeout(timer); }, [notice]);
+  const selected = useMemo(() => broadcasts.find((item) => item.id === selectedId) ?? null, [broadcasts, selectedId]);
 
-  async function createCampaign(payload: CreateOutboundCampaignPayload) {
-    const created = await apiCreateCampaign(payload, getToken);
-    setCampaigns((current) => [created, ...current]); setSelectedId(created.campaign_id); setDetail(created); setCreateOpen(false);
-    setNotice({ kind: "success", text: "Outbound campaign created" });
-  }
-  async function updateCampaign(payload: UpdateOutboundCampaignPayload) {
-    if (!selected) return;
-    const updated = await apiUpdateCampaign(selected.campaign_id, payload, getToken);
-    setCampaigns((current) => current.map((campaign) => campaign.campaign_id === updated.campaign_id ? updated : campaign)); setDetail(updated); setEditOpen(false);
-    setNotice({ kind: "success", text: "Outbound campaign updated" });
-  }
-  async function deleteCampaign(campaign: OutboundCampaign) {
-    if (deletingId || !window.confirm(`Delete “${campaign.campaign_name}”? This cannot be undone.`)) return;
-    setDeletingId(campaign.campaign_id);
-    try {
-      await apiDeleteCampaign(campaign.campaign_id, getToken);
-      const remaining = campaigns.filter((item) => item.campaign_id !== campaign.campaign_id);
-      setCampaigns(remaining); setSelectedId(null); setDetail(null); setNotice({ kind: "success", text: "Outbound campaign deleted" });
-    } catch (error) { setNotice({ kind: "error", text: error instanceof Error ? error.message : "Failed to delete the campaign" }); }
-    finally { setDeletingId(null); }
-  }
+  // Reopening a broadcast from the URL: hold the detail view while it loads.
+  const opening = Boolean(selectedId && !selected && listState === "loading");
 
-  // Campaigns cached from an earlier visit stay on screen while they refetch.
-  const pendingLoadState: LoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
-  const effectiveLoadState: LoadState = pendingLoadState === "loading" && hasCachedCampaigns ? "ready" : pendingLoadState;
-  const updateSelectedLeadCount = useCallback((count: number) => {
-    if (!selectedCampaignId) return;
-    setCampaigns((current) => current.map((campaign) => campaign.campaign_id === selectedCampaignId ? { ...campaign, leads_count: count } : campaign));
-    setDetail((current) => current?.campaign_id === selectedCampaignId ? { ...current, leads_count: count } : current);
-  }, [selectedCampaignId, setCampaigns]);
-  const noteCampaignProgress = useCallback(() => setProgressKey((key) => key + 1), []);
+  const handleCreated = useCallback((created: ApiBroadcast) => {
+    setBroadcasts((current) => [created, ...current]);
+    writeBroadcastUrl(created.id);
+    setCreateOpen(false);
+  }, []);
 
-  return <div className="ob-shell app-accent-green">
+  const handleUpdated = useCallback((updated: ApiBroadcast) => {
+    setBroadcasts((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+  }, []);
+
+  const handleDeleted = useCallback((id: string) => {
+    setBroadcasts((current) => current.filter((item) => item.id !== id));
+    writeBroadcastUrl(null, { replace: true });
+  }, []);
+
+  return <div className="bc-shell app-accent-green">
     <style dangerouslySetInnerHTML={{ __html: css }} />
-    <DashboardSidebar activeLabel="Outbound" badges={{ Outbound: campaigns.length }} stackBelow={980} />
-    <main className="ob-main">
-      <div className={`ob-split${selectedId ? " has-selection" : ""}`}>
-        <aside aria-label="Campaigns" className="ob-pane-list">
-          <div className="ob-pane-head">
-            <Icon name="target" size={17} />
-            <h1 className="ob-pane-title">Outbound</h1>
-            <button aria-label="Refresh campaigns" className="ob-pane-refresh" disabled={!isAuthenticated || loadState === "loading"} onClick={() => setReloadKey((key) => key + 1)} title="Refresh" type="button"><Icon name="refresh" size={15} /></button>
-            <button aria-label="New campaign" className="ob-pane-add" disabled={!isAuthenticated} onClick={() => setCreateOpen(true)} title="New campaign" type="button"><Icon name="plus" size={16} /></button>
+    <DashboardSidebar activeLabel="Broadcast" badges={broadcasts.length ? { Broadcast: broadcasts.length } : undefined} stackBelow={980} />
+    <main className="bc-main">
+      <div className={`bc-split${selected || opening ? " has-selection" : ""}`}>
+        <aside aria-label="Broadcasts" className="bc-list">
+          <div className="bc-head">
+            <TargetIcon />
+            <h1 className="bc-title">Broadcast</h1>
+            <button aria-label="Refresh" className="bc-icon-btn" disabled={!isSignedIn || listState === "loading"} onClick={refresh} title="Refresh" type="button">
+              <svg aria-hidden="true" fill="none" height="15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24" width="15"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
+            </button>
+            <button aria-label="New broadcast" className="bc-add-btn" disabled={!isSignedIn} onClick={() => setCreateOpen(true)} title="New broadcast" type="button">
+              <svg aria-hidden="true" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="16"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
           </div>
-          <nav className="ob-pane-items">
-            {effectiveLoadState === "loading" ? (
-              <p className="ob-pane-note">Loading…</p>
-            ) : effectiveLoadState === "error" ? (
-              <div className="ob-pane-note"><VoiceUpdateNote /></div>
-            ) : campaigns.length === 0 ? (
-              <p className="ob-pane-note">No campaigns yet.</p>
-            ) : (
-              campaigns.map((campaign) => {
-                const isActive = selected?.campaign_id === campaign.campaign_id;
-                return (
-                  <button aria-current={isActive ? "page" : undefined} className={`ob-pane-item${isActive ? " is-active" : ""}`} key={campaign.campaign_id} onClick={() => { setSelectedId(campaign.campaign_id); setActiveTab("overview"); }} type="button">
-                    <Icon name="target" size={16} />
-                    <span className="ob-pane-item-name">{campaign.campaign_name}</span>
-                    <span className={`ob-pane-item-dot ob-status-${campaign.status}`} title={statusLabels[campaign.status]} />
-                  </button>
-                );
-              })
-            )}
+          <nav className="bc-items">
+            {listState === "loading" ? <p className="bc-note">Loading…</p>
+              : listState === "error" ? <p className="bc-note bc-error">{loadError}</p>
+              : broadcasts.length === 0 ? <p className="bc-note">No broadcasts yet. Click + to create one.</p>
+              : broadcasts.map((item) => (
+                <button className={`bc-item${item.id === selectedId ? " is-active" : ""}`} key={item.id} onClick={() => writeBroadcastUrl(item.id)} type="button">
+                  <TargetIcon size={15} />
+                  <span className="bc-item-text">
+                    <span className="bc-item-name">{item.name}</span>
+                    <span className="bc-item-agent">{item.agent_name ?? "No agent"}</span>
+                  </span>
+                </button>
+              ))}
           </nav>
         </aside>
-
-        <section className="ob-pane-detail">
-          <button className="ob-pane-back" onClick={() => setSelectedId(null)} type="button"><Icon name="back" size={15} />Outbound</button>
+        <section className="bc-detail">
           {selected ? (
-            <>
-              <header className="ob-detail-top">
-                <button aria-label="Back to campaigns" className="ob-detail-back" onClick={() => setSelectedId(null)} type="button"><Icon name="back" size={16} /></button>
-                <div className="ob-detail-identity">
-                  <h2 className="ob-detail-name">{selected.campaign_name}</h2>
-                  <div className="ob-detail-line">
-                    <span>ID: {shortId(selected.campaign_id)}</span>
-                    <button aria-label="Copy ID" className="ob-copy" onClick={() => copyId(selected.campaign_id)} title={copiedId === selected.campaign_id ? "Copied" : "Copy ID"} type="button"><Icon name={copiedId === selected.campaign_id ? "check" : "copy"} size={13} /></button>
-                    <span className="ob-detail-dot" />
-                    <span className={`ob-status-line ob-status-${selected.status}`}><span className="ob-status-dot" />{statusLabels[selected.status]}</span>
-                    <span className="ob-detail-dot ob-detail-agent-dot" />
-                    <span className="ob-detail-agent">{selected.agent_name ?`${selected.agent_name}${selected.phone_number ? ` · ${selected.phone_number}` : ""}` : "No agent"}</span>
-                  </div>
-                </div>
-                <div className="ob-detail-buttons">
-                  <button aria-label="Edit campaign" className="ob-dark-btn" onClick={() => setEditOpen(true)} title="Edit campaign" type="button"><Icon name="edit" size={15} /><span className="ob-edit-label">Edit</span></button>
-                  <button aria-label={`Delete ${selected.campaign_name}`} className="ob-outline-icon" disabled={selected.status === "running" || deletingId === selected.campaign_id} onClick={() => deleteCampaign(selected)} title={selected.status === "running" ? "Pause the campaign before deleting it" : "Delete campaign"} type="button"><Icon name="trash" size={16} /></button>
-                </div>
-              </header>
-              <div aria-label="Campaign sections" className="ob-card ob-tabs ob-pane-tabs" role="tablist">{campaignTabs.map((tab) => <button aria-controls={`campaign-${tab.id}-panel`} aria-selected={activeTab === tab.id} className={activeTab === tab.id ? "is-active" : ""} id={`campaign-${tab.id}-tab`} key={tab.id} onClick={() => setActiveTab(tab.id)} role="tab" type="button">{tab.label}{tab.id === "leads" && selected.leads_count > 0 ? <span>{selected.leads_count}</span> : null}{tab.id === "calls" && selected.calls_placed > 0 ? <span>{selected.calls_placed}</span> : null}</button>)}</div>
-              {detailState === "error" ? <div className="ob-card ob-inline-error">{detailError}</div> : null}
-              {activeTab === "overview" ? <div aria-labelledby="campaign-overview-tab" className="ob-tab-panel" id="campaign-overview-panel" role="tabpanel"><div className="ob-stat-grid"><StatCard label="Leads" value={formatNumber(selected.leads_count)} /><StatCard label="Calls placed" value={formatNumber(selected.calls_placed)} /><StatCard label="Pickup rate" note={`${formatNumber(selected.answered_calls)} answered`} value={formatPercent(selected.pickup_rate)} /><StatCard label="Success rate" note={`${formatNumber(selected.successful_calls)} successful`} value={formatPercent(selected.success_rate)} /></div><div className="ob-card ob-details-card"><h3>Campaign details</h3><div className="ob-detail-grid"><DetailItem label="Status" value={statusLabels[selected.status]} /><DetailItem label="Agent" value={selected.agent_name ?? "No agent"} /><DetailItem label="Calls from" value={selected.phone_number ?? (selected.agent_id ? "Agent has no number" : "—")} /><DetailItem label="Budget" value={formatMoney(selected.budget_usd)} /><DetailItem label="Answered calls" value={formatNumber(selected.answered_calls)} /><DetailItem label="Successful calls" value={formatNumber(selected.successful_calls)} /><DetailItem label="Calls today" value={formatNumber(selected.today_calls)} /><DetailItem label="Today calls date" value={selected.today_calls_date ?? "—"} /><DetailItem label="Total usage" value={formatDuration(selected.total_usage_seconds)} /><DetailItem label="Started" value={formatDate(selected.started_at)} /><DetailItem label="Completed" value={formatDate(selected.completed_at)} /><DetailItem label="Created" value={formatDate(selected.created_at)} /><DetailItem label="Updated" value={formatDate(selected.updated_at)} /></div></div></div> : null}
-              {activeTab === "leads" ? <div aria-labelledby="campaign-leads-tab" id="campaign-leads-panel" role="tabpanel"><CampaignLeadsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onCallPlaced={noteCampaignProgress} onCountChange={updateSelectedLeadCount} /></div> : null}
-              {activeTab === "calls" ? <div aria-labelledby="campaign-calls-tab" id="campaign-calls-panel" role="tabpanel"><CampaignCallsWorkspace campaignId={selected.campaign_id} key={selected.campaign_id} onProgress={noteCampaignProgress} /></div> : null}
-              {activeTab === "analytics" ? <div aria-labelledby="campaign-analytics-tab" id="campaign-analytics-panel" role="tabpanel"><CampaignAnalyticsWorkspace campaignId={selected.campaign_id} key={`${selected.campaign_id}-${progressKey}`} /></div> : null}
-            </>
-          ) : effectiveLoadState === "ready" && campaigns.length === 0 ? (
-            <div className="ob-list-message">
-              <Icon name="target" size={30} />
-              <h2>No campaigns yet</h2>
-              <p>Create a campaign to pick an agent, add leads, and start dialling.</p>
-              <button className="ob-primary-btn" disabled={!isAuthenticated} onClick={() => setCreateOpen(true)} type="button"><Icon name="plus" size={15} />New campaign</button>
+            <BroadcastDetail agentPlaceholder={agentPlaceholder} agents={agents} broadcast={selected} getToken={getToken} key={selected.id} onBack={() => writeBroadcastUrl(null)} onDeleted={handleDeleted} onUpdated={handleUpdated} />
+          ) : opening ? (
+            <div className="bc-empty" role="status"><p className="bc-empty-text">Loading broadcast…</p></div>
+          ) : (
+            <div className="bc-empty">
+              <p className="bc-empty-title">{broadcasts.length ? "Select a broadcast" : "Create your first broadcast"}</p>
+              <p className="bc-empty-text">Each broadcast uses one of your voice agents.</p>
+              {isSignedIn ? <button className="bc-primary" onClick={() => setCreateOpen(true)} type="button">New broadcast</button> : null}
             </div>
-          ) : null}
+          )}
         </section>
       </div>
     </main>
-    {notice ? <div className={`ob-toast ${notice.kind}`} role="status">{notice.text}</div> : null}
-    {isCreateOpen ? <CreateCampaignModal agents={agentOptions} onClose={() => setCreateOpen(false)} onSubmit={createCampaign} /> : null}
-    {isEditOpen && selected ? <EditCampaignModal agents={agentOptions} campaign={selected} onClose={() => setEditOpen(false)} onSubmit={updateCampaign} /> : null}
+    {createOpen ? <CreateDialog agentPlaceholder={agentPlaceholder} agents={agents} getToken={getToken} onClose={() => setCreateOpen(false)} onCreated={handleCreated} /> : null}
   </div>;
 }
 
-// Retell shows ids shortened in the middle; the copy button copies the full id.
-function shortId(id: string) { return id.length > 12 ? `${id.slice(0, 4)}...${id.slice(-3)}` : id; }
-function StatCard({ label, note, value }: { label: string; note?: string; value: string }) { return <div className="ob-card ob-stat"><span>{label}</span><strong>{value}</strong>{note ? <small>{note}</small> : null}</div>; }
-function DetailItem({ label, value }: { label: string; value: string }) { return <div className="ob-detail-item"><span>{label}</span><strong title={value}>{value}</strong></div>; }
+type GetToken = ReturnType<typeof useAuth>["getToken"];
 
-function CreateCampaignModal({ agents, onClose, onSubmit }: { agents: AgentOption[]; onClose: () => void; onSubmit: (payload: CreateOutboundCampaignPayload) => Promise<void> }) {
-  const [name, setName] = useState(""); const [budget, setBudget] = useState(""); const [agentId, setAgentId] = useState(""); const [error, setError] = useState(""); const [submitting, setSubmitting] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); const campaignName = name.trim();
-    if (!campaignName) return setError("Campaign name is required."); if (campaignName.length > 80) return setError("Campaign name must be at most 80 characters.");
-    const parsedBudget = budget.trim() === "" ? null : Number(budget); if (parsedBudget != null && (!Number.isFinite(parsedBudget) || parsedBudget < 0)) return setError("Budget must be zero or greater.");
-    setSubmitting(true); setError("");
-    try { await onSubmit({ campaign_name: campaignName, ...(parsedBudget == null ? {} : { budget_usd: parsedBudget }), ...(agentId ? { agent_id: agentId } : {}) }); } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "Failed to create the campaign"); setSubmitting(false); }
-  }
-  return <Modal title="New campaign" onClose={onClose}><form onSubmit={submit}><div className="ob-modal-body"><Field label="Campaign name"><input autoFocus className="ob-input" maxLength={80} onChange={(event) => setName(event.target.value)} value={name} /></Field><AgentField agents={agents} onChange={setAgentId} value={agentId} /><Field hint="Optional" label="Budget (USD)"><input className="ob-input" inputMode="decimal" min="0" onChange={(event) => setBudget(event.target.value)} placeholder="No budget" step="0.01" type="number" value={budget} /></Field>{error ? <div className="ob-form-error">{error}</div> : null}</div><div className="ob-modal-actions"><button className="ob-secondary-btn" disabled={submitting} onClick={onClose} type="button">Cancel</button><button className="ob-primary-btn" disabled={submitting} type="submit">{submitting ? "Creating…" : "Create campaign"}</button></div></form></Modal>;
+function AgentSelect({ agents, value, onChange, id }: {
+  agents: AgentOption[];
+  value: string;
+  onChange: (value: string) => void;
+  id: string;
+}) {
+  return <select className="bc-input" id={id} onChange={(event) => onChange(event.target.value)} value={value}>
+    <option disabled value="">Select an agent</option>
+    {agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
+  </select>;
 }
 
-function EditCampaignModal({ agents, campaign, onClose, onSubmit }: { agents: AgentOption[]; campaign: OutboundCampaign; onClose: () => void; onSubmit: (payload: UpdateOutboundCampaignPayload) => Promise<void> }) {
-  const [name, setName] = useState(campaign.campaign_name); const [budget, setBudget] = useState(campaign.budget_usd == null ? "" : String(campaign.budget_usd)); const [status, setStatus] = useState<OutboundCampaignStatus>(campaign.status); const [agentId, setAgentId] = useState(campaign.agent_id ?? ""); const [error, setError] = useState(""); const [submitting, setSubmitting] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); const campaignName = name.trim();
-    if (!campaignName) return setError("Campaign name is required."); if (campaignName.length > 80) return setError("Campaign name must be at most 80 characters.");
-    const parsedBudget = budget.trim() === "" ? null : Number(budget); if (parsedBudget != null && (!Number.isFinite(parsedBudget) || parsedBudget < 0)) return setError("Budget must be zero or greater.");
-    // The server enforces this too; saying it here saves a round trip and
-    // points at the field that has to change.
-    if (status === "running" && !agentId) return setError("A running campaign needs an agent to dial with.");
-    const payload: UpdateOutboundCampaignPayload = {}; if (campaignName !== campaign.campaign_name) payload.campaign_name = campaignName; if (parsedBudget !== campaign.budget_usd) payload.budget_usd = parsedBudget; if (status !== campaign.status) payload.status = status; if (agentId !== (campaign.agent_id ?? "")) payload.agent_id = agentId || null;
-    if (!Object.keys(payload).length) return setError("Nothing to update."); setSubmitting(true); setError("");
-    try { await onSubmit(payload); } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "Failed to update the campaign"); setSubmitting(false); }
-  }
-  return <Modal title="Edit campaign" onClose={onClose}><form onSubmit={submit}><div className="ob-modal-body"><Field label="Campaign name"><input autoFocus className="ob-input" maxLength={80} onChange={(event) => setName(event.target.value)} value={name} /></Field><AgentField agents={agents} onChange={setAgentId} value={agentId} /><Field hint="Blank removes the budget" label="Budget (USD)"><input className="ob-input" inputMode="decimal" min="0" onChange={(event) => setBudget(event.target.value)} placeholder="No budget" step="0.01" type="number" value={budget} /></Field><Field label="Status"><select className="ob-input" onChange={(event) => setStatus(event.target.value as OutboundCampaignStatus)} value={status}>{allowedStatuses(campaign.status).map((value) => <option key={value} value={value}>{statusLabels[value]}</option>)}</select></Field>{error ? <div className="ob-form-error">{error}</div> : null}</div><div className="ob-modal-actions"><button className="ob-secondary-btn" disabled={submitting} onClick={onClose} type="button">Cancel</button><button className="ob-primary-btn" disabled={submitting} type="submit">{submitting ? "Saving…" : "Save changes"}</button></div></form></Modal>;
-}
-// AgentField is the campaign's one pairing control. There is no phone-number
-// control beside it on purpose: an agent is only selectable once it has a
-// number, and that number is the one the campaign dials from, so offering the
-// number separately would let the two be set to disagree.
-function AgentField({ agents, onChange, value }: { agents: AgentOption[]; onChange: (agentId: string) => void; value: string }) {
-  const usable = agents.filter((agent) => agent.phoneNumberId);
-  // A stored agent that has since lost its number would otherwise vanish from
-  // the picker and read as "No agent", so it is kept as a selected option.
-  const missing = value && !usable.some((agent) => agent.id === value) ? agents.find((agent) => agent.id === value) ?? null : null;
-  const hint = agents.length === 0 ? "No agents yet" : usable.length === 0 ? "No agent has a phone number yet" : "Its phone number is the one the campaign calls from";
-  return <Field hint={hint} label="Agent">
-    <select className="ob-input" onChange={(event) => onChange(event.target.value)} value={value}>
-      <option value="">No agent — draft only</option>
-      {missing ? <option value={missing.id}>{missing.name} — no phone number</option> : null}
-      {usable.map((agent) => <option key={agent.id} value={agent.id}>{agent.name} — {agent.phoneLabel ?? "number assigned"}</option>)}
-    </select>
-  </Field>;
+function BroadcastAgentPicker({ agents, value, onChange, placeholder, compact, disabled, status, error }: {
+  agents: AgentOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  // The phone bottom bar: a pill without the visible label, opening upwards.
+  compact?: boolean;
+  disabled?: boolean;
+  status?: string;
+  error?: string;
+}) {
+  return <div className={`bc-agent-picker${compact ? " is-compact" : ""}`}>
+    <Select.Root
+      disabled={disabled || !agents.length}
+      items={agents.map((agent) => ({ value: agent.id, label: agent.name }))}
+      modal={false}
+      onValueChange={(id) => { if (id) onChange(id); }}
+      value={value || null}
+    >
+      <Select.Label className="bc-agent-label">Voice agent</Select.Label>
+      <Select.Trigger className="bc-agent-trigger">
+        <span aria-hidden="true" className="bc-agent-symbol"><Bot size={16} /></span>
+        <Select.Value className="bc-agent-value" placeholder={placeholder} />
+        <Select.Icon className="bc-agent-chevron"><ChevronDown aria-hidden="true" size={15} /></Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Positioner align="start" alignItemWithTrigger={false} className="bc-agent-positioner" side={compact ? "top" : "bottom"} sideOffset={6}>
+          <Select.Popup className={`bc-agent-menu app-accent-green${compact ? " is-compact" : ""}`}>
+            <Select.List>
+              {agents.map((agent) => (
+                <Select.Item className="bc-agent-option" key={agent.id} value={agent.id}>
+                  <Select.ItemText className="bc-agent-option-text">{agent.name}</Select.ItemText>
+                  <Select.ItemIndicator className="bc-agent-check"><Check aria-hidden="true" size={15} /></Select.ItemIndicator>
+                </Select.Item>
+              ))}
+            </Select.List>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Portal>
+    </Select.Root>
+    {status ? <p className="bc-hint" role="status">{status}</p> : null}
+    {error ? <p className="bc-error bc-form-error" role="alert">{error}</p> : null}
+  </div>;
 }
 
-function Field({ children, hint, label }: { children: ReactNode; hint?: string; label: string }) { return <label className="ob-field"><span>{label}{hint ? <small>{hint}</small> : null}</span>{children}</label>; }
-function Modal({ children, onClose, title }: { children: ReactNode; onClose: () => void; title: string }) { return <div className="ob-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="presentation"><div aria-modal="true" className="ob-modal" role="dialog"><div className="ob-modal-head"><h2>{title}</h2><button aria-label="Close" className="ob-icon-btn" onClick={onClose} type="button"><Icon name="x" size={18} /></button></div>{children}</div></div>; }
+function CreateDialog({ agents, agentPlaceholder, getToken, onClose, onCreated }: { agents: AgentOption[]; agentPlaceholder: string; getToken: GetToken; onClose: () => void; onCreated: (created: ApiBroadcast) => void }) {
+  const [name, setName] = useState("");
+  const [agentId, setAgentId] = useState(agents.length === 1 ? agents[0].id : "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    nameRef.current?.focus();
+    return () => dialog?.close();
+  }, []);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) return setError("Enter a name.");
+    if (!agentId) return setError("Select an agent.");
+    setSaving(true);
+    setError("");
+    try {
+      onCreated(await createBroadcast({ name: trimmed, agent_id: agentId }, getToken));
+    } catch (err) {
+      setError(errorText(err, "Could not create the broadcast."));
+      setSaving(false);
+    }
+  };
+
+  return <dialog
+    aria-labelledby="bc-create-title"
+    aria-describedby="bc-create-description"
+    className="bc-dialog"
+    onCancel={(event) => {
+      event.preventDefault();
+      if (!saving) onClose();
+    }}
+    onClick={(event) => {
+      if (event.target === event.currentTarget && !saving) onClose();
+    }}
+    ref={dialogRef}
+  >
+    <form onSubmit={submit}>
+      <header className="bc-dialog-header">
+        <div className="bc-dialog-icon"><TargetIcon size={22} /></div>
+        <button aria-label="Close dialog" className="bc-icon-btn bc-dialog-close" disabled={saving} onClick={onClose} type="button">
+          <X aria-hidden="true" size={18} />
+        </button>
+        <h2 className="bc-dialog-title" id="bc-create-title">New broadcast</h2>
+        <p id="bc-create-description">Choose the voice agent that will place calls for this broadcast.</p>
+      </header>
+      <div className="bc-dialog-fields">
+        <div className="bc-dialog-field">
+          <label htmlFor="bc-name">Broadcast name</label>
+          <input className="bc-input" id="bc-name" maxLength={NAME_MAX} onChange={(event) => setName(event.target.value)} placeholder="e.g. December renewals" ref={nameRef} value={name} />
+        </div>
+        <div className="bc-dialog-field">
+          <label htmlFor={agents.length ? "bc-agent" : undefined}>Voice agent</label>
+          {agents.length ? <div className="bc-dialog-select">
+            <AgentSelect agents={agents} id="bc-agent" onChange={setAgentId} value={agentId} />
+            <ChevronDown aria-hidden="true" size={16} />
+          </div> : <p className="bc-hint">{agentPlaceholder === "No voice agents" ? "Create an agent in WhatsApp Voice Agents first." : agentPlaceholder}</p>}
+        </div>
+        {error ? <p className="bc-error bc-form-error" role="alert">{error}</p> : null}
+      </div>
+      <footer className="bc-actions">
+        <button className="bc-secondary" disabled={saving} onClick={onClose} type="button">Cancel</button>
+        <button className="bc-primary" disabled={saving || !agents.length} type="submit">
+          {saving ? "Creating\u2026" : "Create broadcast"}
+        </button>
+      </footer>
+    </form>
+  </dialog>;
+}
+
+function BroadcastDetail({ broadcast, agents, agentPlaceholder, getToken, onBack, onUpdated, onDeleted }: {
+  broadcast: ApiBroadcast;
+  agents: AgentOption[];
+  agentPlaceholder: string;
+  getToken: GetToken;
+  onBack: () => void;
+  onUpdated: (updated: ApiBroadcast) => void;
+  onDeleted: (id: string) => void;
+}) {
+  const phone = usePhoneLayout();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") ?? "";
+  const tab = ["overview", "analytics"].includes(tabParam) ? tabParam : "leads";
+  const [configOpen, setConfigOpen] = useState(false);
+  // Where the contacts search and sort go while the phone Config sidebar is open.
+  const [barSlot, setBarSlot] = useState<HTMLElement | null>(null);
+  // Where the contacts Import and Add buttons go in the phone header.
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+  const closeConfig = useCallback(() => setConfigOpen(false), []);
+  const [name, setName] = useState(broadcast.name);
+  const [pendingAgentId, setPendingAgentId] = useState("");
+  const [agentError, setAgentError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const pageParam = Number(searchParams.get("page"));
+  const contactsPage = Number.isInteger(pageParam) && pageParam > 0 && pageParam <= 1_000_000 ? pageParam : 1;
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<{ key: BroadcastContactSort; desc: boolean }>({ key: "created", desc: true });
+  const settledSearch = useDebouncedValue(search.trim());
+  const [contacts, setContacts] = useState<BroadcastContactPage | null>(null);
+  const [loadedKey, setLoadedKey] = useState("");
+  const [contactError, setContactError] = useState("");
+
+  const setContactsPage = useCallback((page: number) => {
+    writeBroadcastUrl(broadcast.id, { tab, page, replace: true });
+  }, [broadcast.id, tab]);
+  // A different search or order starts again from its first page.
+  const changeSearch = (value: string) => {
+    setSearch(value);
+    setContactsPage(1);
+  };
+  const changeSort = (value: { key: BroadcastContactSort; desc: boolean }) => {
+    setSort(value);
+    setContactsPage(1);
+  };
+
+  const queryKey = JSON.stringify([contactsPage, settledSearch, sort.key, sort.desc]);
+  const latestKey = useRef(queryKey);
+  const requestSeq = useRef(0);
+  const appliedSeq = useRef(0);
+  // Answers to an earlier page or search, or older than what is on screen, are
+  // dropped.
+  const loadContacts = useCallback((showError: boolean) => {
+    const seq = ++requestSeq.current;
+    const isCurrent = () => latestKey.current === queryKey && seq > appliedSeq.current;
+    listBroadcastContacts(broadcast.id, { page: contactsPage, search: settledSearch, sort: sort.key, desc: sort.desc }, getToken)
+      .then((result) => {
+        if (!isCurrent()) return;
+        appliedSeq.current = seq;
+        setContacts(result);
+        setLoadedKey(queryKey);
+        setContactError("");
+        // The last contact of the last page was deleted: show the new last page.
+        if (contactsPage > result.totalPages) setContactsPage(result.totalPages);
+      })
+      .catch((error) => {
+        if (!isCurrent() || !showError) return;
+        setLoadedKey(queryKey);
+        setContactError(errorText(error, "Could not load contacts."));
+      });
+  }, [broadcast.id, contactsPage, getToken, queryKey, setContactsPage, settledSearch, sort.desc, sort.key]);
+
+  useEffect(() => {
+    latestKey.current = queryKey;
+    loadContacts(true);
+    return () => {
+      latestKey.current = "";
+    };
+  }, [loadContacts, queryKey]);
+
+  const refreshContacts = useCallback(() => loadContacts(false), [loadContacts]);
+
+  // While the auto-dialer has work, follow it: contacts move queued →
+  // calling → answered / no answer, and the server may pause the broadcast
+  // itself (number disconnected, minutes used up).
+  const dialing = contacts ? contacts.stats.queued + contacts.stats.calling > 0 : false;
+  useEffect(() => {
+    if (!dialing) return;
+    const timer = setInterval(() => {
+      refreshContacts();
+      getBroadcast(broadcast.id, getToken).then(onUpdated).catch(() => undefined);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [broadcast.id, dialing, getToken, onUpdated, refreshContacts]);
+
+  const dirty = name.trim() !== broadcast.name;
+  const busy = saving || Boolean(pendingAgentId);
+  const agentId = pendingAgentId || broadcast.agent_id || "";
+  const agentOptions = broadcast.agent_id && !agents.some((agent) => agent.id === broadcast.agent_id)
+    ? [{ id: broadcast.agent_id, name: broadcast.agent_name ?? "Current agent", phoneNumberId: null }, ...agents]
+    : agents;
+  const callAgent = agentOptions.find((agent) => agent.id === broadcast.agent_id) ?? null;
+
+  const selectAgent = async (id: string) => {
+    if (busy || id === broadcast.agent_id) return;
+    setPendingAgentId(id);
+    setAgentError("");
+    try {
+      onUpdated(await updateBroadcast(broadcast.id, { agent_id: id }, getToken));
+    } catch (err) {
+      setAgentError(errorText(err, "Could not change the voice agent."));
+    } finally {
+      setPendingAgentId("");
+    }
+  };
+
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    if (busy || !dirty) return;
+    const trimmed = name.trim();
+    if (!trimmed) return setMessage({ kind: "error", text: "Enter a name." });
+    setSaving(true);
+    setMessage(null);
+    try {
+      const updated = await updateBroadcast(broadcast.id, { name: trimmed }, getToken);
+      onUpdated(updated);
+      setName(updated.name);
+      setMessage({ kind: "success", text: "Saved." });
+    } catch (err) {
+      setMessage({ kind: "error", text: errorText(err, "Could not save.") });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async () => {
+    if (busy) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      await deleteBroadcast(broadcast.id, getToken);
+      onDeleted(broadcast.id);
+    } catch (err) {
+      setMessage({ kind: "error", text: errorText(err, "Could not delete.") });
+      setSaving(false);
+      setConfirmDelete(false);
+    }
+  };
+
+  const tabs = <Tabs.List activateOnFocus aria-label="Broadcast views" className="bc-tabs">
+    <Tabs.Tab className="bc-tab" value="leads"><Users aria-hidden="true" size={16} />Leads</Tabs.Tab>
+    <Tabs.Tab className="bc-tab" value="overview"><LayoutGrid aria-hidden="true" size={16} />Overview</Tabs.Tab>
+    <Tabs.Tab className="bc-tab" value="analytics"><BarChart3 aria-hidden="true" size={16} />Analytics</Tabs.Tab>
+  </Tabs.List>;
+
+  const meta = <p className="bc-detail-meta">{broadcast.agent_name ?? "No agent"} · Created {formatDate(broadcast.created_at)}</p>;
+  const renderAgentPicker = (compact: boolean) => <BroadcastAgentPicker agents={agentOptions} compact={compact} disabled={busy || !agents.length} error={agentError} onChange={selectAgent} placeholder={agentPlaceholder} status={pendingAgentId ? "Saving…" : undefined} value={agentId} />;
+  const agentPicker = renderAgentPicker(false);
+  const settingsForm = <form className="bc-card" onSubmit={save}>
+    <label className="bc-label" htmlFor="bc-edit-name">Name</label>
+    <input className="bc-input" id="bc-edit-name" maxLength={NAME_MAX} onChange={(event) => setName(event.target.value)} value={name} />
+    {message ? <p className={message.kind === "error" ? "bc-error bc-form-error" : "bc-success bc-form-error"}>{message.text}</p> : null}
+    <div className="bc-actions bc-actions-split">
+      {confirmDelete ? (
+        <span className="bc-confirm">
+          Delete this broadcast?
+          <button className="bc-danger" disabled={busy} onClick={remove} type="button">Delete</button>
+          <button className="bc-secondary" disabled={busy} onClick={() => setConfirmDelete(false)} type="button">Keep</button>
+        </span>
+      ) : (
+        <button className="bc-secondary bc-danger-text" disabled={busy} onClick={() => setConfirmDelete(true)} type="button">Delete</button>
+      )}
+      <button className="bc-primary" disabled={busy || !dirty} type="submit">{saving ? "Saving…" : "Save"}</button>
+    </div>
+  </form>;
+
+  return <Tabs.Root className="bc-detail-full" onValueChange={(value) => writeBroadcastUrl(broadcast.id, { tab: String(value), page: contactsPage, replace: true })} value={tab}>
+    <div className="bc-detail-head">
+      <div className="bc-detail-head-text">
+        <button className="bc-back" onClick={onBack} type="button"><ArrowLeft aria-hidden="true" size={14} /> Broadcasts</button>
+        <h2 className="bc-detail-title" title={broadcast.name}>{broadcast.name}</h2>
+        {phone ? null : meta}
+      </div>
+      {phone ? <>
+        <button aria-haspopup="dialog" className="bc-secondary bc-config-btn" onClick={() => setConfigOpen(true)} type="button"><SlidersHorizontal aria-hidden="true" size={15} />Config</button>
+        {tab === "leads" ? <div className="bc-head-actions" ref={setActionsSlot} /> : null}
+      </> : (
+        <div className="bc-detail-actions">
+          {agentPicker}
+          <button aria-expanded={settingsOpen} className="bc-secondary" onClick={() => setSettingsOpen((open) => !open)} type="button">{settingsOpen ? "Close settings" : "Settings"}</button>
+        </div>
+      )}
+      {phone ? null : tabs}
+    </div>
+    {settingsOpen && !phone ? <div className="bc-settings">
+      {settingsForm}
+    </div> : null}
+      <Tabs.Panel className="bc-tab-panel bc-tab-panel-leads" keepMounted value="leads">
+        <BroadcastContacts actionsSlot={actionsSlot} agent={callAgent} barSlot={phone ? barSlot : undefined} broadcast={broadcast} contacts={contacts} getToken={getToken} loadError={contactError} onSearch={closeConfig} onBroadcastUpdated={onUpdated} onPage={setContactsPage} onSearchChange={changeSearch} onSortChange={changeSort} page={contactsPage} pageBusy={contacts !== null && (loadedKey !== queryKey || search.trim() !== settledSearch)} refreshContacts={refreshContacts} search={search} sort={sort} />
+      </Tabs.Panel>
+      <Tabs.Panel className="bc-tab-panel bc-summary" value="overview">
+        <h3 className="bc-summary-title">Broadcast details</h3>
+        <dl className="bc-summary-grid">
+          <div><dt>Voice agent</dt><dd>{broadcast.agent_name ?? "Unassigned"}</dd></div>
+          <div><dt>Leads</dt><dd>{contactError ? "Unavailable" : contacts?.stats.total.toLocaleString() ?? "Loading…"}</dd></div>
+          <div><dt>Created</dt><dd>{formatDate(broadcast.created_at)}</dd></div>
+          <div><dt>Last updated</dt><dd>{formatDate(broadcast.updated_at)}</dd></div>
+        </dl>
+      </Tabs.Panel>
+      <Tabs.Panel className="bc-tab-panel bc-summary" value="analytics">
+        <LeadAnalytics error={contactError} stats={contacts?.stats ?? null} />
+      </Tabs.Panel>
+      {/* On phones the agent and the tabs are a bar fixed to the bottom of the screen. It is
+          rendered on the page shell, outside the size container, which some
+          browsers would position it against. */}
+      {phone ? createPortal(<div className="bc-bottom-bar">{renderAgentPicker(true)}{tabs}</div>, document.querySelector(".bc-shell") ?? document.body) : null}
+      {phone ? <Dialog.Root onOpenChange={setConfigOpen} open={configOpen}>
+        <Dialog.Portal container={document.querySelector<HTMLElement>(".bc-shell")}>
+          <Dialog.Backdrop className="bc-config-scrim" />
+          <Dialog.Popup className="bc-config">
+            <header className="bc-config-head">
+              <Dialog.Title className="bc-config-title">Config</Dialog.Title>
+              <Dialog.Close aria-label="Close config" className="bc-icon-btn"><X aria-hidden="true" size={18} /></Dialog.Close>
+            </header>
+            <div className="bc-config-body">
+              {tab === "leads" ? <div ref={setBarSlot} /> : null}
+              <div className="bc-config-section">{agentPicker}{meta}</div>
+              <div className="bc-config-section">
+                <h3 className="bc-config-label">Settings</h3>
+                {settingsForm}
+              </div>
+            </div>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root> : null}
+  </Tabs.Root>;
+}
+
+function LeadAnalytics({ stats, error }: { stats: BroadcastContactStats | null; error: string }) {
+  return <>
+    <h3 className="bc-summary-title">Lead coverage</h3>
+    {error ? <p className="bc-summary-note bc-error" role="alert">{error}</p>
+      : stats === null ? <p className="bc-summary-note" role="status">Loading leads…</p>
+      : stats.total === 0 ? <p className="bc-summary-note">Add leads to see contact information coverage.</p>
+      : <dl className="bc-summary-grid">
+        <div><dt>Total leads</dt><dd className="bc-metric">{stats.total.toLocaleString()}</dd></div>
+        <div><dt>With an email</dt><dd className="bc-metric">{stats.with_email.toLocaleString()}</dd></div>
+        <div><dt>With an address</dt><dd className="bc-metric">{stats.with_address.toLocaleString()}</dd></div>
+      </dl>}
+  </>;
+}
+
+function TargetIcon({ size = 17 }: { size?: number }) {
+  return <svg aria-hidden="true" fill="none" height={size} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24" width={size}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></svg>;
+}
 
 const css = `
-.ob-shell {
-  --bg: var(--app-bg);
-  --sidebar: var(--app-sidebar);
-  --surface: var(--app-surface);
-  --surface-2: var(--app-surface-2);
-  --panel: var(--app-panel);
-  --panel-hover: var(--app-panel-hover);
-  --border: var(--app-border);
-  --border-strong: var(--app-border-strong);
-  --text: var(--app-text);
-  --muted: var(--app-muted);
-  --subtle: var(--app-subtle);
-  --faint: var(--app-faint);
-  --primary: var(--app-primary);
-  --primary-2: var(--app-primary-2);
-  --primary-soft: var(--app-primary-soft);
-  --primary-light: var(--app-primary-light);
-  background: var(--bg);
-  color: var(--text);
+.bc-shell {
+  background: var(--app-bg);
+  color: var(--app-text);
   display: flex;
   height: 100vh;
-  max-height: 100vh;
-  width: 100vw;
-  max-width: 100vw;
+  height: 100dvh;
+  width: 100%;
   overflow: hidden;
   font-family: var(--font-manrope), system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
-.ob-shell * { box-sizing: border-box; }
-.ob-shell button, .ob-shell input, .ob-shell select, .ob-shell textarea { font: inherit; }
-.ob-shell ::-webkit-scrollbar { height: 9px; width: 9px; }
-.ob-shell ::-webkit-scrollbar-thumb { background: var(--app-border-strong); border-radius: 9px; }
-.ob-shell ::-webkit-scrollbar-track { background: transparent; }
-.ob-main { display: flex; flex: 1; flex-direction: column; height: 100vh; min-width: 0; overflow: hidden; }
-.ob-topbar {
+.bc-shell * { box-sizing: border-box; }
+.bc-shell button, .bc-shell input, .bc-shell select { font: inherit; }
+.bc-main { display: flex; flex: 1; flex-direction: column; min-width: 0; overflow: hidden; }
+.bc-split { display: flex; flex: 1; min-height: 0; }
+.bc-list { border-right: 1px solid var(--app-border); display: flex; flex: 0 0 clamp(190px, 17vw, 290px); flex-direction: column; min-height: 0; min-width: 0; padding: 16px; }
+.bc-head { align-items: center; border-bottom: 1px solid var(--app-border); display: flex; gap: 8px; padding: 0 2px 14px; }
+.bc-title { flex: 1; font-size: 14.5px; font-weight: 600; margin: 0; }
+.bc-icon-btn, .bc-add-btn { align-items: center; border-radius: 8px; cursor: pointer; display: inline-flex; height: 32px; justify-content: center; width: 32px; }
+.bc-icon-btn { background: transparent; border: 1px solid var(--app-border); color: var(--app-muted); }
+.bc-icon-btn:hover:not(:disabled) { color: var(--app-text); background: var(--app-panel-hover); }
+.bc-add-btn { background: var(--app-text); border: 0; color: var(--app-bg); }
+.bc-icon-btn:disabled, .bc-add-btn:disabled { cursor: default; opacity: .5; }
+.bc-items { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; padding-top: 12px; }
+.bc-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-text); cursor: pointer; display: flex; gap: 10px; padding: 8px 10px; text-align: left; width: 100%; }
+.bc-item:hover { background: var(--app-panel-hover); }
+.bc-item.is-active { background: var(--app-panel); }
+.bc-item-text { display: flex; flex-direction: column; min-width: 0; }
+.bc-item-name, .bc-item-agent { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc-item-name { font-weight: 500; }
+.bc-item-agent { color: var(--app-muted); font-size: 12px; }
+.bc-note { color: var(--app-muted); font-size: 13px; margin: 8px 2px; }
+.bc-detail { display: flex; flex: 1; flex-direction: column; min-width: 0; overflow-y: auto; }
+.bc-detail-full { container: broadcast-detail / inline-size; display: flex; flex: 1 0 auto; flex-direction: column; min-width: 0; width: 100%; }
+.bc-detail-head { align-items: center; border-bottom: 1px solid var(--app-border); display: grid; gap: 12px; grid-template-areas: "title tabs actions"; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); padding: 16px 20px; }
+.bc-detail-head-text { grid-area: title; min-width: 0; }
+.bc-detail-actions { align-items: start; display: grid; gap: 8px; grid-area: actions; grid-template-columns: minmax(0, 236px) auto; justify-content: end; min-width: 0; }
+.bc-agent-picker { display: grid; gap: 5px; min-width: 0; }
+.bc-agent-label { color: var(--app-muted); font-size: 12px; font-weight: 600; }
+.bc-shell .bc-agent-trigger {
   align-items: center;
-  background: var(--app-topbar);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex: 0 0 auto;
-  gap: 16px;
-  padding: 20px 32px;
-}
-.ob-topbar-heading { flex: 1; min-width: 0; }
-.ob-topbar-title { font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin: 0; }
-.ob-topbar-copy { color: var(--subtle); font-size: 12.5px; margin: 3px 0 0; }
-.ob-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 32px 32px; }
-.ob-browse { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-/* Search in the Retell-style header, right of the title. */
-.ob-browse .ob-toolbar-search { flex: 0 1 300px; max-width: none; min-width: 0; width: 300px; }
-@media (max-width: 640px) { .ob-browse .ob-toolbar-search { flex: 1 1 100%; width: auto; } }
-.ob-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
-.ob-toolbar-search { flex: 1 1 240px; max-width: 420px; position: relative; }
-.ob-search-icon { color: var(--subtle); display: flex; left: 12px; pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); }
-.ob-search {
-  background: var(--panel);
-  border: 1px solid var(--app-border);
-  border-radius: 11px;
-  color: var(--text);
-  height: 40px;
-  outline: none;
-  padding: 0 12px 0 38px;
-  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
-  width: 100%;
-}
-.ob-search::placeholder { color: var(--faint); }
-.ob-search:focus { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
-.ob-view-toggle {
-  background: var(--panel);
-  border: 1px solid var(--app-border);
-  border-radius: 11px;
-  display: inline-flex;
-  flex-shrink: 0;
-  gap: 2px;
-  padding: 3px;
-}
-.ob-view-btn {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  border-radius: 8px;
-  color: var(--subtle);
-  cursor: pointer;
-  display: inline-flex;
-  height: 30px;
-  justify-content: center;
-  transition: background .18s ease, box-shadow .18s ease, color .18s ease;
-  width: 34px;
-}
-.ob-view-btn:hover { color: var(--text); }
-.ob-view-btn.is-active { background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--app-primary-ring); color: var(--app-primary-text); }
-.ob-count {
-  background: var(--app-hover-2);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  color: var(--subtle);
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1;
-  margin-left: auto;
-  padding: 6px 10px;
-  white-space: nowrap;
-}
-.ob-primary-btn, .ob-secondary-btn, .ob-danger-btn {
-  align-items: center;
-  border-radius: 11px;
-  cursor: pointer;
-  display: inline-flex;
-  font-size: 13px;
-  font-weight: 800;
-  gap: 8px;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 14px;
-  transition: background .18s ease, border-color .18s ease, filter .18s ease, transform .18s ease;
-  white-space: nowrap;
-}
-.ob-primary-btn:hover, .ob-secondary-btn:hover, .ob-danger-btn:hover { transform: translateY(-1px); }
-.ob-primary-btn { background: linear-gradient(140deg,var(--primary-2),var(--primary)); border: 1px solid transparent; box-shadow: 0 4px 14px var(--app-primary-glow); color: var(--app-on-accent); }
-.ob-secondary-btn { background: var(--panel-hover); border: 1px solid var(--app-border-strong); color: var(--text); }
-.ob-danger-btn { background: var(--app-rose-soft-2); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
-.ob-danger-btn:hover { background: var(--app-rose-border); }
-.ob-primary-btn:disabled, .ob-secondary-btn:disabled, .ob-danger-btn:disabled, .ob-icon-btn:disabled {
-  cursor: not-allowed;
-  filter: grayscale(.35);
-  opacity: .45;
-  transform: none;
-}
-.ob-icon-btn {
-  align-items: center;
-  background: var(--panel);
-  border: 1px solid var(--app-border);
-  border-radius: 11px;
-  color: var(--subtle);
-  cursor: pointer;
-  display: inline-flex;
-  flex-shrink: 0;
-  height: 40px;
-  justify-content: center;
-  transition: background .18s ease, border-color .18s ease, color .18s ease;
-  width: 40px;
-}
-.ob-icon-btn:hover { background: var(--app-hover-2); border-color: var(--app-border-strong); color: var(--app-text-strong); }
-.ob-list { display: flex; flex-direction: column; gap: 10px; }
-.ob-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
-.ob-list-message {
-  align-items: center;
-  border: 1px dashed var(--border-strong);
-  border-radius: 16px;
-  color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  font-size: 13.5px;
-  font-weight: 650;
-  gap: 14px;
-  justify-content: center;
-  min-height: 260px;
-  padding: 40px;
-  text-align: center;
-}
-.ob-list-message p { margin: 0; max-width: 440px; }
-.ob-list-message h2 { color: var(--text); font-size: 17px; margin: 0; }
-.ob-list-message.error { color: var(--app-rose-text); }
-.ob-row {
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  color: inherit;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-strong);
+  border-radius: 10px;
+  color: var(--app-text);
   cursor: pointer;
   display: grid;
-  gap: 16px;
-  grid-template-columns: 38px minmax(170px, 1.2fr) minmax(90px, .5fr) minmax(90px, .5fr) minmax(160px, 1fr) auto 18px;
-  padding: 13px 16px;
-  text-align: left;
-  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
-  width: 100%;
-}
-.ob-row:hover { background: var(--panel-hover); border-color: var(--app-primary-ring); box-shadow: 0 6px 18px var(--app-shadow-soft); transform: translateY(-1px); }
-.ob-row:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
-.ob-target {
-  align-items: center;
-  background: var(--primary-soft);
-  border: 1px solid var(--app-primary-ring);
-  border-radius: 11px;
-  color: var(--primary-light);
-  display: inline-flex;
-  flex: 0 0 auto;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
-}
-.ob-row-identity, .ob-row-field { display: block; min-width: 0; }
-.ob-row-field > span { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ob-row-label { color: var(--faint); display: block; font-size: 9.5px; font-weight: 850; letter-spacing: .7px; margin-bottom: 3px; text-transform: uppercase; }
-.ob-row-name { display: block; font-size: 14px; font-weight: 850; letter-spacing: -.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ob-row-id { color: var(--faint); display: block; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ob-row-chevron { color: var(--faint); display: inline-flex; transition: color .18s ease, transform .18s ease; }
-.ob-row:hover .ob-row-chevron { color: var(--primary-light); transform: translateX(2px); }
-.ob-card-item {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px var(--app-shadow-soft);
-  color: inherit;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 190px;
-  padding: 16px;
-  text-align: left;
-  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
-  width: 100%;
-}
-.ob-card-item:hover {
-  background: var(--panel-hover);
-  border-color: var(--app-primary-border);
-  box-shadow: 0 12px 30px var(--app-shadow-soft);
-  transform: translateY(-2px);
-}
-.ob-card-item:focus-visible { border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); outline: none; }
-.ob-card-top { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
-.ob-card-identity { min-width: 0; }
-.ob-card-meta { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; margin-top: auto; }
-.ob-card-tile { background: var(--panel); border: 1px solid var(--app-border); border-radius: 11px; min-width: 0; padding: 9px 10px; }
-.ob-card-tile > span { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ob-card-foot { align-items: center; color: var(--subtle); display: flex; font-size: 11.5px; gap: 8px; justify-content: space-between; }
-.ob-card-foot span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ob-status {
-  align-items: center;
-  border-radius: 999px;
-  display: inline-flex;
-  flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 800;
-  gap: 5px;
-  line-height: 1;
-  padding: 5px 9px;
-  text-transform: capitalize;
-}
-.ob-status-dot { background: currentColor; border-radius: 50%; height: 5px; width: 5px; }
-.ob-status-draft { background: var(--app-slate-soft); color: var(--app-slate); }
-.ob-status-running { background: var(--app-green-soft); color: var(--app-green); }
-.ob-status-paused { background: var(--app-amber-soft); color: var(--app-amber); }
-.ob-status-completed { background: var(--app-primary-soft); color: var(--app-primary-text); }
-.ob-status-failed { background: var(--app-rose-soft); color: var(--app-rose); }
-.expandable-card-backdrop { background: var(--app-overlay); backdrop-filter: blur(6px); inset: 0; position: fixed; z-index: 80; }
-.expandable-card-stage { align-items: center; display: flex; inset: 0; justify-content: center; padding: 24px; pointer-events: none; position: fixed; z-index: 90; }
-.expandable-card-panel { pointer-events: auto; }
-.ob-expandable-card {
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 20px;
-  box-shadow: 0 30px 90px var(--app-shadow-color), 0 0 0 1px var(--app-primary-ring);
-  max-height: min(860px, calc(100vh - 48px));
-  max-width: 1120px;
-  overflow: auto;
-  padding: 16px;
-  width: 100%;
-}
-.ob-expandable-topline { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
-.ob-expandable-label { color: var(--subtle); font-size: 11px; font-weight: 850; letter-spacing: .7px; text-transform: uppercase; }
-.ob-expandable-close {
-  align-items: center;
-  background: var(--panel);
-  border: 1px solid var(--app-border);
-  border-radius: 10px;
-  color: var(--subtle);
-  cursor: pointer;
-  display: inline-flex;
-  height: 32px;
-  justify-content: center;
-  transition: background .18s ease, color .18s ease;
-  width: 32px;
-}
-.ob-expandable-close:hover { background: var(--panel-hover); color: var(--text); }
-.ob-detail { display: grid; gap: 16px; min-width: 0; }
-.ob-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px var(--app-shadow-soft); }
-.ob-detail-head { align-items: center; display: flex; flex-wrap: wrap; gap: 18px; justify-content: space-between; padding: 18px; }
-.ob-detail-title { align-items: center; display: flex; gap: 13px; min-width: 0; }
-.ob-detail-icon {
-  align-items: center;
-  background: var(--primary-soft);
-  border: 1px solid var(--app-primary-ring);
-  border-radius: 12px;
-  color: var(--primary-light);
-  display: flex;
-  flex-shrink: 0;
-  height: 46px;
-  justify-content: center;
-  width: 46px;
-}
-.ob-name-row { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; }
-.ob-name-row h2 { font-size: 20px; font-weight: 850; letter-spacing: -.35px; margin: 0; }
-.ob-id { color: var(--faint); font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 11px; margin: 5px 0 0; overflow: hidden; text-overflow: ellipsis; }
-.ob-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.ob-tabs { align-items: stretch; display: flex; gap: 24px; overflow-x: auto; padding: 0 18px; }
-.ob-tabs button {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  color: var(--subtle);
-  cursor: pointer;
-  display: flex;
-  font-size: 12.5px;
-  font-weight: 750;
-  gap: 7px;
-  min-height: 48px;
-  padding: 0 2px;
-  white-space: nowrap;
-}
-.ob-tabs button:hover { color: var(--app-text-soft); }
-.ob-tabs button.is-active { border-bottom-color: var(--primary-2); color: var(--app-text-strong); }
-.ob-tabs button span { background: var(--primary-soft); border-radius: 999px; color: var(--app-primary-text); font-size: 9.5px; min-width: 19px; padding: 2px 6px; }
-.ob-tab-panel { display: grid; gap: 16px; }
-.ob-stat-grid { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.ob-stat { display: grid; gap: 5px; min-height: 98px; padding: 15px; }
-.ob-stat > span { color: var(--faint); font-size: 10.5px; font-weight: 850; letter-spacing: .7px; text-transform: uppercase; }
-.ob-stat > strong { font-size: 25px; font-weight: 850; letter-spacing: -.5px; }
-.ob-stat > small { color: var(--subtle); font-size: 11px; }
-.ob-details-card { padding: 18px; }
-.ob-details-card h3 { font-size: 14px; font-weight: 850; margin: 0 0 16px; }
-.ob-detail-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.ob-detail-item { background: var(--panel); border: 1px solid var(--app-border); border-radius: 12px; display: grid; gap: 5px; min-width: 0; padding: 12px 14px; }
-.ob-detail-item span { color: var(--faint); font-size: 10.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
-.ob-detail-item strong { font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
-.ob-inline-error { color: var(--app-rose-text); font-size: 13px; padding: 13px 16px; }
-.ob-modal-overlay {
-  align-items: center;
-  background: var(--app-overlay);
-  backdrop-filter: blur(3px);
-  display: flex;
-  inset: 0;
-  justify-content: center;
-  padding: 20px;
-  position: fixed;
-  z-index: 120;
-}
-.ob-modal {
-  background: var(--app-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: 18px;
-  box-shadow: 0 28px 80px var(--app-shadow-color-strong);
-  max-width: 470px;
-  overflow: hidden;
-  width: 100%;
-}
-.ob-modal-head { align-items: center; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; padding: 16px 18px; }
-.ob-modal-head h2 { font-size: 17px; font-weight: 850; letter-spacing: -.2px; margin: 0; }
-.ob-modal-body { display: grid; gap: 16px; padding: 18px; }
-.ob-field { display: grid; gap: 7px; }
-.ob-field > span { font-size: 12px; font-weight: 800; }
-.ob-field small { color: var(--subtle); font-size: 10.5px; font-weight: 500; margin-left: 7px; }
-.ob-input {
-  background: var(--panel);
-  border: 1px solid var(--app-border);
-  border-radius: 11px;
-  color: var(--text);
-  min-height: 42px;
-  outline: none;
-  padding: 9px 11px;
-  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
-  width: 100%;
-}
-.ob-input::placeholder { color: var(--faint); }
-.ob-input:focus { background: var(--app-input-focus); border-color: var(--app-primary-ring-strong); box-shadow: 0 0 0 4px var(--app-primary-ring); }
-.ob-input option { background: var(--app-elevated); }
-.ob-form-error { background: var(--app-rose-soft); border: 1px solid var(--app-rose-border); border-radius: 10px; color: var(--app-rose-text); font-size: 12px; padding: 9px 11px; }
-.ob-modal-actions { border-top: 1px solid var(--border); display: flex; gap: 9px; justify-content: flex-end; padding: 14px 18px; }
-.ob-toast {
-  border-radius: 12px;
-  bottom: 24px;
-  box-shadow: 0 18px 50px var(--app-shadow-color);
   font-size: 13px;
-  font-weight: 750;
-  left: 50%;
-  max-width: min(480px, calc(100vw - 48px));
-  padding: 12px 18px;
-  position: fixed;
-  transform: translateX(-50%);
-  z-index: 140;
+  font-weight: 600;
+  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 40px;
+  padding: 5px 10px 5px 6px;
+  text-align: left;
 }
-.ob-toast.success { background: var(--app-toast-success-bg); border: 1px solid var(--app-green-border); color: var(--app-toast-success-text); }
-.ob-toast.error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
-/* Retell-style master-detail: a list pane of campaigns beside the open one. */
-.ob-split { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
-.ob-pane-list { border-right: 1px solid var(--app-border); display: flex; flex: 0 0 290px; flex-direction: column; min-height: 0; min-width: 0; padding: 16px; }
-.ob-pane-head { align-items: center; border-bottom: 1px solid var(--app-border); color: var(--app-text); display: flex; gap: 8px; padding: 0 2px 14px; }
-.ob-pane-head > svg { margin-right: 2px; }
-.ob-pane-title { flex: 1; font-size: 14.5px; font-weight: 600; margin: 0; }
-.ob-pane-add, .ob-pane-refresh { align-items: center; border-radius: 8px; cursor: pointer; display: inline-flex; height: 32px; justify-content: center; transition: opacity .16s ease, background .16s ease; width: 32px; }
-.ob-pane-add { background: var(--app-text-strong, var(--app-text)); border: 0; color: var(--app-bg); }
-.ob-pane-add:hover:not(:disabled) { opacity: .85; }
-.ob-pane-refresh { background: transparent; border: 1px solid var(--app-border-strong); color: var(--app-muted); }
-.ob-pane-refresh:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
-.ob-pane-add:disabled, .ob-pane-refresh:disabled { cursor: not-allowed; opacity: .4; }
-.ob-pane-items { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow-y: auto; padding-top: 12px; }
-.ob-pane-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-muted); cursor: pointer; display: flex; font: inherit; font-size: 14px; gap: 10px; min-height: 36px; padding: 0 10px; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
-.ob-pane-item > svg { color: var(--app-text); flex-shrink: 0; }
-.ob-pane-item:hover { background: var(--app-hover); color: var(--app-text); }
-.ob-pane-item.is-active { background: var(--app-hover-2); color: var(--app-text); }
-.ob-pane-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ob-pane-item-dot { border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
-.ob-pane-item-dot.ob-status-draft { background: var(--app-slate); }
-.ob-pane-item-dot.ob-status-running { background: var(--app-green); }
-.ob-pane-item-dot.ob-status-paused { background: var(--app-amber); }
-.ob-pane-item-dot.ob-status-completed { background: var(--app-primary-text); }
-.ob-pane-item-dot.ob-status-failed { background: var(--app-rose); }
-.ob-pane-note { color: var(--app-subtle); font-size: 13px; margin: 0; padding: 6px 4px; }
-.ob-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 20px; min-height: 0; min-width: 0; overflow-y: auto; padding: 24px 24px 32px; }
-.ob-pane-back { display: none; }
-.ob-detail-top { align-items: flex-start; border-bottom: 1px solid var(--app-border); display: flex; gap: 16px; justify-content: space-between; padding-bottom: 16px; }
-.ob-detail-name { font-size: 18px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
-.ob-detail-line { align-items: center; color: var(--app-subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
-.ob-copy { align-items: center; background: none; border: 0; border-radius: 5px; color: var(--app-subtle); cursor: pointer; display: inline-flex; height: 20px; justify-content: center; padding: 0; width: 20px; }
-.ob-copy:hover { background: var(--app-hover); color: var(--app-text); }
-.ob-detail-dot { background: var(--app-text); border-radius: 50%; height: 4px; margin: 0 4px; width: 4px; }
-.ob-status-line { align-items: center; background: none !important; display: inline-flex; font-weight: 600; gap: 5px; }
-/* The separator dot already sits before the status, so its own dot made "• •". */
-.ob-detail-line .ob-status-line .ob-status-dot { display: none; }
-.ob-detail-back { display: none; }
-.ob-detail-identity { flex: 1 1 auto; min-width: 0; }
-.ob-detail-buttons { display: flex; flex-shrink: 0; gap: 8px; }
-.ob-dark-btn { align-items: center; background: var(--app-text-strong, var(--app-text)); border: 0; border-radius: 8px; color: var(--app-bg); cursor: pointer; display: inline-flex; font: inherit; font-size: 14px; font-weight: 600; gap: 6px; height: 36px; padding: 0 14px; white-space: nowrap; }
-.ob-dark-btn:hover { opacity: .85; }
-.ob-outline-icon { align-items: center; background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); cursor: pointer; display: inline-flex; height: 36px; justify-content: center; width: 36px; }
-.ob-outline-icon:hover:not(:disabled) { background: var(--app-rose-soft); border-color: var(--app-rose-border); color: var(--app-rose-text); }
-.ob-outline-icon:disabled { cursor: not-allowed; opacity: .4; }
+.bc-agent-trigger:hover:not(:disabled) { background: var(--app-panel-hover); }
+.bc-agent-trigger[data-popup-open] { border-color: var(--app-primary-border); }
+.bc-agent-trigger:focus-visible { outline: 2px solid var(--app-primary-ring-strong); outline-offset: 2px; }
+.bc-agent-trigger:disabled { cursor: default; }
+.bc-agent-value, .bc-agent-option-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc-agent-value[data-placeholder], .bc-agent-chevron { color: var(--app-muted); }
+.bc-agent-chevron { display: flex; }
+.bc-agent-trigger[data-popup-open] .bc-agent-chevron { transform: rotate(180deg); }
+.bc-agent-symbol { align-items: center; background: var(--app-primary-soft); border-radius: 6px; color: var(--app-primary-text); display: flex; height: 26px; justify-content: center; width: 26px; }
+.bc-agent-positioner { z-index: 30; }
+.bc-agent-menu {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-strong);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgb(0 0 0 / .26);
+  color: var(--app-text);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 13px;
+  max-height: min(264px, var(--available-height));
+  max-width: var(--available-width);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+  width: var(--anchor-width);
+}
+.bc-agent-option {
+  align-items: center;
+  border-radius: 7px;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 15px;
+  min-height: 36px;
+  padding: 6px 9px;
+}
+.bc-agent-option[data-selected] { background: var(--app-primary-soft); color: var(--app-primary-text); font-weight: 600; }
+.bc-agent-option[data-highlighted] { background: var(--app-panel-hover); outline: none; }
+.bc-agent-option[data-selected][data-highlighted] { background: var(--app-primary-soft-2); }
+.bc-agent-check { display: flex; }
+.bc-detail-actions > .bc-secondary { margin-top: 23px; min-height: 40px; white-space: nowrap; }
+.bc-settings { border-bottom: 1px solid var(--app-border); padding: 16px 20px; }
+.bc-settings .bc-card { max-width: 560px; }
+.bc-shell .bc-back { align-items: center; background: none; border: 0; color: var(--app-muted); cursor: pointer; display: inline-flex; font-size: 12px; gap: 5px; margin-bottom: 5px; padding: 0; }
+.bc-back:hover { color: var(--app-text); }
+.bc-tabs { display: flex; flex-wrap: wrap; gap: 8px; grid-area: tabs; min-width: 0; }
+.bc-shell .bc-tab { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border-strong); border-radius: 999px; color: var(--app-muted); cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 600; gap: 6px; min-height: 44px; padding: 0 10px; white-space: nowrap; }
+.bc-shell .bc-tab:hover { background: var(--app-panel-hover); color: var(--app-text); }
+.bc-shell .bc-tab[data-active] { background: var(--app-primary-soft); border-color: var(--app-primary-2); color: var(--app-primary-text); }
+.bc-tab:focus-visible { outline: 2px solid var(--app-primary-ring-strong); outline-offset: 2px; }
+.bc-tab-panel:focus-visible { outline: 2px solid var(--app-primary); outline-offset: -2px; }
+.bc-tab-panel { min-width: 0; }
+.bc-tab-panel-leads { display: flex; flex: 1 0 auto; flex-direction: column; }
+.bc-tab-panel[hidden] { display: none; }
+.bc-summary { padding: 20px; }
+.bc-summary-title { font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+.bc-summary-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); margin: 0; }
+.bc-summary-grid > div, .bc-summary-note { background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; padding: 14px; }
+.bc-summary-grid dt, .bc-summary-note:not(.bc-error) { color: var(--app-muted); }
+.bc-summary-grid dt { font-size: 12px; }
+.bc-summary-grid dd { font-weight: 600; margin: 4px 0 0; overflow-wrap: anywhere; }
+.bc-summary-note { margin: 0; }
+.bc-metric { font-size: 22px; font-variant-numeric: tabular-nums; }
+.bc-detail-title { font-size: 18px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.bc-detail-meta { color: var(--app-muted); font-size: 12.5px; margin: 2px 0 0; }
+.bc-card { background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 12px; display: flex; flex-direction: column; padding: 18px; }
+.bc-label { color: var(--app-muted); font-size: 12px; font-weight: 600; letter-spacing: .02em; margin: 12px 0 6px; text-transform: uppercase; }
+.bc-label:first-of-type { margin-top: 0; }
+.bc-input { background: var(--app-bg); border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-text); height: 38px; padding: 0 10px; width: 100%; }
+.bc-input:focus { border-color: var(--app-primary); outline: none; }
+.bc-hint { color: var(--app-muted); font-size: 12.5px; margin: 6px 0 0; }
+.bc-error { color: #f87171; }
+.bc-success { color: var(--app-primary); }
+.bc-form-error { font-size: 13px; margin: 10px 0 0; }
+.bc-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.bc-actions-split { align-items: center; justify-content: space-between; }
+.bc-confirm { align-items: center; display: inline-flex; flex-wrap: wrap; gap: 8px; font-size: 13px; }
+.bc-primary, .bc-secondary, .bc-danger { border-radius: 8px; cursor: pointer; font-weight: 600; height: 36px; padding: 0 14px; }
+.bc-primary { background: var(--app-primary); border: 0; color: #fff; }
+.bc-secondary { background: transparent; border: 1px solid var(--app-border-strong); color: var(--app-text); }
+.bc-danger { background: #dc2626; border: 0; color: #fff; }
+.bc-danger-text { color: #f87171; }
+.bc-primary:disabled, .bc-secondary:disabled, .bc-danger:disabled { cursor: default; opacity: .5; }
+.bc-empty { align-items: center; display: flex; flex: 1; flex-direction: column; gap: 4px; justify-content: center; padding: 24px 16px; text-align: center; }
+.bc-empty-title { font-size: 15px; font-weight: 600; margin: 0; }
+.bc-empty-text { color: var(--app-muted); margin: 0 0 12px; }
+.bc-dialog {
+  --app-primary-light: var(--app-muted);
+  --app-primary-ring: color-mix(in srgb, var(--app-text) 16%, transparent);
+  background: var(--app-surface);
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--app-text) 7%, transparent), transparent 65%),
+    color-mix(in srgb, var(--app-surface) 75%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(0%);
+  backdrop-filter: blur(22px) saturate(0%);
+  border: 1px solid color-mix(in srgb, var(--app-text) 22%, transparent);
+  border-radius: 20px;
+  box-shadow:
+    0 24px 72px rgb(0 0 0 / .38),
+    inset 0 1px 0 color-mix(in srgb, var(--app-text) 12%, transparent);
+  color: var(--app-text);
+  margin: auto;
+  max-height: calc(100dvh - 32px);
+  max-width: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  width: min(460px, calc(100% - 32px));
+}
+.bc-dialog::backdrop { background: rgb(0 0 0 / .42); }
+.bc-dialog-header { padding: 24px 24px 0; position: relative; }
+.bc-dialog-icon {
+  align-items: center;
+  background: color-mix(in srgb, var(--app-text) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--app-text) 16%, transparent);
+  border-radius: 12px;
+  color: var(--app-text);
+  display: grid;
+  height: 44px;
+  justify-items: center;
+  width: 44px;
+}
+.bc-dialog-close {
+  background: color-mix(in srgb, var(--app-text) 5%, transparent);
+  border-color: color-mix(in srgb, var(--app-text) 10%, transparent);
+  border-radius: 10px;
+  height: 36px;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 36px;
+}
+.bc-dialog-title { font-size: 22px; font-weight: 700; letter-spacing: -.025em; line-height: 1.25; margin: 14px 0 4px; }
+.bc-dialog-header p { color: var(--app-muted); margin: 0; }
+.bc-dialog-fields { display: grid; gap: 16px; padding: 20px 24px 24px; }
+.bc-dialog-field { display: grid; gap: 6px; }
+.bc-dialog-field label { font-size: 13px; font-weight: 600; }
+.bc-dialog .bc-input {
+  background: color-mix(in srgb, var(--app-bg) 48%, transparent);
+  border-color: color-mix(in srgb, var(--app-text) 15%, transparent);
+  border-radius: 10px;
+  height: 44px;
+  padding-inline: 12px;
+}
+.bc-dialog select option { background: var(--app-surface); color: var(--app-text); }
+.bc-dialog .bc-input::placeholder { color: var(--app-muted); }
+.bc-dialog .bc-input:focus { border-color: var(--app-primary-light); box-shadow: 0 0 0 3px var(--app-primary-ring); }
+.bc-dialog-select { position: relative; }
+.bc-dialog .bc-dialog-select select { appearance: none; cursor: pointer; padding-inline-end: 36px; text-overflow: ellipsis; }
+.bc-dialog-select svg { color: var(--app-muted); pointer-events: none; position: absolute; right: 12px; top: 14px; }
+.bc-dialog .bc-hint, .bc-dialog .bc-form-error { margin: 0; }
+.bc-dialog .bc-actions {
+  background: color-mix(in srgb, var(--app-bg) 30%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--app-text) 10%, transparent);
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 14px 24px;
+}
+.bc-shell .bc-dialog .bc-actions button { border-radius: 9px; font-weight: 600; height: 42px; }
+.bc-dialog .bc-primary {
+  background: var(--app-text);
+  color: var(--app-surface);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .18), 0 4px 16px rgb(0 0 0 / .18);
+}
+.bc-dialog .bc-secondary {
+  background: color-mix(in srgb, var(--app-text) 5%, transparent);
+  border-color: color-mix(in srgb, var(--app-text) 15%, transparent);
+}
+.bc-dialog .bc-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--app-text) 88%, var(--app-surface)); }
+.bc-dialog .bc-secondary:hover:not(:disabled) { background: var(--app-panel-hover); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .bc-dialog { background: var(--app-surface); }
+}
+@media (max-width: 420px) {
+  .bc-dialog-header, .bc-dialog-fields, .bc-dialog .bc-actions { padding-inline: 18px; }
+  .bc-dialog-close { right: 14px; }
+}
+@container broadcast-detail (max-width: 1060px) {
+  .bc-detail-head { grid-template-areas: "title actions" "tabs tabs"; grid-template-columns: minmax(0, 1fr) minmax(0, auto); }
+}
+@container broadcast-detail (max-width: 600px) {
+  .bc-detail-head { grid-template-areas: "title" "actions" "tabs"; grid-template-columns: minmax(0, 1fr); }
+  .bc-detail-actions { grid-template-columns: minmax(0, 1fr) auto; }
+  .bc-agent-trigger, .bc-detail-actions > .bc-secondary { min-height: 44px; }
+  .bc-tabs { gap: 6px; }
+  .bc-shell .bc-tab { flex: 1 1 auto; justify-content: center; }
+}
 @media (max-width: 980px) {
-  .ob-split { flex-direction: column; }
-  .ob-pane-list { border-right: 0; flex: 1 1 auto; }
-  .ob-split:not(.has-selection) .ob-pane-detail { display: none; }
-  .ob-split.has-selection .ob-pane-list { display: none; }
-  .ob-pane-detail { overflow: visible; padding: 16px; }
-  .ob-pane-back { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; font: inherit; font-size: 13px; font-weight: 600; gap: 6px; padding: 0; }
-  /* With a campaign open, the back link becomes an arrow button in its
-     header, like the knowledge base and phone number pages. */
-  .ob-pane-detail:has(> .ob-detail-top) > .ob-pane-back { display: none; }
-  .ob-detail-top { align-items: center; display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
-  .ob-detail-back { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; color: var(--app-text); cursor: pointer; display: inline-flex; height: 38px; justify-content: center; padding: 0; width: 38px; }
-  .ob-detail-back:hover { background: var(--app-hover); }
-  .ob-detail-back:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
+  .bc-shell { display: block; height: auto; min-height: 100dvh; overflow: visible; }
+  .bc-main { box-sizing: border-box; min-height: calc(100dvh - 120px - env(safe-area-inset-bottom)); overflow: visible; }
+  .bc-detail { overflow: visible; }
+  .bc-detail-head, .bc-settings, .bc-summary { padding: 12px 16px; }
 }
-/* Phones: back, name and the Edit / Delete buttons share one row (Edit as a
-   square icon button so the name keeps its width); ID and status on one line
-   under the name - the agent is in Campaign details below. */
-@media (max-width: 640px) {
-  .ob-detail-top { gap: 10px; }
-  .ob-detail-name { font-size: 17px; line-height: 1.25; overflow-wrap: break-word; }
-  .ob-detail-line { flex-wrap: nowrap; gap: 4px; margin-top: 3px; overflow: hidden; white-space: nowrap; }
-  .ob-detail-line .ob-detail-dot { margin: 0 2px; }
-  .ob-detail-agent, .ob-detail-agent-dot { display: none; }
-  .ob-detail-buttons { gap: 6px; }
-  .ob-detail-buttons .ob-dark-btn { border-radius: 10px; height: 38px; justify-content: center; padding: 0; width: 38px; }
-  .ob-detail-buttons .ob-edit-label { display: none; }
-  .ob-detail-buttons .ob-outline-icon { border-radius: 10px; height: 38px; width: 38px; }
+@media (width < ${BROADCAST_SPLIT_MIN_WIDTH}px) {
+  .bc-list { border-right: 0; flex: 1 1 auto; }
+  .bc-detail { display: none; }
+  .bc-split.has-selection .bc-list { display: none; }
+  .bc-split.has-selection .bc-detail { display: flex; }
+  .bc-head > button { height: 44px; width: 44px; }
+  .bc-item { min-height: 52px; }
+  .bc-shell .bc-back { min-height: 44px; }
+  .bc-detail-full { padding-bottom: 61px; }
+  .bc-detail-full .bc-detail-head { gap: 0 12px; grid-template-areas: "back name config" "actions actions actions"; grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr); }
+  .bc-detail-head-text { display: contents; }
+  .bc-shell .bc-back { grid-area: back; justify-self: start; margin: 0; }
+  .bc-detail-head .bc-detail-title { grid-area: name; min-width: 0; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .bc-config .bc-detail-meta { margin-top: 10px; }
+  .bc-head-actions { grid-area: actions; margin-top: 12px; }
+  .bc-head-actions .bcd-bar-right { display: grid; grid-template-columns: minmax(0, 1fr) minmax(max-content, 1fr) 44px; position: relative; }
+  .bc-head-actions .bcd-btn { justify-content: center; }
+  .bc-shell .bc-config-btn { align-items: center; justify-self: end; display: inline-flex; gap: 7px; grid-area: config; min-height: 44px; }
+  .bc-agent-positioner { z-index: 60; }
+  .bc-config-scrim { background: rgb(0 0 0 / .55); inset: 0; position: fixed; z-index: 51; }
+  .bc-config { background: var(--app-surface); border-left: 1px solid var(--app-border-strong); bottom: 0; color: var(--app-text); display: flex; flex-direction: column; outline: none; position: fixed; right: 0; top: 0; transition: transform .18s ease-out; width: min(420px, calc(100vw - 32px)); z-index: 52; }
+  .bc-config[data-starting-style], .bc-config[data-ending-style] { transform: translateX(100%); }
+  .bc-config-head { align-items: center; border-bottom: 1px solid var(--app-border); display: flex; gap: 8px; justify-content: space-between; padding: calc(10px + env(safe-area-inset-top)) 12px 10px 16px; }
+  .bc-config-head .bc-icon-btn { height: 44px; width: 44px; }
+  .bc-config-title { font-size: 15px; font-weight: 600; margin: 0; }
+  .bc-config-body { container: broadcast-detail / inline-size; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom); }
+  .bc-config-section { padding: 16px; }
+  .bc-config .bcd-bar { grid-template-areas: "heading heading" "search sort"; grid-template-columns: minmax(0, 1fr) minmax(0, 124px); }
+  .bc-config-section + .bc-config-section { border-top: 1px solid var(--app-border); }
+  .bc-config-label { font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+  /* Sits on top of the sidebar's bottom tab bar (61px plus the safe area). */
+  .bc-bottom-bar { background: var(--app-sidebar); border-top: 1px solid var(--app-border); bottom: calc(61px + env(safe-area-inset-bottom)); display: flex; gap: 6px; left: 0; padding: 8px 12px; position: fixed; right: 0; z-index: 29; }
+  .bc-bottom-bar .bc-tabs { flex: 1 0 auto; flex-wrap: nowrap; gap: 6px; }
+  .bc-bottom-bar .bc-tab { flex: 1 0 auto; gap: 5px; justify-content: center; padding: 0 8px; }
+  /* The agent's name takes what the tabs leave, up to 260px. */
+  .bc-agent-picker.is-compact { flex: 100 1 0; max-width: 260px; min-width: 58px; }
+  .bc-agent-picker.is-compact .bc-agent-label, .bc-agent-picker.is-compact .bc-hint { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; }
+  .bc-agent-picker.is-compact .bc-agent-trigger { border-radius: 999px; gap: 6px; min-height: 44px; padding: 5px 9px 5px 8px; width: 100%; }
+  .bc-agent-picker.is-compact .bc-agent-symbol { background: none; height: 18px; width: 18px; }
+  .bc-agent-picker.is-compact .bc-agent-trigger:disabled { opacity: .6; }
+  .bc-agent-picker.is-compact .bc-form-error { background: var(--app-sidebar); border-top: 1px solid var(--app-border); bottom: 100%; left: 0; margin: 0; padding: 8px 16px; position: absolute; right: 0; }
+  .bc-agent-menu.is-compact { max-width: calc(100vw - 24px); width: 260px; }
+  .bc-agent-menu.is-compact .bc-agent-option { min-height: 44px; }
+  .bc-shell .bc-input { font-size: 16px; }
 }
-@media (max-width: 1180px) {
-  .ob-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ob-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ob-row { grid-template-columns: 38px minmax(160px, 1.2fr) minmax(90px, .5fr) minmax(150px, 1fr) auto 18px; }
-  .ob-row-calls { display: none; }
+/* Too narrow for a readable agent name, then for the tabs' icons too. */
+@media (max-width: 430px) {
+  .bc-agent-picker.is-compact { flex: 0 0 58px; }
+  .bc-agent-picker.is-compact .bc-agent-trigger { grid-template-columns: auto auto; justify-content: center; }
+  .bc-agent-picker.is-compact .bc-agent-value { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; }
 }
-@media (max-width: 980px) {
-  .ob-shell { display: block; height: auto; max-height: none; overflow: visible; }
-  .ob-main { height: auto; overflow: visible; }
-  .ob-content { overflow: visible; padding: 20px; }
-  .ob-topbar { padding: 18px 20px; }
-  .ob-detail-head { align-items: flex-start; flex-direction: column; }
-  .ob-row { grid-template-columns: 38px minmax(150px, 1fr) minmax(150px, .9fr) auto 18px; }
-  .ob-row-leads { display: none; }
-}
-@media (max-width: 640px) {
-  .ob-topbar, .ob-content { padding: 16px 14px; }
-  /* Campaign details as one compact list, like the call page: a slim row per
-     detail, label left, value right (long values end in "...", full value in
-     the tooltip). */
-  .ob-details-card { padding: 14px; }
-  .ob-details-card h3 { margin-bottom: 12px; }
-  .ob-detail-grid { border: 1px solid var(--app-border); border-radius: 12px; gap: 0; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
-  .ob-detail-item { align-items: center; border: 0; border-bottom: 1px solid var(--app-border); border-radius: 0; display: flex; gap: 12px; justify-content: space-between; padding: 9px 12px; }
-  .ob-detail-item:last-child { border-bottom: 0; }
-  .ob-detail-item span { flex: 0 0 auto; font-size: 10px; letter-spacing: .6px; }
-  .ob-detail-item strong { font-size: 12.5px; font-weight: 700; min-width: 0; overflow: hidden; overflow-wrap: normal; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
-  /* Stats two per row: four short numbers don't need a screen each. */
-  .ob-stat-grid { gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ob-stat { min-height: 0; padding: 13px; }
-  .ob-stat > strong { font-size: 22px; }
-  .ob-toolbar-search { max-width: none; min-width: 100%; }
-  .ob-count { margin-left: 0; }
-  .ob-row { gap: 10px; grid-template-columns: 38px minmax(0, 1fr) auto; padding: 11px; }
-  .ob-row-field, .ob-row-chevron { display: none; }
-  .ob-actions { width: 100%; }
-  .ob-actions button { flex: 1; }
-  .expandable-card-stage { align-items: stretch; padding: 0; }
-  .ob-expandable-card { border-radius: 0; max-height: 100vh; max-width: none; padding: 12px; }
-}
+@media (max-width: 374px) { .bc-bottom-bar .bc-tab svg { display: none; } }
+@media (prefers-reduced-motion: reduce) { .bc-config { transition: none; } }
 `;

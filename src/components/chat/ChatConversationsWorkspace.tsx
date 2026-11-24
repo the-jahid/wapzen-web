@@ -1,8 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { PaneListSkeleton } from "@/components/ui/Skeleton";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import ConversationPager, {
+  CONVERSATION_PAGE_SIZE,
+  useDebouncedValue,
+} from "@/components/conversations/ConversationPager";
 import { useCachedState, writeCachedEntry } from "@/lib/pageCache";
 import { startRefreshing } from "@/lib/polling";
 import {
@@ -20,6 +25,7 @@ import {
   listChatConversations,
   setChatConversationAiReply,
   type ApiChatConversation,
+  type ChatConversationListOptions,
 } from "@/lib/chatConversations";
 
 // The agents whose threads this workspace may show. The chat-agent editor
@@ -40,6 +46,9 @@ const listAtLeastEvery = 20;
 // Where each list had scrolled to, so coming back from a thread lands on the row
 // it was opened from. Only this tab's visit needs it, so it isn't stored.
 const listScrollTops = new Map<string, number>();
+
+type ListMeta = { key: string; total: number; totalPages: number };
+const emptyMeta: ListMeta = { key: "", total: 0, totalPages: 1 };
 
 // One list serves both readers of a thread: the chat-agent editor, which passes
 // an agentId and shows only that agent's inbox, and the Conversations page,
@@ -67,8 +76,19 @@ export default function ChatConversationsWorkspace({
   const agentFilter = agents?.some((agent) => agent.id === savedAgentFilter) ? savedAgentFilter : "";
   // Cached per inbox (and per agent filter), so reopening one shows its threads
   // at once while the refetch runs.
-  const listKey = agentId ? `chat-conversations:agent:${agentId}` : `chat-conversations:all:${agentFilter}`;
+  // The entry holds the page last read, so its rows stay on screen while the
+  // next page loads.
+  const listKey = agentId ? `chat-conversations:agent:${agentId}` : `chat-conversations:inbox:${agentFilter}`;
   const [conversations, setConversations, hasCachedList] = useCachedState<ApiChatConversation[]>(listKey, []);
+  // Which request those rows answer and how many threads match it in all. Kept
+  // off the "chat-conversations:" prefix, which the thread page treats as rows.
+  const [listMeta, setListMeta] = useCachedState<ListMeta>(`conversations-list-meta:${listKey}`, emptyMeta);
+  const [page, setPage] = useCachedState(`conversations-page:${listKey}`, 1);
+  // Search and status filter on the server, so they reach every page.
+  const query = useDebouncedValue(search.trim());
+  const status = statusFilter === "open" || statusFilter === "closed" ? statusFilter : undefined;
+  const requestKey = `${page}|${status ?? ""}|${query}`;
+  const isStale = hasCachedList && listMeta.key !== requestKey;
   // Threads whose AI switch is being saved, so a double click can't race itself.
   const [aiSaving, setAiSaving] = useState<string[]>([]);
   const [listError, setListError] = useState("");
@@ -79,13 +99,22 @@ export default function ChatConversationsWorkspace({
       setLoading(true);
       setError("");
       try {
+        const options: ChatConversationListOptions = { page, limit: CONVERSATION_PAGE_SIZE, status, search: query || undefined };
         // One agent's inbox reads its own nested route; the account-wide one
         // reads the collection, narrowed by the agent filter when it is set.
         const result = agentId
-          ? await listChatAgentConversations(agentId, getToken)
-          : await listChatConversations(getToken, { chatAgentId: agentFilter || undefined });
+          ? await listChatAgentConversations(agentId, getToken, options)
+          : await listChatConversations(getToken, { ...options, chatAgentId: agentFilter || undefined });
         if (cancelled) return;
+        // A page emptied by deletes, or past the end after a filter shrank the
+        // list: go to the last page that has threads instead.
+        if (result.items.length === 0 && page > 1 && result.total > 0) {
+          setPage(result.totalPages);
+          return;
+        }
+        if (result.items.length === 0 && page > 1) setPage(1);
         setConversations(result.items);
+        setListMeta({ key: requestKey, total: result.total, totalPages: result.totalPages });
         setLoading(false);
       } catch (loadError) {
         if (cancelled) return;
@@ -96,7 +125,7 @@ export default function ChatConversationsWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [agentFilter, agentId, getToken, reloadKey, setConversations]);
+  }, [agentFilter, agentId, getToken, page, query, reloadKey, requestKey, setConversations, setListMeta, setPage, status]);
 
   // Each turn asks whether the list changed, and only then downloads it. If that
   // question fails, the list is read anyway, as it would be without it.
@@ -121,20 +150,18 @@ export default function ChatConversationsWorkspace({
     };
   }, [agentFilter, agentId, getToken]);
 
-  const visible = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    return conversations.filter((conversation) => {
-      if (statusFilter && conversation.status !== statusFilter) return false;
-      if (!needle) return true;
-      return (
-        conversationTitle(conversation).toLowerCase().includes(needle) ||
-        conversationPhone(conversation).toLowerCase().includes(needle) ||
-        conversation.peer_jid.toLowerCase().includes(needle)
-      );
-    });
-  }, [conversations, search, statusFilter]);
-
-  const openCount = conversations.filter((conversation) => conversation.status === "open").length;
+  // The server already filtered; this only hides a row closed or reopened
+  // since, until the next read moves it.
+  const visible = useMemo(
+    () => (status ? conversations.filter((conversation) => conversation.status === status) : conversations),
+    [conversations, status]
+  );
+  const isFiltered = Boolean(status || query);
+  const listElement = useRef<HTMLDivElement | null>(null);
+  const goToPage = (next: number) => {
+    setPage(next);
+    listElement.current?.scrollTo({ top: 0 });
+  };
 
   // Handing the row to the thread's cache entry puts the contact's name and the
   // AI switch on the next page from its first frame. It keeps any messages an
@@ -154,6 +181,7 @@ export default function ChatConversationsWorkspace({
   // doesn't flash the top of the list first.
   const restoreListScroll = useCallback(
     (list: HTMLDivElement | null) => {
+      listElement.current = list;
       if (list) list.scrollTop = listScrollTops.get(listKey) ?? 0;
     },
     [listKey]
@@ -201,7 +229,10 @@ export default function ChatConversationsWorkspace({
           <SearchIcon />
           <input
             aria-label="Search conversations"
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="Search contacts..."
             value={search}
           />
@@ -211,7 +242,9 @@ export default function ChatConversationsWorkspace({
             <select
               aria-label="Filter conversations by chat agent"
               className="cv-filter"
-              onChange={(event) => setAgentFilter(event.target.value)}
+              onChange={(event) => {
+                setAgentFilter(event.target.value);
+              }}
               value={agentFilter}
             >
               <option value="">All agents</option>
@@ -225,7 +258,10 @@ export default function ChatConversationsWorkspace({
           <select
             aria-label="Filter conversations by status"
             className="cv-filter"
-            onChange={(event) => setStatusFilter(event.target.value)}
+            onChange={(event) => {
+              setStatusFilter(event.target.value);
+              setPage(1);
+            }}
             value={statusFilter}
           >
             <option value="">All threads</option>
@@ -233,9 +269,9 @@ export default function ChatConversationsWorkspace({
             <option value="closed">Closed</option>
           </select>
           <span className="cv-count">
-            {conversations.length === 0
+            {listMeta.total === 0
               ? "No conversations"
-              : `${conversations.length} thread${conversations.length === 1 ? "" : "s"} · ${openCount} open`}
+              : `${listMeta.total} thread${listMeta.total === 1 ? "" : "s"}`}
           </span>
           <button
             aria-label="Refresh conversations"
@@ -254,13 +290,10 @@ export default function ChatConversationsWorkspace({
       {listError ? <div className="cv-error">{listError}</div> : null}
 
       {loading && !hasCachedList && conversations.length === 0 ? (
-        <div className="cv-empty">
-          <span className="cv-spinner" />
-          Loading conversations…
-        </div>
+        <PaneListSkeleton />
       ) : null}
 
-      {(!loading || hasCachedList) && conversations.length === 0 && !error ? (
+      {(!loading || hasCachedList) && conversations.length === 0 && !isFiltered && !error ? (
         <div className="cv-empty">
           <span className="cv-empty-icon">
             <ChatIcon />
@@ -274,8 +307,8 @@ export default function ChatConversationsWorkspace({
         </div>
       ) : null}
 
-      {conversations.length > 0 ? (
-        <div className="cv-list" ref={restoreListScroll}>
+      {conversations.length > 0 || isFiltered ? (
+        <div className={`cv-list${isStale ? " is-stale" : ""}`} ref={restoreListScroll}>
           {visible.length === 0 ? (
             <div className="cv-list-empty">No thread matches that filter.</div>
           ) : (
@@ -334,6 +367,15 @@ export default function ChatConversationsWorkspace({
           )}
         </div>
       ) : null}
+
+      <ConversationPager
+        busy={isStale}
+        label="Conversation pages"
+        onPage={goToPage}
+        page={page}
+        total={listMeta.total}
+        totalPages={listMeta.totalPages}
+      />
     </section>
   );
 }
@@ -389,6 +431,7 @@ const workspaceCSS = `
 .cv-icon-button:disabled{cursor:not-allowed;opacity:.4}
 
 .cv-list{display:flex;flex:1 1 auto;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;padding-right:3px}
+.cv-list.is-stale{opacity:.55;transition:opacity .16s ease}
 .cv-list-empty{color:var(--app-muted);font-size:12px;padding:16px 6px;text-align:center}
 .cv-row{align-items:center;background:var(--app-elevated);border:1px solid var(--app-line);border-radius:14px;cursor:pointer;display:grid;flex:0 0 auto;gap:16px;grid-template-areas:"avatar identity meta time ai status chevron";grid-template-columns:36px minmax(180px,1.2fr) minmax(160px,.9fr) auto auto auto 18px;padding:13px 16px;position:relative;text-align:left;transition:background .16s ease,border-color .16s ease,box-shadow .16s ease;width:100%}
 .cv-row:hover{background:var(--app-panel-hover);border-color:var(--app-primary-ring);box-shadow:0 6px 18px var(--app-shadow-soft)}

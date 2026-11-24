@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import ConversationPager, {
+  CONVERSATION_PAGE_SIZE,
+  useDebouncedValue,
+} from "@/components/conversations/ConversationPager";
 import ConversationsShell from "@/components/conversations/ConversationsShell";
+import { PaneListSkeleton } from "@/components/ui/Skeleton";
 import { avatarColor, formatDate } from "@/components/chat/ConversationParts";
 import { useCachedState, writeCachedEntry } from "@/lib/pageCache";
 import { startRefreshing } from "@/lib/polling";
@@ -20,6 +25,9 @@ import {
 const refreshMs = 15000;
 const listAtLeastEvery = 20;
 
+type ListMeta = { key: string; total: number; totalPages: number };
+const emptyMeta: ListMeta = { key: "", total: 0, totalPages: 1 };
+
 // The Conversations page in Retell's master-detail layout: the account's
 // contacts in a list pane on the left, the open thread on the right. The URL
 // says which thread is open; the bare route opens the most recent one, which
@@ -33,25 +41,51 @@ export default function ConversationsSplit({
 }) {
   const { getToken } = useAuth();
   // The same cache entry the thread page patches, so a delete, a status change
-  // or a sent message shows in the list straight away.
+  // or a sent message shows in the list straight away. It holds the page last
+  // read, so the rows stay on screen while the next page loads.
   const [conversations, setConversations, hasCachedList] = useCachedState<ApiChatConversation[]>(
-    "chat-conversations:all:",
+    "chat-conversations:split",
     []
   );
+  // What the rows above are: which request they answer and how many threads
+  // match it in all. Not under the "chat-conversations:" prefix, which the
+  // thread page treats as lists of rows.
+  const [listMeta, setListMeta] = useCachedState<ListMeta>("conversations-list-meta:split", emptyMeta);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useCachedState("conversations-search:all", "");
   const [statusFilter, setStatusFilter] = useCachedState("conversations-status:all", "");
+  const [page, setPage] = useCachedState("conversations-page:split", 1);
+  const listRef = useRef<HTMLElement | null>(null);
+  // Search and status filter on the server, so they reach every page.
+  const query = useDebouncedValue(search.trim());
+  const status = statusFilter === "open" || statusFilter === "closed" ? statusFilter : undefined;
+  const requestKey = `${page}|${status ?? ""}|${query}`;
+  // Rows from another page or filter are still showing while this one loads.
+  const isStale = hasCachedList && listMeta.key !== requestKey;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       try {
-        const result = await listChatConversations(getToken, {});
+        const result = await listChatConversations(getToken, {
+          page,
+          limit: CONVERSATION_PAGE_SIZE,
+          status,
+          search: query || undefined,
+        });
         if (cancelled) return;
+        // A page emptied by deletes, or one past the end after a filter shrank
+        // the list: go to the last page that has threads instead.
+        if (result.items.length === 0 && page > 1 && result.total > 0) {
+          setPage(result.totalPages);
+          return;
+        }
+        if (result.items.length === 0 && page > 1) setPage(1);
         setConversations(result.items);
+        setListMeta({ key: requestKey, total: result.total, totalPages: result.totalPages });
         setError("");
       } catch (loadError) {
         if (cancelled) return;
@@ -63,7 +97,7 @@ export default function ConversationsSplit({
     return () => {
       cancelled = true;
     };
-  }, [getToken, reloadKey, setConversations]);
+  }, [getToken, page, query, reloadKey, requestKey, setConversations, setListMeta, setPage, status]);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,22 +118,22 @@ export default function ConversationsSplit({
     };
   }, [getToken]);
 
-  const visible = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    return conversations.filter((conversation) => {
-      if (statusFilter && conversation.status !== statusFilter) return false;
-      if (!needle) return true;
-      return (
-        conversationTitle(conversation).toLowerCase().includes(needle) ||
-        conversationPhone(conversation).toLowerCase().includes(needle) ||
-        conversation.peer_jid.toLowerCase().includes(needle)
-      );
-    });
-  }, [conversations, search, statusFilter]);
+  // The server already filtered; this only hides a row the thread page closed
+  // or reopened since, until the next read moves it.
+  const visible = useMemo(
+    () => (status ? conversations.filter((conversation) => conversation.status === status) : conversations),
+    [conversations, status]
+  );
+
+  const goToPage = (next: number) => {
+    setPage(next);
+    listRef.current?.scrollTo({ top: 0 });
+  };
 
   const firstId = conversations[0]?.id ?? null;
-  const shownId = activeId ?? firstId;
+  const shownId = activeId;
   const isLoadingEmpty = loading && !hasCachedList && conversations.length === 0;
+  const isFiltered = Boolean(status || query);
 
   return (
     <ConversationsShell label="Conversations" split>
@@ -125,7 +159,10 @@ export default function ConversationsSplit({
               <SearchIcon />
               <input
                 aria-label="Search contacts"
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
                 placeholder="Search contacts..."
                 value={search}
               />
@@ -133,7 +170,10 @@ export default function ConversationsSplit({
             <select
               aria-label="Filter by status"
               className="conv-pane-select"
-              onChange={(event) => setStatusFilter(event.target.value)}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setPage(1);
+              }}
               value={statusFilter}
             >
               <option value="">All</option>
@@ -141,12 +181,12 @@ export default function ConversationsSplit({
               <option value="closed">Closed</option>
             </select>
           </div>
-          <nav className="conv-pane-items">
+          <nav className={`conv-pane-items${isStale ? " is-stale" : ""}`} ref={listRef}>
             {error && conversations.length === 0 ? (
               <p className="conv-pane-note">{error}</p>
             ) : isLoadingEmpty ? (
-              <p className="conv-pane-note">Loading conversations…</p>
-            ) : conversations.length === 0 ? (
+              <PaneListSkeleton />
+            ) : conversations.length === 0 && !isFiltered ? (
               <p className="conv-pane-note">
                 No conversations yet. Every WhatsApp message your chat agents answer is saved here.
               </p>
@@ -200,8 +240,26 @@ export default function ConversationsSplit({
               })
             )}
           </nav>
+          <ConversationPager
+            busy={isStale}
+            label="Conversation pages"
+            onPage={goToPage}
+            page={page}
+            total={listMeta.total}
+            totalPages={listMeta.totalPages}
+          />
         </aside>
 
+        {/* Phones and tablets: the open thread slides in as a drawer over the
+            list; tapping the dimmed list behind it closes the drawer. */}
+        {activeId ? (
+          <Link
+            aria-label="Close conversation"
+            className="conv-drawer-backdrop"
+            href="/dashboard/conversations"
+            prefetch={false}
+          />
+        ) : null}
         <section className="conv-pane-detail">
           {typeof children === "function" ? (
             firstId || activeId ? (
@@ -260,7 +318,8 @@ const splitCSS = `
 .conv-pane-search input::placeholder{color:var(--app-subtle)}
 .conv-pane-select{background:transparent;border:1px solid var(--app-border-strong);border-radius:8px;color:var(--app-text);font-size:13px;height:34px;outline:none;padding:0 6px}
 .conv-pane-select option{background:var(--app-surface)}
-.conv-pane-items{display:flex;flex-direction:column;gap:2px;min-height:0;overflow-y:auto;padding-top:10px}
+.conv-pane-items{display:flex;flex:1 1 auto;flex-direction:column;gap:2px;min-height:0;overflow-y:auto;padding:10px 0}
+.conv-pane-items.is-stale{opacity:.55;transition:opacity .16s ease}
 .conv-pane-item{align-items:center;border-radius:8px;color:var(--app-muted);display:flex;gap:10px;min-height:52px;padding:6px 10px;text-decoration:none;transition:background .16s ease,color .16s ease}
 .conv-pane-item:hover{background:var(--app-hover);color:var(--app-text)}
 .conv-pane-item.is-active{background:var(--app-hover-2);color:var(--app-text)}
@@ -276,18 +335,23 @@ const splitCSS = `
 .conv-pane-note{color:var(--app-subtle);font-size:13px;margin:0;padding:6px 4px}
 .conv-pane-detail{display:flex;flex:1;flex-direction:column;min-height:0;min-width:0}
 .conv-pane-empty{align-items:center;color:var(--app-subtle);display:flex;flex:1;font-size:13px;justify-content:center;padding:24px}
-/* Beside the list, the thread loses its card look and its back arrow. */
+/* The contact list fills the page; a picked thread slides in over it as a
+   right-hand drawer, and tapping the dimmed list behind it closes the drawer.
+   The thread's back arrow closes it too. */
+.conv-pane-list{border-right:0;flex:1 1 auto}
+.conv-split:not(.has-selection) .conv-pane-detail{display:none}
+.conv-drawer-backdrop{display:none}
+.conv-split.has-selection .conv-drawer-backdrop{animation:conv-backdrop-in .2s ease;background:rgba(0,0,0,.55);display:block;inset:0;position:fixed;z-index:70}
+.conv-split.has-selection .conv-pane-detail{animation:conv-drawer-in .24s cubic-bezier(.2,.8,.2,1);background:var(--app-bg,#0a0a0b);border-left:1px solid var(--app-border);bottom:0;box-shadow:-12px 0 32px rgba(0,0,0,.45);height:100dvh;max-width:640px;position:fixed;right:0;top:0;width:92vw;z-index:71}
+@keyframes conv-drawer-in{from{transform:translateX(100%)}to{transform:none}}
+@keyframes conv-backdrop-in{from{opacity:0}to{opacity:1}}
 .conv-pane-detail .cv-thread-head{background:transparent;padding:16px 20px}
 .conv-pane-detail .cv-thread-head h1{font-size:18px;font-weight:600}
 .conv-pane-detail .cv-thread-head p{font-size:12px;margin-top:4px}
-.conv-pane-detail .cv-back{display:none}
 .conv-pane-detail .cv-composer{background:transparent}
 @media(max-width:900px){
   .conv-split{flex-direction:column}
-  .conv-pane-list{border-right:0;flex:1 1 auto}
-  .conv-split:not(.has-selection) .conv-pane-detail{display:none}
-  .conv-split.has-selection .conv-pane-list{display:none}
-  .conv-pane-detail .cv-back{display:flex}
+  .conv-split.has-selection .conv-pane-detail{max-width:none;width:min(calc(100vw - 48px),560px)}
   .conv-pane-detail .cv-thread-head{padding:12px 14px}
   .conv-pane-search input,.conv-pane-select{font-size:16px}
   /* Phones and tablets: a page title like "All Agents" and "Orders", and

@@ -14,6 +14,7 @@ type Envelope<T> = {
   success: boolean;
   message: string;
   data: T;
+  meta?: { pagination?: { page: number; total_items: number; total_pages: number } };
   errors?: { field: string; message: string }[] | null;
 };
 
@@ -28,6 +29,10 @@ export class VoiceApiError extends Error {
 }
 
 async function request<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<T> {
+  return (await requestEnvelope<T>(path, init, getToken)).data;
+}
+
+async function requestEnvelope<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<Envelope<T>> {
   let response: Response;
   try {
     response = await serverFetch(voiceServerURL(path), init, getToken);
@@ -50,7 +55,7 @@ async function request<T>(path: string, init: RequestInit | undefined, getToken:
     throw new VoiceApiError(message, response.status);
   }
 
-  return envelope.data;
+  return envelope;
 }
 
 function json(method: string, body: unknown): RequestInit {
@@ -146,7 +151,7 @@ export function getVoiceCall(callId: string, getToken: AuthTokenGetter): Promise
 // placeVoiceCall rings `to` from the agent's number. It returns while the phone
 // is still ringing ("received"); the outcome arrives on later reads.
 export function placeVoiceCall(
-  payload: { phone_number_id: string; to: string; agent_id?: string },
+  payload: { phone_number_id: string; to: string; agent_id?: string; broadcast_contact_id?: string },
   getToken: AuthTokenGetter,
   signal?: AbortSignal
 ): Promise<ApiCall> {
@@ -173,4 +178,156 @@ export type ApiVoiceUsage = {
 
 export function getVoiceUsage(getToken: AuthTokenGetter): Promise<ApiVoiceUsage> {
   return request<ApiVoiceUsage>("/v1/voice/usage", undefined, getToken);
+}
+
+// Broadcasts: a user can create any number, each with one of their voice
+// agents selected. agent_id goes null only if that agent is deleted later.
+
+export type ApiBroadcast = {
+  id: string;
+  name: string;
+  agent_id: string | null;
+  agent_name: string | null;
+  // Auto-dialer switch. paused_reason is set when the server paused it itself
+  // (number disconnected, minutes used up, agent can't call out).
+  paused: boolean;
+  paused_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export function listBroadcasts(getToken: AuthTokenGetter): Promise<ApiBroadcast[]> {
+  return request<ApiBroadcast[]>("/v1/dashboard/voice/broadcasts", undefined, getToken);
+}
+
+export function createBroadcast(payload: { name: string; agent_id: string }, getToken: AuthTokenGetter): Promise<ApiBroadcast> {
+  return request<ApiBroadcast>("/v1/dashboard/voice/broadcasts", json("POST", payload), getToken);
+}
+
+export function updateBroadcast(
+  broadcastId: string,
+  payload: { name?: string; agent_id?: string; paused?: boolean },
+  getToken: AuthTokenGetter
+): Promise<ApiBroadcast> {
+  return request<ApiBroadcast>(`/v1/dashboard/voice/broadcasts/${encodeURIComponent(broadcastId)}`, json("PATCH", payload), getToken);
+}
+
+export function deleteBroadcast(broadcastId: string, getToken: AuthTokenGetter): Promise<unknown> {
+  return request<unknown>(`/v1/dashboard/voice/broadcasts/${encodeURIComponent(broadcastId)}`, { method: "DELETE" }, getToken);
+}
+
+// Broadcast contacts: the people a broadcast calls. phone_number is required
+// and comes back in E.164; the same number may be added any number of times,
+// each its own contact with its own call. Every contact added is queued and the server's auto-dialer
+// calls it from the broadcast agent's number.
+
+export type ApiBroadcastContact = {
+  id: string;
+  broadcast_id: string;
+  phone_number: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  address: string | null;
+  // Auto-dialer state; last_error explains "failed".
+  call_status: BroadcastContactStatus;
+  last_call_id: string | null;
+  last_error: string | null;
+  created_at: string;
+};
+
+export type BroadcastContactStatus = "idle" | "queued" | "calling" | "answered" | "no_answer" | "failed";
+
+export type BroadcastContactInput = {
+  phone_number: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  address?: string;
+};
+
+function contactsPath(broadcastId: string) {
+  return `/v1/dashboard/voice/broadcasts/${encodeURIComponent(broadcastId)}/contacts`;
+}
+
+export type BroadcastContactSort = "created" | "name" | "first" | "last";
+
+export type BroadcastContactQuery = {
+  page: number;
+  search: string;
+  sort: BroadcastContactSort;
+  desc: boolean;
+};
+
+// Counts over the whole broadcast, whatever the page or search.
+export type BroadcastContactStats = {
+  total: number;
+  idle: number;
+  queued: number;
+  calling: number;
+  answered: number;
+  no_answer: number;
+  failed: number;
+  with_email: number;
+  with_address: number;
+  // Who is being called right now, if anyone.
+  calling_name: string | null;
+};
+
+export type BroadcastContactPage = {
+  contacts: ApiBroadcastContact[];
+  stats: BroadcastContactStats;
+  // Contacts matching the search, over all pages.
+  total: number;
+  totalPages: number;
+};
+
+export const BROADCAST_CONTACTS_PAGE_SIZE = 10;
+
+// One page of contacts; the server searches, sorts and pages.
+export async function listBroadcastContacts(broadcastId: string, query: BroadcastContactQuery, getToken: AuthTokenGetter): Promise<BroadcastContactPage> {
+  const params = new URLSearchParams({
+    page: String(query.page),
+    limit: String(BROADCAST_CONTACTS_PAGE_SIZE),
+    sort: query.sort,
+    order: query.desc ? "desc" : "asc",
+  });
+  if (query.search) params.set("search", query.search);
+  const envelope = await requestEnvelope<{ contacts: ApiBroadcastContact[]; stats: BroadcastContactStats }>(`${contactsPath(broadcastId)}?${params}`, undefined, getToken);
+  return {
+    ...envelope.data,
+    total: envelope.meta?.pagination?.total_items ?? envelope.data.contacts.length,
+    totalPages: Math.max(1, envelope.meta?.pagination?.total_pages ?? 1),
+  };
+}
+
+export function createBroadcastContact(broadcastId: string, payload: BroadcastContactInput, getToken: AuthTokenGetter): Promise<ApiBroadcastContact> {
+  return request<ApiBroadcastContact>(contactsPath(broadcastId), json("POST", payload), getToken);
+}
+
+export function deleteBroadcastContact(broadcastId: string, contactId: string, getToken: AuthTokenGetter): Promise<unknown> {
+  return request<unknown>(`${contactsPath(broadcastId)}/${encodeURIComponent(contactId)}`, { method: "DELETE" }, getToken);
+}
+
+// generateCallSummary (re)writes a call's summary with Gemini from its saved
+// transcript. New calls get one automatically a few seconds after they end;
+// this is for older calls and for redoing one.
+export function generateCallSummary(callId: string, getToken: AuthTokenGetter): Promise<{ summary: string }> {
+  return request<{ summary: string }>(`/v1/dashboard/calls/${encodeURIComponent(callId)}/summary`, { method: "POST" }, getToken);
+}
+
+export function getBroadcast(broadcastId: string, getToken: AuthTokenGetter): Promise<ApiBroadcast> {
+  return request<ApiBroadcast>(`/v1/dashboard/voice/broadcasts/${encodeURIComponent(broadcastId)}`, undefined, getToken);
+}
+
+export type BroadcastImportResult = {
+  added: number;
+  invalid: { row: number; phone_number: string; reason: string }[];
+};
+
+// importBroadcastContacts adds up to 5,000 contacts at once. Every added
+// contact is queued and the server calls them one after another, in this
+// order. Bad rows come back in `invalid` (row is 1-based in `contacts`).
+export function importBroadcastContacts(broadcastId: string, contacts: BroadcastContactInput[], getToken: AuthTokenGetter): Promise<BroadcastImportResult> {
+  return request<BroadcastImportResult>(`${contactsPath(broadcastId)}/import`, json("POST", { contacts }), getToken);
 }

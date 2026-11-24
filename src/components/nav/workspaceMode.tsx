@@ -64,7 +64,7 @@ const voiceNavItems: WorkspaceNavItem[] = [
   { label: "Knowledge Base", icon: "book", group: "Build", href: "/dashboard/voice/knowledge-base" },
   { label: "Tools", icon: "wrench", group: "Build", href: "/dashboard/voice/tools" },
   { label: "Phone Numbers", icon: "phone", group: "Deploy", href: "/dashboard/voice/phone-numbers" },
-  { label: "Outbound", icon: "target", group: "Deploy", href: "/dashboard/voice/outbound" },
+  { label: "Broadcast", icon: "target", group: "Deploy", href: "/dashboard/voice/outbound" },
   { label: "Call History", icon: "phone", group: "Data", href: "/dashboard/voice/calls" },
 ];
 

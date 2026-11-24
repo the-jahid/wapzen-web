@@ -102,6 +102,8 @@ type Envelope<T> = {
   success: boolean;
   message: string;
   data: T;
+  // List responses carry the page they answer and how many rows exist in all.
+  meta?: { pagination?: { page?: number; total_items?: number; total_pages?: number } };
   // Present on 400 responses that failed per-field validation.
   errors?: FieldError[];
 };
@@ -134,6 +136,15 @@ async function request<T>(
   getToken: AuthTokenGetter,
   workspace: Workspace = "chat"
 ): Promise<T> {
+  return (await requestEnvelope<T>(path, init, getToken, workspace)).data;
+}
+
+async function requestEnvelope<T>(
+  path: string,
+  init: RequestInit | undefined,
+  getToken: AuthTokenGetter,
+  workspace: Workspace = "chat"
+): Promise<Envelope<T>> {
   let response: Response;
   try {
     response = await serverFetch(routed(path, workspace), init, getToken);
@@ -153,7 +164,7 @@ async function request<T>(
     throw new KnowledgeBaseError(message, response.status, envelope?.errors ?? []);
   }
 
-  return envelope.data;
+  return envelope;
 }
 
 // ListKnowledgeBasesOptions pages the collection. The server defaults to page 1
@@ -185,6 +196,40 @@ export function listKnowledgeBases(
     getToken,
     workspace
   );
+}
+
+export type KnowledgeBasePage = {
+  items: ApiKnowledgeBase[];
+  /** Knowledge bases in all, across every page. */
+  total: number;
+  /** At least 1, so a pager always has a page to show. */
+  totalPages: number;
+};
+
+// listKnowledgeBasesPage returns one server page of knowledge bases together
+// with the totals from the response meta, for a paged list.
+export async function listKnowledgeBasesPage(
+  getToken: AuthTokenGetter,
+  options: ListKnowledgeBasesOptions = {},
+  workspace: Workspace = "chat"
+): Promise<KnowledgeBasePage> {
+  const query = new URLSearchParams({
+    page: String(options.page ?? 1),
+    limit: String(options.limit ?? 20),
+  });
+  const envelope = await requestEnvelope<ApiKnowledgeBase[]>(
+    `/v1/dashboard/knowledge-base?${query.toString()}`,
+    undefined,
+    getToken,
+    workspace
+  );
+  const items = envelope.data ?? [];
+  const pagination = envelope.meta?.pagination;
+  return {
+    items,
+    total: pagination?.total_items ?? items.length,
+    totalPages: Math.max(1, pagination?.total_pages ?? 1),
+  };
 }
 
 export function getKnowledgeBase(

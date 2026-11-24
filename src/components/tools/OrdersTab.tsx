@@ -1,5 +1,6 @@
 "use client";
 
+import { PaneListSkeleton } from "@/components/ui/Skeleton";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -326,7 +327,7 @@ export default function OrdersTab({
           {error && orders.length === 0 ? (
             <p className="tools-pane-note">{error}</p>
           ) : loading && !hasCachedPage ? (
-            <p className="tools-pane-note">Loading orders…</p>
+            <PaneListSkeleton />
           ) : orders.length === 0 ? (
             <>
               <p className="tools-pane-note orders-empty-note">

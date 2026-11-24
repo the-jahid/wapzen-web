@@ -1,5 +1,6 @@
 "use client";
 
+import { PaneListSkeleton } from "@/components/ui/Skeleton";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -72,7 +73,7 @@ export default function GroupsPage() {
             <p className="grp-pane-hint">Pick a number, then switch the AI on in the groups you want it to answer.</p>
             <nav className="grp-pane-items">
               {loading && !linked.length ? (
-                <p className="grp-pane-note">Loading your numbers…</p>
+                <PaneListSkeleton rows={3} />
               ) : loadError && !linked.length ? (
                 <p className="grp-pane-note">{loadError}</p>
               ) : !linked.length ? (

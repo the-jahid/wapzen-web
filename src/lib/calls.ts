@@ -19,10 +19,6 @@ export type ApiCall = {
   call_id: string;
   phone_number_id?: string | null;
   agent_id?: string | null;
-  // Set only on a call an outbound campaign placed, which is what lets a
-  // campaign list its own calls.
-  campaign_id?: string | null;
-  lead_id?: string | null;
   peer: string;
   call_type: string;
   status: string;
@@ -31,6 +27,8 @@ export type ApiCall = {
   answered_at?: string | null;
   ended_at?: string | null;
   created_at: string;
+  // Gemini-written summary, null until the server has written one.
+  summary?: string | null;
   updated_at: string;
   // Populated by the Get endpoint; omitted from list responses.
   messages?: ApiCallMessage[] | null;
@@ -69,6 +67,8 @@ type Envelope<T> = {
   data: T;
   // Only 400s carry this; it names the offending body fields.
   errors?: FieldError[] | null;
+  // List responses only.
+  meta?: { pagination?: { page?: number; total_items?: number; total_pages?: number } };
 };
 
 export class CallError extends Error {
@@ -81,7 +81,7 @@ export class CallError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<T> {
+async function requestEnvelope<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<Envelope<T>> {
   let response: Response;
   try {
     response = await serverFetch(voiceServerURL(path), init, getToken);
@@ -106,25 +106,49 @@ async function request<T>(path: string, init: RequestInit | undefined, getToken:
     throw new CallError(message, response.status);
   }
 
-  return envelope.data;
+  return envelope;
+}
+
+async function request<T>(path: string, init: RequestInit | undefined, getToken: AuthTokenGetter): Promise<T> {
+  return (await requestEnvelope<T>(path, init, getToken)).data;
 }
 
 // Dashboard call routes use the signed-in user's Clerk session. The server
 // keeps these separate from the API-key-only /v1/calls routes so the public API
 // remains API-key-only.
 
-// Paging matches the agents collection: a 1-based page plus a page size
-// (1-200, default 50). The server also returns meta.pagination and links, which
-// this helper drops — callers that need them should read the envelope directly.
-export function listCalls(
-  getToken: AuthTokenGetter,
-  params?: { page?: number; limit?: number }
-): Promise<ApiCall[]> {
+export type CallListParams = { page?: number; limit?: number; search?: string; broadcastContactId?: string };
+
+function callListPath(params?: CallListParams) {
   const search = new URLSearchParams();
   if (params?.page != null) search.set("page", String(params.page));
   if (params?.limit != null) search.set("limit", String(params.limit));
+  if (params?.search) search.set("search", params.search);
+  if (params?.broadcastContactId) search.set("broadcast_contact_id", params.broadcastContactId);
   const query = search.toString();
-  return request<ApiCall[]>(`/v1/dashboard/calls${query ? `?${query}` : ""}`, undefined, getToken);
+  return `/v1/dashboard/calls${query ? `?${query}` : ""}`;
+}
+
+// Paging matches the agents collection: a 1-based page plus a page size
+// (1-200, default 50). This helper drops meta.pagination; listCallsPage keeps it.
+export function listCalls(getToken: AuthTokenGetter, params?: CallListParams): Promise<ApiCall[]> {
+  return request<ApiCall[]>(callListPath(params), undefined, getToken);
+}
+
+// One server page of calls, newest first, with how many calls match in all.
+// search matches part of the number, or the start of the status or call type.
+export type CallPage = { items: ApiCall[]; total: number; page: number; totalPages: number };
+
+export async function listCallsPage(getToken: AuthTokenGetter, params?: CallListParams): Promise<CallPage> {
+  const envelope = await requestEnvelope<ApiCall[]>(callListPath(params), undefined, getToken);
+  const items = envelope.data ?? [];
+  const pagination = envelope.meta?.pagination;
+  return {
+    items,
+    total: pagination?.total_items ?? items.length,
+    page: pagination?.page ?? params?.page ?? 1,
+    totalPages: Math.max(1, pagination?.total_pages ?? 1),
+  };
 }
 
 // createCall places an outbound call and returns as soon as the callee's phone

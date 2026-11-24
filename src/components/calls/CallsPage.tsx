@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { PaneListSkeleton } from "@/components/ui/Skeleton";
+import ConversationPager, { useDebouncedValue } from "@/components/conversations/ConversationPager";
 import { VoiceUpdateNote } from "@/components/nav/VoiceUpdateNote";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
@@ -9,7 +11,7 @@ import {
   callStatuses,
   deleteCall as apiDeleteCall,
   getCall as apiGetCall,
-  listCalls as apiListCalls,
+  listCallsPage as apiListCallsPage,
   updateCall as apiUpdateCall,
   type ApiCall,
   type ApiCallMessage,
@@ -52,7 +54,8 @@ type DetailState = "idle" | "loading" | "ready" | "error";
 type Notice = { kind: "success" | "error"; text: string };
 
 
-const listPageLimit = 200;
+// Calls per page in the Call History list.
+const CALLS_PAGE_SIZE = 20;
 
 const statusLabels: Record<CallStatus, string> = {
   received: "Received",
@@ -736,34 +739,67 @@ const css = `
 .calls-toast-error { background: var(--app-toast-error-bg); border: 1px solid var(--app-rose-border-strong); color: var(--app-rose-text); }
 /* Retell-style master-detail: a list pane of calls beside the open one. */
 .calls-split { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
-.calls-pane-list { border-right: 1px solid var(--app-border); display: flex; flex: 0 0 300px; flex-direction: column; min-height: 0; min-width: 0; padding: 16px; }
-.calls-pane-head { align-items: center; border-bottom: 1px solid var(--app-border); color: var(--app-text); display: flex; gap: 10px; padding: 0 2px 14px; }
-.calls-pane-title { flex: 0 0 auto; font-size: 14.5px; font-weight: 600; margin: 0; }
-.calls-pane-refresh { align-items: center; background: transparent; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-muted); cursor: pointer; display: inline-flex; height: 32px; justify-content: center; width: 32px; }
-.calls-pane-refresh:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
-.calls-pane-refresh:disabled { cursor: not-allowed; opacity: .4; }
-.calls-pane-items { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow-y: auto; padding-top: 12px; }
-.calls-pane-search { align-items: center; border: 1px solid var(--app-border-strong); border-radius: 8px; color: var(--app-subtle); display: flex; flex: 1 1 auto; gap: 7px; height: 34px; min-width: 0; padding: 0 10px; }
-.calls-pane-search:focus-within { border-color: var(--app-primary); }
+.calls-pane-list { display: flex; flex: 1 1 auto; flex-direction: column; gap: 18px; min-height: 0; min-width: 0; padding: 28px 32px 24px; }
+.calls-page-head { align-items: flex-end; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; }
+.calls-page-heading { min-width: 0; }
+.calls-pane-title { color: var(--app-text); font-size: 22px; font-weight: 650; letter-spacing: -.3px; margin: 0; }
+.calls-page-sub { color: var(--app-subtle); font-size: 13px; margin: 4px 0 0; }
+.calls-page-tools { align-items: center; display: flex; gap: 8px; }
+.calls-pane-search { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border-strong); border-radius: 10px; color: var(--app-subtle); display: flex; gap: 8px; height: 38px; min-width: 0; padding: 0 12px; width: 320px; }
+.calls-pane-search:focus-within { border-color: var(--app-primary); box-shadow: 0 0 0 3px var(--app-primary-soft, rgba(16,185,129,.15)); }
 .calls-pane-search input { appearance: none; background: transparent; border: 0; color: var(--app-text); font: inherit; font-size: 13px; min-width: 0; outline: none; width: 100%; }
 .calls-pane-search input::placeholder { color: var(--app-subtle); }
-.calls-pane-item { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--app-muted); cursor: pointer; display: flex; font: inherit; gap: 10px; min-height: 48px; padding: 6px 10px; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
-.calls-pane-item > svg { color: var(--app-text); flex-shrink: 0; }
-.calls-pane-item:hover { background: var(--app-hover); color: var(--app-text); }
-.calls-pane-item.is-active { background: var(--app-hover-2); color: var(--app-text); }
-.calls-pane-item-body { display: grid; flex: 1; gap: 1px; min-width: 0; }
-.calls-pane-item-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calls-pane-item-sub { color: var(--app-subtle); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calls-pane-item-dot { border-radius: 50%; flex-shrink: 0; height: 7px; width: 7px; }
-.calls-pane-item-dot.calls-status-ended { background: var(--green); }
-.calls-pane-item-dot.calls-status-answered { background: var(--sky); }
-.calls-pane-item-dot.calls-status-received { background: var(--amber); }
-.calls-pane-item-dot.calls-status-declined { background: var(--orange); }
-.calls-pane-item-dot.calls-status-failed { background: var(--rose); }
-.calls-pane-item-dot.calls-status-neutral { background: var(--faint); }
-.calls-pane-note { color: var(--app-subtle); font-size: 13px; margin: 0; padding: 6px 4px; }
+.calls-pane-refresh { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border-strong); border-radius: 10px; color: var(--app-muted); cursor: pointer; display: inline-flex; flex: 0 0 auto; height: 38px; justify-content: center; width: 38px; }
+.calls-pane-refresh:hover:not(:disabled) { background: var(--app-hover); color: var(--app-text); }
+.calls-pane-refresh:disabled { cursor: not-allowed; opacity: .4; }
+/* The calls as a table in a card: a header row, one row per call, the pager
+   in the card's footer. The columns share one grid template. */
+.calls-table { background: var(--app-surface); border: 1px solid var(--app-border-strong); border-radius: 14px; display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
+.calls-table-head, .calls-pane-item { display: grid; gap: 16px; grid-template-columns: minmax(200px, 2fr) minmax(110px, 1fr) minmax(90px, .8fr) minmax(80px, .7fr) minmax(150px, 1.2fr) 16px; }
+.calls-table-head { border-bottom: 1px solid var(--app-border-strong); color: var(--app-subtle); font-size: 11px; font-weight: 600; letter-spacing: .6px; padding: 11px 20px; text-transform: uppercase; }
+.calls-pane-items { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow-y: auto; }
+.calls-pane-items.is-stale { opacity: .55; transition: opacity .16s ease; }
+.calls-pane-items .sk-rows { padding: 8px 10px; }
+.calls-pane-item { align-items: center; background: transparent; border: 0; border-bottom: 1px solid var(--app-border-strong); color: var(--app-text); cursor: pointer; flex: 0 0 auto; font: inherit; min-height: 60px; padding: 10px 20px; text-align: left; transition: background .14s ease; width: 100%; }
+/* The last row keeps its line too, so a short list still reads as rows. */
+.calls-pane-item:hover { background: var(--app-hover); }
+.calls-pane-item.is-active { background: var(--app-hover-2); box-shadow: inset 3px 0 0 var(--app-primary); }
+.calls-pane-item:focus-visible { outline: 2px solid var(--app-primary); outline-offset: -2px; }
+.calls-cell-contact { align-items: center; display: flex; gap: 12px; min-width: 0; }
+.calls-cell-icon { align-items: center; background: var(--app-green-soft); border-radius: 10px; color: var(--green); display: inline-flex; flex: 0 0 auto; height: 34px; justify-content: center; width: 34px; }
+.calls-cell-icon.is-out { background: var(--app-sky-soft); color: var(--sky); }
+.calls-pane-item-body { display: grid; gap: 2px; min-width: 0; }
+.calls-pane-item-name { font-size: 14px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-pane-item-sub { color: var(--app-subtle); display: none; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-cell-status { min-width: 0; }
+.calls-cell-status .calls-status-chip { font-size: 11.5px; font-weight: 650; padding: 5px 9px; }
+.calls-status-chip-dot { background: currentColor; border-radius: 50%; height: 6px; width: 6px; }
+.calls-cell-muted { color: var(--app-muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calls-cell-chevron { color: var(--app-faint, var(--app-subtle)); font-size: 18px; line-height: 1; text-align: right; }
+.calls-pane-item:hover .calls-cell-chevron { color: var(--app-text); }
+.calls-table-empty { align-items: center; color: var(--app-subtle); display: flex; flex: 1; flex-direction: column; font-size: 13px; gap: 6px; justify-content: center; padding: 56px 20px; text-align: center; }
+.calls-table-empty strong { color: var(--app-text); font-size: 15px; font-weight: 600; }
+.calls-table-empty-icon { align-items: center; background: var(--app-hover-2); border-radius: 14px; color: var(--app-muted); display: inline-flex; height: 48px; justify-content: center; margin-bottom: 6px; width: 48px; }
+.calls-table-foot { border-top: 1px solid var(--app-border-strong); flex: 0 0 auto; padding: 4px 16px; }
+.calls-table-foot nav { border-top: 0 !important; }
+.calls-pane-note { color: var(--app-subtle); font-size: 13px; margin: 0; padding: 16px 20px; }
+@media (max-width: 1180px) {
+  .calls-table-head, .calls-pane-item { grid-template-columns: minmax(180px, 2fr) minmax(110px, 1fr) minmax(80px, .7fr) minmax(140px, 1.2fr) 16px; }
+  .calls-col-direction { display: none; }
+}
 .calls-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 20px; min-height: 0; min-width: 0; overflow-y: auto; padding: 24px 24px 32px; }
 .calls-pane-back { display: none; }
+/* The call list fills the page; a picked call slides in over it as a
+   right-hand drawer at every width, like Conversations. */
+.calls-split:not(.has-selection) .calls-pane-detail { display: none; }
+.calls-drawer-backdrop { display: none; }
+.calls-split.has-selection .calls-drawer-backdrop { animation: calls-backdrop-in .2s ease; background: rgba(0,0,0,.55); border: 0; cursor: default; display: block; inset: 0; padding: 0; position: fixed; z-index: 70; }
+.calls-split.has-selection .calls-pane-detail { animation: calls-drawer-in .24s cubic-bezier(.2,.8,.2,1); background: var(--app-bg, #0a0a0b); border-left: 1px solid var(--app-border); bottom: 0; box-shadow: -12px 0 32px rgba(0,0,0,.45); height: 100dvh; max-width: 760px; overflow-y: auto; position: fixed; right: 0; top: 0; width: 92vw; z-index: 71; }
+.calls-split.has-selection .calls-pane-detail .calls-rt-head { align-items: center; display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto; }
+.calls-split.has-selection .calls-rt-back { align-items: center; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; color: var(--app-text); cursor: pointer; display: inline-flex; height: 38px; justify-content: center; padding: 0; width: 38px; }
+.calls-split.has-selection .calls-rt-back:hover { background: var(--app-hover); }
+@keyframes calls-drawer-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes calls-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 .calls-rt-head { align-items: flex-start; border-bottom: 1px solid var(--app-border); display: flex; gap: 16px; justify-content: space-between; padding-bottom: 16px; }
 .calls-rt-title { font-size: 18px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
 .calls-rt-line { align-items: center; color: var(--app-subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
@@ -783,19 +819,20 @@ const css = `
 .calls-rt-outline:disabled { cursor: not-allowed; opacity: .4; }
 @media (max-width: 980px) {
   .calls-split { flex-direction: column; }
-  .calls-pane-list { border-right: 0; flex: 1 1 auto; }
-  .calls-split:not(.has-selection) .calls-pane-detail { display: none; }
-  .calls-split.has-selection .calls-pane-list { display: none; }
-  .calls-pane-detail { overflow: visible; padding: 16px; }
+  .calls-split.has-selection .calls-pane-detail { max-width: none; padding: 16px; width: min(calc(100vw - 48px), 640px); }
   .calls-pane-back { align-items: center; background: none; border: 0; color: var(--app-subtle); cursor: pointer; display: inline-flex; font: inherit; font-size: 13px; font-weight: 600; gap: 6px; padding: 0; }
-  /* Phones and tablets: a page title like "All Agents" and "Conversations",
-     with a full-size search box under it. */
-  .calls-pane-head { border-bottom: 0; padding-bottom: 4px; }
-  .calls-pane-head > svg { display: none; }
-  .calls-pane-title { font-size: 20px; font-weight: 600; letter-spacing: -.2px; }
-  .calls-pane-refresh { border-radius: 10px; height: 38px; width: 38px; }
-  .calls-pane-search { background: var(--app-surface); border-radius: 10px; height: 40px; padding: 0 12px; }
+  /* Phones and tablets: the table folds to contact + status, with the date
+     and duration under the number; the toolbar takes the full width. */
+  .calls-pane-list { padding: 18px 16px; }
+  .calls-page-tools { width: 100%; }
+  .calls-pane-search { flex: 1 1 auto; width: auto; }
   .calls-pane-search input { font-size: 16px; } /* stops iOS zooming on focus */
+  .calls-table-head { display: none; }
+  .calls-table-head, .calls-pane-item { gap: 12px; grid-template-columns: minmax(0, 1fr) auto; }
+  .calls-pane-item { padding: 12px 14px; }
+  .calls-col-direction, .calls-col-duration, .calls-col-date, .calls-cell-chevron { display: none; }
+  .calls-pane-item-sub { display: block; }
+  .calls-table-foot { padding: 4px 10px; }
   /* With a call open, the back link becomes an arrow button in its header,
      like the other detail pages. */
   .calls-pane-detail:has(> .calls-rt-head) > .calls-pane-back { display: none; }
@@ -911,10 +948,18 @@ export default function CallsPage() {
   const { user, isLoaded: isUserLoaded, isSignedIn: isUserSignedIn } = useUser();
   const { getToken, isLoaded: isAuthLoaded, isSignedIn: isAuthSignedIn } = useAuth();
 
+  // The page of calls last read; it stays on screen while the next one loads.
   const [calls, setCalls, hasCachedCalls] = useCachedState<ApiCall[]>("calls-page:calls", []);
+  const [listMeta, setListMeta] = useCachedState("calls-page:meta", { key: "", total: 0, totalPages: 1 });
+  const [page, setPage] = useCachedState("calls-page:page", 1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // Filters the loaded calls by number, status or direction as you type.
+  // Searches every call by number, status or direction; the server does the
+  // matching once typing pauses.
   const [query, setQuery] = useState("");
+  const serverQuery = useDebouncedValue(query.trim());
+  const requestKey = `${page}|${serverQuery}`;
+  const isStale = hasCachedCalls && listMeta.key !== requestKey;
+  const listRef = useRef<HTMLElement | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -940,11 +985,9 @@ export default function CallsPage() {
   const pendingLoadState = !isUserLoaded || !isAuthLoaded ? "loading" : authError ? "error" : loadState;
   const effectiveLoadState = pendingLoadState === "loading" && hasCachedCalls ? "ready" : pendingLoadState;
 
-  // Retell-style master-detail: the newest call is open until another is
-  // picked; selectedId is only the explicit pick (on phones it swaps the list
-  // pane for the detail pane).
-  const selectedCall =
-    (selectedId ? calls.find((call) => call.id === selectedId) : null) ?? calls[0] ?? null;
+  // The list fills the page; a picked call opens in a drawer over it, like
+  // Conversations. Nothing is open until a call is picked.
+  const selectedCall = selectedId ? calls.find((call) => call.id === selectedId) ?? null : null;
   const selectedCallId = selectedCall?.id ?? null;
   const needle = query.trim().toLowerCase();
   const digits = needle.replace(/\D/g, "");
@@ -973,9 +1016,21 @@ export default function CallsPage() {
       setLoadState("loading");
       setLoadError("");
       try {
-        const rows = await apiListCalls(getToken, { limit: listPageLimit });
+        const result = await apiListCallsPage(getToken, {
+          page,
+          limit: CALLS_PAGE_SIZE,
+          search: serverQuery || undefined,
+        });
         if (cancelled) return;
+        // A page emptied by deletes, or past the end after a search shrank the
+        // list: go to the last page that has calls instead.
+        if (result.items.length === 0 && page > 1) {
+          setPage(result.total > 0 ? result.totalPages : 1);
+          return;
+        }
+        const rows = result.items;
         setCalls(rows);
+        setListMeta({ key: requestKey, total: result.total, totalPages: result.totalPages });
         setSelectedId((current) =>
           current && rows.some((call) => call.id === current) ? current : null
         );
@@ -990,7 +1045,13 @@ export default function CallsPage() {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, reloadKey, setCalls]);
+  }, [getToken, isAuthenticated, isAuthLoaded, isUserLoaded, page, reloadKey, requestKey, serverQuery, setCalls, setListMeta, setPage]);
+
+  function goToPage(next: number) {
+    setPage(next);
+    setSelectedId(null);
+    listRef.current?.scrollTo({ top: 0 });
+  }
 
   // Load the full call (including transcript) whenever the selection changes.
   // State updates live inside the async body so nothing runs synchronously in
@@ -1083,6 +1144,9 @@ export default function CallsPage() {
       await apiDeleteCall(call.id, getToken);
       const remaining = calls.filter((item) => item.id !== call.id);
       setCalls(remaining);
+      setListMeta((current) => ({ ...current, total: Math.max(0, current.total - 1) }));
+      // Refill the page from the server (the next call slides up from the page after).
+      setReloadKey((key) => key + 1);
       setSelectedId((current) => (current === call.id ? null : current));
       if (detail?.id === call.id) setDetail(null);
       setNotice({ kind: "success", text: "Call deleted" });
@@ -1105,73 +1169,136 @@ export default function CallsPage() {
   return (
     <div className="calls-shell app-accent-green">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <DashboardSidebar activeLabel="Call History" badges={{ "Call History": calls.length }} stackBelow={980} />
+      <DashboardSidebar activeLabel="Call History" badges={{ "Call History": listMeta.key ? listMeta.total : calls.length }} stackBelow={980} />
 
       <main className="calls-main">
-        <div className={`calls-split${selectedId ? " has-selection" : ""}`}>
+        <div className={`calls-split${selectedCall ? " has-selection" : ""}`}>
           <aside aria-label="Calls" className="calls-pane-list">
-            <div className="calls-pane-head">
-              <Icon name="phone" size={17} sw={1.8} />
-              <h1 className="calls-pane-title">Call History</h1>
-              {/* Search sits on the title row, in the space beside the title. */}
-              <label className="calls-pane-search">
-                <Icon name="search" size={14} sw={2.2} />
-                <input
-                  aria-label="Search calls by number, status or direction"
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search calls..."
-                  title="Search by number, status or direction"
-                  type="search"
-                  value={query}
-                />
-              </label>
-              <button
-                aria-label="Refresh calls"
-                className="calls-pane-refresh"
-                disabled={!isAuthenticated || effectiveLoadState === "loading"}
-                onClick={refresh}
-                title="Refresh"
-                type="button"
-              >
-                <Icon name="refresh" size={15} sw={2} />
-              </button>
-            </div>
-            <nav className="calls-pane-items">
-              {effectiveLoadState === "loading" && calls.length === 0 ? (
-                <p className="calls-pane-note">Loading calls...</p>
-              ) : effectiveLoadState === "error" ? (
-                <div className="calls-pane-note"><VoiceUpdateNote /></div>
-              ) : calls.length === 0 ? (
-                <p className="calls-pane-note">No calls yet. Inbound and outbound calls appear here once they run.</p>
-              ) : visibleCalls.length === 0 ? (
-                <p className="calls-pane-note">No call matches that search.</p>
-              ) : (
-                visibleCalls.map((call) => {
-                  const isActive = call.id === selectedCallId;
-                  return (
-                    <button
-                      aria-current={isActive ? "true" : undefined}
-                      className={`calls-pane-item${isActive ? " is-active" : ""}`}
-                      key={call.id}
-                      onClick={() => setSelectedId(call.id)}
-                      style={deletingId === call.id ? { opacity: 0.5 } : undefined}
-                      type="button"
-                    >
-                      <Icon name={call.call_type === "outbound" ? "phoneOut" : "phoneIn"} size={16} sw={1.8} />
-                      <span className="calls-pane-item-body">
-                        <span className="calls-pane-item-name notranslate">{peerLabel(call)}</span>
-                        <span className="calls-pane-item-sub">
-                          {formatDate(call.created_at)} · {formatDuration(call.duration_seconds)}
+            <header className="calls-page-head">
+              <div className="calls-page-heading">
+                <h1 className="calls-pane-title">Call History</h1>
+                <p className="calls-page-sub">
+                  {listMeta.total > 0
+                    ? `${listMeta.total} ${listMeta.total === 1 ? "call" : "calls"} answered or placed by your voice agents`
+                    : "Every call your voice agents answer or place"}
+                </p>
+              </div>
+              <div className="calls-page-tools">
+                <label className="calls-pane-search">
+                  <Icon name="search" size={14} sw={2.2} />
+                  <input
+                    aria-label="Search calls by number, status or direction"
+                    onChange={(event) => {
+                      setQuery(event.target.value);
+                      setPage(1);
+                    }}
+                    placeholder="Search by number, status or direction"
+                    title="Search by number, status or direction"
+                    type="search"
+                    value={query}
+                  />
+                </label>
+                <button
+                  aria-label="Refresh calls"
+                  className="calls-pane-refresh"
+                  disabled={!isAuthenticated || effectiveLoadState === "loading"}
+                  onClick={refresh}
+                  title="Refresh"
+                  type="button"
+                >
+                  <Icon name="refresh" size={15} sw={2} />
+                </button>
+              </div>
+            </header>
+
+            <div className="calls-table">
+              <div aria-hidden="true" className="calls-table-head">
+                <span>Contact</span>
+                <span>Status</span>
+                <span className="calls-col-direction">Direction</span>
+                <span className="calls-col-duration">Duration</span>
+                <span className="calls-col-date">Date</span>
+                <span />
+              </div>
+              <nav className={`calls-pane-items${isStale ? " is-stale" : ""}`} ref={listRef}>
+                {effectiveLoadState === "loading" && calls.length === 0 ? (
+                  <PaneListSkeleton rows={8} />
+                ) : effectiveLoadState === "error" ? (
+                  <div className="calls-pane-note"><VoiceUpdateNote /></div>
+                ) : calls.length === 0 && !serverQuery ? (
+                  <div className="calls-table-empty">
+                    <span className="calls-table-empty-icon"><Icon name="phone" size={22} sw={1.8} /></span>
+                    <strong>No calls yet</strong>
+                    <span>Inbound and outbound calls appear here once they run.</span>
+                  </div>
+                ) : visibleCalls.length === 0 ? (
+                  <div className="calls-table-empty">
+                    <strong>No matching calls</strong>
+                    <span>Try another number, status or direction.</span>
+                  </div>
+                ) : (
+                  visibleCalls.map((call) => {
+                    const isActive = call.id === selectedCallId;
+                    const outbound = call.call_type === "outbound";
+                    return (
+                      <button
+                        aria-current={isActive ? "true" : undefined}
+                        className={`calls-pane-item${isActive ? " is-active" : ""}`}
+                        key={call.id}
+                        onClick={() => setSelectedId(call.id)}
+                        style={deletingId === call.id ? { opacity: 0.5 } : undefined}
+                        type="button"
+                      >
+                        <span className="calls-cell-contact">
+                          <span className={`calls-cell-icon${outbound ? " is-out" : ""}`}>
+                            <Icon name={outbound ? "phoneOut" : "phoneIn"} size={15} sw={1.9} />
+                          </span>
+                          <span className="calls-pane-item-body">
+                            <span className="calls-pane-item-name notranslate">{peerLabel(call)}</span>
+                            {/* Narrow screens drop the columns; their facts move here. */}
+                            <span className="calls-pane-item-sub">
+                              {formatDate(call.created_at)} · {formatDuration(call.duration_seconds)}
+                            </span>
+                          </span>
                         </span>
-                      </span>
-                      <span className={`calls-pane-item-dot ${statusClass(call.status)}`} title={statusText(call.status)} />
-                    </button>
-                  );
-                })
-              )}
-            </nav>
+                        <span className="calls-cell-status">
+                          <span className={`calls-status-chip ${statusClass(call.status)}`}>
+                            <span className="calls-status-chip-dot" />
+                            {statusText(call.status)}
+                          </span>
+                        </span>
+                        <span className="calls-cell-muted calls-col-direction">{callTypeLabel(call.call_type)}</span>
+                        <span className="calls-cell-muted calls-col-duration">{formatDuration(call.duration_seconds)}</span>
+                        <span className="calls-cell-muted calls-col-date">{formatDate(call.created_at)}</span>
+                        <span className="calls-cell-chevron" aria-hidden="true">›</span>
+                      </button>
+                    );
+                  })
+                )}
+              </nav>
+              <div className="calls-table-foot">
+                <ConversationPager
+                  busy={isStale}
+                  label="Call pages"
+                  onPage={goToPage}
+                  page={page}
+                  pageSize={CALLS_PAGE_SIZE}
+                  total={listMeta.total}
+                  totalPages={listMeta.totalPages}
+                />
+              </div>
+            </div>
           </aside>
 
+          {/* Tapping the dimmed list behind the drawer closes it. */}
+          {selectedCall ? (
+            <button
+              aria-label="Close call"
+              className="calls-drawer-backdrop"
+              onClick={() => setSelectedId(null)}
+              type="button"
+            />
+          ) : null}
           <section className="calls-pane-detail">
             <button className="calls-pane-back" onClick={() => setSelectedId(null)} type="button">
               <Icon name="back" size={15} sw={2.2} />

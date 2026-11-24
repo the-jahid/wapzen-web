@@ -1,7 +1,8 @@
 "use client";
 
+import { DetailSkeleton } from "@/components/ui/Skeleton";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import SetupVideoButton from "@/components/chat/SetupVideoButton";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -2300,18 +2301,18 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
               ) : (
                 // A link or a reload lands here before the list has loaded, so
                 // "not found" waits until the server has answered.
-                <div className="chat-agent-page-empty">
-                  {isLoading ? (
-                    <span aria-busy="true">Loading chat agent...</span>
-                  ) : (
-                    <>
-                      <span>This chat agent does not exist or was deleted.</span>
-                      <Link className="chat-btn chat-btn-secondary chat-btn-sm" href="/dashboard/chat">
-                        Back to chat agents
-                      </Link>
-                    </>
-                  )}
-                </div>
+                isLoading ? (
+                  <div style={{ flex: "1 1 auto", width: "100%" }}>
+                    <DetailSkeleton />
+                  </div>
+                ) : (
+                  <div className="chat-agent-page-empty">
+                    <span>This chat agent does not exist or was deleted.</span>
+                    <Link className="chat-btn chat-btn-secondary chat-btn-sm" href="/dashboard/chat">
+                      Back to chat agents
+                    </Link>
+                  </div>
+                )
               )}
             </section>
           ) : (
@@ -3302,72 +3303,6 @@ function formatQrCountdown(ms: number) {
 // The QR-first way to link a number: the code on the left with when it next
 // reloads, the steps beside it (under it where the pane is narrow), and a link
 // to the pairing-code form instead.
-// Desktop gets the landscape walkthrough; phones and tablets get the Short.
-const SETUP_VIDEO_ID = "sVzHeUp6Pho";
-const SETUP_SHORT_ID = "Lj6yex0_PXw";
-
-/** Small "Watch video" pill in the link-a-number header (desktop only via CSS)
-    that opens the setup walkthrough in a lightbox. Portalled to <body> so the
-    connect dialog's own stacking/transform can't clip it. */
-function SetupVideoButton({ vertical = false }: { vertical?: boolean }) {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        setOpen(false);
-      }
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [open]);
-
-  return (
-    <>
-      <button
-        className={`chat-number-video-btn ${vertical ? "is-mobile" : "is-desktop"}`}
-        onClick={() => setOpen(true)}
-        title="Watch how to link your number"
-        type="button"
-      >
-        <svg aria-hidden="true" height="13" viewBox="0 0 24 24" width="13">
-          <path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8Z" fill="currentColor" />
-          <path d="m9.75 15.02 5.75-3.02-5.75-3.02v6.04Z" fill="#fff" />
-        </svg>
-        Watch video
-      </button>
-      {open
-        ? createPortal(
-            <div
-              aria-label="How to link your WhatsApp number"
-              aria-modal="true"
-              className="chat-video-overlay"
-              onClick={() => setOpen(false)}
-              role="dialog"
-            >
-              <div className={`chat-video-box${vertical ? " is-vertical" : ""}`} onClick={(e) => e.stopPropagation()}>
-                <button className="chat-video-close" onClick={() => setOpen(false)} type="button">
-                  Close ✕
-                </button>
-                <iframe
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="chat-video-frame"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  src={`https://www.youtube.com/embed/${vertical ? SETUP_SHORT_ID : SETUP_VIDEO_ID}?autoplay=1&rel=0&playsinline=1`}
-                  title="How to link your WhatsApp number"
-                />
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-    </>
-  );
-}
-
 function QrConnectView({
   isStarting,
   login,

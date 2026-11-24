@@ -1,5 +1,6 @@
 "use client";
 
+import { DetailSkeleton, PaneListSkeleton } from "@/components/ui/Skeleton";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -831,7 +832,7 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
             </div>
             <nav className="tools-pane-items">
               {showSkeleton ? (
-                <p className="tools-pane-note">Loading…</p>
+                <PaneListSkeleton rows={4} variant="icon" />
               ) : loadError && tools.length === 0 ? (
                 <p className="tools-pane-note">{loadError}</p>
               ) : tools.length === 0 ? (
@@ -873,6 +874,8 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
                 tool={selected}
                 mode={mode}
               />
+            ) : (showSkeleton || (toolId && isLoading)) && !loadError ? (
+              <DetailSkeleton />
             ) : toolId ? (
               <div className="tools-detail">
                 <Link className="tools-back" href={dashboardHref("/tools", mode)}>
@@ -881,9 +884,7 @@ export default function ToolsPage({ toolId }: { toolId?: string } = {}) {
                 </Link>
                 <div className="tools-empty">
                   <span>
-                    {isLoading
-                      ? "Loading tool…"
-                      : loadError ?? "This tool was not found. It may have been deleted."}
+                    {loadError ?? "This tool was not found. It may have been deleted."}
                   </span>
                 </div>
               </div>

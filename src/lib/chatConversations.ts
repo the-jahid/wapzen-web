@@ -42,8 +42,43 @@ type Envelope<T> = {
   success: boolean;
   message: string;
   data: T;
-  meta?: { pagination?: { total_items?: number } };
+  meta?: { pagination?: { total_items?: number; total_pages?: number; page?: number } };
 };
+
+// One server page of threads. total counts every thread the filter matches, not
+// just this page, and totalPages is at least 1 so a pager always has a page.
+export type ChatConversationPage = {
+  items: ApiChatConversation[];
+  total: number;
+  page: number;
+  totalPages: number;
+};
+
+export type ChatConversationListOptions = {
+  status?: ChatConversationStatus;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+function listParams(options: ChatConversationListOptions | undefined, defaultLimit: number) {
+  const params = new URLSearchParams({ limit: String(options?.limit ?? defaultLimit) });
+  if (options?.page && options.page > 1) params.set("page", String(options.page));
+  if (options?.status) params.set("status", options.status);
+  if (options?.search) params.set("search", options.search);
+  return params;
+}
+
+function toPage(envelope: Envelope<ApiChatConversation[]>, requestedPage: number): ChatConversationPage {
+  const items = envelope.data ?? [];
+  const pagination = envelope.meta?.pagination;
+  return {
+    items,
+    total: pagination?.total_items ?? items.length,
+    page: pagination?.page ?? requestedPage,
+    totalPages: Math.max(1, pagination?.total_pages ?? 1),
+  };
+}
 
 export class ChatConversationError extends Error {
   readonly status: number;
@@ -81,39 +116,35 @@ async function request<T>(
   return envelope;
 }
 
-// listChatAgentConversations reads one agent's threads, most recently active
-// first. The total comes from the response meta rather than the page length, so
-// a paged listing still reports how many threads the agent has.
+// listChatAgentConversations reads one page of one agent's threads, most
+// recently active first. The total comes from the response meta rather than the
+// page length, so a paged listing still reports how many threads the agent has.
 export async function listChatAgentConversations(
   chatAgentId: string,
   getToken: AuthTokenGetter,
-  options?: { limit?: number }
-): Promise<{ items: ApiChatConversation[]; total: number }> {
-  const limit = options?.limit ?? 100;
+  options?: ChatConversationListOptions
+): Promise<ChatConversationPage> {
+  const params = listParams(options, 100);
   const envelope = await request<ApiChatConversation[]>(
-    `/v1/dashboard/chat-agents/${encodeURIComponent(chatAgentId)}/conversations?limit=${limit}`,
+    `/v1/dashboard/chat-agents/${encodeURIComponent(chatAgentId)}/conversations?${params.toString()}`,
     undefined,
     getToken
   );
-  const items = envelope.data ?? [];
-  return { items, total: envelope.meta?.pagination?.total_items ?? items.length };
+  return toPage(envelope, options?.page ?? 1);
 }
 
-// listChatConversations reads every thread on the account, most recently active
-// first — the Conversations page, where threads from all of the user's chat
-// agents share one inbox. The same filters the API takes are optional here.
+// listChatConversations reads one page of every thread on the account, most
+// recently active first — the Conversations page, where threads from all of the
+// user's chat agents share one inbox. Status and search filter on the server, so
+// they reach threads on every page, not only the one loaded.
 export async function listChatConversations(
   getToken: AuthTokenGetter,
-  options?: { chatAgentId?: string; status?: ChatConversationStatus; search?: string; limit?: number }
-): Promise<{ items: ApiChatConversation[]; total: number }> {
-  const params = new URLSearchParams({ limit: String(options?.limit ?? 200) });
+  options?: ChatConversationListOptions & { chatAgentId?: string }
+): Promise<ChatConversationPage> {
+  const params = listParams(options, 200);
   if (options?.chatAgentId) params.set("chat_agent_id", options.chatAgentId);
-  if (options?.status) params.set("status", options.status);
-  if (options?.search) params.set("search", options.search);
-
   const envelope = await request<ApiChatConversation[]>(`${dashboardPath}?${params.toString()}`, undefined, getToken);
-  const items = envelope.data ?? [];
-  return { items, total: envelope.meta?.pagination?.total_items ?? items.length };
+  return toPage(envelope, options?.page ?? 1);
 }
 
 // getChatConversationsVersion is a short text that changes whenever the listing

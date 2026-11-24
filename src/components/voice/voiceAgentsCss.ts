@@ -671,7 +671,12 @@ export const baseCss = `
   gap: 10px;
   padding: 13px;
 }
-.va-number-pane-head { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; }
+.va-number-pane-head { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.va-number-video { align-items: center; display: flex; flex: none; }
+/* Phones: the QR code under the code form, for scanning from a second phone. */
+.va-phone-qr { align-items: center; display: flex; flex-direction: column; gap: 10px; }
+.va-phone-qr .va-qr-reveal-or { align-self: stretch; }
+.va-phone-qr .va-qr-frame { max-width: 240px; width: 100%; }
 .va-number-pane-title { font-size: 12.5px; font-weight: 800; letter-spacing: -.1px; }
 .va-number-pane-note { color: var(--faint); font-size: 11px; white-space: nowrap; }
 .va-number-pane-actions { align-items: center; display: flex; gap: 8px; }

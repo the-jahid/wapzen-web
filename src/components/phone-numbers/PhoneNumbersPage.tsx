@@ -1,5 +1,6 @@
 "use client";
 
+import { PaneListSkeleton } from "@/components/ui/Skeleton";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
@@ -350,8 +351,8 @@ const css = `
   color: var(--text);
   display: flex;
   min-height: 100vh;
-  width: 100vw;
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
   font-family: var(--font-manrope), system-ui, sans-serif;
   font-size: 14px;
@@ -1144,19 +1145,21 @@ const css = `
 .phone-pane-note p { margin: 0; }
 .phone-pane-detail { display: flex; flex: 1; flex-direction: column; gap: 28px; min-width: 0; padding: 24px 24px 32px; }
 .phone-pane-back { display: none; }
-.phone-detail-top { align-items: flex-start; border-bottom: 1px solid var(--border); display: flex; gap: 16px; justify-content: space-between; padding-bottom: 16px; }
+.phone-detail-top { align-items: flex-start; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 14px 16px; justify-content: space-between; padding-bottom: 16px; }
 .phone-detail-title { font-size: 18px; font-weight: 600; margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .phone-detail-back { display: none; }
 /* Re-pair shows its link icon only on phones, where the button loses its text. */
 .phone-btn-phone-icon { display: none; }
-.phone-detail-identity { flex: 1 1 auto; min-width: 0; }
-.phone-detail-title-row { align-items: center; display: flex; gap: 10px; min-width: 0; }
-.phone-detail-status-inline { display: none; flex: none; font-size: 12px; font-weight: 600; }
-.phone-detail-line-status { align-items: center; display: inline-flex; gap: 6px; }
-.phone-detail-line { align-items: center; color: var(--subtle); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px; margin-top: 6px; }
+/* The basis is what makes the buttons wrap below the number in a narrow pane
+   instead of squeezing it. */
+.phone-detail-identity { flex: 1 1 260px; min-width: 0; }
+.phone-detail-line { align-items: center; color: var(--subtle); clip-path: inset(-4px -4px -4px 16px); display: flex; flex-wrap: wrap; font-size: 12px; margin: 6px 0 0 -16px; row-gap: 2px; }
+/* Each item carries the dot before it; the clip above hides the dot of
+   whichever item starts a line, so a wrapped line never begins with one. */
+.phone-detail-line-item { align-items: center; display: inline-flex; gap: 6px; min-height: 20px; min-width: 0; padding-left: 16px; position: relative; }
+.phone-detail-line-item::before { background: currentColor; border-radius: 50%; content: ""; height: 3px; left: 6.5px; position: absolute; top: calc(50% - 1.5px); width: 3px; }
 .phone-copy { align-items: center; background: none; border: 0; border-radius: 5px; color: var(--subtle); cursor: pointer; display: inline-flex; height: 20px; justify-content: center; padding: 0; width: 20px; }
 .phone-copy:hover { background: var(--app-hover); color: var(--text); }
-.phone-detail-dot { background: var(--text); border-radius: 50%; height: 4px; margin: 0 4px; width: 4px; }
 .phone-status-line { align-items: center; background: none; display: inline-flex; gap: 5px; }
 .phone-status-line.phone-status-connected { background: none; color: var(--app-green-text); }
 .phone-status-line.phone-status-pending { background: none; color: var(--app-amber-text); }
@@ -1220,25 +1223,30 @@ const css = `
 }
 /* Phones: back, number and the buttons share one row, like the knowledge
    base page - refresh, re-pair and disconnect as icon buttons (names in
-   their tooltips). The status sits on the details line under the number.
-   The agent picker loses two of its three frames so it gets the card's
-   whole width. */
+   their tooltips). The status sits on the details line under the number. */
 @media (max-width: 640px) {
   .phone-detail-top { gap: 10px; }
   .phone-detail-title { font-size: 17px; line-height: 1.25; }
-  .phone-detail-line { gap: 4px; margin-top: 3px; }
-  .phone-detail-line .phone-detail-dot { margin: 0 2px; }
+  .phone-detail-line { margin-top: 3px; row-gap: 0; }
   .phone-detail-buttons { flex-wrap: nowrap; gap: 6px; }
   .phone-detail-buttons .phone-outline-btn,
   .phone-detail-buttons .phone-outline-btn.has-text { border-radius: 10px; height: 38px; min-width: 38px; padding: 0; width: 38px; }
   .phone-detail-buttons .phone-btn-label { display: none; }
   .phone-detail-buttons .phone-btn-phone-icon { display: block; }
+}
+/* Phones, and small laptops where the sidebar and list leave a narrow pane:
+   the agent picker loses two of its three frames so it gets the card's whole
+   width. */
+@media (max-width: 640px), (min-width: 901px) and (max-width: 1100px) {
   .phone-config-section { gap: 14px; padding: 14px; }
   .phone-settings-grid > .phone-setting-row { background: none; border: 0; border-radius: 0; padding: 0; }
   .phone-setting-row { align-items: center; gap: 12px 10px; }
   .phone-setting-row > .phone-setting-body { display: contents; }
   .phone-setting-row .phone-assignment-grid { grid-column: 1 / -1; }
   .phone-setting-copy { margin-top: 0; }
+}
+@media (min-width: 901px) and (max-width: 1100px) {
+  .phone-pane-list { flex-basis: 230px; }
 }
 /* Wide screens: a little more room around the capped content. */
 @media (min-width: 1680px) {
@@ -1848,7 +1856,7 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
             </div>
             <nav className="phone-pane-items">
               {effectiveLoadState === "loading" && phoneNumbers.length === 0 ? (
-                <p className="phone-pane-note">Loading...</p>
+                <PaneListSkeleton rows={4} />
               ) : effectiveLoadState === "error" && phoneNumbers.length === 0 ? (
                 <div className="phone-pane-note">
                   <p>{effectiveLoadError}</p>
@@ -1896,30 +1904,21 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
                     <Icon name="back" size={16} sw={2.4} />
                   </Link>
                   <div className="phone-detail-identity">
-                    <div className="phone-detail-title-row">
-                      <h2 className="phone-detail-title notranslate">{displayName(selectedPhoneNumber)}</h2>
-                      <span className={`phone-status-line phone-detail-status-inline ${statusClass(selectedPhoneNumber.status)}`}>
-                        {selectedPhoneNumber.status === "connected" ? (
-                          <Icon name="check" size={13} sw={2.4} />
-                        ) : (
-                          <span className="phone-dot" />
-                        )}
-                        {statusLabels[selectedPhoneNumber.status]}
-                      </span>
-                    </div>
+                    <h2 className="phone-detail-title notranslate">{displayName(selectedPhoneNumber)}</h2>
                     <div className="phone-detail-line">
-                      <span>ID: {shortId(selectedPhoneNumber.id)}</span>
-                      <button
-                        aria-label="Copy ID"
-                        className="phone-copy"
-                        onClick={() => copyId(selectedPhoneNumber.id)}
-                        title={copiedId === selectedPhoneNumber.id ? "Copied" : "Copy ID"}
-                        type="button"
-                      >
-                        <Icon name={copiedId === selectedPhoneNumber.id ? "check" : "copy"} size={13} />
-                      </button>
-                      <span className="phone-detail-line-status">
-                        <span className="phone-detail-dot" />
+                      <span className="phone-detail-line-item">
+                        ID: {shortId(selectedPhoneNumber.id)}
+                        <button
+                          aria-label="Copy ID"
+                          className="phone-copy"
+                          onClick={() => copyId(selectedPhoneNumber.id)}
+                          title={copiedId === selectedPhoneNumber.id ? "Copied" : "Copy ID"}
+                          type="button"
+                        >
+                          <Icon name={copiedId === selectedPhoneNumber.id ? "check" : "copy"} size={13} />
+                        </button>
+                      </span>
+                      <span className="phone-detail-line-item">
                         <span className={`phone-status-line ${statusClass(selectedPhoneNumber.status)}`}>
                           {selectedPhoneNumber.status === "connected" ? (
                             <Icon name="check" size={13} sw={2.4} />
@@ -1929,13 +1928,13 @@ export default function PhoneNumbersPage({ phoneNumberId }: { phoneNumberId?: st
                           {statusLabels[selectedPhoneNumber.status]}
                         </span>
                       </span>
-                      <span className="phone-detail-dot phone-detail-wa-dot" />
-                      <span className="phone-detail-wa notranslate">WhatsApp · {displayNumber(selectedPhoneNumber)}</span>
+                      <span className="phone-detail-line-item notranslate">
+                        WhatsApp · {displayNumber(selectedPhoneNumber)}
+                      </span>
                       {selectedPhoneNumber.last_connected_at ? (
-                        <>
-                          <span className="phone-detail-dot" />
+                        <span className="phone-detail-line-item">
                           <span>Last connected {formatShortDate(selectedPhoneNumber.last_connected_at)}</span>
-                        </>
+                        </span>
                       ) : null}
                     </div>
                   </div>

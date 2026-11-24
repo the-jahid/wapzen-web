@@ -1,23 +1,10 @@
 "use client";
 
 import ConversationsSplit from "@/components/conversations/ConversationsSplit";
-import { ConversationThreadView } from "@/components/conversations/ConversationThreadPage";
 
-// The account's whole chat inbox in Retell's master-detail layout: contacts on
-// the left, the most recent thread open on the right until another is picked
-// (picking one moves to /dashboard/conversations/<id>).
+// The account's whole chat inbox: every contact in one list. Picking one moves
+// to /dashboard/conversations/<id>, which opens that thread in a drawer over
+// the list.
 export default function ConversationsPage() {
-  return (
-    <ConversationsSplit>
-      {(firstId) =>
-        firstId ? (
-          <ConversationThreadView
-            backHref="/dashboard/conversations"
-            conversationId={firstId}
-            key={firstId}
-          />
-        ) : null
-      }
-    </ConversationsSplit>
-  );
+  return <ConversationsSplit>{null}</ConversationsSplit>;
 }

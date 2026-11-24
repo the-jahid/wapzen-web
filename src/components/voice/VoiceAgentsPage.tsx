@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import SetupVideoButton from "@/components/chat/SetupVideoButton";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
@@ -730,6 +731,7 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const closeCreate = useCallback(() => setCreateOpen(false), []);
   const [deleteTargetId, setDeleteTargetId] = useState("");
   const deleteTarget = agents.find((agent) => agent.id === deleteTargetId) ?? null;
   const [isDeleting, setIsDeleting] = useState(false);
@@ -950,30 +952,44 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
     }
   };
 
-  const createAgent = async (form: CreateForm) => {
-    const created = await createVoiceAgent(
-      {
-        agent: {
-          name: form.name.trim(),
-          phone_number_id: form.phoneNumberId || null,
-          // An agent created with a number is live straight away.
-          ...(form.phoneNumberId ? { status: "active" } : {}),
-          language: form.language,
-        },
-        prompt: {
-          system_prompt: "You are a friendly phone assistant. Keep every reply short and natural to say out loud.",
-          begin_message_mode: DEFAULT_BEGIN_MODE,
-        },
-        voice: {
-          openai: { voice_id: DEFAULT_VOICE_ID, voice_name: DEFAULT_VOICE_NAME, realtime_model: DEFAULT_REALTIME_MODEL },
-        },
-      },
-      getToken
-    );
-    setAgents((current) => [created, ...current]);
-    setCreateOpen(false);
-    router.push(`/dashboard/voice/agents/${created.id}`);
-  };
+  // Creating an agent starts with its number, as on the chat agents page: once
+  // one is linked (or picked) the agent is made on it, live, and opened. A number
+  // an agent already holds (a rescan of it) opens that agent instead. Names are
+  // unique per account, so the default is the first one free.
+  const createForNumber = useCallback(
+    async (phoneNumberId: string) => {
+      const list = await listVoiceAgents(getToken);
+      let agent = list.find((item) => item.agent?.phone_number_id === phoneNumberId);
+      if (!agent) {
+        const taken = new Set(list.map((item) => item.agent?.name?.trim()));
+        let index = list.length + 1;
+        while (taken.has(`WhatsApp voice agent ${index}`)) index += 1;
+        agent = await createVoiceAgent(
+          {
+            agent: {
+              name: `WhatsApp voice agent ${index}`,
+              phone_number_id: phoneNumberId,
+              status: "active",
+              language: "multi",
+            },
+            prompt: {
+              system_prompt: "You are a friendly phone assistant. Keep every reply short and natural to say out loud.",
+              begin_message_mode: DEFAULT_BEGIN_MODE,
+            },
+            voice: {
+              openai: { voice_id: DEFAULT_VOICE_ID, voice_name: DEFAULT_VOICE_NAME, realtime_model: DEFAULT_REALTIME_MODEL },
+            },
+          },
+          getToken
+        );
+        list.unshift(agent);
+      }
+      setAgents(list);
+      setCreateOpen(false);
+      router.push(`/dashboard/voice/agents/${agent.id}`);
+    },
+    [getToken, router, setAgents]
+  );
 
   return (
     <div className="va-shell app-accent-green">
@@ -1010,11 +1026,16 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
                           </p>
                         </div>
                         <NumberSetup
-                          agent={selected}
+                          agentId={selected.id}
                           getToken={getToken}
                           key={`connect-${selected.id}`}
                           onLinked={onNumberLinked}
-                          onPatch={patchSelected}
+                          onUseNumber={(id) =>
+                            patchSelected((current) => ({
+                              ...current,
+                              agent: { ...current.agent, phone_number_id: id, status: "active" },
+                            }))
+                          }
                           phoneNumbers={phoneNumbers}
                         />
                       </div>
@@ -1251,9 +1272,10 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
 
       {createOpen ? (
         <CreateVoiceAgentModal
-          index={agents.length + 1}
-          onCancel={() => setCreateOpen(false)}
-          onCreate={createAgent}
+          agents={agents}
+          getToken={getToken}
+          onCancel={closeCreate}
+          onCreate={createForNumber}
           phoneNumbers={phoneNumbers}
         />
       ) : null}
@@ -1267,132 +1289,101 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
   );
 }
 
-type CreateForm = { name: string; phoneNumberId: string; language: string };
-
+// "Create" opens this: the WhatsApp number is linked first, by QR code or pairing
+// code, and the agent is created on it the moment it connects.
 function CreateVoiceAgentModal({
-  index,
+  agents,
+  getToken,
   onCancel,
   onCreate,
   phoneNumbers,
 }: {
-  index: number;
+  agents: VoiceAgent[];
+  getToken: AuthGetter;
   onCancel: () => void;
-  onCreate: (form: CreateForm) => Promise<void>;
+  onCreate: (phoneNumberId: string) => Promise<void>;
   phoneNumbers: ApiPhoneNumber[];
 }) {
-  const [form, setForm] = useState<CreateForm>({
-    name: `WhatsApp voice agent ${index}`,
-    phoneNumberId: "",
-    language: "multi",
-  });
+  // The number the agent is being made on; kept after a failure to try again.
+  const [numberId, setNumberId] = useState("");
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const connected = phoneNumbers.filter((pn) => pn.status === "connected");
+  const busy = useRef(false);
+  const isCreating = Boolean(numberId) && !error;
+  const held = new Set(agents.map((agent) => agent.agent?.phone_number_id).filter(Boolean));
+  const freeNumbers = phoneNumbers.filter((pn) => !held.has(pn.id));
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isSubmitting) onCancel();
+      if (event.key === "Escape" && !isCreating) onCancel();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isSubmitting, onCancel]);
+  }, [isCreating, onCancel]);
 
-  const submit = async () => {
-    if (!form.name.trim()) {
-      setError("Give the agent a name.");
-      return;
-    }
-    setError("");
-    setIsSubmitting(true);
-    try {
-      await onCreate(form);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create WhatsApp voice agent");
-      setIsSubmitting(false);
-    }
-  };
+  const create = useCallback(
+    async (phoneNumberId: string) => {
+      if (busy.current) return;
+      busy.current = true;
+      setNumberId(phoneNumberId);
+      setError("");
+      try {
+        await onCreate(phoneNumberId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not create WhatsApp voice agent");
+      } finally {
+        busy.current = false;
+      }
+    },
+    [onCreate]
+  );
+  const onLinked = useCallback((_agentId: string, linked: ApiPhoneNumber) => create(linked.id), [create]);
 
   return (
-    <div
-      className="va-modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isSubmitting) onCancel();
-      }}
-    >
-      <form
-        aria-labelledby="va-create-title"
-        aria-modal="true"
-        className="va-modal-card"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit();
-        }}
-        role="dialog"
-      >
+    // A stray click must not end a login someone is halfway through on their
+    // phone, so the backdrop doesn't close this.
+    <div className="va-modal-backdrop">
+      <div aria-labelledby="va-create-title" aria-modal="true" className="va-modal-card is-pairing" role="dialog">
         <div className="va-modal-head">
           <div>
             <h2 className="va-modal-title" id="va-create-title">
-              New WhatsApp voice agent
+              Connect your WhatsApp
             </h2>
-            <div className="va-modal-subtitle">Name it and choose how it calls. Everything else is set in the editor.</div>
+            <div className="va-modal-subtitle">
+              Scan the QR code or use a pairing code to link the number your agent will call and answer on. Your agent
+              is ready the moment it connects.
+            </div>
           </div>
-          <button aria-label="Close" className="va-icon-btn" disabled={isSubmitting} onClick={onCancel} type="button">
+          <button aria-label="Close" className="va-icon-btn" disabled={isCreating} onClick={onCancel} type="button">
             <Icon name="x" size={15} sw={2.4} />
           </button>
         </div>
         <div className="va-modal-body">
-          <label className="va-field">
-            <span className="va-field-label">Name</span>
-            <input
-              autoFocus
-              className="va-input"
-              maxLength={80}
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-              value={form.name}
-            />
-          </label>
-          <div className="va-modal-grid">
-            <label className="va-field">
-              <span className="va-field-label">Phone number</span>
-              <select
-                className="va-select"
-                onChange={(event) => setForm((current) => ({ ...current, phoneNumberId: event.target.value }))}
-                value={form.phoneNumberId}
-              >
-                <option value="">Link one later</option>
-                {connected.map((pn) => (
-                  <option key={pn.id} value={pn.id}>
-                    {phoneNumberLabel(pn)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="va-field">
-              <span className="va-field-label">Language</span>
-              <select
-                className="va-select"
-                onChange={(event) => setForm((current) => ({ ...current, language: event.target.value }))}
-                value={form.language}
-              >
-                {languages.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
           {error ? <div className="va-modal-error">{error}</div> : null}
+          {numberId ? (
+            <div className="va-number-status" role="status">
+              {error ? "Your number is linked, but the agent could not be created." : "Number connected. Creating your agent…"}
+            </div>
+          ) : (
+            <NumberSetup
+              agentId=""
+              getToken={getToken}
+              onLinked={onLinked}
+              onUseNumber={(id) => void create(id)}
+              phoneNumbers={freeNumbers}
+            />
+          )}
         </div>
         <div className="va-modal-footer">
-          <button className="va-btn va-btn-secondary" disabled={isSubmitting} onClick={onCancel} type="button">
+          <button className="va-btn va-btn-secondary" disabled={isCreating} onClick={onCancel} type="button">
             Cancel
           </button>
-          <button className="va-btn va-btn-primary" disabled={isSubmitting} type="submit">
-            {isSubmitting ? "Creating…" : "Create agent"}
-          </button>
+          {error ? (
+            <button className="va-btn va-btn-primary" onClick={() => void create(numberId)} type="button">
+              Try again
+            </button>
+          ) : null}
         </div>
-      </form>
+      </div>
     </div>
   );
 }
@@ -1562,11 +1553,13 @@ function Editor({
 
   const numberSetup = (
     <NumberSetup
-      agent={agent}
+      agentId={agent.id}
       getToken={getToken}
       key={`setup-${agent.id}`}
       onLinked={onNumberLinked}
-      onPatch={onPatch}
+      onUseNumber={(id) =>
+        onPatch((current) => ({ ...current, agent: { ...current.agent, phone_number_id: id, status: "active" } }))
+      }
       phoneNumbers={phoneNumbers}
     />
   );
@@ -1764,17 +1757,18 @@ function formatQrCountdown(ms: number) {
 // code to scan, or a pairing code for a number typed in. The login carries the
 // agent's id, so the server hands the number to this agent once WhatsApp
 // connects it. A number already linked on the account can be picked instead.
+// The create modal passes no agent id: its agent is made once the number is in.
 function NumberSetup({
-  agent,
+  agentId,
   getToken,
   onLinked,
-  onPatch,
+  onUseNumber,
   phoneNumbers,
 }: {
-  agent: VoiceAgent;
+  agentId: string;
   getToken: AuthGetter;
-  onLinked: (agentId: string, linked: ApiPhoneNumber | null) => Promise<void>;
-  onPatch: Patch;
+  onLinked: (agentId: string, linked: ApiPhoneNumber) => Promise<void>;
+  onUseNumber: (phoneNumberId: string) => void;
   phoneNumbers: ApiPhoneNumber[];
 }) {
   const [login, setLogin] = useState<ApiPhoneNumber | null>(null);
@@ -1784,7 +1778,6 @@ function NumberSetup({
   const connected = phoneNumbers.filter((pn) => pn.status === "connected");
   const loginId = login?.id;
   const pending = login?.status === "pending_qr";
-  const linkAgentId = agent.id;
 
   useEffect(() => {
     if (!loginId || !pending) return;
@@ -1796,7 +1789,7 @@ function NumberSetup({
         setLogin(fresh);
         if (fresh.status === "connected") {
           clearInterval(timer);
-          await onLinked(linkAgentId, fresh);
+          await onLinked(agentId, fresh);
         } else if (fresh.status !== "pending_qr") {
           clearInterval(timer);
           setError("That login ended before it was finished. Start again.");
@@ -1809,21 +1802,21 @@ function NumberSetup({
       cancelled = true;
       clearInterval(timer);
     };
-  }, [getToken, linkAgentId, loginId, onLinked, pending]);
+  }, [agentId, getToken, loginId, onLinked, pending]);
 
-  const agentId = agent.id;
   const start = useCallback(
     async (byCode: boolean) => {
       setError("");
       setIsStarting(true);
       try {
         const phone = codePhone.replace(/[^\d+]/g, "");
+        const forAgent = agentId ? { agent_id: agentId } : {};
         const started = byCode
           ? await startVoiceNumberCodeLogin(
-              { phone_number: phone.startsWith("+") ? phone : `+${phone}`, agent_id: agentId },
+              { phone_number: phone.startsWith("+") ? phone : `+${phone}`, ...forAgent },
               getToken
             )
-          : await startVoiceNumberLogin({ agent_id: agentId }, getToken);
+          : await startVoiceNumberLogin(forAgent, getToken);
         setLogin(started);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not start linking a number");
@@ -1841,20 +1834,24 @@ function NumberSetup({
   const [codeChosen, setCodeChosen] = useState(false);
   const showsPairing = pending && Boolean(login?.pairing_code);
   const qrFirst = !isPhone && !codeChosen && !showsPairing;
+  // A phone keeps the code form first, with a QR code already showing under
+  // it for scanning from a second phone, as on the chat agent page.
+  const phoneQr = isPhone && !showsPairing;
+  const autoQr = qrFirst || phoneQr;
 
   // The QR view starts its login itself, once per time it is shown. A login
   // creates no number until it is scanned. A failed or ended one is not
   // retried here; the "New QR code" button is.
   const autoStarted = useRef(false);
   useEffect(() => {
-    if (!qrFirst) {
+    if (!autoQr) {
       autoStarted.current = false;
       return;
     }
     if (autoStarted.current || login || isStarting || error) return;
     autoStarted.current = true;
     void start(false);
-  }, [error, isStarting, login, qrFirst, start]);
+  }, [autoQr, error, isStarting, login, start]);
 
   // The QR code's countdown, re-anchored to each poll's reading.
   const qrCode = pending && !login?.pairing_code ? login?.qr_code ?? null : null;
@@ -1877,7 +1874,7 @@ function NumberSetup({
   const qrReissues = useRef(0);
   const [reissueStopped, setReissueStopped] = useState(false);
   useEffect(() => {
-    if (!qrFirst || !qrStopped || reissueStopped) return;
+    if (!autoQr || !qrStopped || reissueStopped) return;
     if (qrReissues.current >= maxQrReissues) {
       setReissueStopped(true);
       return;
@@ -1887,7 +1884,7 @@ function NumberSetup({
     setError("");
     autoStarted.current = true;
     void start(false);
-  }, [qrFirst, qrStopped, reissueStopped, start]);
+  }, [autoQr, qrStopped, reissueStopped, start]);
   const restartQr = () => {
     qrReissues.current = 0;
     setReissueStopped(false);
@@ -1896,9 +1893,11 @@ function NumberSetup({
     void start(false);
   };
   // While codes are being reissued the ended login is not an error to show.
-  const shownError = qrFirst && qrStopped && !reissueStopped ? "" : error;
+  const shownError = autoQr && qrStopped && !reissueStopped ? "" : error;
   const qrTimer = login?.status === "connected"
-    ? "Connected. Linking it to this agent…"
+    ? agentId
+      ? "Connected. Linking it to this agent…"
+      : "Connected. Creating your agent…"
     : isStarting
     ? "Getting a QR code…"
     : qrCode && qrExpiresIn !== null && qrLeft !== null
@@ -1931,6 +1930,10 @@ function NumberSetup({
       <div className="va-number-pane">
         <div className="va-number-pane-head">
           <span className="va-number-pane-title">Link a WhatsApp number</span>
+          <span className="va-number-video">
+            <SetupVideoButton />
+            <SetupVideoButton vertical />
+          </span>
         </div>
         {qrFirst ? (
           <div className="va-qr-connect">
@@ -1973,7 +1976,8 @@ function NumberSetup({
                 </li>
               </ol>
               <p className="va-qr-connect-note">
-                The number is linked to this agent the moment it connects — keep this page open.
+                {agentId ? "The number is linked to this agent" : "Your agent is ready"} the moment it connects — keep
+                this page open.
               </p>
             </div>
           </div>
@@ -1988,29 +1992,8 @@ function NumberSetup({
             <div className="va-number-code notranslate">{login?.pairing_code}</div>
             <span className="va-number-status">Type this code in WhatsApp › Link with phone number instead.</span>
           </>
-        ) : isPhone && pending && login?.qr_code ? (
-          <>
-            <div className="va-qr-frame">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="WhatsApp QR code" className="va-qr-image" src={login.qr_code} />
-            </div>
-            <span className="va-number-status">Scan with WhatsApp. The code refreshes by itself.</span>
-          </>
-        ) : isPhone && pending ? (
-          <div className="va-qr-frame">
-            <div className="va-qr-placeholder">Waiting for WhatsApp…</div>
-          </div>
         ) : (
           <>
-            {isPhone ? (
-              <>
-                <button className="va-btn va-btn-primary" disabled={isStarting} onClick={() => void start(false)} type="button">
-                  <Icon name="qr" size={15} stroke="#fff" sw={2.2} />
-                  {isStarting ? "Starting…" : "Scan QR code"}
-                </button>
-                <div className="va-qr-reveal-or">or</div>
-              </>
-            ) : null}
             <div className="va-alert-row">
               <input
                 aria-label="WhatsApp number with country code"
@@ -2029,6 +2012,28 @@ function NumberSetup({
                 Get code
               </button>
             </div>
+            {isPhone ? (
+              <div className="va-phone-qr">
+                <div className="va-qr-reveal-or">or scan from another phone</div>
+                <div className="va-qr-connect-timer" role="timer">{qrTimer}</div>
+                <div className="va-qr-frame">
+                  {qrCode ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img alt="WhatsApp login QR code" className="va-qr-image" src={qrCode} />
+                  ) : (
+                    <div className="va-qr-placeholder">
+                      {needsRestart ? "Get a new QR code to scan" : "The QR code appears here in a moment"}
+                    </div>
+                  )}
+                </div>
+                {needsRestart ? (
+                  <button className="va-btn va-btn-primary" onClick={restartQr} type="button">
+                    <Icon name="qr" size={15} stroke="#fff" sw={2.2} />
+                    New QR code
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </>
         )}
         {isPhone ? null : (
@@ -2050,12 +2055,7 @@ function NumberSetup({
               <li key={pn.id}>
                 <button
                   className="va-number-row"
-                  onClick={() =>
-                    onPatch((current) => ({
-                      ...current,
-                      agent: { ...current.agent, phone_number_id: pn.id, status: "active" },
-                    }))
-                  }
+                  onClick={() => onUseNumber(pn.id)}
                   type="button"
                 >
                   <span className="va-number-icon">
