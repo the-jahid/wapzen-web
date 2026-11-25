@@ -3289,7 +3289,7 @@ function FreeTrialEndedCard() {
 }
 
 // From this many AI replies on, a free account is told it is near its limit.
-const FREE_LIMIT_NOTE_FROM = 150;
+const FREE_LIMIT_NOTE_FROM = 350;
 
 // How far through its free replies an account near the limit is, or null: below
 // the threshold, on a paid plan, or already over (FreeTrialEndedCard says that).
