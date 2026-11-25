@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
+  FREE_LIMIT_WHATSAPP_URL,
   FREE_TRIAL_WHATSAPP_URL,
   MORE_AGENTS_WHATSAPP_URL,
   SUPPORT_WHATSAPP_URL,
@@ -632,6 +633,8 @@ const css = `
 .chat-limit-list { display: grid; gap: 10px; margin: 0 0 16px; width: 100%; }
 .chat-limit-card { align-items: center; flex-wrap: wrap; justify-content: space-between; }
 .chat-limit-card-text { flex: 1 1 240px; min-width: 0; }
+.chat-limit-meter { background: var(--app-amber-border); border-radius: 999px; height: 8px; margin-top: 10px; overflow: hidden; }
+.chat-limit-meter > span { background: var(--app-amber); border-radius: inherit; display: block; height: 100%; }
 .chat-limit-timer { color: var(--app-amber-text); flex: none; text-align: right; }
 .chat-limit-timer-value { display: block; font-size: 24px; font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
 .chat-limit-timer-label { color: var(--subtle); display: block; font-size: 11.5px; font-weight: 600; margin-top: 2px; }
@@ -1639,6 +1642,9 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     [chatAgents, selectedId]
   );
 
+  // The free limit is the account's, so one agent's copy of it is enough.
+  const nearLimitAgent = chatAgents.find((agent) => freeLimitUsage(agent));
+
   // A live agent can reach its hourly limit at any moment, on the list or with
   // the agent open, so the timer is re-read while one is on screen. Only that
   // field is taken, never the settings, so an edit still waiting to save is not
@@ -1663,6 +1669,7 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
               agent: match.status ? { ...item.agent, status: match.status } : item.agent,
               hourly_limit_resets_at: match.hourly_limit_resets_at,
               free_trial_ended: match.free_trial_ended,
+              free_trial: match.free_trial,
             };
           })
         );
@@ -2217,6 +2224,11 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
           {!agentId && chatAgents.some((agent) => agent.free_trial_ended) ? (
             <div className="chat-limit-list">
               <FreeTrialEndedCard />
+            </div>
+          ) : null}
+          {!agentId && nearLimitAgent ? (
+            <div className="chat-limit-list">
+              <FreeLimitCard agent={nearLimitAgent} />
             </div>
           ) : null}
           {!agentId && chatAgents.some((agent) => agent.agent.status === "active" && agent.hourly_limit_resets_at) ? (
@@ -3089,6 +3101,7 @@ function Editor({
   return (
     <div className="chat-editor">
       {agent.free_trial_ended ? <FreeTrialEndedCard /> : null}
+      <FreeLimitCard agent={agent} />
       <HourlyLimitCard agent={agent} />
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
@@ -3265,6 +3278,65 @@ function FreeTrialEndedCard() {
       <a
         className="chat-btn chat-upgrade-whatsapp"
         href={FREE_TRIAL_WHATSAPP_URL}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <WhatsAppGlyph size={16} />
+        Message us on WhatsApp
+      </a>
+    </div>
+  );
+}
+
+// From this many AI replies on, a free account is told it is near its limit.
+const FREE_LIMIT_NOTE_FROM = 150;
+
+// How far through its free replies an account near the limit is, or null: below
+// the threshold, on a paid plan, or already over (FreeTrialEndedCard says that).
+function freeLimitUsage(agent: ApiChatAgent) {
+  const trial = agent.free_trial;
+  if (!trial || agent.free_trial_ended || !(trial.limit > 0) || !(trial.used >= FREE_LIMIT_NOTE_FROM)) return null;
+  // Never over 100% or below 0 left, and 100% only when none are left.
+  return {
+    percent: Math.min(100, Math.floor((trial.used / trial.limit) * 100)),
+    left: Math.max(0, trial.limit - trial.used),
+  };
+}
+
+// FreeLimitCard stays up, with no way to dismiss it, until the account is on a
+// paid plan or its free replies are used up.
+function FreeLimitCard({ agent }: { agent: ApiChatAgent }) {
+  const usage = freeLimitUsage(agent);
+  if (!usage) return null;
+
+  return (
+    <div className="chat-card chat-runtime-alert chat-limit-card" role="status">
+      <span className="chat-runtime-alert-icon">!</span>
+      <div className="chat-limit-card-text">
+        <p className="chat-runtime-alert-title">
+          You are reaching your free limit: {usage.percent}% used
+        </p>
+        <p className="chat-runtime-alert-copy">
+          You have{" "}
+          <strong>
+            {usage.left} {usage.left === 1 ? "AI reply" : "AI replies"} left
+          </strong>
+          . When they run out, your AI agent turns off. To keep it running, get a paid plan.
+        </p>
+        <div
+          aria-label="Free replies used"
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={usage.percent}
+          className="chat-limit-meter"
+          role="progressbar"
+        >
+          <span style={{ width: `${usage.percent}%` }} />
+        </div>
+      </div>
+      <a
+        className="chat-btn chat-upgrade-whatsapp"
+        href={FREE_LIMIT_WHATSAPP_URL}
         rel="noopener noreferrer"
         target="_blank"
       >

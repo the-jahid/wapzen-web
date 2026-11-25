@@ -18,6 +18,11 @@ export const FREE_TRIAL_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encod
   "Hi, my free trial on Wapzen has ended. I'd like to buy a paid plan.",
 )}`;
 
+/** Opens a WhatsApp chat with support to buy a paid plan before the free replies run out. */
+export const FREE_LIMIT_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
+  "Hi, I'm close to my free AI reply limit on Wapzen. I'd like to buy a paid plan.",
+)}`;
+
 /** Opens a WhatsApp chat with support to buy more voice call minutes. */
 export const VOICE_MINUTES_WHATSAPP_URL = `https://wa.me/8801701750469?text=${encodeURIComponent(
   "Hi, I've used my voice minutes on Wapzen. I'd like to buy more minutes for my WhatsApp voice agent.",
