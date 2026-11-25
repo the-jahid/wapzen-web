@@ -3252,7 +3252,7 @@ function Editor({
 
 // SYSTEM_PROMPT_MAX_CHARS matches the servers' cap. The prompt is resent with
 // every reply, so its length is the main per-reply cost a free account adds.
-const SYSTEM_PROMPT_MAX_CHARS = 8000;
+const SYSTEM_PROMPT_MAX_CHARS = 9000;
 
 function subscribeToSeconds(onTick: () => void) {
   const timer = setInterval(onTick, 1000);
