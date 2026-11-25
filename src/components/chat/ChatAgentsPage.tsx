@@ -97,7 +97,8 @@ type ConfigSectionId =
   | "files"
   | "website"
   | "human-intervention"
-  | "voice-photos";
+  | "voice-photos"
+  | "behavior";
 
 // The editor's tabs. "agent" is what the agent says and answers on, "conversation"
 // the record of what it has already said, and "configuration" what it can reach.
@@ -1540,6 +1541,7 @@ function toChatAgentPayload(agent: ApiChatAgent): CreateChatAgentPayload {
     media: agent.media ? { ...agent.media } : undefined,
     website: agent.website ? { ...agent.website } : undefined,
     files: agent.files ? { ...agent.files } : undefined,
+    behavior: agent.behavior ? { ...agent.behavior } : undefined,
     human_intervention: agent.human_intervention ? { ...agent.human_intervention } : undefined,
   };
 }
@@ -4034,6 +4036,31 @@ function ConfigPanel({
               title="Voice & Photos"
             >
               <MediaSettings media={agent.media} onPatch={onPatch} />
+            </ConfigSection>
+          ) : null}
+
+          {agent.behavior ? (
+            <ConfigSection
+              icon="spark"
+              id="behavior"
+              isOpen={openSection === "behavior"}
+              meta={agent.behavior.short_replies ? "Short replies" : "Normal"}
+              onToggle={setOpenSection}
+              title="Agent Behavior"
+            >
+              <div className="chat-media-settings">
+                <MediaToggle
+                  hint="On: the agent answers in a line or two, like a person texting. Off: it writes as much as it thinks the question needs."
+                  label="Reply short and concise"
+                  on={agent.behavior.short_replies}
+                  onToggle={() =>
+                    onPatch((current) => ({
+                      ...current,
+                      behavior: { short_replies: !(current.behavior?.short_replies ?? true) },
+                    }))
+                  }
+                />
+              </div>
             </ConfigSection>
           ) : null}
         </div>

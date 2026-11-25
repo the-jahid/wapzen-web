@@ -83,6 +83,13 @@ export type ChatFilesSection = {
   files_enabled: boolean;
 };
 
+// How the agent writes. short_replies on (the default): a line or two, like a
+// person texting; off, the agent picks the length. Absent from servers that
+// predate it, so it is only sent back when returned.
+export type ChatBehaviorSection = {
+  short_replies: boolean;
+};
+
 // What the running server reports about serving the agent. Never saved: it is
 // read-only and absent from older servers.
 export type ChatRuntimeSection = {
@@ -105,6 +112,7 @@ export type ApiChatAgent = {
   media?: ChatMediaSection;
   website?: ChatWebsiteSection;
   files?: ChatFilesSection;
+  behavior?: ChatBehaviorSection;
   human_intervention?: ChatHumanInterventionSection;
   // True once the account has sent every reply it is allowed; the agent stays
   // silent until the limit is lifted. Read-only.
@@ -131,6 +139,7 @@ export type CreateChatAgentPayload = {
   media?: ChatMediaSection;
   website?: ChatWebsiteSection;
   files?: ChatFilesSection;
+  behavior?: ChatBehaviorSection;
   human_intervention?: ChatHumanInterventionSection;
 };
 
@@ -147,6 +156,7 @@ export type UpdateChatAgentPayload = {
   media?: Partial<ChatMediaSection>;
   website?: Partial<ChatWebsiteSection>;
   files?: Partial<ChatFilesSection>;
+  behavior?: Partial<ChatBehaviorSection>;
   human_intervention?: Partial<ChatHumanInterventionSection>;
 };
 
