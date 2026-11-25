@@ -1004,7 +1004,7 @@ const css = `
   gap: 10px;
   padding: 13px;
 }
-.chat-number-pane-head { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; }
+.chat-number-pane-head { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
 .chat-number-pane-title { font-size: 12.5px; font-weight: 800; letter-spacing: -.1px; }
 .chat-number-pane-note { color: var(--faint); font-size: 11px; white-space: nowrap; }
 .chat-number-pane-actions { align-items: center; display: flex; gap: 8px; }
@@ -3549,7 +3549,8 @@ function PhoneNumberSetupCard({
         <section className="chat-number-pane" aria-label="Link a new WhatsApp number">
           <div className="chat-number-pane-head">
             <span className="chat-number-pane-title">Link a new number</span>
-            <span className="chat-number-pane-note">WhatsApp › Linked devices</span>
+            <SetupVideoButton />
+            <SetupVideoButton vertical />
           </div>
 
           {showQrView ? (

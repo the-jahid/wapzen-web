@@ -6,7 +6,7 @@ import { useState, useSyncExternalStore } from "react";
 import styles from "./TechnicalIssueNotice.module.css";
 
 // Set to false once the issue is fixed.
-const SHOW_TECHNICAL_ISSUE_NOTICE = true;
+const SHOW_TECHNICAL_ISSUE_NOTICE = false;
 
 // Remembers that this browser closed the notice. Change the suffix when the
 // text changes and people who closed the old one should see the new one.
