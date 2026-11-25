@@ -131,6 +131,40 @@
 .supportCard:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
 .supportIcon { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: #25d366; color: #fff; }
 .supportTitle { font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+button.supportCard { cursor: pointer; font: inherit; text-align: left; }
+.usageIcon { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: var(--brand); color: #fff; }
+
+/* Usage modal, portalled to <body>: a donut of replies left beside the plan. */
+.usageOverlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(3px); }
+.usageModal { position: relative; width: min(520px, 100%); padding: 24px; border: 1px solid var(--app-border); border-radius: 18px; background: var(--app-surface); color: var(--app-text); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35); }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.usageClose { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--app-text-soft); cursor: pointer; }
+.usageClose:hover { background: var(--app-hover); color: var(--app-text); }
+.usageNote { margin: 8px 0; font-size: 13.5px; line-height: 1.45; color: var(--app-text-soft); }
+.usageCard { display: flex; align-items: center; gap: 24px; }
+.usageRing { position: relative; flex-shrink: 0; width: 132px; height: 132px; }
+.usageRingTrack { color: var(--app-border-strong, var(--app-border)); }
+.usageRingFill { stroke: var(--brand); transition: stroke-dasharray 0.4s ease; }
+.usageRingText { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.usageRingValue { font-size: 30px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.usageRingLabel { max-width: 80px; margin-top: 4px; font-size: 11px; line-height: 1.25; color: var(--app-text-soft); }
+.usageInfo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.usagePill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--app-border); border-radius: 8px; font-size: 12px; font-weight: 500; }
+.usagePill svg { color: var(--brand); }
+.usagePlan { font-size: 24px; font-weight: 700; line-height: 1.15; }
+.usagePlanSub { margin-left: 4px; font-size: 13px; font-weight: 500; color: var(--app-text-soft); }
+.usageMeta { margin: 0; font-size: 13px; line-height: 1.45; color: var(--app-text-soft); }
+.usageActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.usageCta, .usageCtaGhost { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: background 0.18s ease; }
+.usageCta { background: var(--brand); color: #fff; }
+.usageCta:hover { filter: brightness(1.08); }
+.usageCtaGhost { border: 1px solid var(--app-border); background: transparent; color: var(--app-text); }
+.usageCtaGhost:hover { background: var(--app-hover); }
+@media (max-width: 480px) {
+  .usageCard { flex-direction: column; text-align: center; }
+  .usageInfo { align-items: center; }
+  .usageActions { justify-content: center; }
+}
 .userCard { padding-left: 8px; }
 .userEmail { min-width: 0; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .footerRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -214,22 +248,69 @@
   left: 0;
   z-index: 50;
   box-sizing: border-box;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  gap: 2px;
-  padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
+  align-items: stretch;
+  padding: 4px 0 calc(4px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--app-border);
   background: color-mix(in srgb, var(--app-sidebar) 92%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
+/* The tabs scroll sideways when they don't fit; on wider screens they grow to
+   fill the row. Scrollbar hidden: the arrow button and swiping do the work. */
+.tabScroller {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabScroller::-webkit-scrollbar { display: none; }
+.tabScrollButton {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  margin: 6px 6px 6px 0;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  cursor: pointer;
+}
+/* A fade over the last tab says there is more to the right. */
+.tabScrollButton::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  right: 100%;
+  width: 24px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--app-sidebar) 92%, transparent));
+  pointer-events: none;
+}
+.tabScrollButton[data-end]::before { display: none; }
+.tabScrollButton svg { transition: transform 0.2s ease; }
+.tabScrollButton[data-end] svg { transform: rotate(180deg); }
+.tabScrollButton:focus-visible { outline: 2px solid var(--app-primary-light); outline-offset: 2px; }
+button.tab { border: 0; background: transparent; cursor: pointer; font-family: inherit; }
+.usageTab[data-warn] { color: #ef4444; }
 .tab {
   display: flex;
+  flex: 1 0 64px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 0;
+  min-width: 64px;
+  scroll-snap-align: start;
   min-height: 52px;
   padding: 6px 2px;
   border-radius: 12px;
@@ -253,7 +334,7 @@
   .root[data-stack="980"] .rail { display: none; }
   .root[data-stack="980"] .topbar { display: flex; }
   .root[data-stack="980"] .backdrop, .root[data-stack="980"] .drawer { display: block; }
-  .root[data-stack="980"] .tabbar { display: grid; }
+  .root[data-stack="980"] .tabbar { display: flex; }
   /* The root is `display: contents`, so its parent is the page's shell: leave
      room at the shell's foot so the bar never covers the last of the page. */
   *:has(> .root[data-stack="980"]) {
@@ -265,7 +346,7 @@
   .root[data-stack="900"] .rail { display: none; }
   .root[data-stack="900"] .topbar { display: flex; }
   .root[data-stack="900"] .backdrop, .root[data-stack="900"] .drawer { display: block; }
-  .root[data-stack="900"] .tabbar { display: grid; }
+  .root[data-stack="900"] .tabbar { display: flex; }
   *:has(> .root[data-stack="900"]) {
     box-sizing: border-box;
     padding-bottom: calc(62px + env(safe-area-inset-bottom));
@@ -282,36 +363,69 @@
   .navItem, .drawer, .backdrop, .tab { transition: none; }
 }
 
-/* ---------- Desktop: the page in an inset panel (Retell) ---------- */
-/* Beside the rail, every dashboard page's <main> sits in a rounded panel set
-   into the sidebar's colour, and the rail loses its divider. The root is
-   `display: contents`, so its parent is the page shell and the <main> is its
-   sibling; these selectors outrank each page's own .xxx-main rules. */
+/* ---------- Desktop: floating cards on the page background ---------- */
+/* Laptop and desktop only. The whole page is the app's background colour, the
+   rail is a rounded card floating in it with a 16px gutter, and every dashboard
+   page's <main> is a rounded panel beside it with the same gutter (pages that
+   lay out their own cards, like the chat agents page, drop the panel frame).
+   The root is `display: contents`, so its parent is the page shell and the
+   <main> is its sibling; these selectors outrank each page's own .xxx-main rules. */
 @media (min-width: 901px) {
-  *:has(> .root[data-stack="900"]) { background: var(--app-sidebar); }
-  .root[data-stack="900"] .rail .panel { border-right-color: transparent; }
+  *:has(> .root[data-stack="900"]) { background: var(--app-bg); }
+  .root[data-stack="900"] .rail { box-sizing: border-box; width: calc(var(--rail-open) + 16px); padding: 16px 0 16px 16px; }
+  .root[data-stack="900"] .rail .panel {
+    border: 1px solid var(--app-border);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px var(--app-shadow-soft);
+  }
   .root[data-stack="900"] ~ main {
     box-sizing: border-box;
-    height: calc(100vh - 16px);
-    height: calc(100dvh - 16px);
-    margin: 8px 8px 8px 0;
+    height: calc(100vh - 32px);
+    height: calc(100dvh - 32px);
+    margin: 16px;
     overflow: auto;
     border: 1px solid var(--app-border);
-    border-radius: 12px;
+    border-radius: 20px;
     background: var(--app-bg);
   }
 }
 @media (min-width: 981px) {
-  *:has(> .root[data-stack="980"]) { background: var(--app-sidebar); }
-  .root[data-stack="980"] .rail .panel { border-right-color: transparent; }
+  *:has(> .root[data-stack="980"]) { background: var(--app-bg); }
+  .root[data-stack="980"] .rail { box-sizing: border-box; width: calc(var(--rail-open) + 16px); padding: 16px 0 16px 16px; }
+  .root[data-stack="980"] .rail .panel {
+    border: 1px solid var(--app-border);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px var(--app-shadow-soft);
+  }
   .root[data-stack="980"] ~ main {
     box-sizing: border-box;
-    height: calc(100vh - 16px);
-    height: calc(100dvh - 16px);
-    margin: 8px 8px 8px 0;
+    height: calc(100vh - 32px);
+    height: calc(100dvh - 32px);
+    margin: 16px;
     overflow: auto;
     border: 1px solid var(--app-border);
-    border-radius: 12px;
+    border-radius: 20px;
     background: var(--app-bg);
   }
 }
+
+/* Red once the account is near the end of its free AI replies. */
+.usageButton[data-warn] { border-color: rgba(239, 68, 68, 0.55); background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.usageButton[data-warn]:hover { background: rgba(239, 68, 68, 0.16); border-color: #ef4444; }
+.usageButton[data-warn] .usageIcon { background: #ef4444; }
+.usageCard[data-warn] .usageRingFill { stroke: #ef4444; }
+.usageCard[data-warn] .usageCta { background: #ef4444; }
+
+/* Near-limit warning inside the Usage modal (same copy as the chat page's note). */
+.usageAlert { display: flex; gap: 12px; margin-top: 20px; padding: 14px 16px; border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; background: rgba(245, 158, 11, 0.08); }
+.usageAlertIcon { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #f5b014; color: #1a1300; font-size: 13px; font-weight: 800; }
+.usageAlertText { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+.usageAlertTitle { margin: 0; color: #f5b014; font-size: 13.5px; font-weight: 700; }
+.usageAlertCopy { margin: 0; color: var(--app-text); font-size: 13px; line-height: 1.45; }
+.usageAlertMeter { height: 6px; margin-top: 4px; overflow: hidden; border-radius: 999px; background: rgba(245, 176, 20, 0.22); }
+.usageAlertMeter > span { display: block; height: 100%; border-radius: inherit; background: #f5b014; }
+
+/* Chat and voice sections in the Usage modal. */
+.usageModal { max-height: calc(100dvh - 40px); overflow-y: auto; }
+.usageSection { display: flex; align-items: center; gap: 6px; margin: 0 0 14px; color: var(--app-text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.usageDivider { height: 1px; margin: 22px 0; background: var(--app-border); }

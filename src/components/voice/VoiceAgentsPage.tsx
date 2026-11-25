@@ -1115,7 +1115,7 @@ export default function VoiceAgentsPage({ agentId = "" }: { agentId?: string }) 
                   </div>
                 </div>
 
-                <VoiceUsageCard usage={voiceUsage} />
+                <VoiceUsageCard compact usage={voiceUsage} />
 
                 <div className="va-table-wrap">
                   <table aria-busy={showSkeleton || undefined} className="va-table">

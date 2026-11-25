@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
 import {
@@ -8,6 +8,8 @@ import {
   BookOpen,
   Bot,
   CalendarDays,
+  ChevronRight,
+  Clock,
   KeyRound,
   LayoutGrid,
   Menu,
@@ -37,6 +39,7 @@ import {
 } from "@/components/nav/workspaceMode";
 import { SUPPORT_WHATSAPP_URL, WhatsAppGlyph } from "@/components/nav/supportWhatsApp";
 import { useNewOrders } from "@/components/nav/useNewOrders";
+import { UsageButton } from "@/components/nav/UsageButton";
 import { LanguageSwitch } from "@/components/translate/AutoTranslate";
 import styles from "./DashboardSidebar.module.css";
 
@@ -55,6 +58,7 @@ export const navIcons: Record<NavIconName, ComponentType<LucideProps>> = {
   calendar: CalendarDays,
   chart: BarChart3,
   orders: ShoppingBag,
+  "follow-ups": Clock,
   settings: Settings,
 };
 
@@ -178,6 +182,7 @@ const shortTabLabels: Partial<Record<string, string>> = {
   "Phone Numbers": "Phone",
   "Call History": "Calls",
   "Knowledge Base": "KB",
+  "Follow-ups": "Follow",
 };
 
 /**
@@ -187,9 +192,47 @@ const shortTabLabels: Partial<Record<string, string>> = {
  */
 function BottomTabs({ activeLabel, newOrders }: { activeLabel: string; newOrders: number }) {
   const { mode } = useWorkspaceMode();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  // Whether the tabs overflow, and whether the row is scrolled to its end: the
+  // arrow only shows on overflow and points back to the start at the end.
+  const [overflow, setOverflow] = useState(false);
+  const [atEnd, setAtEnd] = useState(false);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const measure = () => {
+      const more = scroller.scrollWidth - scroller.clientWidth;
+      setOverflow(more > 2);
+      setAtEnd(scroller.scrollLeft >= more - 2);
+    };
+    measure();
+    scroller.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(scroller);
+    return () => {
+      scroller.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
+  }, [mode]);
+
+  // Keep the current page's tab in view when the page loads.
+  useEffect(() => {
+    scrollerRef.current
+      ?.querySelector<HTMLElement>("[data-active]")
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [activeLabel, mode]);
+
+  const scrollTabs = () => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    if (atEnd) scroller.scrollTo({ left: 0, behavior: "smooth" });
+    else scroller.scrollBy({ left: scroller.clientWidth * 0.7, behavior: "smooth" });
+  };
 
   return (
     <nav aria-label="Pages" className={styles.tabbar}>
+      <div className={styles.tabScroller} ref={scrollerRef}>
       {navItemsForMode(mode).map((item) => {
         const Icon = navIcons[item.icon];
         const active = item.label === activeLabel;
@@ -215,6 +258,19 @@ function BottomTabs({ activeLabel, newOrders }: { activeLabel: string; newOrders
           </Link>
         );
       })}
+        <UsageButton variant="tab" />
+      </div>
+      {overflow ? (
+        <button
+          aria-label={atEnd ? "Scroll tabs back to the start" : "Scroll tabs to see more"}
+          className={styles.tabScrollButton}
+          data-end={atEnd || undefined}
+          onClick={scrollTabs}
+          type="button"
+        >
+          <ChevronRight aria-hidden="true" size={18} />
+        </button>
+      ) : null}
     </nav>
   );
 }
@@ -283,6 +339,7 @@ function SidebarBody({
       </nav>
 
       <div className={styles.footer}>
+        <UsageButton onOpen={onNavigate} />
         <a
           className={styles.supportCard}
           href={SUPPORT_WHATSAPP_URL}

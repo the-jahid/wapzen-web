@@ -9,7 +9,6 @@ import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
 import {
-  FREE_LIMIT_WHATSAPP_URL,
   FREE_TRIAL_WHATSAPP_URL,
   MORE_AGENTS_WHATSAPP_URL,
   SUPPORT_WHATSAPP_URL,
@@ -1184,6 +1183,8 @@ const css = `
   .chat-agent-expanded-topline .chat-heading { min-width: 0; }
   .chat-agent-expanded-topline .chat-heading-row > :not(.chat-heading) { flex: none; }
   .chat-agent-expanded-topline .chat-editor-actions { flex-wrap: nowrap; }
+  /* Right-hand column even when there are no tabs (an agent with no number). */
+  .chat-agent-expanded-topline .chat-detail-head > .chat-editor-actions { grid-column: 3; }
   .chat-agent-expanded-topline .chat-tab { min-height: 28px; }
   .chat-card-conversations { flex: 1 1 0; height: auto; }
 }
@@ -1229,6 +1230,63 @@ const css = `
 /* Small laptops / landscape tablets: a slimmer sidebar keeps the list usable. */
 @media (max-width: 1100px) {
   .chat-content { padding: 18px 20px; }
+}
+/* Laptop and desktop: a bento layout. The page has no outer frame; the header,
+   the prompt, each side card and the settings rail float on the page background
+   as separate rounded cards, all 16px apart and 16px from the edges (the same
+   gutter as the floating sidebar). Only the layout changes, not the colours.
+   Placed after the width-specific padding rules above so it wins over them. */
+@media (min-width: 901px) {
+  .chat-shell > main.chat-main.chat-main {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+  }
+  .chat-content,
+  .chat-content:has(> .chat-agent-page) { gap: 16px; padding: 16px 16px 16px 16px; }
+  .chat-limit-list { margin: 0; }
+
+  .chat-agent-browser {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px var(--app-shadow-soft);
+    padding: 20px 24px 12px;
+  }
+
+  .chat-agent-page {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    gap: 16px;
+    max-width: none;
+    overflow: visible;
+  }
+  .chat-agent-expanded-topline {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px var(--app-shadow-soft);
+    padding: 12px 16px;
+  }
+  .chat-agent-expanded-grid { gap: 16px; padding: 0; }
+  .chat-editor,
+  .chat-editor-columns,
+  .chat-editor-main,
+  .chat-editor-cards { gap: 16px; }
+  .chat-card,
+  .chat-panel { border-radius: 20px; }
+  .chat-prompt-card { padding: 18px 20px; }
+  .chat-connect-page {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px var(--app-shadow-soft);
+  }
 }
 /* Tablets and phones: the sidebar becomes a drawer behind a sticky top bar,
    and the page scrolls as a whole instead of each pane on its own. */
@@ -1641,9 +1699,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
     () => (selectedId ? chatAgents.find((agent) => agent.id === selectedId) ?? null : null),
     [chatAgents, selectedId]
   );
-
-  // The free limit is the account's, so one agent's copy of it is enough.
-  const nearLimitAgent = chatAgents.find((agent) => freeLimitUsage(agent));
 
   // A live agent can reach its hourly limit at any moment, on the list or with
   // the agent open, so the timer is re-read while one is on screen. Only that
@@ -2224,11 +2279,6 @@ export default function ChatAgentsPage({ agentId = "" }: { agentId?: string }) {
           {!agentId && chatAgents.some((agent) => agent.free_trial_ended) ? (
             <div className="chat-limit-list">
               <FreeTrialEndedCard />
-            </div>
-          ) : null}
-          {!agentId && nearLimitAgent ? (
-            <div className="chat-limit-list">
-              <FreeLimitCard agent={nearLimitAgent} />
             </div>
           ) : null}
           {!agentId && chatAgents.some((agent) => agent.agent.status === "active" && agent.hourly_limit_resets_at) ? (
@@ -3101,7 +3151,6 @@ function Editor({
   return (
     <div className="chat-editor">
       {agent.free_trial_ended ? <FreeTrialEndedCard /> : null}
-      <FreeLimitCard agent={agent} />
       <HourlyLimitCard agent={agent} />
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
@@ -3278,65 +3327,6 @@ function FreeTrialEndedCard() {
       <a
         className="chat-btn chat-upgrade-whatsapp"
         href={FREE_TRIAL_WHATSAPP_URL}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <WhatsAppGlyph size={16} />
-        Message us on WhatsApp
-      </a>
-    </div>
-  );
-}
-
-// From this many AI replies on, a free account is told it is near its limit.
-const FREE_LIMIT_NOTE_FROM = 350;
-
-// How far through its free replies an account near the limit is, or null: below
-// the threshold, on a paid plan, or already over (FreeTrialEndedCard says that).
-function freeLimitUsage(agent: ApiChatAgent) {
-  const trial = agent.free_trial;
-  if (!trial || agent.free_trial_ended || !(trial.limit > 0) || !(trial.used >= FREE_LIMIT_NOTE_FROM)) return null;
-  // Never over 100% or below 0 left, and 100% only when none are left.
-  return {
-    percent: Math.min(100, Math.floor((trial.used / trial.limit) * 100)),
-    left: Math.max(0, trial.limit - trial.used),
-  };
-}
-
-// FreeLimitCard stays up, with no way to dismiss it, until the account is on a
-// paid plan or its free replies are used up.
-function FreeLimitCard({ agent }: { agent: ApiChatAgent }) {
-  const usage = freeLimitUsage(agent);
-  if (!usage) return null;
-
-  return (
-    <div className="chat-card chat-runtime-alert chat-limit-card" role="status">
-      <span className="chat-runtime-alert-icon">!</span>
-      <div className="chat-limit-card-text">
-        <p className="chat-runtime-alert-title">
-          You are reaching your free limit: {usage.percent}% used
-        </p>
-        <p className="chat-runtime-alert-copy">
-          You have{" "}
-          <strong>
-            {usage.left} {usage.left === 1 ? "AI reply" : "AI replies"} left
-          </strong>
-          . When they run out, your AI agent turns off. To keep it running, get a paid plan.
-        </p>
-        <div
-          aria-label="Free replies used"
-          aria-valuemax={100}
-          aria-valuemin={0}
-          aria-valuenow={usage.percent}
-          className="chat-limit-meter"
-          role="progressbar"
-        >
-          <span style={{ width: `${usage.percent}%` }} />
-        </div>
-      </div>
-      <a
-        className="chat-btn chat-upgrade-whatsapp"
-        href={FREE_LIMIT_WHATSAPP_URL}
         rel="noopener noreferrer"
         target="_blank"
       >

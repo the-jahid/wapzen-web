@@ -23,6 +23,7 @@ export type NavIconName =
   | "calendar"
   | "chart"
   | "orders"
+  | "follow-ups"
   | "settings";
 
 // The sidebar heading an item sits under, as Retell groups its menu.
@@ -83,6 +84,7 @@ const chatNavItems: WorkspaceNavItem[] = [
   { label: "Groups", icon: "groups", group: "Data", href: "/dashboard/groups" },
   // What the agents' Take Order tool has placed.
   { label: "Orders", icon: "orders", group: "Data", href: "/dashboard/orders" },
+  { label: "Follow-ups", icon: "follow-ups", group: "Data", href: "/dashboard/follow-ups" },
 ];
 
 export const navGroups: NavGroup[] = ["Build", "Deploy", "Data"];
