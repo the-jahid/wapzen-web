@@ -429,6 +429,12 @@ button.tab { border: 0; background: transparent; cursor: pointer; font-family: i
 .usagePricingNote p { margin: 0; font-size: 12.5px; line-height: 1.5; }
 .usagePricingNote strong { color: var(--app-text); font-weight: 600; }
 .usagePricingLine { display: block; margin: 8px 0 0; color: var(--app-text); font-size: 13.5px; font-weight: 700; }
+.usagePricingBox { margin: 10px 0 6px; padding: 12px 14px; border: 1px solid rgba(37, 211, 102, 0.35); border-radius: 12px; background: rgba(37, 211, 102, 0.08); }
+.usagePricingBox .usagePricingLine { margin: 0; }
+.usagePricingBox .usagePricingList { margin-bottom: 0; }
+.usagePricingList { display: grid; gap: 4px; margin: 8px 0 4px; padding: 0; list-style: none; }
+.usagePricingList li { position: relative; padding-left: 20px; color: var(--app-text-soft); font-size: 13px; line-height: 1.4; }
+.usagePricingList li::before { content: "✓"; position: absolute; left: 3px; color: #25d366; font-weight: 900; }
 
 /* Chat and voice sections in the Usage modal. */
 .usageModal { max-height: calc(100dvh - 40px); overflow-y: auto; }

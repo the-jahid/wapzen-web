@@ -213,7 +213,15 @@ function UsageBody({ usage }: { usage: Usage }) {
             {used} used · {left} left · shared by all your chat agents
             {usage.ended ? " · trial ended, your agent is off" : ""}
           </p>
+          <div className={styles.usagePricingBox}>
           <p className={styles.usagePricingLine}>Pricing: $10 per month per agent, with unlimited messages.</p>
+          <ul className={styles.usagePricingList}>
+            <li>Unlimited messages</li>
+            <li>Custom features built on request for you</li>
+            <li>Advanced AI model for smarter replies</li>
+            <li>All existing Wapzen features included</li>
+          </ul>
+          </div>
           <div className={styles.usageActions}>
             <a
               className={styles.usageCta}
