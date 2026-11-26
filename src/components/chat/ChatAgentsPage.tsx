@@ -3339,7 +3339,7 @@ function HourlyLimitCard({ agent }: { agent: ApiChatAgent }) {
       <div className="chat-limit-card-text">
         <p className="chat-runtime-alert-title">You have reached your hourly AI reply limit</p>
         <p className="chat-runtime-alert-copy">
-          {agent.agent.name} has sent 50 AI replies this hour, so it is paused. It turns back on by itself when the
+          {agent.agent.name} has sent 100 AI replies this hour, so it is paused. It turns back on by itself when the
           timer ends. Messages that arrive meanwhile are still saved in Conversations.
         </p>
       </div>
