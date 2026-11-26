@@ -3332,16 +3332,28 @@ function useHourlyLimit(agent: ApiChatAgent) {
 function HourlyLimitCard({ agent }: { agent: ApiChatAgent }) {
   const limit = useHourlyLimit(agent);
   if (!limit) return null;
+  // The server leaves free_trial out for paid plans. Their limit is temporary
+  // (2026-11-27), so they get an apology instead of the plain limit copy.
+  const paid = !agent.free_trial;
 
   return (
     <div className="chat-card chat-runtime-alert chat-limit-card" role="status">
       <span className="chat-runtime-alert-icon">!</span>
       <div className="chat-limit-card-text">
         <p className="chat-runtime-alert-title">You have reached your hourly AI reply limit</p>
-        <p className="chat-runtime-alert-copy">
-          {agent.agent.name} has sent 100 AI replies this hour, so it is paused. It turns back on by itself when the
-          timer ends. Messages that arrive meanwhile are still saved in Conversations.
-        </p>
+        {paid ? (
+          <p className="chat-runtime-alert-copy">
+            We&apos;re temporarily limiting each agent to <strong>100 messages per hour</strong> while we work on
+            resolving a technical issue on our servers. Once the issue is fixed, everything will return to its
+            previous state. We sincerely apologize for the temporary inconvenience and appreciate your patience and
+            understanding.
+          </p>
+        ) : (
+          <p className="chat-runtime-alert-copy">
+            {agent.agent.name} has sent 100 AI replies this hour, so it is paused. It turns back on by itself when the
+            timer ends. Messages that arrive meanwhile are still saved in Conversations.
+          </p>
+        )}
       </div>
       <div className="chat-limit-timer" aria-label={`Active again in ${limit.countdown}, at ${limit.at}`}>
         <span className="chat-limit-timer-value">{limit.countdown}</span>
