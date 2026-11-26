@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@clerk/nextjs";
-import { CreditCard, Gauge, MessageSquare, Phone, X, Zap } from "lucide-react";
+import { CreditCard, Gauge, Info, MessageSquare, Phone, X, Zap } from "lucide-react";
 import { listChatAgentLiveStates } from "@/lib/chatAgents";
 import { getVoiceUsage, type ApiVoiceUsage } from "@/lib/voiceAgents";
 import {
@@ -213,6 +213,7 @@ function UsageBody({ usage }: { usage: Usage }) {
             {used} used · {left} left · shared by all your chat agents
             {usage.ended ? " · trial ended, your agent is off" : ""}
           </p>
+          <p className={styles.usagePricingLine}>Pricing: $10 per month per agent, with unlimited messages.</p>
           <div className={styles.usageActions}>
             <a
               className={styles.usageCta}
@@ -257,6 +258,14 @@ function UsageBody({ usage }: { usage: Usage }) {
           </div>
         </div>
       ) : null}
+      <div className={styles.usagePricingNote}>
+        <Info aria-hidden="true" size={15} />
+        <p>
+          <strong>A note from the Wapzen team:</strong> our Stripe business verification is still in progress, so we
+          could not add our pricing to the Wapzen website yet. That is why the free limit is shown here in your
+          dashboard. We are really sorry for the inconvenience. As soon as Stripe verification is complete, we will
+          publish our pricing on the Wapzen website.        </p>
+      </div>
     </>
   );
 }
@@ -287,6 +296,7 @@ function VoiceUsageBody({ usage, failed }: { usage: ApiVoiceUsage | null; failed
           {clock(usage.used_seconds)} used · {clock(left)} left · shared by all your voice agents
           {usage.exhausted ? " · used up, your voice agents won't answer or call" : ""}
         </p>
+        <p className={styles.usagePricingLine}>Pricing: $0.08 per minute.</p>
         <div className={styles.usageActions}>
           <a
             className={styles.usageCta}

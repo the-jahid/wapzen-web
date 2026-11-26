@@ -609,6 +609,25 @@ const css = `
 .chat-confirm-copy { color: var(--app-muted); font-size: 13px; line-height: 1.55; margin: 8px 0 0; }
 .chat-confirm-copy strong { color: var(--app-text-strong); font-weight: 800; }
 .chat-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.chat-trial-modal { max-width: 600px; padding: 32px; }
+.chat-trial-modal .chat-confirm-icon { font-size: 20px; font-weight: 850; height: 52px; width: 52px; }
+.chat-trial-modal .chat-confirm-title { font-size: 26px; }
+.chat-trial-modal .chat-confirm-copy { font-size: 15px; margin-top: 10px; }
+.chat-trial-modal .chat-confirm-actions { margin-top: 26px; }
+.chat-trial-modal .chat-confirm-actions .chat-btn { font-size: 15px; min-height: 46px; padding: 0 20px; }
+.chat-trial-plan { background: var(--app-primary-soft, rgba(37, 211, 102, 0.08)); border: 1px solid var(--app-primary-border, rgba(37, 211, 102, 0.35)); border-radius: 14px; margin-top: 20px; padding: 20px 22px; }
+.chat-trial-plan-price { align-items: baseline; display: flex; gap: 8px; }
+.chat-trial-plan-amount { color: var(--app-text-strong); font-size: 36px; font-weight: 850; letter-spacing: -.5px; line-height: 1; }
+.chat-trial-plan-per { color: var(--app-muted); font-size: 14px; font-weight: 650; }
+.chat-trial-plan-list { display: grid; gap: 9px; list-style: none; margin: 16px 0 0; padding: 0; }
+.chat-trial-plan-list li { color: var(--app-text); font-size: 14.5px; line-height: 1.4; padding-left: 26px; position: relative; }
+.chat-trial-plan-list li::before { color: #25d366; content: "✓"; font-weight: 900; left: 4px; position: absolute; }
+.chat-trial-plan-list strong { color: var(--app-text-strong); font-weight: 800; }
+.chat-trial-note { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--app-line); border-radius: 12px; display: flex; gap: 10px; margin-top: 14px; padding: 12px 14px; }
+.chat-trial-note p { color: var(--app-muted); font-size: 13px; line-height: 1.55; margin: 0; }
+.chat-trial-note strong { color: var(--app-text-strong); font-weight: 800; }
+.chat-trial-note-icon { align-items: center; border: 1.5px solid var(--app-muted); border-radius: 999px; color: var(--app-muted); display: inline-flex; flex: none; font-size: 11px; font-weight: 800; height: 17px; justify-content: center; margin-top: 2px; width: 17px; }
+.chat-trial-modal { max-height: calc(100dvh - 32px); overflow-y: auto; }
 .chat-confirm-danger { background: var(--app-rose); border-color: transparent; color: #fff; }
 .chat-confirm-danger:hover { filter: brightness(1.08); }
 .chat-upgrade-icon { background: rgba(37, 211, 102, .12); border-color: rgba(37, 211, 102, .35); color: #25d366; }
@@ -2986,15 +3005,21 @@ function AgentHeader({
           <button
             className="chat-btn chat-btn-secondary"
             disabled={activationBlocked}
-            onClick={() =>
+            onClick={() => {
+              // Out of free replies: the server would keep it off anyway, so
+              // show the limit modal instead of turning it on.
+              if (status !== "active" && trialOver(agent)) {
+                window.dispatchEvent(new Event(TRIAL_LIMIT_EVENT));
+                return;
+              }
               onPatch((current) => ({
                 ...current,
                 agent: {
                   ...current.agent,
                   status: (current.agent.status ?? "inactive") === "active" ? "inactive" : "active",
                 },
-              }))
-            }
+              }));
+            }}
             title={
               activationBlocked
                 ? needsNumberHint
@@ -3153,6 +3178,9 @@ function Editor({
   return (
     <div className="chat-editor">
       {agent.free_trial_ended ? <FreeTrialEndedCard /> : null}
+      {trialOver(agent) ? (
+        <FreeTrialLimitModal key={agent.id} limit={agent.free_trial?.limit} />
+      ) : null}
       <HourlyLimitCard agent={agent} />
       {agent.runtime?.last_error ? (
         <div className="chat-card chat-runtime-alert" role="alert">
@@ -3335,6 +3363,101 @@ function FreeTrialEndedCard() {
         <WhatsAppGlyph size={16} />
         Message us on WhatsApp
       </a>
+    </div>
+  );
+}
+
+// FreeTrialLimitModal pops up over the agent page once the account has used all
+// its free AI replies. "Not now" closes it; it comes back the next time an agent
+// page opens. The FreeTrialEndedCard stays on the page underneath.
+// Pressing Activate on an agent whose account is out of free replies sends
+// this event, which reopens the modal.
+const TRIAL_LIMIT_EVENT = "wapzen:trial-limit";
+
+function trialOver(agent: ApiChatAgent) {
+  return Boolean(agent.free_trial_ended || (agent.free_trial && agent.free_trial.used >= agent.free_trial.limit));
+}
+
+function FreeTrialLimitModal({ limit }: { limit?: number }) {
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    const reopen = () => setOpen(true);
+    window.addEventListener(TRIAL_LIMIT_EVENT, reopen);
+    return () => window.removeEventListener(TRIAL_LIMIT_EVENT, reopen);
+  }, []);
+  if (!open) return null;
+  return (
+    <div
+      className="chat-confirm-overlay"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setOpen(false);
+      }}
+    >
+      <div
+        aria-describedby="chat-trial-limit-copy"
+        aria-labelledby="chat-trial-limit-title"
+        aria-modal="true"
+        className="chat-confirm chat-trial-modal"
+        role="dialog"
+      >
+        <div className="chat-confirm-icon">!</div>
+        <h2 className="chat-confirm-title" id="chat-trial-limit-title">
+          You have reached your limit
+        </h2>
+        <p className="chat-confirm-copy" id="chat-trial-limit-copy">
+          You have used all {limit ? `${limit} ` : ""}free AI replies, so your AI agent is turned off. To keep it
+          running, get a <strong>paid plan</strong>.
+        </p>
+        <div className="chat-trial-plan">
+          <div className="chat-trial-plan-price">
+            <span className="chat-trial-plan-amount">$10</span>
+            <span className="chat-trial-plan-per">per month, per agent</span>
+          </div>
+          <ul className="chat-trial-plan-list">
+            <li><strong>Unlimited AI replies</strong> on WhatsApp</li>
+            <li><strong>Custom features</strong> built on request for you</li>
+            <li><strong>Advanced AI model</strong> for smarter replies</li>
+            <li>Your agent stays on 24/7 and never turns off</li>
+            <li>Knowledge Base, Tools and order taking</li>
+            <li>Images, files, voice notes and photos</li>
+            <li>Replies in WhatsApp groups</li>
+            <li>Human intervention when a customer needs a person</li>
+            <li>Help from our team on WhatsApp</li>
+          </ul>
+        </div>
+        <div className="chat-trial-note">
+          <span aria-hidden="true" className="chat-trial-note-icon">i</span>
+          <p>
+            <strong>A note from the Wapzen team:</strong> our Stripe business verification is still in progress, so we
+            could not add our pricing to the Wapzen website yet. That is why the free limit is shown here in your
+            dashboard. We are really sorry for the inconvenience. As soon as Stripe verification is complete, we will
+            publish our pricing on the Wapzen website.
+          </p>
+        </div>
+        <p className="chat-confirm-copy">
+          Message us on WhatsApp at <strong className="notranslate">+880 1701-750469</strong>&nbsp;and we&apos;ll set
+          it up for you.
+        </p>
+        <div className="chat-confirm-actions">
+          <button className="chat-btn chat-btn-secondary" onClick={() => setOpen(false)} type="button">
+            Not now
+          </button>
+          <a
+            autoFocus
+            className="chat-btn chat-upgrade-whatsapp"
+            href={FREE_TRIAL_WHATSAPP_URL}
+            onClick={() => setOpen(false)}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <WhatsAppGlyph size={16} />
+            Message us on WhatsApp
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
