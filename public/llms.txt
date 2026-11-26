@@ -96,6 +96,10 @@ Facts checked 18 November 2026. Straight answers to common questions: [Wapzen FA
 - [WhatsApp QR Code Generator](/tools/whatsapp-qr-code-generator)
 - [WhatsApp Country Code Finder](/tools/whatsapp-country-code-finder)
 - [WhatsApp Text Formatter](/tools/whatsapp-text-formatter): bold, italic, strikethrough, monospace, inline code, lists and quotes with a live WhatsApp preview, plus Unicode fancy fonts.
+- [WhatsApp Button for Website](/tools/whatsapp-button-generator): a floating WhatsApp chat button with an optional welcome popup, live preview, and self-contained HTML for WordPress, Shopify, Wix, Squarespace, Webflow or any site.
+- [WhatsApp Chat Analyzer](/tools/whatsapp-chat-analyzer): opens an exported WhatsApp chat in the browser (nothing uploaded) and shows who texts the most, reply times, busiest hours, days and months, and top words and emojis.
+- [AI WhatsApp Reply Generator](/tools/ai-whatsapp-reply-generator): paste a WhatsApp message and get three AI-written replies in the tone and language you choose.
+- [WhatsApp Business Message Generator](/tools/whatsapp-business-message-generator): free AI that writes WhatsApp Business greeting and away messages, quick replies, a profile description, offers and reminders.
 
 ## Other languages
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { Fragment, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Bold, Check, Code, Copy, Eraser, ExternalLink, Italic, List, ListOrdered, SquareCode, Strikethrough, TextQuote, Type, type LucideIcon } from "lucide-react";
 import { CopyButton } from "./CopyButton";
-import { fancyFonts, MAX_TEXT, parseMessage, stripFormatting, toggleLines, toggleWrap, type Edit, type Inline, type Line, type LineKind, type WrapMark } from "./whatsappFormat";
+import { fancyFonts, MAX_TEXT, stripFormatting, toggleLines, toggleWrap, type Edit, type LineKind, type WrapMark } from "./whatsappFormat";
+import { WhatsAppMessage } from "./WhatsAppMessage";
 import styles from "./FreeTools.module.css";
 
 type Action = { label: string; icon: LucideIcon; run: (value: string, start: number, end: number) => Edit };
@@ -43,24 +44,6 @@ const samples = [
     text: "*Opening hours* 🕘\n\n- Mon–Fri: 9 am – 7 pm\n- Saturday: 10 am – 4 pm\n- Sunday: _closed_\n\n> Public holiday hours may differ.",
   },
 ];
-
-function Inlines({ nodes }: { nodes: Inline[] }) {
-  return nodes.map((node, i) => {
-    if (typeof node === "string") return <Fragment key={i}>{node}</Fragment>;
-    const children = <Inlines nodes={node.children} />;
-    if (node.mark === "bold") return <strong key={i}>{children}</strong>;
-    if (node.mark === "italic") return <em key={i}>{children}</em>;
-    if (node.mark === "strike") return <s key={i}>{children}</s>;
-    return <code key={i} className={node.mark === "code" ? styles.waCode : styles.waMono}>{children}</code>;
-  });
-}
-
-function PreviewLine({ line }: { line: Line }) {
-  const content: ReactNode = line.content.length ? <Inlines nodes={line.content} /> : "​";
-  if (line.kind === "quote") return <span className={`${styles.waLine} ${styles.waQuote}`}>{content}</span>;
-  if (line.kind === "text") return <span className={styles.waLine}>{content}</span>;
-  return <span className={`${styles.waLine} ${styles.waItem}`}><span aria-hidden="true">{line.kind === "bullet" ? "•" : line.marker.trim()}</span><span>{content}</span></span>;
-}
 
 export function WhatsAppTextFormatter() {
   const id = useId();
@@ -154,7 +137,7 @@ export function WhatsAppTextFormatter() {
       {view === "preview" ? <>
         <div className={styles.chatPreview}>
           {hasText
-            ? <div className={styles.chatBubble}>{parseMessage(text).map((line, i) => <PreviewLine key={i} line={line} />)}</div>
+            ? <div className={styles.chatBubble}><WhatsAppMessage text={text} /></div>
             : <div className={styles.empty}><Type size={34} strokeWidth={1.4} /><p>Start typing, and your message appears here exactly as WhatsApp shows it.</p></div>}
         </div>
         <div className={styles.actions}>
