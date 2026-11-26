@@ -1,13 +1,14 @@
 "use client";
 
 import { DetailSkeleton } from "@/components/ui/Skeleton";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import SetupVideoButton from "@/components/chat/SetupVideoButton";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { DashboardSidebar } from "@/components/nav/DashboardSidebar";
+import { openUsageModal } from "@/components/nav/UsageButton";
 import {
   FREE_TRIAL_WHATSAPP_URL,
   MORE_AGENTS_WHATSAPP_URL,
@@ -623,7 +624,17 @@ const css = `
 .chat-trial-plan-list li { color: var(--app-text); font-size: 14.5px; line-height: 1.4; padding-left: 26px; position: relative; }
 .chat-trial-plan-list li::before { color: #25d366; content: "✓"; font-weight: 900; left: 4px; position: absolute; }
 .chat-trial-plan-list strong { color: var(--app-text-strong); font-weight: 800; }
-.chat-trial-note { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--app-line); border-radius: 12px; display: flex; gap: 10px; margin-top: 14px; padding: 12px 14px; }
+.chat-trial-chip { align-items: center; background: transparent; border: 1px solid var(--app-line); border-radius: 12px; color: var(--app-text); cursor: pointer; display: inline-flex; font: inherit; gap: 8px; padding: 3px 12px 3px 4px; }
+.chat-trial-chip:hover { border-color: var(--app-rose-border); }
+.chat-trial-chip-ring { color: var(--app-muted); display: inline-grid; flex: none; height: 38px; place-items: center; position: relative; width: 38px; }
+.chat-trial-chip-ring svg { inset: 0; position: absolute; }
+.chat-trial-chip-fill { stroke: var(--app-rose); stroke-linecap: round; }
+.chat-trial-chip-value { color: var(--app-text-strong); font-size: 11px; font-weight: 850; position: relative; }
+.chat-trial-chip-text { display: grid; line-height: 1.15; text-align: left; }
+.chat-trial-chip-text strong { color: var(--app-text-strong); font-size: 12.5px; font-weight: 800; }
+.chat-trial-chip-text span { color: var(--app-muted); font-size: 11px; }
+.chat-trial-chip[data-over] .chat-trial-chip-text strong { color: var(--app-rose); }
+.chat-trial-note {background: rgba(255, 255, 255, 0.03); border: 1px solid var(--app-line); border-radius: 12px; display: flex; gap: 10px; margin-top: 14px; padding: 12px 14px; }
 .chat-trial-note p { color: var(--app-muted); font-size: 13px; line-height: 1.55; margin: 0; }
 .chat-trial-note strong { color: var(--app-text-strong); font-weight: 800; }
 .chat-trial-note-icon { align-items: center; border: 1.5px solid var(--app-muted); border-radius: 999px; color: var(--app-muted); display: inline-flex; flex: none; font-size: 11px; font-weight: 800; height: 17px; justify-content: center; margin-top: 2px; width: 17px; }
@@ -3002,6 +3013,7 @@ function AgentHeader({
         </div>
         {tabs}
         <div className="chat-editor-actions">
+          <TrialUsageChip agent={agent} />
           <button
             className="chat-btn chat-btn-secondary"
             disabled={activationBlocked}
@@ -3370,6 +3382,61 @@ function FreeTrialEndedCard() {
 // FreeTrialLimitModal pops up over the agent page once the account has used all
 // its free AI replies. "Not now" closes it; it comes back the next time an agent
 // page opens. The FreeTrialEndedCard stays on the page underneath.
+// From this many used free replies the agent header shows how many are left.
+const TRIAL_CHIP_FROM = 350;
+
+// TrialUsageChip is a small donut beside Activate once a free account has used
+// TRIAL_CHIP_FROM replies: the coloured arc is what is left. Clicking it opens
+// the sidebar's Usage modal.
+function TrialUsageChip({ agent }: { agent: ApiChatAgent }) {
+  const hatch = `trial-hatch-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const trial = agent.free_trial;
+  if (!trial || trial.used < TRIAL_CHIP_FROM) return null;
+  const left = Math.max(0, trial.limit - trial.used);
+  const r = 15;
+  const c = 2 * Math.PI * r;
+  const filled = trial.limit > 0 ? Math.min(1, left / trial.limit) * c : 0;
+  const over = left === 0;
+  return (
+    <button
+      aria-label={`${left} of ${trial.limit} free AI replies left`}
+      className="chat-trial-chip"
+      data-over={over || undefined}
+      onClick={openUsageModal}
+      title={`${left} of ${trial.limit} free AI replies left — open Usage`}
+      type="button"
+    >
+      <span className="chat-trial-chip-ring">
+        <svg aria-hidden="true" height="38" viewBox="0 0 38 38" width="38">
+          <defs>
+            <pattern height="4" id={hatch} patternTransform="rotate(45)" patternUnits="userSpaceOnUse" width="4">
+              <line stroke="currentColor" strokeWidth="1.6" x1="0" x2="0" y1="0" y2="4" />
+            </pattern>
+          </defs>
+          <circle cx="19" cy="19" fill="none" r={r} stroke={`url(#${hatch})`} strokeWidth="5" />
+          {filled > 0 ? (
+            <circle
+              className="chat-trial-chip-fill"
+              cx="19"
+              cy="19"
+              fill="none"
+              r={r}
+              strokeDasharray={`${filled} ${c}`}
+              strokeWidth="5"
+              transform="rotate(-90 19 19)"
+            />
+          ) : null}
+        </svg>
+        <span className="chat-trial-chip-value">{left}</span>
+      </span>
+      <span className="chat-trial-chip-text">
+        <strong>{left} left</strong>
+        <span>of {trial.limit} replies</span>
+      </span>
+    </button>
+  );
+}
+
 // Pressing Activate on an agent whose account is out of free replies sends
 // this event, which reopens the modal.
 const TRIAL_LIMIT_EVENT = "wapzen:trial-limit";

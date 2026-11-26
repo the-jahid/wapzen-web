@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@clerk/nextjs";
 import { CreditCard, Gauge, Info, MessageSquare, Phone, X, Zap } from "lucide-react";
@@ -17,6 +17,12 @@ import styles from "./DashboardSidebar.module.css";
 // From this many replies used the Usage button and ring turn red, the same
 // point the near-limit warning shows in the modal.
 const USAGE_WARN_FROM = 350;
+
+/** Fire this (window event) to open the Usage modal from anywhere in the dashboard. */
+export const OPEN_USAGE_EVENT = "wapzen:open-usage";
+export function openUsageModal() {
+  window.dispatchEvent(new CustomEvent(OPEN_USAGE_EVENT, { detail: { handled: false } }));
+}
 // Under this many voice seconds left the voice ring turns red (same as the
 // voice agents page's amber point).
 const VOICE_WARN_SECONDS = 120;
@@ -97,9 +103,25 @@ export function UsageButton({
     };
   }, [getToken, isSignedIn, open, setVoice]);
 
+  // Other parts of the dashboard (the agent page's usage chip) open this modal
+  // with OPEN_USAGE_EVENT. The sidebar card and the phone tab bar both mount a
+  // UsageButton, so only the one actually on screen answers, and only once.
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const onOpenRequest = (event: Event) => {
+      const request = (event as CustomEvent<{ handled?: boolean }>).detail;
+      if (request?.handled) return;
+      if (!triggerRef.current || triggerRef.current.getClientRects().length === 0) return;
+      if (request) request.handled = true;
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_USAGE_EVENT, onOpenRequest);
+    return () => window.removeEventListener(OPEN_USAGE_EVENT, onOpenRequest);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
+    const onKey =(event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.stopPropagation();
         setOpen(false);
@@ -114,6 +136,7 @@ export function UsageButton({
       {variant === "tab" ? (
         <button
           aria-label={warn ? "Usage: free AI replies almost used up" : "Usage"}
+          ref={triggerRef}
           className={`${styles.tab} ${styles.usageTab}`}
           data-warn={warn || undefined}
           onClick={() => {
@@ -130,6 +153,7 @@ export function UsageButton({
       ) : (
         <button
           aria-label={warn ? "Usage: free AI replies almost used up" : "Usage"}
+          ref={triggerRef}
           className={`${styles.supportCard} ${styles.usageButton}`}
           data-warn={warn || undefined}
           onClick={() => {
